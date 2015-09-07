@@ -27,6 +27,7 @@
 	Last Modified	: 7th September 2015
 */
 
+#include <mutex>
 #include <vector>
 #include <functional>
 #include "Component.hpp"
@@ -41,6 +42,9 @@ namespace Solaire{ namespace Components{
 		Composite& operator=(const Composite&);
 
 		std::vector<Component::pointer_t> mComponents;
+
+		static std::vector<Composite*> COMPOSITE_TRACKER;
+		static std::mutex COMPOSITE_TRACKER_LOCK;
 	protected:
 		virtual bool PreAttach(const Component& aComponent) const = 0;
 		virtual void PostAttach(Component& aComponent) = 0;
@@ -48,6 +52,70 @@ namespace Solaire{ namespace Components{
 		virtual bool PreDetach(const Component& aComponent) const = 0;
 		virtual void PostDetach(Component& aComponent) = 0;
 	public:
+		template<class T>
+		static bool CheckType(const Composite& aComposite){
+			static_assert(std::is_base_of<Composite, T>::value, "Composite::CheckType() template must derive from Composite");
+			return dynamic_cast<const T*>(&aComposite) != nullptr;
+		}
+
+		static size_t CompositeCount(){
+			size_t count = 0;
+			COMPOSITE_TRACKER_LOCK.lock();
+			count = COMPOSITE_TRACKER.size();
+			COMPOSITE_TRACKER_LOCK.unlock();
+			return count;
+		}
+
+		template<class CONDITION, class CALLBACK>
+		static size_t ForEachComposite(CONDITION aCondition, CALLBACK aCallback){
+			size_t count = 0;
+			COMPOSITE_TRACKER_LOCK.lock();
+			for(Composite* i : COMPOSITE_TRACKER){
+				if(aCondition(*i)){
+					++count;
+					aCallback(*i);
+				}
+			}
+			COMPOSITE_TRACKER_LOCK.unlock();
+			return count;
+		}
+
+		template<class COMPOSITE, class CALLBACK>
+		static size_t ForEachComposite(CALLBACK aCallback){
+			return ForEachComposite(Composite::CheckType<COMPOSITE>, aCallback);
+		}
+
+		template<class CONDITION, class CALLBACK>
+		static size_t ForEachComponent(CONDITION aCondition, CALLBACK aCallback){
+			size_t count = 0;
+			COMPOSITE_TRACKER_LOCK.lock();
+			for(Composite* i : COMPOSITE_TRACKER){
+				count += i->ForEachComponent(aCondition, aCallback);
+			}
+			COMPOSITE_TRACKER_LOCK.unlock();
+			return count;
+		}
+
+		template<class COMPONENT, class CALLBACK>
+		static size_t ForEachComponent(CALLBACK aCallback){
+			return ForEachComposite(Component::CheckType<COMPONENT>, [&](Component& aComponent){
+				aCallback(reinterpret_cast<T&>(aComponent));
+			});
+		}
+
+		Composite(){
+			// Register with tracker
+			COMPOSITE_TRACKER_LOCK.lock();
+			COMPOSITE_TRACKER.push_back(this);
+			COMPOSITE_TRACKER_LOCK.unlock();
+		}
+
+		virtual ~Composite(){
+			// Register with tracker
+			COMPOSITE_TRACKER_LOCK.lock();
+			COMPOSITE_TRACKER.erase(std::find(COMPOSITE_TRACKER.begin(), COMPOSITE_TRACKER.end(), this));
+			COMPOSITE_TRACKER_LOCK.unlock();
+		}
 
 		// Component management
 

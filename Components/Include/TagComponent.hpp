@@ -59,6 +59,30 @@ namespace Solaire{ namespace Components{
 		}
 
 	public:
+		template<class tag_iterator, class CALLBACK>
+		static size_t ForEachComposite(tag_iterator aBegin, tag_iterator aEnd, CALLBACK aCallback){
+			auto condition = [&](Component& aComponent){
+				TagComponent* tag = dynamic_cast<TagComponent*>(&aComponent);
+				if(tag == nullptr) return false;
+				return tag->HasTags(aBegin, aEnd);
+			};
+
+			auto action = [&](Component& aComponent){
+				aCallback(aComponent.GetParent());
+			};
+
+			return Composite::ForEachComponent(condition, action);
+		}
+		
+		template<class CALLBACK>
+		static size_t ForEachComposite(const std::string& aTag, CALLBACK aCallback){
+			const std::string* begin = &aTag;
+			const std::string* end = begin + 1;
+			return TagComponent::ForEachComposite(begin, end, aCallback);
+		}
+
+		typedef std::vector<const std::string>::const_iterator tag_iterator;
+
 		TagComponent(){
 
 		}
@@ -76,6 +100,22 @@ namespace Solaire{ namespace Components{
 		TagComponent& operator=(const TagComponent& aOther){
 			mTags = aOther.mTags;
 			return *this;
+		}
+
+		tag_iterator TagBegin() const{
+			return mTags.begin();
+		}
+
+		tag_iterator TagEnd() const{
+			return mTags.end();
+		}
+
+		size_t TagCount() const{
+			return mTags.size();
+		}
+
+		const std::string& GetTag(size_t aIndex = 0) const{
+			return mTags[aIndex];
 		}
 
 		bool AddTag(const std::string& aTag){
@@ -123,6 +163,10 @@ namespace Solaire{ namespace Components{
 
 		bool operator==(const TagComponent& aOther) const{
 			return aOther.HasTags(mTags.begin(), mTags.end());
+		}
+
+		bool operator!=(const TagComponent& aOther) const{
+			return ! aOther.HasTags(mTags.begin(), mTags.end());
 		}
 	};
 }}
