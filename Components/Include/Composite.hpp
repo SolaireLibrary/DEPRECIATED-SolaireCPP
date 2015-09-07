@@ -235,12 +235,12 @@ namespace Solaire{ namespace Components{
 		}
 
 		template<class T>
-		const_component_iterator GetComponent(component_condition aCondition, size_t aIndex = 0) const{
+		const_component_iterator GetComponent(size_t aIndex = 0) const{
 			return GetComponent(Component::CheckType<T>, aIndex);
 		}
 
 		template<class T>
-		component_iterator GetComponent(component_condition aCondition, size_t aIndex = 0){
+		component_iterator GetComponent(size_t aIndex = 0){
 			return GetComponent(Component::CheckType<T>, aIndex);
 		}
 	};
