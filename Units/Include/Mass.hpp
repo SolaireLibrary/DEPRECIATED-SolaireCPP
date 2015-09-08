@@ -75,6 +75,12 @@ namespace Solaire{ namespace Units{
 			ConfigureProperties();
 		}
 
+		Mass(conversion_t aValue) : 
+			PrefixConverter(aValue)
+		{
+
+		}
+
 		Mass(unit_t aUnit, conversion_t aValue) : 
 			PrefixConverter(static_cast<conversion_t>(0.0))
 		{

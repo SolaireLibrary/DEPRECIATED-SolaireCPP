@@ -78,6 +78,12 @@ namespace Solaire{ namespace Units{
 			ConfigureProperties();
 		}
 
+		Volume(conversion_t aValue) : 
+			PrefixConverter(aValue)
+		{
+
+		}
+
 		Volume(unit_t aUnit, conversion_t aValue) : 
 			PrefixConverter(static_cast<conversion_t>(0.0))
 		{

@@ -87,6 +87,12 @@ namespace Solaire{ namespace Units{
 			ConfigureProperties();
 		}
 
+		Metric(conversion_t aValue) : 
+			BaseConverter(aValue)
+		{
+
+		}
+
 		Metric(unit_t aUnit, conversion_t aValue) : 
 			BaseConverter(static_cast<conversion_t>(0.0))
 		{

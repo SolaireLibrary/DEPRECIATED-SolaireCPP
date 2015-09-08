@@ -80,6 +80,12 @@ namespace Solaire{ namespace Units{
 			ConfigureProperties();
 		}
 
+		Distance(conversion_t aValue) : 
+			PrefixConverter(aValue)
+		{
+
+		}
+
 		Distance(unit_t aUnit, conversion_t aValue) : 
 			PrefixConverter(static_cast<conversion_t>(0.0))
 		{

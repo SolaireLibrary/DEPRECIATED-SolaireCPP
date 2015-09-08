@@ -66,6 +66,12 @@ namespace Solaire{ namespace Units{
 			ConfigureProperties();
 		}
 
+		Temperature(conversion_t aValue) : 
+			PrefixConverter(aValue)
+		{
+
+		}
+
 		Temperature(unit_t aUnit, conversion_t aValue) : 
 			PrefixConverter(static_cast<conversion_t>(0.0))
 		{
