@@ -111,7 +111,7 @@ namespace Solaire{ namespace Components{
 		}
 
 		virtual ~Composite(){
-			// Register with tracker
+			// Un-register with tracker
 			COMPOSITE_TRACKER_LOCK.lock();
 			COMPOSITE_TRACKER.erase(std::find(COMPOSITE_TRACKER.begin(), COMPOSITE_TRACKER.end(), this));
 			COMPOSITE_TRACKER_LOCK.unlock();
