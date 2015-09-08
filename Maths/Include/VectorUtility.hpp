@@ -15,6 +15,18 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
+/*!
+	\file VectorUtility.hpp
+	\brief Contains utility code for all vectors
+	\version 1.0
+	\author
+	Created			: Adam Smith
+	Last modified	: Adam Smith
+	\date 
+	Created			: 8th September 2015
+	Last Modified	: 8th September 2015
+*/
+
 #include <limits>
 
 namespace Solaire{ namespace Maths{
