@@ -1,4 +1,4 @@
-# SolaireCPP
+# SolaireCPP - WIP
 C++ implementation of the Solaire library
 
 The solaire library is intended to be a set of modular code libraries that are easy to use, and provide powerful functionality.
