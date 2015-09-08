@@ -15,6 +15,10 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
+// Contact :
+// Email             : solairelibrary@mail.com
+// GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
+
 /*!
 	\file VectorDynamic.hpp
 	\brief Contains code for N dimentional vector maths.
