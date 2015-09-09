@@ -24,57 +24,41 @@
 
 namespace Solaire{ namespace Units{ namespace VolumeInl{
 
-	static const VolumeUnit INTERMEDIARY_UNIT = VolumeUnit::LITRE;
+	static constexpr VolumeUnit INTERMEDIARY_UNIT = VolumeUnit::LITRE;
 	
-	static const double SCALE_LITRE				= 1.0;
-	static const double SCALE_OUNCE_UK			= SCALE_LITRE * 35.1951;
-	static const double SCALE_OUNCE_US			= SCALE_LITRE * 33.814;
-	static const double SCALE_PINT_UK			= SCALE_OUNCE_UK / 20.0;
-	static const double SCALE_PINT_US			= SCALE_OUNCE_US / 16.0;
-	static const double SCALE_GALLON_UK			= SCALE_OUNCE_UK / 160.0;
-	static const double SCALE_GALLON_US			= SCALE_OUNCE_US / 128.0;
-	static const double SCALE_CUP_US			= SCALE_OUNCE_US / 8.0;
-	static const double SCALE_TABLE_SPOON_UK	= SCALE_OUNCE_UK * 1.6;
-	static const double SCALE_TABLE_SPOON_US	= SCALE_OUNCE_US * 2.0;
-	static const double SCALE_TEA_SPOON_UK		= SCALE_OUNCE_UK * 4.8;
-	static const double SCALE_TEA_SPOON_US		= SCALE_OUNCE_US * 6.0;
-	static const double SCALE_QUART_UK			= SCALE_OUNCE_UK / 40.0;
-	static const double SCALE_QUART_US			= SCALE_OUNCE_US / 32.0;
+	static constexpr double SCALE_LITRE				= 1.0;
+	static constexpr double SCALE_OUNCE_UK			= SCALE_LITRE * 35.1951;
+	static constexpr double SCALE_OUNCE_US			= SCALE_LITRE * 33.814;
+	static constexpr double SCALE_PINT_UK			= SCALE_OUNCE_UK / 20.0;
+	static constexpr double SCALE_PINT_US			= SCALE_OUNCE_US / 16.0;
+	static constexpr double SCALE_GALLON_UK			= SCALE_OUNCE_UK / 160.0;
+	static constexpr double SCALE_GALLON_US			= SCALE_OUNCE_US / 128.0;
+	static constexpr double SCALE_CUP_US			= SCALE_OUNCE_US / 8.0;
+	static constexpr double SCALE_TABLE_SPOON_UK	= SCALE_OUNCE_UK * 1.6;
+	static constexpr double SCALE_TABLE_SPOON_US	= SCALE_OUNCE_US * 2.0;
+	static constexpr double SCALE_TEA_SPOON_UK		= SCALE_OUNCE_UK * 4.8;
+	static constexpr double SCALE_TEA_SPOON_US		= SCALE_OUNCE_US * 6.0;
+	static constexpr double SCALE_QUART_UK			= SCALE_OUNCE_UK / 40.0;
+	static constexpr double SCALE_QUART_US			= SCALE_OUNCE_US / 32.0;
 
 
-	static double GetScale(const VolumeUnit aUnit){
-		switch (aUnit){
-		case VolumeUnit::LITRE:
-			return SCALE_LITRE;
-		case VolumeUnit::PINT_UK:
-			return SCALE_PINT_UK;
-		case VolumeUnit::PINT_US:
-			return SCALE_PINT_US;
-		case VolumeUnit::GALLON_UK:
-			return SCALE_GALLON_UK;
-		case VolumeUnit::GALLON_US:
-			return SCALE_GALLON_US;
-		case VolumeUnit::CUP_US:
-			return SCALE_CUP_US;
-		case VolumeUnit::OUNCE_UK:
-			return SCALE_OUNCE_UK;
-		case VolumeUnit::OUNCE_US:
-			return SCALE_OUNCE_US;
-		case VolumeUnit::TABLE_SPOON_UK:
-			return SCALE_TABLE_SPOON_UK;
-		case VolumeUnit::TABLE_SPOON_US:
-			return SCALE_TABLE_SPOON_US;
-		case VolumeUnit::TEA_SPOON_UK:
-			return SCALE_TEA_SPOON_UK;
-		case VolumeUnit::TEA_SPOON_US:
-			return SCALE_TEA_SPOON_US;
-		case VolumeUnit::QUART_UK:
-			return SCALE_QUART_UK;
-		case VolumeUnit::QUART_US:
-			return SCALE_QUART_US;
-		default:
-			throw std::runtime_error("Could not recognise unit");
-		}
+	static constexpr double GetScale(const VolumeUnit aUnit){
+		return
+			aUnit == VolumeUnit::LITRE			? SCALE_LITRE :
+			aUnit == VolumeUnit::PINT_UK		? SCALE_PINT_UK :
+			aUnit == VolumeUnit::PINT_US		? SCALE_PINT_US :
+			aUnit == VolumeUnit::GALLON_UK		? SCALE_GALLON_UK :
+			aUnit == VolumeUnit::GALLON_US		? SCALE_GALLON_US :
+			aUnit == VolumeUnit::CUP_US			? SCALE_CUP_US :
+			aUnit == VolumeUnit::OUNCE_UK		? SCALE_OUNCE_UK :
+			aUnit == VolumeUnit::OUNCE_US		? SCALE_OUNCE_US :
+			aUnit == VolumeUnit::TABLE_SPOON_UK	? SCALE_TABLE_SPOON_UK :
+			aUnit == VolumeUnit::TABLE_SPOON_US	? SCALE_TABLE_SPOON_US :
+			aUnit == VolumeUnit::TEA_SPOON_UK	? SCALE_TEA_SPOON_UK :
+			aUnit == VolumeUnit::TEA_SPOON_US	? SCALE_TEA_SPOON_US :
+			aUnit == VolumeUnit::QUART_UK		? SCALE_QUART_UK :
+			aUnit == VolumeUnit::QUART_US		? SCALE_QUART_US :
+												0.0;
 	}
 }}}
 

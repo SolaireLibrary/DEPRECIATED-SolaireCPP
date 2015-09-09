@@ -24,71 +24,40 @@
 
 namespace Solaire{ namespace Units{ namespace MetricInl{
 
-	static const MetricPrefix INTERMEDIARY_UNIT = MetricPrefix::NONE;
+	static constexpr MetricPrefix INTERMEDIARY_UNIT = MetricPrefix::NONE;
 
-	static double GetScale(const MetricPrefix aUnit){
-		switch (aUnit){
-		case MetricPrefix::YOTTA:
-			return 1e+24;
-		case MetricPrefix::ZETTA:
-			return 1e+21;
-		case MetricPrefix::EXA:
-			return 1e+18;
-		case MetricPrefix::PETA:
-			return 1e+15;
-		case MetricPrefix::TERA:
-			return 1e+12;
-		case MetricPrefix::GIGA:
-			return 1e+9;
-		case MetricPrefix::MEGA:
-			return 1e+6;
-		case MetricPrefix::KILO:
-			return 1e+3;
-		case MetricPrefix::HECTO:
-			return 1e+2;
-		case MetricPrefix::DECA:
-			return 1e+1;
-		case MetricPrefix::NONE:
-			return 1.0;
-		case MetricPrefix::DECI:
-			return 1e-1;
-		case MetricPrefix::CENTI:
-			return 1e-2;
-		case MetricPrefix::MILLI:
-			return 1e-3;
-		case MetricPrefix::MICRO:
-			return 1e-6;
-		case MetricPrefix::NANO:
-			return 1e-9;
-		case MetricPrefix::PICO:
-			return 1e-12;
-		case MetricPrefix::FEMTO:
-			return 1e-15;
-		case MetricPrefix::ATTO:
-			return 1e-18;
-		case MetricPrefix::ZEPTO:
-			return 1e-21;
-		case MetricPrefix::YOCTO:
-			return 1e-24;
-		case MetricPrefix::KIBI:
-			return 2e+10;
-		case MetricPrefix::MEBI:
-			return 2e+20;
-		case MetricPrefix::GIBI:
-			return 2e+30;
-		case MetricPrefix::TEBI:
-			return 2e+40;
-		case MetricPrefix::PEBI:
-			return 2e+50;
-		case MetricPrefix::EXBI:
-			return 2e+60;
-		case MetricPrefix::ZEBI:
-			return 2e+70;
-		case MetricPrefix::YOBI:
-			return 2e+80;
-		default:
-			throw std::runtime_error("Could not recognise prefix");
-		}
+	static constexpr double GetScale(const MetricPrefix aUnit){
+		return
+			aUnit == MetricPrefix::YOTTA	? 1e+24 :
+			aUnit == MetricPrefix::ZETTA	? 1e+21 :
+			aUnit == MetricPrefix::EXA		? 1e+18 :
+			aUnit == MetricPrefix::PETA		? 1e+15 :
+			aUnit == MetricPrefix::TERA		? 1e+12 :
+			aUnit == MetricPrefix::GIGA		? 1e+9 :
+			aUnit == MetricPrefix::MEGA		? 1e+6 :
+			aUnit == MetricPrefix::KILO		? 1e+3 :
+			aUnit == MetricPrefix::HECTO	? 1e+2 :
+			aUnit == MetricPrefix::DECA		? 1e+1 :
+			aUnit == MetricPrefix::NONE		? 1.0 :
+			aUnit == MetricPrefix::DECI		? 1e-1 :
+			aUnit == MetricPrefix::CENTI	? 1e-2 :
+			aUnit == MetricPrefix::MILLI	? 1e-3 :
+			aUnit == MetricPrefix::MICRO	? 1e-6 :
+			aUnit == MetricPrefix::NANO		? 1e-9 :
+			aUnit == MetricPrefix::PICO		? 1e-12 :
+			aUnit == MetricPrefix::FEMTO	? 1e-15 :
+			aUnit == MetricPrefix::ATTO		? 1e-18 :
+			aUnit == MetricPrefix::ZEPTO	? 1e-21 :
+			aUnit == MetricPrefix::YOCTO	? 1e-24 :
+			aUnit == MetricPrefix::KIBI		? 2e+10 :
+			aUnit == MetricPrefix::MEBI		? 2e+20 :
+			aUnit == MetricPrefix::GIBI		? 2e+30 :
+			aUnit == MetricPrefix::TEBI		? 2e+40 :
+			aUnit == MetricPrefix::PEBI		? 2e+50 :
+			aUnit == MetricPrefix::EXBI		? 2e+60 :
+			aUnit == MetricPrefix::ZEBI		? 2e+70 :
+			aUnit == MetricPrefix::YOBI		? 2e+80 :
+			0.0;
 	}
 }}}
 

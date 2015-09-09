@@ -24,45 +24,35 @@
 
 namespace Solaire{ namespace Units{ namespace MassInl{
 
-	static const MassUnit INTERMEDIARY_UNIT = MassUnit::METRIC_TON;
+	static constexpr MassUnit INTERMEDIARY_UNIT = MassUnit::METRIC_TON;
 	
-	static const double SCALE_METRIC_TON	= 1.0;
-	static const double SCALE_GRAM			= SCALE_METRIC_TON * 1e+6;
-	static const double SCALE_OUNCE			= SCALE_GRAM / 28.3495;
-	static const double SCALE_POUND			= SCALE_OUNCE / 16.0;
-	static const double SCALE_STONE			= SCALE_POUND / 14.0;
-	static const double SCALE_SHORT_TON		= SCALE_POUND / 2000.0;
-	static const double SCALE_LONG_TON		= SCALE_POUND / 2240.0;
-	static const double SCALE_TROY_OUNCE	= SCALE_OUNCE / 1.09714286;
-	static const double SCALE_TROY_POUND	= SCALE_TROY_OUNCE / 12.0;
-	static const double SCALE_SOLAR_MASS	= SCALE_METRIC_TON / 1.989e+27;
+	static constexpr double SCALE_METRIC_TON = 1.0;
+	static constexpr double SCALE_GRAM			= SCALE_METRIC_TON * 1e+6;
+	static constexpr double SCALE_OUNCE			= SCALE_GRAM / 28.3495;
+	static constexpr double SCALE_POUND			= SCALE_OUNCE / 16.0;
+	static constexpr double SCALE_STONE			= SCALE_POUND / 14.0;
+	static constexpr double SCALE_SHORT_TON		= SCALE_POUND / 2000.0;
+	static constexpr double SCALE_LONG_TON		= SCALE_POUND / 2240.0;
+	static constexpr double SCALE_TROY_OUNCE	= SCALE_OUNCE / 1.09714286;
+	static constexpr double SCALE_TROY_POUND	= SCALE_TROY_OUNCE / 12.0;
+	static constexpr double SCALE_SOLAR_MASS	= SCALE_METRIC_TON / 1.989e+27;
 
 
-	static double GetScale(const MassUnit aUnit){
-		switch (aUnit){
-		case MassUnit::GRAM:
-			return SCALE_GRAM;
-		case MassUnit::OUNCE:
-			return SCALE_OUNCE;
-		case MassUnit::POUND:
-			return SCALE_POUND;
-		case MassUnit::STONE:
-			return SCALE_STONE;
-		case MassUnit::SHORT_TON:
-			return SCALE_SHORT_TON;
-		case MassUnit::LONG_TON:
-			return SCALE_SHORT_TON;
-		case MassUnit::METRIC_TON:
-			return SCALE_METRIC_TON;
-		case MassUnit::TROY_OUNCE:
-			return SCALE_TROY_OUNCE;
-		case MassUnit::TROY_POUND:
-			return SCALE_TROY_POUND;
-		case MassUnit::SOLAR_MASS:
-			return SCALE_SOLAR_MASS;
-		default:
-			throw std::runtime_error("Could not recognise unit");
-		}
+	static constexpr double GetScale(const MassUnit aUnit){
+		return
+			aUnit == MassUnit::GRAM ? SCALE_GRAM :
+			aUnit == MassUnit::OUNCE ? SCALE_OUNCE :
+			aUnit == MassUnit::POUND ? SCALE_POUND :
+			aUnit == MassUnit::OUNCE ? SCALE_OUNCE :
+			aUnit == MassUnit::STONE ? SCALE_STONE :
+			aUnit == MassUnit::SHORT_TON ? SCALE_SHORT_TON :
+			aUnit == MassUnit::LONG_TON ? SCALE_LONG_TON :
+			aUnit == MassUnit::SHORT_TON ? SCALE_SHORT_TON :
+			aUnit == MassUnit::METRIC_TON ? SCALE_METRIC_TON :
+			aUnit == MassUnit::TROY_OUNCE ? SCALE_TROY_OUNCE :
+			aUnit == MassUnit::TROY_POUND ? SCALE_TROY_POUND :
+			aUnit == MassUnit::SOLAR_MASS ? SCALE_SOLAR_MASS :
+			0.0;
 	}
 }}}
 

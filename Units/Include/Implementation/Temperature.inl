@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UNITS_DISTANCE_INL
-#define SOLAIRE_UNITS_DISTANCE_INL
+#ifndef SOLAIRE_UNITS_TEMPERATURE_INL
+#define SOLAIRE_UNITS_TEMPERATURE_INL
 
 //Copyright 2015 Adam Smith
 //
@@ -25,34 +25,22 @@
 namespace Solaire{ namespace Units{ namespace TemperatureInl{
 	static const TemperatureUnit INTERMEDIARY_UNIT = TemperatureUnit::CELCIUS;
 	
-	static double ConvertToIntermediary(TemperatureUnit aUnit, double aValue){
-		switch (aUnit){
-		case TemperatureUnit::CELCIUS:
-			return aValue;
-		case TemperatureUnit::FAHRENHEIT:
-			return (aValue - 32.0) / 1.8;
-		case TemperatureUnit::KELVIN:
-			return aValue - 273.15;
-		case TemperatureUnit::GAS_MARK:
-			return (aValue * 14.0) + 121.0;
-		default:
-			throw std::runtime_error("Could not recognise unit");
-		}
+	static constexpr double ConvertToIntermediary(const TemperatureUnit aUnit, const double aValue){
+		return
+			aUnit == TemperatureUnit::CELCIUS		? aValue :
+			aUnit == TemperatureUnit::FAHRENHEIT	? (aValue - 32.0) / 1.8 :
+			aUnit == TemperatureUnit::KELVIN		? aValue - 273.15 :
+			aUnit == TemperatureUnit::GAS_MARK		? (aValue * 14.0) + 121.0 :
+													0.0;
 	}
 
-	static double ConvertFromIntermediary(TemperatureUnit aUnit, double aValue){
-		switch (aUnit){
-		case TemperatureUnit::CELCIUS:
-			return aValue;
-		case TemperatureUnit::FAHRENHEIT:
-			return (aValue * 1.8) + 32.0;
-		case TemperatureUnit::KELVIN:
-			return aValue + 273.15;
-		case TemperatureUnit::GAS_MARK:
-			return (aValue - 121.0) / 14.0;
-		default:
-			throw std::runtime_error("Could not recognise unit");
-	}
+	static constexpr double ConvertFromIntermediary(const TemperatureUnit aUnit, double aValue){
+		return
+			aUnit == TemperatureUnit::CELCIUS		? aValue :
+			aUnit == TemperatureUnit::FAHRENHEIT	? (aValue * 1.8) + 32.0 :
+			aUnit == TemperatureUnit::KELVIN		? aValue + 273.15 :
+			aUnit == TemperatureUnit::GAS_MARK		? (aValue - 121.0) / 14.0 :
+													0.0;
 	}
 }}}
 

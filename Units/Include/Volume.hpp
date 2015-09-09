@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UNITS_MASS_HPP
-#define SOLAIRE_UNITS_MASS_HPP
+#ifndef SOLAIRE_UNITS_VOLUME_HPP
+#define SOLAIRE_UNITS_VOLUME_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -39,11 +39,11 @@ namespace Solaire{ namespace Units{
 	protected:
 		// Inherited from BaseConverter
 
-		conversion_t ConvertToIntermediaryUnit(unit_t aUnit, conversion_t aValue) const override{
+		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
 			return static_cast<conversion_t>(static_cast<double>(aValue) / VolumeInl::GetScale(aUnit));
 		}
 
-		conversion_t ConvertFromIntermediaryUnit(unit_t aUnit, conversion_t aValue) const override{
+		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
 			return static_cast<conversion_t>(static_cast<double>(aValue) * VolumeInl::GetScale(aUnit));
 		}
 

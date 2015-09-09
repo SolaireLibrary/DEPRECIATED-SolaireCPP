@@ -24,24 +24,19 @@
 
 namespace Solaire{ namespace Units{ namespace DigitalInl{
 
-	static const DigitalUnit INTERMEDIARY_UNIT = DigitalUnit::BYTE;
+	static constexpr DigitalUnit INTERMEDIARY_UNIT = DigitalUnit::BYTE;
 	
-	static const double SCALE_BYTE	 			= 1.0;
-	static const double SCALE_NYBBLE	 		= SCALE_BYTE * 2.0;
-	static const double SCALE_BIT	 			= SCALE_BYTE * 8.0;
+	static constexpr double SCALE_BYTE	 			= 1.0;
+	static constexpr double SCALE_NYBBLE	 		= SCALE_BYTE * 2.0;
+	static constexpr double SCALE_BIT	 			= SCALE_BYTE * 8.0;
 
 
-	static double GetScale(const DigitalUnit aUnit){
-		switch (aUnit){
-		case DigitalUnit::BIT:
-			return SCALE_BIT;
-		case DigitalUnit::NYBBLE:
-			return SCALE_NYBBLE;
-		case DigitalUnit::BYTE:
-			return SCALE_BYTE;
-		default:
-			throw std::runtime_error("Could not recognise unit");
-		}
+	static constexpr double GetScale(const DigitalUnit aUnit){
+		return
+			aUnit == DigitalUnit::BIT		?  SCALE_BIT :
+			aUnit == DigitalUnit::NYBBLE	? SCALE_NYBBLE :
+			aUnit == DigitalUnit::BYTE		? SCALE_BYTE :
+											0.0;
 	}
 }}}
 

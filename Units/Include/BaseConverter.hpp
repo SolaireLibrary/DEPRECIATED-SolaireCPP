@@ -59,7 +59,7 @@ namespace Solaire{ namespace Units{
 			\brief Create a new BaseConverter.
 			\param aValue The initial value stored in the converter.
 		*/
-		BaseConverter(conversion_t aValue) : 
+		BaseConverter(const conversion_t aValue) :
 			mValue(aValue)
 		{
 
@@ -77,7 +77,7 @@ namespace Solaire{ namespace Units{
 			\param aUnit The unit to convert into.
 			\return The stored value represented in the converted unit.
 		*/
-		conversion_t Get(unit_t aUnit) const{
+		conversion_t Get(const unit_t aUnit) const{
 			return ConvertFromIntermediaryUnit(aUnit, mValue);	
 		}
 
@@ -86,7 +86,7 @@ namespace Solaire{ namespace Units{
 			\param aUnit The unit format of \a aValue.
 			\param aValue The value that will be converted to be the new intermediary value.
 		*/
-		void Set(unit_t aUnit, conversion_t aValue){
+		void Set(const unit_t aUnit, const conversion_t aValue){
 			mValue = ConvertToIntermediaryUnit(aUnit, aValue) ;
 		}
 
@@ -208,7 +208,7 @@ namespace Solaire{ namespace Units{
 			\return The value of \a aValue when converted into the intermediary unit
 			\see GetIntermediaryUnit
 		*/
-		virtual conversion_t ConvertToIntermediaryUnit(unit_t aUnit, conversion_t aValue) const = 0;
+		virtual conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const = 0;
 
 		/*!
 			\brief Convert a value from the current intermediary unit into a different unit.
@@ -217,7 +217,7 @@ namespace Solaire{ namespace Units{
 			\return The value of \a aValue when converted into the requested unit
 			\see GetIntermediaryUnit
 		*/
-		virtual conversion_t ConvertFromIntermediaryUnit(unit_t aUnit, conversion_t aValue) const = 0;
+		virtual conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const = 0;
 	private:
 		conversion_t mValue;	//!< The intermediary value.
 	};
