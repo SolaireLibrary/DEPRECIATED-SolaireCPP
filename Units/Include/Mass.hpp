@@ -35,7 +35,7 @@ namespace Solaire{ namespace Units{
 		typedef MetricPrefix prefix_t;
 	private:
 		conversion_t mValue;
-	protected:
+
 		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(static_cast<double>(aValue) / MassInl::GetScale(aUnit));
 		}
