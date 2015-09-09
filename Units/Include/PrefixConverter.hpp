@@ -44,7 +44,7 @@ namespace Solaire{
             );\
     }\
 \
-	conversion_t Get(const prefix_t aPrefix, const unit_t aUnit) const{\
+	constexpr conversion_t Get(const prefix_t aPrefix, const unit_t aUnit) const{\
 		return prefix_converter::Convert(prefix_converter::INTERMEDIARY_UNIT, aPrefix, Get(aUnit));\
 	}\
 	void Set(const prefix_t aPrefix, unit_t aUnit, const conversion_t aValue){\
@@ -61,7 +61,7 @@ namespace Solaire{
 			return mParent->Set(PREFIX, UNIT, aValue);
 		}
 
-		operator typename CONVERTER::conversion_t() const{
+		constexpr operator typename CONVERTER::conversion_t() const{
 			return mParent->Get(PREFIX, UNIT);
 		}
 

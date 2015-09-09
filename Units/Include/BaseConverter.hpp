@@ -60,7 +60,7 @@ void Set(const unit_t aUnit, const conversion_t aValue){\
 \param aOther A reference to the converter to compare.\
 \return True if the values are the same, else false.\
 */\
-bool operator==(const class_name aOther) const{\
+constexpr bool operator==(const class_name aOther) const{\
 	return mValue == aOther.mValue;\
 }\
 \
@@ -70,7 +70,7 @@ bool operator==(const class_name aOther) const{\
 \param aOther A reference to the converter to compare.\
 \return True if the values are different, else false.\
 */\
-bool operator!=(const class_name aOther) const{\
+constexpr bool operator!=(const class_name aOther) const{\
 	return mValue != aOther.mValue;\
 }\
 \
@@ -80,7 +80,7 @@ bool operator!=(const class_name aOther) const{\
 \param aOther A reference to the converter to compare.\
 \return True if the this converter's value is smaller, else false.\
 */\
-bool operator<(const class_name aOther) const{\
+constexpr bool operator<(const class_name aOther) const{\
 	return mValue < aOther.mValue;\
 }\
 \
@@ -90,7 +90,7 @@ bool operator<(const class_name aOther) const{\
 \param aOther A reference to the converter to compare.\
 \return True if the this converter's value is larger, else false.\
 */\
-bool operator>(const class_name aOther) const{\
+constexpr bool operator>(const class_name aOther) const{\
 	return mValue > aOther.mValue;\
 }\
 \
@@ -100,7 +100,7 @@ bool operator>(const class_name aOther) const{\
 \param aOther A reference to the converter to compare.\
 \return True if the this converter's value is smaller or equal, else false.\
 */\
-bool operator<=(const class_name aOther) const{\
+constexpr bool operator<=(const class_name aOther) const{\
 	return mValue <= aOther.mValue;\
 }\
 \
@@ -110,7 +110,7 @@ bool operator<=(const class_name aOther) const{\
 \param aOther A reference to the converter to compare.\
 \return True if the this converter's value is larger or equal, else false.\
 */\
-bool operator>=(const class_name aOther) const{\
+constexpr bool operator>=(const class_name aOther) const{\
 	return mValue >= aOther.mValue;\
 }\
 \
@@ -227,7 +227,7 @@ namespace Solaire{ namespace Units{
 			\brief Call the parent converter's Get function.
 			\see BaseConverter::Get
 		*/
-		operator typename CONVERTER::conversion_t() const{
+		constexpr operator typename CONVERTER::conversion_t() const{
 			return mParent->Get(UNIT);
 		}
 
