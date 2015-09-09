@@ -60,7 +60,16 @@ namespace Solaire{ namespace Units{
 		};
 #endif
 
-		static const unit_t INTERMEDIARY_UNIT = TemperatureInl::INTERMEDIARY_UNIT;
+		static constexpr unit_t INTERMEDIARY_UNIT = TemperatureInl::INTERMEDIARY_UNIT;
+
+		static constexpr conversion_t Convert(const unit_t aInput, const unit_t aOutput, const conversion_t aValue){
+			return static_cast<conversion_t>(
+				TemperatureInl::ConvertFromIntermediary(
+					aOutput, 
+					TemperatureInl::ConvertToIntermediary(aInput, static_cast<double>(aValue))
+				)
+			);
+		}
 
 		// Constructors
 

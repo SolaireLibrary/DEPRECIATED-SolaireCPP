@@ -40,11 +40,11 @@ namespace Solaire{ namespace Units{
 		}
 
 		conversion_t PrefixedGet(prefix_t aPrefix, unit_t aUnit) const{
-			return Convert<PREFIX_CONVERTER>(PREFIX_CONVERTER::INTERMEDIARY_UNIT, aPrefix, Get(aUnit));
+			return PREFIX_CONVERTER::Convert(PREFIX_CONVERTER::INTERMEDIARY_UNIT, aPrefix, Get(aUnit));
 		}
 
 		void PrefixedSet(prefix_t aPrefix, unit_t aUnit, conversion_t aValue){
-			Set(aUnit, Convert<PREFIX_CONVERTER>>(aPrefix, PREFIX_CONVERTER::INTERMEDIARY_UNIT, aValue));
+			Set(aUnit, PREFIX_CONVERTER::Convert(aPrefix, PREFIX_CONVERTER::INTERMEDIARY_UNIT, aValue));
 		}
 	};
 

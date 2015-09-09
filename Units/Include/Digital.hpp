@@ -67,7 +67,14 @@ namespace Solaire{namespace Units{
 		};
 #endif
 
-		static const unit_t INTERMEDIARY_UNIT = DigitalInl::INTERMEDIARY_UNIT;
+		static constexpr unit_t INTERMEDIARY_UNIT = DigitalInl::INTERMEDIARY_UNIT;
+
+		static constexpr conversion_t Convert(const unit_t aInput, const unit_t aOutput, const conversion_t aValue){
+			return static_cast<conversion_t>(
+				(static_cast<double>(aValue) / DigitalInl::GetScale(aInput)) * 
+				DigitalInl::GetScale(aOutput)
+			);
+		}
 
 		// Constructors
 

@@ -81,7 +81,14 @@ namespace Solaire{ namespace Units{
 			ConverterProperty<Metric, unit_t::YOBI>		Yobi;
 		};
 #endif
-		static const unit_t INTERMEDIARY_UNIT = MetricInl::INTERMEDIARY_UNIT;
+		static constexpr unit_t INTERMEDIARY_UNIT = MetricInl::INTERMEDIARY_UNIT;
+
+		static constexpr conversion_t Convert(const unit_t aInput, const unit_t aOutput, const conversion_t aValue){
+			return static_cast<conversion_t>(
+				(static_cast<double>(aValue) / MetricInl::GetScale(aInput)) * 
+				MetricInl::GetScale(aOutput)
+			);
+		}
 
 		// Constructors
 

@@ -33,12 +33,6 @@
 
 namespace Solaire{ namespace Units{
 
-	template<class CONVERTER>
-	static typename CONVERTER::conversion_t Convert(typename CONVERTER::unit_t aInput, typename CONVERTER::unit_t aOutput, typename CONVERTER::conversion_t aValue){
-		CONVERTER tmp(aInput, aValue);
-		return tmp.Get(aOutput);
-	}
-
 	/*!
 		\class BaseConverter
 		\tparam UNIT The type, usually an enum that identifies the unit(s) to convert between.
