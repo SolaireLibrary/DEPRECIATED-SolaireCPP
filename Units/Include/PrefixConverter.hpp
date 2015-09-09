@@ -26,11 +26,29 @@ namespace Solaire{
 	namespace Units{
 
 #define SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(class_name, prefix_converter)\
+\
+	static constexpr conversion_t Convert(const typename prefix_converter::unit_t aInputPrefix, const unit_t aInputUnit, const typename prefix_converter::unit_t aOutputPrefix, const unit_t aOutputUnit, const conversion_t aValue){\
+        return\
+            prefix_converter::Convert(\
+                prefix_converter::unit_t::NONE,\
+                aOutputPrefix,\
+                class_name::Convert(\
+                    aInputUnit,\
+                    aOutputUnit,\
+                    prefix_converter::Convert(\
+                        aInputPrefix,\
+                        prefix_converter::unit_t::NONE,\
+                        aValue\
+                    )\
+                )\
+            );\
+    }\
+\
 	conversion_t Get(const prefix_t aPrefix, const unit_t aUnit) const{\
-		return prefix_converter::Convert(PREFIX_CONVERTER::INTERMEDIARY_UNIT, aPrefix, Get(aUnit));\
+		return prefix_converter::Convert(prefix_converter::INTERMEDIARY_UNIT, aPrefix, Get(aUnit));\
 	}\
 	void Set(const prefix_t aPrefix, unit_t aUnit, const conversion_t aValue){\
-		Set(aUnit, prefix_converter::Convert(aPrefix, PREFIX_CONVERTER::INTERMEDIARY_UNIT, aValue));\
+		Set(aUnit, prefix_converter::Convert(aPrefix, prefix_converter::INTERMEDIARY_UNIT, aValue));\
 	}
 
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES

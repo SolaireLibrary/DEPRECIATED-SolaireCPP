@@ -37,16 +37,12 @@ namespace Solaire{ namespace Units{
 	private:
 		conversion_t mValue;
 
-		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
+		static constexpr conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
 			return static_cast<conversion_t>(static_cast<double>(aValue) / VolumeInl::GetScale(aUnit));
 		}
 
-		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
+		static constexpr conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
 			return static_cast<conversion_t>(static_cast<double>(aValue) * VolumeInl::GetScale(aUnit));
-		}
-
-		unit_t GetIntermediaryUnit() const{
-			return INTERMEDIARY_UNIT;
 		}
 	public:
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
@@ -73,34 +69,9 @@ namespace Solaire{ namespace Units{
 
 		static constexpr unit_t INTERMEDIARY_UNIT = VolumeInl::INTERMEDIARY_UNIT;
 
-		static constexpr conversion_t Convert(const unit_t aInput, const unit_t aOutput, const conversion_t aValue){
-			return static_cast<conversion_t>(
-				(static_cast<double>(aValue) / VolumeInl::GetScale(aInput)) * 
-				VolumeInl::GetScale(aOutput)
-			);
-		}
-
-		static constexpr conversion_t Convert(const MetricD::unit_t aInputPrefix, const unit_t aInputUnit, const MetricD::unit_t aOutputPrefix, const unit_t aOutputUnit, const conversion_t aValue){
-			return static_cast<conversion_t>(
-				MetricD::Convert(
-					MetricD::unit_t::NONE, 
-					aOutputPrefix,
-					VolumeD::Convert(
-						aInputUnit,
-						aOutputUnit,
-						MetricD::Convert(
-							aInputPrefix,
-							MetricD::unit_t::NONE,
-							static_cast<double>(aValue)
-						)
-					)
-				)
-			);
-		}
-
 		// Constructors
 
-		constexpr Volume() : 
+		constexpr Volume() :
 			mValue(static_cast<conversion_t>(0.0))
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
@@ -128,7 +99,7 @@ namespace Solaire{ namespace Units{
 		}
 
 		constexpr Volume(const prefix_t aPrefix, const unit_t aUnit, const conversion_t aValue) :
-			mValue(Convert(aPrefix, aUnit, MetricD::NONE, INTERMEDIARY_UNIT, aValue))
+			mValue(Convert(aPrefix, aUnit, MetricD::unit_t::NONE, INTERMEDIARY_UNIT, aValue))
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
 #endif

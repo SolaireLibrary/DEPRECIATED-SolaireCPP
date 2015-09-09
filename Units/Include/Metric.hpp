@@ -33,16 +33,12 @@ namespace Solaire{ namespace Units{
 	private:
 		conversion_t mValue;
 
-		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
+		static constexpr conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
 			return static_cast<conversion_t>(static_cast<double>(aValue) * MetricInl::GetScale(aUnit));
 		}
 
-		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
+		static constexpr conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
 			return static_cast<conversion_t>(static_cast<double>(aValue) / MetricInl::GetScale(aUnit));
-		}
-
-		unit_t GetIntermediaryUnit() const{
-			return INTERMEDIARY_UNIT;
 		}
 	public:
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
@@ -81,13 +77,6 @@ namespace Solaire{ namespace Units{
 #endif
 		static constexpr unit_t INTERMEDIARY_UNIT = MetricInl::INTERMEDIARY_UNIT;
 
-		static constexpr conversion_t Convert(const unit_t aInput, const unit_t aOutput, const conversion_t aValue){
-			return static_cast<conversion_t>(
-				(static_cast<double>(aValue) / MetricInl::GetScale(aInput)) * 
-				MetricInl::GetScale(aOutput)
-			);
-		}
-
 		// Constructors
 
 		constexpr Metric() :
@@ -108,7 +97,7 @@ namespace Solaire{ namespace Units{
 
 		}
 
-		constexpr Metric(const unit_t aUnit, const conversion_t aValue) : 
+		constexpr Metric(const unit_t aUnit, const conversion_t aValue) :
 			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
@@ -123,7 +112,7 @@ namespace Solaire{ namespace Units{
 			, Self(this)
 #endif
 		{
-			
+
 		}
 
 		SOLAIRE_UNITS_CONVERTER_COMMON(Metric<conversion_t>)

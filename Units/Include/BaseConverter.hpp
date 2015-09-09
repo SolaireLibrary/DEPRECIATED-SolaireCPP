@@ -26,18 +26,22 @@
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 2.0
-	\date 
+	\date
 	Created			: 6th September 2015
 	Last Modified	: 7th September 2015
 */
 
 #define SOLAIRE_UNITS_CONVERTER_COMMON(class_name)\
+\
+static constexpr conversion_t Convert(const unit_t aInput, const unit_t aOutput, const conversion_t aValue){\
+    return ConvertFromIntermediaryUnit(aOutput, ConvertToIntermediaryUnit(aInput, aValue));\
+}\
 /*!\
 \brief Convert the stored intermediary value to the requested unit format.\
 \param aUnit The unit to convert into.\
 \return The stored value represented in the converted unit.\
 */\
-conversion_t Get(const unit_t aUnit) const{\
+constexpr conversion_t Get(const unit_t aUnit) const{\
 	return ConvertFromIntermediaryUnit(aUnit, mValue);\
 }\
 \
@@ -156,7 +160,7 @@ class_name& operator/=(const class_name aOther){\
 }
 
 namespace Solaire{ namespace Units{
-	
+
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 	/*!
 		\class ConverterProperty
@@ -165,7 +169,7 @@ namespace Solaire{ namespace Units{
 		\version 1.0
 		\author Adam Smith
 		\brief Allows for a unit to be represented to the programmer as a named variable, instead of using Get / Set.
-		\detail 
+		\detail
 		Properties are designed so they can be placed in a union to save memory, their paramiters should be defined by templates.
 		Properties can be disabled by defineing the macro SOLAIRE_UNITS_NO_PROPERTIES, this will reduce the size of each BaseConverter object by the size of a pointer.
 
@@ -188,7 +192,7 @@ namespace Solaire{ namespace Units{
 		double valueInFeet = converter.Feet;
 		\endcode
 		While these two methods are similar, the second version is much faster to type and easier to read. This makes the conversion code less error prone, and easier to develop with.
-		
+
 		Properties can also be used with the basic maths operators:
 		\code
 		Distance<double> converter;
@@ -218,7 +222,7 @@ namespace Solaire{ namespace Units{
 		void operator=(const typename CONVERTER::conversion_t aValue){
 			return mParent->Set(UNIT, aValue);
 		}
-		
+
 		/*!
 			\brief Call the parent converter's Get function.
 			\see BaseConverter::Get
@@ -226,7 +230,7 @@ namespace Solaire{ namespace Units{
 		operator typename CONVERTER::conversion_t() const{
 			return mParent->Get(UNIT);
 		}
-		
+
 		/*!
 			\brief Call a combination of the parent converter's Get and Set functions to add to it's intermediary value.
 			\param aValue The value to add to the intermediary.
@@ -236,7 +240,7 @@ namespace Solaire{ namespace Units{
 		void operator+=(const typename CONVERTER::conversion_t aValue){
 			mParent->Set(UNIT, mParent->Get(UNIT) + aValue);
 		}
-		
+
 		/*!
 			\brief Call a combination of the parent converter's Get and Set functions to subtract from it's intermediary value.
 			\param aValue The value to subtract from the intermediary.
@@ -246,7 +250,7 @@ namespace Solaire{ namespace Units{
 		void operator-=(const typename CONVERTER::conversion_t aValue){
 			mParent->Set(UNIT, mParent->Get(UNIT) - aValue);
 		}
-		
+
 		/*!
 			\brief Call a combination of the parent converter's Get and Set functions to multiply it's intermediary value.
 			\param aValue The value to multiply the intermediary by.
@@ -256,7 +260,7 @@ namespace Solaire{ namespace Units{
 		void operator*=(const typename CONVERTER::conversion_t aValue){
 			mParent->Set(UNIT, mParent->Get(UNIT) * aValue);
 		}
-		
+
 		/*!
 			\brief Call a combination of the parent converter's Get and Set functions to divide it's intermediary value.
 			\param aValue The value to divide the intermediary by.
