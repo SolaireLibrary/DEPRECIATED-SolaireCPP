@@ -63,8 +63,8 @@ namespace Solaire{ namespace Components{
 		}
 
 	public:
-		template<class tag_iterator, class CALLBACK>
-		static size_t ForEachComposite(tag_iterator aBegin, tag_iterator aEnd, CALLBACK aCallback){
+		template<class CALLBACK, class tag_iterator>
+		static size_t ForEachComposite(CALLBACK aCallback, tag_iterator aBegin, tag_iterator aEnd){
 			auto condition = [&](Component& aComponent){
 				TagComponent* tag = dynamic_cast<TagComponent*>(&aComponent);
 				if(tag == nullptr) return false;
@@ -77,18 +77,29 @@ namespace Solaire{ namespace Components{
 
 			return Composite::ForEachComponent(condition, action);
 		}
-		
+
 		template<class CALLBACK>
-		static size_t ForEachComposite(const std::string& aTag, CALLBACK aCallback){
-			const std::string* begin = &aTag;
-			const std::string* end = begin + 1;
-			return TagComponent::ForEachComposite(begin, end, aCallback);
+		static size_t ForEachComposite(CALLBACK aCallback, const std::initializer_list<const std::string> aTags){
+			return ForEachComposite(aCallback, aTags.begin(), aTags.end());
+		}
+
+		template<class CALLBACK>
+		static size_t ForEachComposite(CALLBACK aCallback, const std::string& aTag){
+			return TagComponent::ForEachComposite({aTag}, aCallback);
 		}
 
 		typedef std::vector<const std::string>::const_iterator tag_iterator;
 
 		TagComponent(){
 
+		}
+
+		TagComponent(const std::string& aTag){
+			AddTag(aTag);
+		}
+
+		TagComponent(const std::initializer_list<const std::string> aTags){
+			AddTags(aTags.begin(), aTags.end());
 		}
 
 		~TagComponent(){
@@ -137,6 +148,10 @@ namespace Solaire{ namespace Components{
 			return addedAll;
 		}
 
+		bool AddTags(const std::initializer_list<const std::string> aTags){
+			return AddTags(aTags.begin(), aTags.end());
+		}
+
 		bool RemoveTag(const std::string& aTag){
 			auto it = std::find(mTags.begin(), mTags.end(), aTag);
 			if(it == mTags.end()) return false;
@@ -153,6 +168,10 @@ namespace Solaire{ namespace Components{
 			return removedAll;
 		}
 
+		bool RemoveTags(const std::initializer_list<const std::string> aTags){
+			return RemoveTags(aTags.begin(), aTags.end());
+		}
+
 		bool HasTag(const std::string& aTag) const{
 			return std::find(mTags.begin(), mTags.end(), aTag) != mTags.end();
 		}
@@ -165,12 +184,24 @@ namespace Solaire{ namespace Components{
 			return true;
 		}
 
+		bool HasTags(const std::initializer_list<const std::string> aTags) const{
+			return HasTags(aTags.begin(), aTags.end());
+		}
+
 		bool operator==(const TagComponent& aOther) const{
 			return aOther.HasTags(mTags.begin(), mTags.end());
 		}
 
 		bool operator!=(const TagComponent& aOther) const{
 			return ! aOther.HasTags(mTags.begin(), mTags.end());
+		}
+
+		bool operator==(const std::initializer_list<const std::string> aTags) const{
+			return HasTags(aTags);
+		}
+
+		bool operator!=(const std::initializer_list<const std::string> aTags) const{
+			return ! HasTags(aTags);
 		}
 	};
 }}
