@@ -28,31 +28,30 @@
 namespace Solaire{ namespace Units{
 
 	template<class CONVERSION = double>
-	class Volume : public PrefixConverter<Metric<CONVERSION>, VolumeUnit, CONVERSION>
+	class Volume
 	{
+	public:
+		typedef VolumeUnit unit_t;
+		typedef CONVERSION conversion_t;
+		typedef MetricPrefix prefix_t;
 	private:
-		void ConfigureProperties(){
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
-			Litres.mParent = this;
-#endif
-		}
+		conversion_t mValue;
 	protected:
-		// Inherited from BaseConverter
-
-		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
+		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(static_cast<double>(aValue) / VolumeInl::GetScale(aUnit));
 		}
 
-		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
+		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(static_cast<double>(aValue) * VolumeInl::GetScale(aUnit));
 		}
 
-		unit_t GetIntermediaryUnit() const override{
+		unit_t GetIntermediaryUnit() const{
 			return INTERMEDIARY_UNIT;
 		}
 	public:
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 		union{
+			Volume* const Self;
 			ConverterProperty<Volume, unit_t::LITRE>							Litres;
 			ConverterProperty<Volume, unit_t::PINT_UK>							PintsUK;
 			ConverterProperty<Volume, unit_t::PINT_US>							PintsUS;
@@ -84,36 +83,52 @@ namespace Solaire{ namespace Units{
 		// Constructors
 
 		Volume() : 
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
+
 		}
 
 		Volume(conversion_t aValue) : 
-			PrefixConverter(aValue)
+			mValue(aValue)
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
 
 		}
 
 		Volume(unit_t aUnit, conversion_t aValue) : 
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
 			Set(aUnit, aValue);
 		}
 
 		Volume(prefix_t aPrefix, unit_t aUnit, conversion_t aValue) :
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
 			Set(aPrefix, aUnit, aValue);
 		}
 
-		Volume(const BaseConverter<unit_t, conversion_t>& aOther) :
-			PrefixConverter(aOther.Get(GetIntermediaryUnit()))
+		Volume(const Volume<conversion_t>& aOther) :
+			mValue(aOther.mValue)
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
+
 		}
+
+		SOLAIRE_UNITS_CONVERTER_COMMON(Volume<conversion_t>)
+		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Volume<conversion_t>)
 	};
 }}
 

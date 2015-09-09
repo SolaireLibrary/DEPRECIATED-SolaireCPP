@@ -27,31 +27,31 @@
 
 namespace Solaire{ namespace Units{
 	template<class CONVERSION = double>
-	class Mass : public PrefixConverter<Metric<CONVERSION>, MassUnit, CONVERSION>
+	class Mass
 	{
+	public:
+		typedef MassUnit unit_t;
+		typedef CONVERSION conversion_t;
+		typedef MetricPrefix prefix_t;
 	private:
-		void ConfigureProperties(){
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
-			Grams.mParent = this;
-#endif
-		}
+		conversion_t mValue;
 	protected:
-		// Inherited from BaseConverter
-
-		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
+		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(static_cast<double>(aValue) / MassInl::GetScale(aUnit));
 		}
 
-		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
+		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(static_cast<double>(aValue) * MassInl::GetScale(aUnit));
 		}
 
-		unit_t GetIntermediaryUnit() const override{
+		unit_t GetIntermediaryUnit() const{
 			return INTERMEDIARY_UNIT;
 		}
 	public:
+
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 		union{
+			Mass* const Self;
 			ConverterProperty<Mass, unit_t::GRAM>								Grams;
 			ConverterProperty<Mass, unit_t::POUND>								Pounds;
 			ConverterProperty<Mass, unit_t::OUNCE>								Ounces;
@@ -81,36 +81,51 @@ namespace Solaire{ namespace Units{
 		// Constructors
 
 		Mass() : 
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
+
 		}
 
 		Mass(conversion_t aValue) : 
-			PrefixConverter(aValue)
+			mValue(aValue)
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
 
 		}
 
 		Mass(unit_t aUnit, conversion_t aValue) : 
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
 			Set(aUnit, aValue);
 		}
 
 		Mass(prefix_t aPrefix, unit_t aUnit, conversion_t aValue) :
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
 			Set(aPrefix, aUnit, aValue);
 		}
 
-		Mass(const BaseConverter<unit_t, conversion_t>& aOther) :
-			PrefixConverter(aOther.Get(GetIntermediaryUnit()))
+		Mass(const Mass<conversion_t>& aOther) :
+			mValue(aOther.mValue)
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
 		}
+
+		SOLAIRE_UNITS_CONVERTER_COMMON(Mass<conversion_t>)
+		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Mass<conversion_t>)
 	};
 }}
 

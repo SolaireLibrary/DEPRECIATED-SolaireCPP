@@ -31,190 +31,131 @@
 	Last Modified	: 7th September 2015
 */
 
+#define SOLAIRE_UNITS_CONVERTER_COMMON(class_name)\
+/*!\
+\brief Convert the stored intermediary value to the requested unit format.\
+\param aUnit The unit to convert into.\
+\return The stored value represented in the converted unit.\
+*/\
+conversion_t Get(const unit_t aUnit) const{\
+	return ConvertFromIntermediaryUnit(aUnit, mValue);\
+}\
+\
+/*!\
+\brief Set the intermediary.\
+\param aUnit The unit format of \a aValue.\
+\param aValue The value that will be converted to be the new intermediary value.\
+*/\
+void Set(const unit_t aUnit, const conversion_t aValue){\
+	mValue = ConvertToIntermediaryUnit(aUnit, aValue);\
+}\
+\
+/*!\
+\brief Compare two converters to check if their intermediary values are the same.\
+\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.\
+\param aOther A reference to the converter to compare.\
+\return True if the values are the same, else false.\
+*/\
+bool operator==(const class_name aOther) const{\
+	return mValue == aOther.mValue;\
+}\
+\
+/*!\
+\brief Compare two converters to check if their intermediary values are the different.\
+\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.\
+\param aOther A reference to the converter to compare.\
+\return True if the values are different, else false.\
+*/\
+bool operator!=(const class_name aOther) const{\
+	return mValue != aOther.mValue;\
+}\
+\
+/*!\
+\brief Compare two converters to check if the intermediary value of the first is less than the second's.\
+\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.\
+\param aOther A reference to the converter to compare.\
+\return True if the this converter's value is smaller, else false.\
+*/\
+bool operator<(const class_name aOther) const{\
+	return mValue < aOther.mValue;\
+}\
+\
+/*!\
+\brief Compare two converters to check if the intermediary value of the first is greater than the second's.\
+\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.\
+\param aOther A reference to the converter to compare.\
+\return True if the this converter's value is larger, else false.\
+*/\
+bool operator>(const class_name aOther) const{\
+	return mValue > aOther.mValue;\
+}\
+\
+/*!\
+\brief Compare two converters to check if the intermediary value of the first is less than or equal to the second's.\
+\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.\
+\param aOther A reference to the converter to compare.\
+\return True if the this converter's value is smaller or equal, else false.\
+*/\
+bool operator<=(const class_name aOther) const{\
+	return mValue <= aOther.mValue;\
+}\
+\
+/*!\
+\brief Compare two converters to check if the intermediary value of the first is greater than or equal to the second's.\
+\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.\
+\param aOther A reference to the converter to compare.\
+\return True if the this converter's value is larger or equal, else false.\
+*/\
+bool operator>=(const class_name aOther) const{\
+	return mValue >= aOther.mValue;\
+}\
+\
+/*!\
+\brief Add the intermediary value of another compatible converter to this converter's intermediary value.\
+\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.\
+\param aOther A reference to the converter.\
+\return A reference to this converter.\
+*/\
+class_name& operator+=(const class_name aOther){\
+	mValue += aOther.mValue;\
+	return *this;\
+}\
+\
+\
+/*!\
+\brief Subtract the intermediary value of another compatible converter from this converter's intermediary value.\
+\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.\
+\param aOther A reference to the converter.\
+\return A reference to this converter.\
+*/\
+class_name& operator-=(const class_name aOther){\
+	mValue -= aOther.mValue;\
+	return *this;\
+}\
+\
+/*!\
+\brief Multiply this converter's intermediary value by the intermediary value of another compatible converter.\
+\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.\
+\param aOther A reference to the converter.\
+\return A reference to this converter.\
+*/\
+class_name& operator*=(const class_name aOther){\
+	mValue *= aOther.mValue;\
+	return *this;\
+}\
+\
+/*!\
+\brief Divide this converter's intermediary value by the intermediary value of another compatible converter.\
+\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.\
+\param aOther A reference to the converter.\
+\return A reference to this converter.\
+*/\
+class_name& operator/=(const class_name aOther){\
+	mValue /= aOther.mValue;\
+	return *this;\
+}
+
 namespace Solaire{ namespace Units{
-
-	/*!
-		\class BaseConverter
-		\tparam UNIT The type, usually an enum that identifies the unit(s) to convert between.
-		\tparam CONVERSION The data type of converted units.
-		\brief Provides basic functionality for implementaion of simple unit conversions using an intermediate unit for storage.
-		\detail
-		\version 2.0
-		\author Adam Smith
-	*/
-	template<class UNIT, class CONVERSION>
-	class BaseConverter
-	{
-	public:
-		typedef UNIT unit_t;				//!< The type that identifies which conversion(s) to make.
-		typedef CONVERSION conversion_t;	//!< The data type that converted values are stored in.
-
-		/*!
-			\brief Create a new BaseConverter.
-			\param aValue The initial value stored in the converter.
-		*/
-		BaseConverter(const conversion_t aValue) :
-			mValue(aValue)
-		{
-
-		}
-
-		/*!
-			\brief Virtual destructor, currently does nothing.
-		*/
-		virtual ~BaseConverter(){
-
-		}
-
-		/*!
-			\brief Convert the stored intermediary value to the requested unit format.
-			\param aUnit The unit to convert into.
-			\return The stored value represented in the converted unit.
-		*/
-		conversion_t Get(const unit_t aUnit) const{
-			return ConvertFromIntermediaryUnit(aUnit, mValue);	
-		}
-
-		/*!
-			\brief Set the intermediary.
-			\param aUnit The unit format of \a aValue.
-			\param aValue The value that will be converted to be the new intermediary value.
-		*/
-		void Set(const unit_t aUnit, const conversion_t aValue){
-			mValue = ConvertToIntermediaryUnit(aUnit, aValue) ;
-		}
-
-		/*!
-			\brief Compare two converters to check if their intermediary values are the same.
-			\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.
-			\param aOther A reference to the converter to compare.
-			\return True if the values are the same, else false.
-		*/
-		bool operator==(const BaseConverter<unit_t, conversion_t>& aOther) const{
-			return mValue == aOther.Get(GetIntermediaryUnit());
-		}
-		
-		/*!
-			\brief Compare two converters to check if their intermediary values are the different.
-			\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.
-			\param aOther A reference to the converter to compare.
-			\return True if the values are different, else false.
-		*/
-		bool operator!=(const BaseConverter<unit_t, conversion_t>& aOther) const{
-			return mValue != aOther.Get(GetIntermediaryUnit());
-		}
-		
-		/*!
-			\brief Compare two converters to check if the intermediary value of the first is less than the second's.
-			\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.
-			\param aOther A reference to the converter to compare.
-			\return True if the this converter's value is smaller, else false.
-		*/
-		bool operator<(const BaseConverter<unit_t, conversion_t>& aOther) const{
-			return mValue < aOther.Get(GetIntermediaryUnit());
-		}
-		
-		/*!
-			\brief Compare two converters to check if the intermediary value of the first is greater than the second's.
-			\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.
-			\param aOther A reference to the converter to compare.
-			\return True if the this converter's value is larger, else false.
-		*/
-		bool operator>(const BaseConverter<unit_t, conversion_t>& aOther) const{
-			return mValue > aOther.Get(GetIntermediaryUnit());
-		}
-		
-		/*!
-			\brief Compare two converters to check if the intermediary value of the first is less than or equal to the second's.
-			\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.
-			\param aOther A reference to the converter to compare.
-			\return True if the this converter's value is smaller or equal, else false.
-		*/
-		bool operator<=(const BaseConverter<unit_t, conversion_t>& aOther) const{
-			return mValue <= aOther.Get(GetIntermediaryUnit());
-		}
-		
-		/*!
-			\brief Compare two converters to check if the intermediary value of the first is greater than or equal to the second's.
-			\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.
-			\param aOther A reference to the converter to compare.
-			\return True if the this converter's value is larger or equal, else false.
-		*/
-		bool operator>=(const BaseConverter<unit_t, conversion_t>& aOther) const{
-			return mValue >= aOther.Get(GetIntermediaryUnit());
-		}
-
-		/*!
-			\brief Add the intermediary value of another compatible converter to this converter's intermediary value.
-			\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.
-			\param aOther A reference to the converter.
-			\return A reference to this converter.
-		*/
-		BaseConverter<unit_t, conversion_t>& operator+=(const BaseConverter<unit_t, conversion_t>& aOther){
-			mValue += aOther.Get(GetIntermediaryUnit());
-			return *this;
-		}
-		
-
-		/*!
-			\brief Subtract the intermediary value of another compatible converter from this converter's intermediary value.
-			\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.
-			\param aOther A reference to the converter.
-			\return A reference to this converter.
-		*/
-		BaseConverter<unit_t, conversion_t>& operator-=(const BaseConverter<unit_t, conversion_t>& aOther){
-			mValue -= aOther.Get(GetIntermediaryUnit());
-			return *this;
-		}
-		
-		/*!
-			\brief Multiply this converter's intermediary value by the intermediary value of another compatible converter.
-			\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.
-			\param aOther A reference to the converter.
-			\return A reference to this converter.
-		*/
-		BaseConverter<unit_t, conversion_t>& operator*=(const BaseConverter<unit_t, conversion_t>& aOther){
-			mValue *= aOther.Get(GetIntermediaryUnit());
-			return *this;
-		}
-		
-		/*!
-			\brief Divide this converter's intermediary value by the intermediary value of another compatible converter.
-			\detail The intermediary value of \a aOther is automatically converted into the intermediary unit of this converter.
-			\param aOther A reference to the converter.
-			\return A reference to this converter.
-		*/
-		BaseConverter<unit_t, conversion_t>& operator/=(const BaseConverter<unit_t, conversion_t>& aOther){
-			mValue /= aOther.Get(GetIntermediaryUnit());
-			return *this;
-		}
-	protected:
-		/*!
-			\brief Return the unit identifer that is used to store the intermediary value in this converter.
-			\return The intermediary unit identifier.
-		*/
-		virtual unit_t GetIntermediaryUnit() const = 0;
-
-		/*!
-			\brief Convert a value from one unit format to the current intermediary unit.
-			\param aUnit The unit format to convert from.
-			\param aValue The value to convert.
-			\return The value of \a aValue when converted into the intermediary unit
-			\see GetIntermediaryUnit
-		*/
-		virtual conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const = 0;
-
-		/*!
-			\brief Convert a value from the current intermediary unit into a different unit.
-			\param aUnit The unit format to convert into.
-			\param aValue The value to convert.
-			\return The value of \a aValue when converted into the requested unit
-			\see GetIntermediaryUnit
-		*/
-		virtual conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const = 0;
-	private:
-		conversion_t mValue;	//!< The intermediary value.
-	};
 	
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 	/*!
@@ -276,7 +217,7 @@ namespace Solaire{ namespace Units{
 			\param aValue The value to use as a Set paramiter.
 			\see BaseConverter::Set
 		*/
-		void operator=(typename CONVERTER::conversion_t aValue){
+		void operator=(const typename CONVERTER::conversion_t aValue){
 			return mParent->Set(UNIT, aValue);
 		}
 		
@@ -294,7 +235,7 @@ namespace Solaire{ namespace Units{
 			\see BaseConverter::Get
 			\see BaseConverter::Set
 		*/
-		void operator+=(typename CONVERTER::conversion_t aValue){
+		void operator+=(const typename CONVERTER::conversion_t aValue){
 			mParent->Set(UNIT, mParent->Get(UNIT) + aValue);
 		}
 		
@@ -304,7 +245,7 @@ namespace Solaire{ namespace Units{
 			\see BaseConverter::Get
 			\see BaseConverter::Set
 		*/
-		void operator-=(typename CONVERTER::conversion_t aValue){
+		void operator-=(const typename CONVERTER::conversion_t aValue){
 			mParent->Set(UNIT, mParent->Get(UNIT) - aValue);
 		}
 		
@@ -314,7 +255,7 @@ namespace Solaire{ namespace Units{
 			\see BaseConverter::Get
 			\see BaseConverter::Set
 		*/
-		void operator*=(typename CONVERTER::conversion_t aValue){
+		void operator*=(const typename CONVERTER::conversion_t aValue){
 			mParent->Set(UNIT, mParent->Get(UNIT) * aValue);
 		}
 		
@@ -324,7 +265,7 @@ namespace Solaire{ namespace Units{
 			\see BaseConverter::Get
 			\see BaseConverter::Set
 		*/
-		void operator/=(typename CONVERTER::conversion_t aValue){
+		void operator/=(const typename CONVERTER::conversion_t aValue){
 			mParent->Set(UNIT, mParent->Get(UNIT) / aValue);
 		}
 	};

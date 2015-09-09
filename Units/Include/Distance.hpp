@@ -27,31 +27,30 @@
 
 namespace Solaire{ namespace Units{
 	template<class CONVERSION = double>
-	class Distance : public PrefixConverter<Metric<CONVERSION>, DistanceUnit, CONVERSION>
+	class Distance
 	{
+	public:
+		typedef DistanceUnit unit_t;
+		typedef CONVERSION conversion_t;
+		typedef MetricPrefix prefix_t;
 	private:
-		void ConfigureProperties(){
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
-			Metres.mParent = this;
-#endif
-		}
+		conversion_t mValue;
 	protected:
-		// Inherited from BaseConverter
-
-		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
+		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(static_cast<double>(aValue) / DistanceInl::GetScale(aUnit));
 		}
 
-		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
+		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(static_cast<double>(aValue) * DistanceInl::GetScale(aUnit));
 		}
 
-		unit_t GetIntermediaryUnit() const override{
+		unit_t GetIntermediaryUnit() const{
 			return INTERMEDIARY_UNIT;
 		}
 	public:
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 		union{
+			Distance* const Self;
 			ConverterProperty<Distance, unit_t::METRE>				Metres;
 			ConverterProperty<Distance, unit_t::MILE>				Miles;
 			ConverterProperty<Distance, unit_t::MILE_NAUTICAL>		NauticalMiles;
@@ -86,36 +85,52 @@ namespace Solaire{ namespace Units{
 		// Constructors
 
 		Distance() : 
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
 			ConfigureProperties();
 		}
 
 		Distance(conversion_t aValue) : 
-			PrefixConverter(aValue)
+			mValue(aValue)
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
 
 		}
 
 		Distance(unit_t aUnit, conversion_t aValue) : 
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
 			Set(aUnit, aValue);
 		}
 
 		Distance(prefix_t aPrefix, unit_t aUnit, conversion_t aValue) :
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
 			Set(aPrefix, aUnit, aValue);
 		}
 
-		Distance(const BaseConverter<unit_t, conversion_t>& aOther) :
-			PrefixConverter(aOther.Get(GetIntermediaryUnit()))
+		Distance(const Distance<conversion_t>& aOther) :
+			mValue(aOther.mValue)
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
+
 		}
+
+		SOLAIRE_UNITS_CONVERTER_COMMON(Distance<conversion_t>)
+		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Distance<conversion_t>)
 	};
 }}
 

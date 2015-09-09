@@ -25,31 +25,30 @@
 
 namespace Solaire{ namespace Units{
 	template<class CONVERSION = double>
-	class Metric : public BaseConverter<MetricPrefix, CONVERSION>
+	class Metric
 	{
+	public:
+		typedef MetricPrefix unit_t;
+		typedef CONVERSION conversion_t;
+		typedef MetricPrefix prefix_t;
 	private:
-		void ConfigureProperties(){
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
-			Value.mParent = this;
-#endif
-		}
+		conversion_t mValue;
 	protected:
-		// Inherited from BaseConverter
-
-		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
+		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(static_cast<double>(aValue) * MetricInl::GetScale(aUnit));
 		}
 
-		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
+		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(static_cast<double>(aValue) / MetricInl::GetScale(aUnit));
 		}
 
-		unit_t GetIntermediaryUnit() const override{
+		unit_t GetIntermediaryUnit() const{
 			return INTERMEDIARY_UNIT;
 		}
 	public:
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 		union{
+			Metric* const Self;
 			ConverterProperty<Metric, unit_t::NONE>		Value;
 			ConverterProperty<Metric, unit_t::YOTTA>	Yotta;
 			ConverterProperty<Metric, unit_t::ZETTA>	Zetta;
@@ -93,29 +92,42 @@ namespace Solaire{ namespace Units{
 		// Constructors
 
 		Metric() : 
-			BaseConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
+
 		}
 
 		Metric(conversion_t aValue) : 
-			BaseConverter(aValue)
+			mValue(aValue)
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
 
 		}
 
 		Metric(unit_t aUnit, conversion_t aValue) : 
-			BaseConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
 			Set(aUnit, aValue);
 		}
 
-		Metric(const BaseConverter<unit_t, conversion_t>& aOther) :
-			BaseConverter(aOther.Get(GetIntermediaryUnit()))
+		Metric(const Metric<conversion_t>& aOther) :
+			mValue(aOther.mValue)
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
+			
 		}
+
+		SOLAIRE_UNITS_CONVERTER_COMMON(Metric<conversion_t>)
 	};
 }}
 

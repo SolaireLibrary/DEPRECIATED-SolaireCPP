@@ -28,31 +28,30 @@
 namespace Solaire{ namespace Units{
 
 	template<class CONVERSION = double>
-	class Temperature : public PrefixConverter<Metric<CONVERSION>, TemperatureUnit, CONVERSION>
+	class Temperature
 	{
+	public:
+		typedef TemperatureUnit unit_t;
+		typedef CONVERSION conversion_t;
+		typedef MetricPrefix prefix_t;
 	private:
-		void ConfigureProperties(){
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
-			Celcius.mParent = this;
-#endif
-		}
+		conversion_t mValue;
 	protected:
-		// Inherited from BaseConverter
-
-		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
+		conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(TemperatureInl::ConvertToIntermediary(aUnit, static_cast<double>(aValue)));
 		}
 
-		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const override{
+		conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue) const{
 			return static_cast<conversion_t>(TemperatureInl::ConvertFromIntermediary(aUnit, static_cast<double>(aValue)));
 		}
 
-		unit_t GetIntermediaryUnit() const override{
+		unit_t GetIntermediaryUnit() const{
 			return INTERMEDIARY_UNIT;
 		}
 	public:
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 		union{
+			Temperature* const Self;
 			ConverterProperty<Temperature, unit_t::CELCIUS>						Celcius;
 			ConverterProperty<Temperature, unit_t::FAHRENHEIT>					Fahrenheit;
 			ConverterProperty<Temperature, unit_t::KELVIN>						Kelvin;
@@ -74,36 +73,52 @@ namespace Solaire{ namespace Units{
 		// Constructors
 
 		Temperature() : 
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
+
 		}
 
 		Temperature(conversion_t aValue) : 
-			PrefixConverter(aValue)
+			mValue(aValue)
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
 
 		}
 
 		Temperature(unit_t aUnit, conversion_t aValue) : 
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
 			Set(aUnit, aValue);
 		}
 
 		Temperature(prefix_t aPrefix, unit_t aUnit, conversion_t aValue) :
-			PrefixConverter(static_cast<conversion_t>(0.0))
+			mValue(static_cast<conversion_t>(0.0))
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
 			Set(aPrefix, aUnit, aValue);
 		}
 
-		Temperature(const BaseConverter<unit_t, conversion_t>& aOther) :
-			PrefixConverter(aOther.Get(GetIntermediaryUnit()))
+		Temperature(const Temperature<conversion_t>& aOther) :
+			mValue(aOther.mValue)
+#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+			, Self(this)
+#endif
 		{
-			ConfigureProperties();
+
 		}
+
+		SOLAIRE_UNITS_CONVERTER_COMMON(Temperature<conversion_t>)
+		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Temperature<conversion_t>)
 	};
 }}
 
