@@ -90,7 +90,7 @@ namespace Solaire{ namespace Units{
 
 		// Constructors
 
-		Metric() : 
+		constexpr Metric() :
 			mValue(static_cast<conversion_t>(0.0))
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
@@ -99,7 +99,7 @@ namespace Solaire{ namespace Units{
 
 		}
 
-		Metric(conversion_t aValue) : 
+		constexpr Metric(const conversion_t aValue) :
 			mValue(aValue)
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
@@ -108,16 +108,16 @@ namespace Solaire{ namespace Units{
 
 		}
 
-		Metric(unit_t aUnit, conversion_t aValue) : 
-			mValue(static_cast<conversion_t>(0.0))
+		constexpr Metric(const unit_t aUnit, const conversion_t aValue) : 
+			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
 #endif
 		{
-			Set(aUnit, aValue);
+
 		}
 
-		Metric(const Metric<conversion_t>& aOther) :
+		constexpr Metric(const Metric<conversion_t>& aOther) :
 			mValue(aOther.mValue)
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)

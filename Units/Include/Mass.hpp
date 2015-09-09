@@ -32,7 +32,7 @@ namespace Solaire{ namespace Units{
 	public:
 		typedef MassInl::MassUnit unit_t;
 		typedef CONVERSION conversion_t;
-		typedef typename Metric<conversion_t>::unit_t prefix_t;
+		typedef typename MetricD::unit_t prefix_t;
 	private:
 		conversion_t mValue;
 
@@ -78,9 +78,29 @@ namespace Solaire{ namespace Units{
 			);
 		}
 
+		
+
+		static constexpr conversion_t Convert(const MetricD::unit_t aInputPrefix, const unit_t aInputUnit, const MetricD::unit_t aOutputPrefix, const unit_t aOutputUnit, const conversion_t aValue){
+			return static_cast<conversion_t>(
+				MetricD::Convert(
+					MetricD::unit_t::NONE, 
+					aOutputPrefix,
+					MassD::Convert(
+						aInputUnit,
+						aOutputUnit,
+						MetricD::Convert(
+							aInputPrefix,
+							MetricD::unit_t::NONE,
+							static_cast<double>(aValue)
+						)
+					)
+				)
+			);
+		}
+
 		// Constructors
 
-		Mass() : 
+		constexpr Mass() : 
 			mValue(static_cast<conversion_t>(0.0))
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
@@ -89,7 +109,7 @@ namespace Solaire{ namespace Units{
 
 		}
 
-		Mass(conversion_t aValue) : 
+		constexpr Mass(const conversion_t aValue) :
 			mValue(aValue)
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
@@ -98,25 +118,25 @@ namespace Solaire{ namespace Units{
 
 		}
 
-		Mass(unit_t aUnit, conversion_t aValue) : 
-			mValue(static_cast<conversion_t>(0.0))
+		constexpr Mass(const unit_t aUnit, const conversion_t aValue) :
+			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
 #endif
 		{
-			Set(aUnit, aValue);
+
 		}
 
-		Mass(prefix_t aPrefix, unit_t aUnit, conversion_t aValue) :
-			mValue(static_cast<conversion_t>(0.0))
+		constexpr Mass(const prefix_t aPrefix, const unit_t aUnit, const conversion_t aValue) :
+			mValue(Convert(aPrefix, aUnit, MetricD::NONE, INTERMEDIARY_UNIT, aValue))
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
 #endif
 		{
-			Set(aPrefix, aUnit, aValue);
+			
 		}
 
-		Mass(const Mass<conversion_t>& aOther) :
+		constexpr Mass(const Mass<conversion_t>& aOther) :
 			mValue(aOther.mValue)
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
 			, Self(this)
