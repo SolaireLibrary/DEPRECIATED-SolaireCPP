@@ -21,7 +21,6 @@
 
 #include <cstdint>
 #include "BaseConverter.hpp"
-#include "DefaultUnits.hpp"
 #include "Implementation\Metric.inl"
 
 namespace Solaire{ namespace Units{
@@ -29,9 +28,8 @@ namespace Solaire{ namespace Units{
 	class Metric
 	{
 	public:
-		typedef MetricPrefix unit_t;
+		typedef MetricInl::MetricPrefix unit_t;
 		typedef CONVERSION conversion_t;
-		typedef MetricPrefix prefix_t;
 	private:
 		conversion_t mValue;
 

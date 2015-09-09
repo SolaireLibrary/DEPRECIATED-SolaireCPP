@@ -20,9 +20,16 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include <stdexcept>
-#include "..\DefaultUnits.hpp"
 
 namespace Solaire{ namespace Units{ namespace TemperatureInl{
+
+	enum class TemperatureUnit{
+		CELCIUS,
+		FAHRENHEIT,
+		KELVIN,
+		GAS_MARK
+	};
+
 	static const TemperatureUnit INTERMEDIARY_UNIT = TemperatureUnit::CELCIUS;
 	
 	static constexpr double ConvertToIntermediary(const TemperatureUnit aUnit, const double aValue){

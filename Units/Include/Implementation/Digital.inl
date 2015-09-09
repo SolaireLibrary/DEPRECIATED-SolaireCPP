@@ -20,9 +20,14 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include <stdexcept>
-#include "..\DefaultUnits.hpp"
 
 namespace Solaire{ namespace Units{ namespace DigitalInl{
+
+	enum class DigitalUnit{
+		BIT,
+		NYBBLE,
+		BYTE
+	};
 
 	static constexpr DigitalUnit INTERMEDIARY_UNIT = DigitalUnit::BYTE;
 	

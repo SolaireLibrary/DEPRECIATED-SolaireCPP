@@ -23,7 +23,6 @@
 #include "BaseConverter.hpp"
 #include "Metric.hpp"
 #include "PrefixConverter.hpp"
-#include "DefaultUnits.hpp"
 #include "Implementation\Volume.inl"
 
 namespace Solaire{ namespace Units{
@@ -32,9 +31,9 @@ namespace Solaire{ namespace Units{
 	class Volume
 	{
 	public:
-		typedef VolumeUnit unit_t;
+		typedef VolumeInl::VolumeUnit unit_t;
 		typedef CONVERSION conversion_t;
-		typedef MetricPrefix prefix_t;
+		typedef typename Metric<conversion_t>::unit_t prefix_t;
 	private:
 		conversion_t mValue;
 

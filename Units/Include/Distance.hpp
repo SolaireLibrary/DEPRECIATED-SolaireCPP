@@ -22,7 +22,6 @@
 #include "BaseConverter.hpp"
 #include "Metric.hpp"
 #include "PrefixConverter.hpp"
-#include "DefaultUnits.hpp"
 #include "Implementation\Distance.inl"
 
 namespace Solaire{ namespace Units{
@@ -30,9 +29,9 @@ namespace Solaire{ namespace Units{
 	class Distance
 	{
 	public:
-		typedef DistanceUnit unit_t;
+		typedef DistanceInl::DistanceUnit unit_t;
 		typedef CONVERSION conversion_t;
-		typedef MetricPrefix prefix_t;
+		typedef typename Metric<conversion_t>::unit_t prefix_t;
 	private:
 		conversion_t mValue;
 

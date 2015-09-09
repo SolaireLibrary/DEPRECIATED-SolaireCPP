@@ -20,9 +20,21 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include <stdexcept>
-#include "..\DefaultUnits.hpp"
 
 namespace Solaire{ namespace Units{ namespace MassInl{
+
+	enum class MassUnit{
+		GRAM,
+		POUND,
+		OUNCE,
+		STONE,
+		SHORT_TON,
+		LONG_TON,
+		METRIC_TON,
+		TROY_POUND,
+		TROY_OUNCE,
+		SOLAR_MASS
+	};
 
 	static constexpr MassUnit INTERMEDIARY_UNIT = MassUnit::METRIC_TON;
 	

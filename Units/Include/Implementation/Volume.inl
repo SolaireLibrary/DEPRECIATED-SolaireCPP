@@ -20,9 +20,25 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include <stdexcept>
-#include "..\DefaultUnits.hpp"
 
 namespace Solaire{ namespace Units{ namespace VolumeInl{
+
+	enum class VolumeUnit{
+		LITRE,
+		PINT_UK,
+		PINT_US,
+		GALLON_UK,
+		GALLON_US,
+		CUP_US,
+		OUNCE_UK,
+		OUNCE_US,
+		TABLE_SPOON_UK,
+		TABLE_SPOON_US,
+		TEA_SPOON_UK,
+		TEA_SPOON_US,
+		QUART_UK,
+		QUART_US
+	};
 
 	static constexpr VolumeUnit INTERMEDIARY_UNIT = VolumeUnit::LITRE;
 	

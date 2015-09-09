@@ -20,9 +20,42 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include <stdexcept>
-#include "..\DefaultUnits.hpp"
 
 namespace Solaire{ namespace Units{ namespace MetricInl{
+
+	enum class MetricPrefix{
+		// SI
+		YOTTA,
+		ZETTA,
+		EXA,
+		PETA,
+		TERA,
+		GIGA,
+		MEGA,
+		KILO,
+		HECTO,
+		DECA,
+		NONE,
+		DECI,
+		CENTI,
+		MILLI,
+		MICRO,
+		NANO,
+		PICO,
+		FEMTO,
+		ATTO,
+		ZEPTO,
+		YOCTO,
+		// Digital
+		KIBI,
+		MEBI,
+		GIBI,
+		TEBI,
+		PEBI,
+		EXBI,
+		ZEBI,
+		YOBI
+	};
 
 	static constexpr MetricPrefix INTERMEDIARY_UNIT = MetricPrefix::NONE;
 

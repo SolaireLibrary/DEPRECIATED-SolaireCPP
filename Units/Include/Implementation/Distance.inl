@@ -20,9 +20,26 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include <stdexcept>
-#include "..\DefaultUnits.hpp"
 
 namespace Solaire{ namespace Units{ namespace DistanceInl{
+
+	enum class DistanceUnit{
+		METRE,
+		MILE,
+		MILE_NAUTICAL,
+		YARD,
+		FOOT,
+		INCH,
+		PARSEC,
+		FURLONG,
+		CHAIN,
+		LINK,
+		ROD,
+		LEAGUE_UK,
+		LEAGUE_US,
+		LEAGUE_NAUTICAL,
+		LIGHTYEAR
+	};
 
 	static constexpr DistanceUnit INTERMEDIARY_UNIT = DistanceUnit::METRE;
 	
