@@ -19,6 +19,7 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <cstdint>
 #include "BaseConverter.hpp"
 #include "Metric.hpp"
 #include "PrefixConverter.hpp"
@@ -120,6 +121,11 @@ namespace Solaire{ namespace Units{
 		SOLAIRE_UNITS_CONVERTER_COMMON(Temperature<conversion_t>)
 		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Temperature<conversion_t>, Metric<conversion_t>)
 	};
+
+	typedef Temperature<double> TemperatureD;		//!< A Temperature value that is a double.
+	typedef Temperature<float> TemperatureF;		//!< A Temperature value that is a float.
+	typedef Temperature<int32_t> TemperatureI;		//!< A Temperature value that is a signed 32 bit integer.
+	typedef Temperature<uint32_t> TemperatureU;		//!< A Temperature value that is a unsigned 32 bit integer.
 }}
 
 

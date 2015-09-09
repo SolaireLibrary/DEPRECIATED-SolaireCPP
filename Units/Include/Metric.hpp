@@ -19,6 +19,7 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <cstdint>
 #include "BaseConverter.hpp"
 #include "DefaultUnits.hpp"
 #include "Implementation\Metric.inl"
@@ -129,6 +130,11 @@ namespace Solaire{ namespace Units{
 
 		SOLAIRE_UNITS_CONVERTER_COMMON(Metric<conversion_t>)
 	};
+
+	typedef Metric<double> MetricD;		//!< A Metric value that is a double.
+	typedef Metric<float> MetricF;		//!< A Metric value that is a float.
+	typedef Metric<int32_t> MetricI;	//!< A Metric value that is a signed 32 bit integer.
+	typedef Metric<uint32_t> MetricU;	//!< A Metric value that is a unsigned 32 bit integer.
 }}
 
 

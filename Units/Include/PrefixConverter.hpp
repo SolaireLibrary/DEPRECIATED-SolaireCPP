@@ -39,8 +39,6 @@ namespace Solaire{
 	private:
 		CONVERTER* mParent;
 	public:
-		friend CONVERTER;
-
 		void operator=(const typename CONVERTER::conversion_t aValue){
 			return mParent->Set(PREFIX, UNIT, aValue);
 		}

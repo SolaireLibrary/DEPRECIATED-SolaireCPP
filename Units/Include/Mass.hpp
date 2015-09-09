@@ -19,6 +19,7 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <cstdint>
 #include "BaseConverter.hpp"
 #include "Metric.hpp"
 #include "PrefixConverter.hpp"
@@ -127,6 +128,11 @@ namespace Solaire{ namespace Units{
 		SOLAIRE_UNITS_CONVERTER_COMMON(Mass<conversion_t>)
 		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Mass<conversion_t>, Metric<conversion_t>)
 	};
+
+	typedef Mass<double> MassD;		//!< A Mass value that is a double.
+	typedef Mass<float> MassF;		//!< A Mass value that is a float.
+	typedef Mass<int32_t> MassI;	//!< A Mass value that is a signed 32 bit integer.
+	typedef Mass<uint32_t> MassU;	//!< A Mass value that is a unsigned 32 bit integer.
 }}
 
 

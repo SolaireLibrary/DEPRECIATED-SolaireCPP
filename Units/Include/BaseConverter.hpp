@@ -210,8 +210,6 @@ namespace Solaire{ namespace Units{
 	private:
 		CONVERTER* mParent;	//!< A pointer to the converter that owns this property.
 	public:
-		friend CONVERTER;
-
 		/*!
 			\brief Call the parent converter's Set function.
 			\param aValue The value to use as a Set paramiter.

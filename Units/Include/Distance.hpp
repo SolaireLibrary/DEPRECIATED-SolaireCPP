@@ -132,6 +132,11 @@ namespace Solaire{ namespace Units{
 		SOLAIRE_UNITS_CONVERTER_COMMON(Distance<conversion_t>)
 		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Distance<conversion_t>, Metric<conversion_t>)
 	};
+
+	typedef Distance<double> DistanceD;		//!< A Distance value that is a double.
+	typedef Distance<float> DistanceF;		//!< A Distance value that is a float.
+	typedef Distance<int32_t> DistanceI;	//!< A Distance value that is a signed 32 bit integer.
+	typedef Distance<uint32_t> DistanceU;	//!< A Distance value that is a unsigned 32 bit integer.
 }}
 
 

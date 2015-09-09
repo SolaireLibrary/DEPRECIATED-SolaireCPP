@@ -19,6 +19,7 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <cstdint>
 #include "BaseConverter.hpp"
 #include "Metric.hpp"
 #include "PrefixConverter.hpp"
@@ -130,6 +131,11 @@ namespace Solaire{ namespace Units{
 		SOLAIRE_UNITS_CONVERTER_COMMON(Volume<conversion_t>)
 		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Volume<conversion_t>, Metric<conversion_t>)
 	};
+
+	typedef Volume<double> VolumeD;		//!< A volume value that is a double.
+	typedef Volume<float> VolumeF;		//!< A volume value that is a float.
+	typedef Volume<int32_t> VolumeI;	//!< A volume value that is a signed 32 bit integer.
+	typedef Volume<uint32_t> VolumeU;	//!< A volume value that is a unsigned 32 bit integer.
 }}
 
 #endif
