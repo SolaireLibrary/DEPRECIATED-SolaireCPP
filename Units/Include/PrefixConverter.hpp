@@ -22,14 +22,15 @@
 
 #include "BaseConverter.hpp"
 
-namespace Solaire{ namespace Units{
+namespace Solaire{
+	namespace Units{
 
-#define SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(class_name)\
-	conversion_t PrefixedGet(const prefix_t aPrefix, const unit_t aUnit) const{\
-		return PREFIX_CONVERTER::Convert(PREFIX_CONVERTER::INTERMEDIARY_UNIT, aPrefix, Get(aUnit));\
+#define SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(class_name, prefix_converter)\
+	conversion_t Get(const prefix_t aPrefix, const unit_t aUnit) const{\
+		return prefix_converter::Convert(PREFIX_CONVERTER::INTERMEDIARY_UNIT, aPrefix, Get(aUnit));\
 	}\
-	void PrefixedSet(const prefix_t aPrefix, unit_t aUnit, const conversion_t aValue){\
-		Set(aUnit, PREFIX_CONVERTER::Convert(aPrefix, PREFIX_CONVERTER::INTERMEDIARY_UNIT, aValue));\
+	void Set(const prefix_t aPrefix, unit_t aUnit, const conversion_t aValue){\
+		Set(aUnit, prefix_converter::Convert(aPrefix, PREFIX_CONVERTER::INTERMEDIARY_UNIT, aValue));\
 	}
 
 #ifndef SOLAIRE_UNITS_NO_PROPERTIES
@@ -41,27 +42,27 @@ namespace Solaire{ namespace Units{
 		friend CONVERTER;
 
 		void operator=(const typename CONVERTER::conversion_t aValue){
-			return mParent->PrefixedSet(PREFIX, UNIT, aValue);
+			return mParent->Set(PREFIX, UNIT, aValue);
 		}
 
 		operator typename CONVERTER::conversion_t() const{
-			return mParent->PrefixedGet(PREFIX, UNIT);
+			return mParent->Get(PREFIX, UNIT);
 		}
 
 		void operator+=(const typename CONVERTER::conversion_t aValue){
-			mParent->PrefixedSet(PREFIX, UNIT, mParent->PrefixedGet(PREFIX, UNIT) + aValue);
+			mParent->Set(PREFIX, UNIT, mParent->PrefixedGet(PREFIX, UNIT) + aValue);
 		}
 
 		void operator-=(const typename CONVERTER::conversion_t aValue){
-			mParent->PrefixedSet(PREFIX, UNIT, mParent->PrefixedGetPREFIX, (UNIT) - aValue);
+			mParent->Set(PREFIX, UNIT, mParent->PrefixedGetPREFIX, (UNIT) - aValue);
 		}
 
 		void operator*=(const typename CONVERTER::conversion_t aValue){
-			mParent->PrefixedSet(PREFIX, UNIT, mParent->PrefixedGetPREFIX, (UNIT) * aValue);
+			mParent->Set(PREFIX, UNIT, mParent->PrefixedGetPREFIX, (UNIT) * aValue);
 		}
 
 		void operator/=(const typename CONVERTER::conversion_t aValue){
-			mParent->PrefixedSet(PREFIX, UNIT, mParent->PrefixedGet(PREFIX, UNIT) / aValue);
+			mParent->Set(PREFIX, UNIT, mParent->PrefixedGet(PREFIX, UNIT) / aValue);
 		}
 	};
 #endif

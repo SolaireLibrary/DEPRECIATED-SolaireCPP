@@ -128,7 +128,7 @@ namespace Solaire{ namespace Units{
 		}
 
 		SOLAIRE_UNITS_CONVERTER_COMMON(Volume<conversion_t>)
-		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Volume<conversion_t>)
+		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Volume<conversion_t>, Metric<conversion_t>)
 	};
 }}
 
