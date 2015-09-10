@@ -33,6 +33,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <vector>
 #include "Controller.hpp"
 
 namespace Solaire{ namespace Logic{ namespace Fuzzy{
@@ -70,15 +71,15 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
     };
 
     class IfStatement : public Command{
+    private:
+        const std::string mInput;
+        const std::string mMembershipFunction;
+        const bool mNot;
     public:
-        const std::string Input;
-        const std::string MembershipFunction;
-        const bool Not;
-
         IfStatement(const std::string aInput, const std::string aMembership, const bool aNot = false) :
-            Input(aInput),
-            MembershipFunction(aMembership),
-            Not(aNot)
+            mInput(aInput),
+            mMembershipFunction(aMembership),
+            mNot(aNot)
         {
 
         }
@@ -87,6 +88,7 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             // Locate Keywords
             const char* _if = std::strstr(aCodeBegin, "IF");
             const char* _is = _if ? std::strstr(_if, "IS") : nullptr;
+            const char* _not = std::strstr(aCodeBegin, "NOT");
 
             if(! (_if && _is)) return nullptr;
 
@@ -101,22 +103,23 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             // Build command
             return new IfStatement(
                 std::string(inputBegin, inputEnd - inputBegin),
-                std::string(membershipBegin, membershipEnd - membershipBegin)
+                std::string(membershipBegin, membershipEnd - membershipBegin),
+                _not ? true : false
             );
         }
 
         truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const{
-            const truth_t tmp = aController.CalculateMembership(MembershipFunction, aFuzzifier.GetInput(Input));
-            return Not ? Fuzzy::Not(tmp) : tmp;
+            const truth_t tmp = aController.CalculateMembership(mMembershipFunction, aFuzzifier.GetInput(mInput));
+            return mNot ? Fuzzy::Not(tmp) : tmp;
         }
     };
 
     class ThenStatement : public Command{
+    private:
+        const std::string mOutput;
     public:
-        const std::string Output;
-
         ThenStatement(const std::string aOutput) :
-            Output(aOutput)
+            mOutput(aOutput)
         {
 
         }
@@ -140,19 +143,149 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
         }
 
         void operator()(Fuzzifier& aFuzzifier, const truth_t aValue) const{
-            return aFuzzifier.SetOutput(Output, aValue);
+            return aFuzzifier.SetOutput(mOutput, aValue);
         }
     };
 
+    class BinaryOperator : public Command{
+    protected:
+        const Command* const mLeft;
+        const Command* const mRight;
+    public:
+        template<class T>
+        static T* Compile(const char* aCode){
+            static_assert(std::is_base_of<Command, T>::value, "Must inherit from BinaryOperator");
+            //! \TODO Implement BinaryOperator.Compile
+            return nullptr;
+        }
+
+        BinaryOperator(const Command* const aLeft, const Command* const aRight) :
+            mLeft(aLeft),
+            mRight(aRight)
+        {
+
+        }
+
+        virtual ~BinaryOperator(){
+            delete mLeft;
+            delete mRight;
+        }
+
+        virtual truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const = 0;
+    };
+
+    class And : public BinaryOperator{
+    public:
+        And(const IfStatement* const aLeft, const IfStatement* const aRight) :
+            BinaryOperator(aLeft, aRight)
+        {
+
+        }
+
+        // Inherited from BinaryOperator
+
+        truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const override{
+            return Fuzzy::And(
+                reinterpret_cast<const IfStatement*>(mLeft)->operator()(aFuzzifier, aController),
+                reinterpret_cast<const IfStatement*>(mRight)->operator()(aFuzzifier, aController)
+            );
+        }
+    };
+
+    class Or : public BinaryOperator{
+    public:
+        Or(const IfStatement* const aLeft, const IfStatement* const aRight) :
+            BinaryOperator(aLeft, aRight)
+        {
+
+        }
+
+        // Inherited from BinaryOperator
+
+        truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const override{
+            return Fuzzy::Or(
+                reinterpret_cast<const IfStatement*>(mLeft)->operator()(aFuzzifier, aController),
+                reinterpret_cast<const IfStatement*>(mRight)->operator()(aFuzzifier, aController)
+            );
+        }
+    };
 
     class Line : public Command{
     private:
+        const Command* const mBody;
+        const ThenStatement* const mThen;
+    public:
+        static Line* Compile(const char* aCode){
+            //! \TODO Implement Line.Compile
+            return nullptr;
+        }
 
+        Line(const IfStatement* const aBody, const ThenStatement* aOutput) :
+            mBody(aBody),
+            mThen(aOutput)
+        {
+
+        }
+
+        Line(const BinaryOperator* const aBody, const ThenStatement* aOutput) :
+            mBody(aBody),
+            mThen(aOutput)
+        {
+
+        }
+
+        ~Line(){
+            delete mBody;
+            delete mThen;
+        }
+
+        void operator()(Fuzzifier& aFuzzifier, const Controller& aController) const{
+            const BinaryOperator* const bin = dynamic_cast<const BinaryOperator*>(mBody);
+            const IfStatement* const _if = dynamic_cast<const IfStatement*>(mBody);
+
+            truth_t output = 0.f;
+            if(bin){
+                output = bin->operator()(aFuzzifier, aController);
+            }else if(_if){
+                output = _if->operator()(aFuzzifier, aController);
+            }
+            mThen->operator()(aFuzzifier, output);
+        }
     };
 
     class Script : public Command{
     private:
+        const std::vector<const Line*> mLines;
+    public:
+        static Script* Compile(const char* aCode){
+            //! \TODO Implement Script.Compile
+            return nullptr;
+        }
 
+        template<typename iterator>
+        Script(iterator aBegin, iterator aEnd):
+            mLines(aBegin, aEnd)
+        {
+
+        }
+
+        Script(const std::initializer_list<const Line*> aLines):
+            mLines(aLines)
+        {
+
+        }
+
+        ~Script(){
+            for(const Line* line : mLines){
+                delete line;
+            }
+        }
+
+        truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const{
+            for(const Line* line : mLines){
+                line->operator()(aFuzzifier, aController);
+            }
+        }
     };
 }}}
 
