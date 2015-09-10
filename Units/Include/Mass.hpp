@@ -51,7 +51,7 @@ namespace Solaire{ namespace Units{
 			ConverterProperty<Mass, unit_t::GRAM>								Grams;
 			ConverterProperty<Mass, unit_t::POUND>								Pounds;
 			ConverterProperty<Mass, unit_t::OUNCE>								Ounces;
-			ConverterProperty<Mass, unit_t::STONE>								Stone;
+			ConverterProperty<Mass, unit_t::STONE>								Stones;
 			ConverterProperty<Mass, unit_t::SHORT_TON>							ShortTons;
 			ConverterProperty<Mass, unit_t::LONG_TON>							LongTons;
 			ConverterProperty<Mass, unit_t::METRIC_TON>							MetricTons;

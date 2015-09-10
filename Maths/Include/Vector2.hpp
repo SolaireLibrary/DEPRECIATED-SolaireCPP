@@ -26,12 +26,13 @@
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 1.0
-	\date 
+	\date
 	Created			: 8th September 2015
 	Last Modified	: 8th September 2015
 */
 
-#include <cstdint> 
+#include <cmath>
+#include <cstdint>
 #include <stdexcept>
 #include "VectorUtility.hpp"
 
@@ -45,12 +46,12 @@ namespace Solaire{ namespace Maths{
 		\author
 		Created			: Adam Smith
 		Last modified	: Adam Smith
-		\date 
+		\date
 		Created			: 8th September 2015
 		Last Modified	: 8th September 2015
 	*/
 	template<typename TYPE>
-	class Vector2{ 
+	class Vector2{
 	public:
 		typedef TYPE value_t;	//!< The data type used by the vector.
 
@@ -61,44 +62,43 @@ namespace Solaire{ namespace Maths{
 
 		/*!
 			 \brief Create a vector initialised to 0.
-		*/ 
-		Vector2 () :
+		*/
+		constexpr Vector2 () :
 			X( static_cast<value_t>(0)),
-			Y (static_cast<value_t>(0)),
-			 Z(static_cast<value_t>(0))
-		{ 
-			 
-		} 
-		 
-		/*! 
+			Y (static_cast<value_t>(0))
+		{
+
+		}
+
+		/*!
 			\brief Create a vector with specific values.
 			\param aX The X axis component.
 			\param aY The Y axis component.
 		*/
-		Vector2(const value_t aX, const value_t aY) :
+		constexpr Vector2(const value_t aX, const value_t aY) :
 			X(aX),
 			Y(aY)
-		{  
-			  
-		} 
-		 
+		{
+
+		}
+
 		// Operator overloads
-			 
-		/*! 
+
+		/*!
 			 \brief Check if two vectors are equal.
 			\ param aOther The vector to compare this vector against.
 			\return True if all vector components are equal.
-		*/  
-		bool operator==(const Vector2<value_t> aOther) const{
+		*/
+		constexpr bool operator==(const Vector2<value_t> aOther) const{
 			return X == aOther.X && Y == aOther.Y;
 		}
-		
+
 		/*!
 			\brief Check if two vectors are not equal.
 			\param aOther The vector to compare this vector against.
 			\return True if at least one vector component is not equal.
 		*/
-		bool operator!=(const Vector2<value_t> aOther) const{
+		constexpr bool operator!=(const Vector2<value_t> aOther) const{
 			return X != aOther.X || Y != aOther.Y;
 		}
 
@@ -112,7 +112,7 @@ namespace Solaire{ namespace Maths{
 			Y += aOther.Y;
 			return *this;
 		}
-		
+
 		/*!
 			\brief Add a vector and a scalar value.
 			\param aScalar The scalar to add to this vector.
@@ -123,25 +123,31 @@ namespace Solaire{ namespace Maths{
 			Y += aScalar;
 			return *this;
 		}
-		
+
 		/*!
 			\brief Add two vectors.
 			\param aOther The vector to add to this vector.
 			\return The result of the operation.
 		*/
-		 Vector2<value_t> operator+(const Vector2<value_t> aOther) const{
-			return Vector2<value_t>(*this) += aOther;
+		 constexpr Vector2<value_t> operator+(const Vector2<value_t> aOther) const{
+			return Vector2<value_t>(
+                X + aOther.X,
+                Y + aOther.Y
+            );
 		}
-		
+
 		/*!
 			\brief Add a vector and a scalar value.
 			\param aScalar The scalar to add to this vector.
 			\return The result of the operation.
 		*/
-		 Vector2<value_t> operator+(const value_t aScalar) const{
-			return Vector2<value_t>(*this) += aScalar;
+        constexpr Vector2<value_t> operator+(const value_t aScalar) const{
+			return Vector2<value_t>(
+                X + aScalar,
+                Y + aScalar
+            );
 		}
-		
+
 		/*!
 			\brief Subtract two vectors.
 			\param aOther The vector to subtract from this vector.
@@ -152,7 +158,7 @@ namespace Solaire{ namespace Maths{
 			Y -= aOther.Y;
 			return *this;
 		}
-		
+
 		/*!
 			\brief Subtract a scalar value from a vector.
 			\param aScalar The scalar to subtract from this vector.
@@ -163,25 +169,31 @@ namespace Solaire{ namespace Maths{
 			Y -= aScalar;
 			return *this;
 		}
-		
+
 		/*!
 			\brief Subtract two vectors.
 			\param aOther The vector to subtract from this vector.
 			\return The result of the operation.
 		*/
-		 Vector2<value_t> operator-(const Vector2<value_t> aOther) const{
-			return Vector2<value_t>(*this) -= aOther;
+		 constexpr Vector2<value_t> operator-(const Vector2<value_t> aOther) const{
+			return Vector2<value_t>(
+                X - aOther.X,
+                Y - aOther.Y
+            );
 		}
-		
+
 		/*!
 			\brief Subtract a scalar from a vector.
 			\param aScalar The scalar to subtract from this vector.
 			\return A reference to this vector.
 		*/
-		 Vector2<value_t> operator-(const value_t aScalar) const{
-			return Vector2<value_t>(*this) -= aScalar;
+        constexpr Vector2<value_t> operator-(const value_t aScalar) const{
+			return Vector2<value_t>(
+                X - aScalar,
+                Y - aScalar
+            );
 		}
-		
+
 		/*!
 			\brief Multiply two vectors.
 			\param aOther The vector to multiply this vector by.
@@ -192,7 +204,7 @@ namespace Solaire{ namespace Maths{
 			Y *= aOther.Y;
 			return *this;
 		}
-		
+
 		/*!
 			\brief Multiply a vector by a scalar value.
 			\param aScalar The scalar to multiply this vector by.
@@ -203,26 +215,32 @@ namespace Solaire{ namespace Maths{
 			Y *= aScalar;
 			return *this;
 		}
-		
+
 		/*!
 			\brief Multiply two vectors.
 			\param aOther The vector to multiply this vector by.
 			\return The result of the operation.
 		*/
-		 Vector2<value_t> operator*(const Vector2<value_t> aOther) const{
-			return Vector2<value_t>(*this) *= aOther;
+		 constexpr Vector2<value_t> operator*(const Vector2<value_t> aOther) const{
+			return Vector2<value_t>(
+                X * aOther.X,
+                Y * aOther.Y
+            );
 		}
-		
-		
+
+
 		/*!
 			\brief Multiply a vector by a scalar value.
 			\param aScalar The scalar to multiply this vector by.
 			\return The result of the operation.
 		*/
-		 Vector2<value_t> operator*(const value_t aScalar) const{
-			return Vector2<value_t>(*this) *= aScalar;
+        constexpr Vector2<value_t> operator*(const value_t aScalar) const{
+			return Vector2<value_t>(
+                X * aScalar,
+                Y * aScalar
+            );
 		}
-		
+
 		/*!
 			\brief Divide two vectors.
 			\param aOther The vector to divide this vector by.
@@ -233,7 +251,7 @@ namespace Solaire{ namespace Maths{
 			Y /= aOther.Y;
 			return *this;
 		}
-		
+
 		/*!
 			\brief Divide a vector by a scalar value.
 			\param aScalar The scalar to divide this vector by.
@@ -244,23 +262,29 @@ namespace Solaire{ namespace Maths{
 			Y /= aScalar;
 			return *this;
 		}
-		
+
 		/*!
 			\brief Divide two vectors.
 			\param aOther The vector to divide this vector by.
 			\return The result of the operation.
 		*/
-		 Vector2<value_t> operator/(const Vector2<value_t> aOther) const{
-			return Vector2<value_t>(*this) /= aOther;
+        constexpr Vector2<value_t> operator/(const Vector2<value_t> aOther) const{
+			return Vector2<value_t>(
+                X / aOther.X,
+                Y / aOther.Y
+            );
 		}
-		
+
 		/*!
 			\brief Divide a vector by a scalar.
 			\param aScalar The scalar to divide this vector by.
 			\return The result of the operation.
 		*/
-		 Vector2<value_t> operator/(const value_t aScalar) const{
-			return Vector2<value_t>(*this) /= aScalar;
+		 constexpr Vector2<value_t> operator/(const value_t aScalar) const{
+			return Vector2<value_t>(
+                X / aScalar,
+                Y / aScalar
+            );
 		}
 
 		/*!
@@ -284,7 +308,7 @@ namespace Solaire{ namespace Maths{
 			if(aIndex >= 2) throw std::runtime_error(" Vector2 index is out of bounds");
 			return (&X)[aIndex];
 		}
-		
+
 		/*!
 			\brief Access a vector component by axis name.
 			\detail Will throw std::runtime_error if \a aAxis is not a valid axis name.
@@ -295,7 +319,7 @@ namespace Solaire{ namespace Maths{
 		value_t operator[](const char aAxis) const{
 			return operator[](Maths::AxisToIndex(aAxis));
 		}
-		
+
 		/*!
 			\brief Access a vector component by axis name.
 			\detail Will throw std::runtime_error if \a aAxis is not a valid axis name.
@@ -313,7 +337,7 @@ namespace Solaire{ namespace Maths{
 			\brief Return the number of components in this vector.
 			\return The component count.
 		*/
-		size_t Length() const{
+		constexpr size_t Length() const{
 			return 2;
 		}
 
@@ -321,7 +345,7 @@ namespace Solaire{ namespace Maths{
 			\brief Add all of the components in this vector.
 			\return The sum of components.
 		*/
-		value_t Sum() const{
+		constexpr value_t Sum() const{
 			return X + Y;
 		}
 
@@ -329,19 +353,19 @@ namespace Solaire{ namespace Maths{
 			\brief Calculate the average of all components in this vector.
 			\return The average component.
 		*/
-		value_t Average() const{
+		constexpr value_t Average() const{
 			return Sum() / static_cast<value_t>(Length());
 		}
-		
+
 		/*!
 			\brief Calculate the dot product of two vectors.
 			\param aOther The vector to calculate the dot product with.
 			\return The dot product.
 		*/
-		value_t DotProduct(const Vector2<value_t> aOther) const{
+		constexpr value_t DotProduct(const Vector2<value_t> aOther) const{
 			return operator*(aOther).Sum();
 		}
-		
+
 		/*!
 			\brief Calculate the cross product of two vectors.
 			\param aOther The vector to calculate the cross product with.
@@ -351,23 +375,23 @@ namespace Solaire{ namespace Maths{
 			//! \TODO Implement or remove 2 dimentional cross product
 			throw std::runtime_error("Vector2.CrossProduct not implemented");
 		}
-		
+
 		/*!
 			\brief Calculate the square of the magnitude of this vector.
 			\detail This is faster than calculating the exact magnitude.
 			\return The square of the magnitude.
 			\see Magnitude
 		*/
-		value_t MagnitudeSquared() const{
+		constexpr value_t MagnitudeSquared() const{
 			return operator*(*this).Sum();
 		}
-		
+
 		/*!
 			\brief Calculate the magnitude of this vector.
 			\return The magnitude.
 			\see MagnitudeSquared
 		*/
-		value_t Magnitude() const{
+		constexpr value_t Magnitude() const{
 			return static_cast<value_t>(std::sqrt(static_cast<double>(MagnitudeSquared())));
 		}
 
@@ -375,11 +399,19 @@ namespace Solaire{ namespace Maths{
 			\brief Normalise this vector to a unit vector.
 			\return The normalised form of this vector.
 		*/
-		 Vector2<value_t> Normalise() const{
+        constexpr Vector2<value_t> Normalise() const{
 			return operator/(Magnitude());
 		}
 
 		// Other
+
+        /*!
+            \brief Check if this vector has been normalised.
+            \return True if this vector is a unit vector.
+        */
+		constexpr bool IsUnitVector() const{
+		    return Sum() == static_cast<value_t>(1);
+		}
 
 		/*!
 			\brief Re-arrange values into a Vector2.
@@ -417,7 +449,7 @@ namespace Solaire{ namespace Maths{
 			\brief Return an read-only iterator to the first component in this vector.
 			\return A pointer to the X component.
 		*/
-		const value_t* begin() const{
+		constexpr const value_t* begin() const{
 			return &X;
 		}
 
@@ -433,7 +465,7 @@ namespace Solaire{ namespace Maths{
 			\brief Return an read-only iterator that indicates the end of components in this vector.
 			\return A pointer past the W component.
 		*/
-		const value_t* end() const{
+		constexpr const value_t* end() const{
 			return (&Y) + 1;
 		}
 	};
@@ -442,7 +474,7 @@ namespace Solaire{ namespace Maths{
 	typedef Vector2<float> Vector2F;	//!< Vector2 storing values using floats.
 	typedef Vector2<int32_t> Vector2I;	//!< Vector2 storing values using 32 bit signed integers.
 	typedef Vector2<uint32_t> Vector2U;	//!< Vector2 storing values using 32 bit unsigned integers.
-	
+
 	/*!
 		\brief Cast a vector of one type to a vector of another type.
 		\tparam A The type being cast into.
@@ -451,7 +483,7 @@ namespace Solaire{ namespace Maths{
 		\return The casted vector.
 	*/
 	template<typename A, typename B>
-	static Vector2<A> vector_cast(const Vector2<B> aVector){
+	static constexpr Vector2<A> vector_cast(const Vector2<B> aVector){
 		return Vector2<A>(
 			static_cast<A>(aVector.X),
 			static_cast<A>(aVector.Y)
