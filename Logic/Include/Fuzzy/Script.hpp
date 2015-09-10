@@ -70,61 +70,80 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
         }
     };
 
-    class IfStatement : public Command{
+    class ContainerCommand : public Command{
+    public:
+        virtual ~ContainerCommand(){
+
+        }
+
+        virtual void operator()(Controller& aController) const = 0;
+    };
+
+    template<typename R>
+    class FunctionCommand : public Command{
+    public:
+        virtual ~FunctionCommand(){
+
+        }
+
+        virtual R operator()(Controller& aController) const = 0;
+    };
+
+    template<typename R>
+    class OutputCommand : public Command{
+    public:
+        virtual ~OutputCommand(){
+
+        }
+
+        virtual void operator()(Controller& aController, const R aCommand) const = 0;
+    };
+
+    class Input : public FunctionCommand<truth_t>{
     private:
         const std::string mInput;
-        const std::string mMembershipFunction;
-        const bool mNot;
     public:
-        IfStatement(const std::string aInput, const std::string aMembership, const bool aNot = false) :
-            mInput(aInput),
-            mMembershipFunction(aMembership),
-            mNot(aNot)
+        Input(const std::string aInput) :
+            mInput(aInput)
         {
 
         }
 
-        static IfStatement* Compile(const char* aCodeBegin){
+        static Input* Compile(const char* aCodeBegin){
             // Locate Keywords
             const char* _if = std::strstr(aCodeBegin, "IF");
-            const char* _is = _if ? std::strstr(_if, "IS") : nullptr;
-            const char* _not = std::strstr(aCodeBegin, "NOT");
-
-            if(! (_if && _is)) return nullptr;
+            if(! _if) return nullptr;
 
             // Locate values
             const char* inputBegin = FindWordBegin(_if + 2);
             const char* inputEnd = FindWordEnd(inputEnd);
-            const char* membershipBegin = FindWordBegin(_is + 2);
-            const char* membershipEnd = FindWordEnd(membershipBegin);
 
-            if(! (inputBegin && inputEnd && membershipBegin && membershipEnd)) return nullptr;
+            if(! (inputBegin && inputEnd)) return nullptr;
 
             // Build command
-            return new IfStatement(
-                std::string(inputBegin, inputEnd - inputBegin),
-                std::string(membershipBegin, membershipEnd - membershipBegin),
-                _not ? true : false
+            return new Input(
+                std::string(inputBegin, inputEnd - inputBegin)
             );
         }
 
-        truth_t operator()(const Controller& aController) const{
-            const truth_t tmp = aController.CalculateMembership(mMembershipFunction, aController.GetInput(mInput));
-            return mNot ? Fuzzy::Not(tmp) : tmp;
+        // Inherited
+
+        truth_t operator()(Controller& aController) const override{
+            return aController.GetInput(mInput);
         }
     };
 
-    class ThenStatement : public Command{
+    class Then : public OutputCommand<truth_t>{
     private:
         const std::string mOutput;
     public:
-        ThenStatement(const std::string aOutput) :
+        Then(const std::string aOutput) :
             mOutput(aOutput)
         {
 
         }
 
-        static ThenStatement* Compile(const char* aCodeBegin){
+        static Then* Compile(const char* aCodeBegin){
             // Locate Keywords
             const char* _then = std::strstr(aCodeBegin, "THEN");
 
@@ -137,20 +156,39 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             if(! (outputBegin && outputEnd)) return nullptr;
 
             // Build command
-            return new ThenStatement(
+            return new Then(
                 std::string(outputBegin, outputEnd - outputBegin)
             );
         }
 
-        void operator()(Controller& aFuzzifier, const truth_t aValue) const{
+        // Inherited
+
+        void operator()(Controller& aFuzzifier, const truth_t aValue) const override{
             return aFuzzifier.SetOutput(mOutput, aValue);
         }
     };
 
-    class BinaryOperator : public Command{
+    template<typename R>
+    class UnaryOperator : public FunctionCommand<R>{
     protected:
-        const Command* const mLeft;
-        const Command* const mRight;
+        const FunctionCommand<R>* const mBody;
+    public:
+        UnaryOperator(const FunctionCommand<R>* const aBody) :
+            mBody(aBody)
+        {
+
+        }
+
+        virtual ~UnaryOperator(){
+            delete mBody;
+        }
+    };
+
+    template<typename R>
+    class BinaryOperator : public FunctionCommand<R>{
+    protected:
+        const FunctionCommand<R>* const mLeft;
+        const FunctionCommand<R>* const mRight;
     public:
         template<class T>
         static T* Compile(const char* aCode){
@@ -159,7 +197,7 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             return nullptr;
         }
 
-        BinaryOperator(const Command* const aLeft, const Command* const aRight) :
+        BinaryOperator(const FunctionCommand<R>* const aLeft, const FunctionCommand<R>* const aRight) :
             mLeft(aLeft),
             mRight(aRight)
         {
@@ -170,42 +208,90 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             delete mLeft;
             delete mRight;
         }
-
-        virtual truth_t operator()(Controller& aController) const = 0;
     };
 
-    class And : public BinaryOperator{
+    class Not : public UnaryOperator<truth_t>{
     public:
-        And(const IfStatement* const aLeft, const IfStatement* const aRight) :
+        static Not* Compile(const char* aCode){
+            //! \TODO Implement Not.Compile
+            return nullptr;
+        }
+
+        Not(const FunctionCommand<truth_t>* const aBody) :
+            UnaryOperator(aBody)
+        {
+
+        }
+
+        // Inherited
+
+        truth_t operator()(Controller& aController) const override{
+            return Fuzzy::Not(mBody->operator()(aController));
+        }
+    };
+
+    class Brackets : public UnaryOperator<truth_t>{
+    public:
+        static Brackets* Compile(const char* aCode){
+            //! \TODO Implement Brackets.Compile
+            return nullptr;
+        }
+
+        Brackets(const FunctionCommand<truth_t>* const aBody) :
+            UnaryOperator(aBody)
+        {
+
+        }
+
+        // Inherited
+
+        truth_t operator()(Controller& aController) const override{
+            return mBody->operator()(aController);
+        }
+    };
+
+    class And : public BinaryOperator<truth_t>{
+    public:
+        static And* Compile(const char* aCode){
+            //! \TODO Implement And.Compile
+            return nullptr;
+        }
+
+        And(const FunctionCommand<truth_t>* const aLeft, const FunctionCommand<truth_t>* const aRight) :
             BinaryOperator(aLeft, aRight)
         {
 
         }
 
-        // Inherited from BinaryOperator
+        // Inherited
 
         truth_t operator()(Controller& aController) const override{
             return Fuzzy::And(
-                reinterpret_cast<const IfStatement*>(mLeft)->operator()(aController),
-                reinterpret_cast<const IfStatement*>(mRight)->operator()(aController)
+                mLeft->operator()(aController),
+                mRight->operator()(aController)
             );
         }
     };
 
-    class Or : public BinaryOperator{
+    class Or : public BinaryOperator<truth_t>{
     public:
-        Or(const IfStatement* const aLeft, const IfStatement* const aRight) :
+        static Or* Compile(const char* aCode){
+            //! \TODO Implement Or.Compile
+            return nullptr;
+        }
+
+        Or(const FunctionCommand<truth_t>* const aLeft, const FunctionCommand<truth_t>* const aRight) :
             BinaryOperator(aLeft, aRight)
         {
 
         }
 
-        // Inherited from BinaryOperator
+        // Inherited
 
         truth_t operator()(Controller& aController) const override{
             return Fuzzy::Or(
-                reinterpret_cast<const IfStatement*>(mLeft)->operator()(aController),
-                reinterpret_cast<const IfStatement*>(mRight)->operator()(aController)
+                mLeft->operator()(aController),
+                mRight->operator()(aController)
             );
         }
     };
@@ -213,50 +299,36 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
     //! \TODO implement Not as seperate command
     //! \TODO impelement Bracket command
 
-    class Line : public Command{
+    class Line : public ContainerCommand{
     private:
-        const Command* const mBody;
-        const ThenStatement* const mThen;
+        const FunctionCommand<truth_t>* const mBody;
+        const OutputCommand<truth_t>* const mOutput;
     public:
         static Line* Compile(const char* aCode){
             //! \TODO Implement Line.Compile
             return nullptr;
         }
 
-        Line(const IfStatement* const aBody, const ThenStatement* aOutput) :
+        Line(const FunctionCommand<truth_t>* const aBody, const OutputCommand<truth_t>* aOutput) :
             mBody(aBody),
-            mThen(aOutput)
-        {
-
-        }
-
-        Line(const BinaryOperator* const aBody, const ThenStatement* aOutput) :
-            mBody(aBody),
-            mThen(aOutput)
+            mOutput(aOutput)
         {
 
         }
 
         ~Line(){
             delete mBody;
-            delete mThen;
+            delete mOutput;
         }
 
-        void operator()(Controller& aController) const{
-            const BinaryOperator* const bin = dynamic_cast<const BinaryOperator*>(mBody);
-            const IfStatement* const _if = dynamic_cast<const IfStatement*>(mBody);
+        // Inherited
 
-            truth_t output = 0.f;
-            if(bin){
-                output = bin->operator()(aController);
-            }else if(_if){
-                output = _if->operator()(aController);
-            }
-            mThen->operator()(aController, output);
+        void operator()(Controller& aController) const override{
+            mOutput->operator()(aController, mBody->operator()(aController));
         }
     };
 
-    class Script : public Command{
+    class Script : public ContainerCommand{
     private:
         const std::vector<const Line*> mLines;
     public:
@@ -284,7 +356,9 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             }
         }
 
-        void operator()(Controller& aController) const{
+        // Inherited
+
+        void operator()(Controller& aController) const override{
             for(const Line* line : mLines){
                 line->operator()(aController);
             }
