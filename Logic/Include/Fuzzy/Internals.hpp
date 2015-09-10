@@ -38,6 +38,10 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
     static constexpr truth_t TRUE = 1.f;
     static constexpr truth_t FALSE = 0.f;
+
+    static constexpr truth_t Not(const truth_t aValue){
+        return aValue >= 1.f ? 0.f : aValue <= 0.f ? 1.f : 1.f - aValue;
+    }
 }}}
 
 

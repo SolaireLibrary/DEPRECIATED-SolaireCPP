@@ -33,6 +33,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include "Controller.hpp"
 
 namespace Solaire{ namespace Logic{ namespace Fuzzy{
     class Command{
@@ -71,13 +72,13 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
     class IfStatement : public Command{
     public:
         const std::string Input;
-        const std::string Output;
         const std::string MembershipFunction;
+        const bool Not;
 
-        IfStatement(const std::string aInput, const std::string aMembership, const std::string aOutput) :
+        IfStatement(const std::string aInput, const std::string aMembership, const bool aNot = false) :
             Input(aInput),
-            Output(aOutput),
-            MembershipFunction(aMembership)
+            MembershipFunction(aMembership),
+            Not(aNot)
         {
 
         }
@@ -86,28 +87,63 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             // Locate Keywords
             const char* _if = std::strstr(aCodeBegin, "IF");
             const char* _is = _if ? std::strstr(_if, "IS") : nullptr;
-            const char* _then = _is ? std::strstr(_is, "THEN") : nullptr;
 
-            if(! (_if && _is && _then)) return nullptr;
+            if(! (_if && _is)) return nullptr;
 
             // Locate values
             const char* inputBegin = FindWordBegin(_if + 2);
             const char* inputEnd = FindWordEnd(inputEnd);
             const char* membershipBegin = FindWordBegin(_is + 2);
             const char* membershipEnd = FindWordEnd(membershipBegin);
-            const char* outputBegin = FindWordBegin(_then + 4);
-            const char* outputEnd = FindWordEnd(outputBegin);
 
-            if(! (inputBegin && inputEnd && membershipBegin && membershipEnd && outputBegin && outputEnd)) return nullptr;
+            if(! (inputBegin && inputEnd && membershipBegin && membershipEnd)) return nullptr;
 
             // Build command
             return new IfStatement(
                 std::string(inputBegin, inputEnd - inputBegin),
-                std::string(membershipBegin, membershipEnd - membershipBegin),
+                std::string(membershipBegin, membershipEnd - membershipBegin)
+            );
+        }
+
+        truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const{
+            const truth_t tmp = aController.CalculateMembership(MembershipFunction, aFuzzifier.GetInput(Input));
+            return Not ? Fuzzy::Not(tmp) : tmp;
+        }
+    };
+
+    class ThenStatement : public Command{
+    public:
+        const std::string Output;
+
+        ThenStatement(const std::string aOutput) :
+            Output(aOutput)
+        {
+
+        }
+
+        static ThenStatement* Compile(const char* aCodeBegin){
+            // Locate Keywords
+            const char* _then = std::strstr(aCodeBegin, "THEN");
+
+            if(! _then) return nullptr;
+
+            // Locate values
+            const char* outputBegin = FindWordBegin(_then + 4);
+            const char* outputEnd = FindWordEnd(outputBegin);
+
+            if(! (outputBegin && outputEnd)) return nullptr;
+
+            // Build command
+            return new ThenStatement(
                 std::string(outputBegin, outputEnd - outputBegin)
             );
         }
+
+        void operator()(Fuzzifier& aFuzzifier, const truth_t aValue) const{
+            return aFuzzifier.SetOutput(Output, aValue);
+        }
     };
+
 
     class Line : public Command{
     private:
