@@ -108,8 +108,8 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             );
         }
 
-        truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const{
-            const truth_t tmp = aController.CalculateMembership(mMembershipFunction, aFuzzifier.GetInput(mInput));
+        truth_t operator()(const Controller& aController) const{
+            const truth_t tmp = aController.CalculateMembership(mMembershipFunction, aController.GetInput(mInput));
             return mNot ? Fuzzy::Not(tmp) : tmp;
         }
     };
@@ -142,7 +142,7 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             );
         }
 
-        void operator()(Fuzzifier& aFuzzifier, const truth_t aValue) const{
+        void operator()(Controller& aFuzzifier, const truth_t aValue) const{
             return aFuzzifier.SetOutput(mOutput, aValue);
         }
     };
@@ -171,7 +171,7 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             delete mRight;
         }
 
-        virtual truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const = 0;
+        virtual truth_t operator()(Controller& aController) const = 0;
     };
 
     class And : public BinaryOperator{
@@ -184,10 +184,10 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
         // Inherited from BinaryOperator
 
-        truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const override{
+        truth_t operator()(Controller& aController) const override{
             return Fuzzy::And(
-                reinterpret_cast<const IfStatement*>(mLeft)->operator()(aFuzzifier, aController),
-                reinterpret_cast<const IfStatement*>(mRight)->operator()(aFuzzifier, aController)
+                reinterpret_cast<const IfStatement*>(mLeft)->operator()(aController),
+                reinterpret_cast<const IfStatement*>(mRight)->operator()(aController)
             );
         }
     };
@@ -202,13 +202,16 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
         // Inherited from BinaryOperator
 
-        truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const override{
+        truth_t operator()(Controller& aController) const override{
             return Fuzzy::Or(
-                reinterpret_cast<const IfStatement*>(mLeft)->operator()(aFuzzifier, aController),
-                reinterpret_cast<const IfStatement*>(mRight)->operator()(aFuzzifier, aController)
+                reinterpret_cast<const IfStatement*>(mLeft)->operator()(aController),
+                reinterpret_cast<const IfStatement*>(mRight)->operator()(aController)
             );
         }
     };
+
+    //! \TODO implement Not as seperate command
+    //! \TODO impelement Bracket command
 
     class Line : public Command{
     private:
@@ -239,17 +242,17 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             delete mThen;
         }
 
-        void operator()(Fuzzifier& aFuzzifier, const Controller& aController) const{
+        void operator()(Controller& aController) const{
             const BinaryOperator* const bin = dynamic_cast<const BinaryOperator*>(mBody);
             const IfStatement* const _if = dynamic_cast<const IfStatement*>(mBody);
 
             truth_t output = 0.f;
             if(bin){
-                output = bin->operator()(aFuzzifier, aController);
+                output = bin->operator()(aController);
             }else if(_if){
-                output = _if->operator()(aFuzzifier, aController);
+                output = _if->operator()(aController);
             }
-            mThen->operator()(aFuzzifier, output);
+            mThen->operator()(aController, output);
         }
     };
 
@@ -281,9 +284,9 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             }
         }
 
-        truth_t operator()(Fuzzifier& aFuzzifier, const Controller& aController) const{
+        void operator()(Controller& aController) const{
             for(const Line* line : mLines){
-                line->operator()(aFuzzifier, aController);
+                line->operator()(aController);
             }
         }
     };

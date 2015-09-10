@@ -36,17 +36,12 @@
 
 namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
-    class Fuzzifier{
-    public:
-        virtual ~Fuzzifier();
-        virtual truth_t GetInput(const std::string& aInput) const = 0;
-        virtual void SetOutput(const std::string& aOutput, const truth_t aValue) = 0;
-    };
-
     class Controller{
     public:
         virtual ~Controller();
         virtual truth_t CalculateMembership(const std::string& aMembership, const truth_t aInput) const = 0;
+        virtual truth_t GetInput(const std::string& aInput) const = 0;
+        virtual void SetOutput(const std::string& aOutput, const truth_t aValue) = 0;
     };
 
 }}}

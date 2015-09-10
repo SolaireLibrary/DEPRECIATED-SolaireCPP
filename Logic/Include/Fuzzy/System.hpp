@@ -40,8 +40,8 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
     class System{
     private:
-        const Controller* mController;
-        Fuzzifier* mFuzzifier;
+        Controller* mController;
+        const Script* mScript;
     public:
         System(){
 
@@ -51,16 +51,16 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
         }
 
-        void SetController(const Controller& aController){
+        void SetController(Controller& aController){
             mController = &aController;
         }
 
-        void SetFuzzifier(Fuzzifier& aFuzzifier){
-            mFuzzifier = &aFuzzifier;
+        void SetRules(const Script& aScript){
+            mScript = &aScript;
         }
 
         void Run(){
-            //! \TODO Implement Run
+            mScript->operator()(*mController);
         }
 
         void operator()(){
