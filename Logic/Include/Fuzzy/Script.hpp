@@ -32,58 +32,89 @@
 */
 
 #include <cstdint>
+#include <cstring>
 
 namespace Solaire{ namespace Logic{ namespace Fuzzy{
-    class System;
-
-    namespace Commands{
-
-        class Command(){
-        public:
-            virtual ~Command(){
-
+    class Command{
+    public:
+        static const char* FindWordBegin(const char* aString){
+            if(aString == nullptr) return nullptr;
+            while(true){
+                const char c = *aString;
+                if(c == '\0'){
+                    return nullptr;
+                }else if(std::isspace(c)){
+                    ++aString;
+                }else{
+                    return aString;
+                }
             }
-        };
+        }
 
-        class IfStatement : public Command{
-        public:
-            const std::string Input;
-            const std::string Output;
-            const std::string MembershipFunction;
-
-            IfStatement(const std::string aInput, const std::string aMembership, const std::string aOutput) :
-                Input(aInput),
-                Output(aOutput),
-                MembershipFunction(aMembership)
-            {
-
+        static const char* FindWordEnd(const char* aString){
+            if(aString == nullptr) return nullptr;
+            while(true){
+                const char c = *aString;
+                if(std::isspace(c) || c == '\0'){
+                    return aString;
+                }else{
+                    ++aString;
+                }
             }
+        }
 
-            static IfStatement* Compile(const char* aCode){
-                // Locate Keywords
-                const char* _if;
-                const char* _is;
-                const char* _then;
+        virtual ~Command(){
 
-                // Locate values
-                const char* inputBegin;
-                const char* inputEnd;
-                const char* membershipBegin;
-                const char* membershipEnd;
-                const char* outputBegin;
-                const char* outputEnd;
+        }
+    };
 
-                // Build command
-                return new IfStatement(
-                    std::string(inputBegin, inputEnd - inputBegin),
-                    std::string(membershipBegin, membershipEnd - membershipBegin),
-                    std::string(outputBegin, outputEnd - outputBegin)
-                );
-            }
-        };
-    }
+    class IfStatement : public Command{
+    public:
+        const std::string Input;
+        const std::string Output;
+        const std::string MembershipFunction;
 
-    class Script{
+        IfStatement(const std::string aInput, const std::string aMembership, const std::string aOutput) :
+            Input(aInput),
+            Output(aOutput),
+            MembershipFunction(aMembership)
+        {
+
+        }
+
+        static IfStatement* Compile(const char* aCodeBegin){
+            // Locate Keywords
+            const char* _if = std::strstr(aCodeBegin, "IF");
+            const char* _is = _if ? std::strstr(_if, "IS") : nullptr;
+            const char* _then = _is ? std::strstr(_is, "THEN") : nullptr;
+
+            if(! (_if && _is && _then)) return nullptr;
+
+            // Locate values
+            const char* inputBegin = FindWordBegin(_if + 2);
+            const char* inputEnd = FindWordEnd(inputEnd);
+            const char* membershipBegin = FindWordBegin(_is + 2);
+            const char* membershipEnd = FindWordEnd(membershipBegin);
+            const char* outputBegin = FindWordBegin(_then + 4);
+            const char* outputEnd = FindWordEnd(outputBegin);
+
+            if(! (inputBegin && inputEnd && membershipBegin && membershipEnd && outputBegin && outputEnd)) return nullptr;
+
+            // Build command
+            return new IfStatement(
+                std::string(inputBegin, inputEnd - inputBegin),
+                std::string(membershipBegin, membershipEnd - membershipBegin),
+                std::string(outputBegin, outputEnd - outputBegin)
+            );
+        }
+    };
+
+    class Line : public Command{
+    private:
+
+    };
+
+    class Script : public Command{
     private:
 
     };

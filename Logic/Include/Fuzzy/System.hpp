@@ -34,6 +34,7 @@
 #include <string>
 #include "Internals.hpp"
 #include "Controller.hpp"
+#include "Script.hpp"
 
 namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
