@@ -35,34 +35,17 @@
 #include <cstring>
 #include <vector>
 #include "Controller.hpp"
+#include "../../../Utility/Include/StringProcessor.hpp"
 
 namespace Solaire{ namespace Logic{ namespace Fuzzy{
     class Command{
     public:
-        static const char* FindWordBegin(const char* aString){
-            if(aString == nullptr) return nullptr;
-            while(true){
-                const char c = *aString;
-                if(c == '\0'){
-                    return nullptr;
-                }else if(std::isspace(c)){
-                    ++aString;
-                }else{
-                    return aString;
-                }
-            }
+        static const char* FindWordBegin(const char* const aBegin, const char* aEnd){
+            return Utility::Strings::FindNextConditional(aBegin, aEnd, [](const char aChar){return ! Utility::Strings::IsWhitespace(aChar);});
         }
 
-        static const char* FindWordEnd(const char* aString){
-            if(aString == nullptr) return nullptr;
-            while(true){
-                const char c = *aString;
-                if(std::isspace(c) || c == '\0'){
-                    return aString;
-                }else{
-                    ++aString;
-                }
-            }
+        static const char* FindWordEnd(const char* const aBegin, const char* aEnd){
+            return Utility::Strings::FindNextConditional(aBegin, aEnd, Utility::Strings::IsWhitespace);
         }
 
         virtual ~Command(){
@@ -99,6 +82,8 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
         virtual void operator()(Controller& aController, const R aCommand) const = 0;
     };
 
+    static FunctionCommand<truth_t>* CompileBody(const char* aCodeBegin, const char* aCodeEnd);
+
     class Input : public FunctionCommand<truth_t>{
     private:
         const std::string mInput;
@@ -109,14 +94,14 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
         }
 
-        static Input* Compile(const char* aCodeBegin){
+        static Input* Compile(const char* aCodeBegin, const char* const aCodeEnd){
             // Locate Keywords
             const char* _if = std::strstr(aCodeBegin, "IF");
             if(! _if) return nullptr;
 
             // Locate values
-            const char* inputBegin = FindWordBegin(_if + 2);
-            const char* inputEnd = FindWordEnd(inputEnd);
+            const char* inputBegin = FindWordBegin(_if + 2, aCodeEnd);
+            const char* inputEnd = FindWordEnd(inputEnd, aCodeEnd);
 
             if(! (inputBegin && inputEnd)) return nullptr;
 
@@ -143,15 +128,15 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
         }
 
-        static Then* Compile(const char* aCodeBegin){
+        static Then* Compile(const char* aCodeBegin, const char* const aCodeEnd){
             // Locate Keywords
             const char* _then = std::strstr(aCodeBegin, "THEN");
 
             if(! _then) return nullptr;
 
             // Locate values
-            const char* outputBegin = FindWordBegin(_then + 4);
-            const char* outputEnd = FindWordEnd(outputBegin);
+            const char* outputBegin = FindWordBegin(_then + 4, aCodeEnd);
+            const char* outputEnd = FindWordEnd(outputBegin, aCodeEnd);
 
             if(! (outputBegin && outputEnd)) return nullptr;
 
@@ -212,7 +197,7 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
     class Not : public UnaryOperator<truth_t>{
     public:
-        static Not* Compile(const char* aCode){
+        static Not* Compile(const char* aCodeBegin, const char* aCodeEnd){
             //! \TODO Implement Not.Compile
             return nullptr;
         }
@@ -230,10 +215,98 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
         }
     };
 
+    class If : public UnaryOperator<truth_t>{
+    public:
+        static If* Compile(const char* aCodeBegin, const char* aCodeEnd){
+            //! \TODO Implement Not.Compile
+            return nullptr;
+        }
+
+        If(const FunctionCommand<truth_t>* const aBody) :
+            UnaryOperator(aBody)
+        {
+
+        }
+
+        // Inherited
+
+        truth_t operator()(Controller& aController) const override{
+            return mBody->operator()(aController);
+        }
+    };
+
+    class MembershipCommand : public Command{
+    private:
+        const std::string mMembership;
+    public:
+        MembershipCommand(const std::string aMembership) :
+            mMembership(aMembership)
+        {
+
+        }
+
+        ~MembershipCommand(){
+
+        }
+
+        truth_t operator()(Controller& aController, const truth_t aInput) const{
+            return aController.CalculateMembership(mMembership, aInput);
+        }
+    };
+
+    class Is : public FunctionCommand<truth_t>{
+    private:
+        const FunctionCommand<truth_t>* mInput;
+        const MembershipCommand* mMembership;
+    public:
+        static Is* Compile(const char* aCodeBegin, const char* aCodeEnd){
+            //! \TODO Implement Is.Compile
+            return nullptr;
+        }
+
+        Is(const FunctionCommand<truth_t>* const aInput, const MembershipCommand* aMembership) :
+            mInput(aInput),
+            mMembership(aMembership)
+        {
+
+        }
+
+        ~Is(){
+            delete mInput;
+            delete mMembership;
+        }
+
+        // Inherited
+
+        truth_t operator()(Controller& aController) const override{
+            return mMembership->operator()(aController, mInput->operator()(aController));
+        }
+    };
+
     class Brackets : public UnaryOperator<truth_t>{
     public:
-        static Brackets* Compile(const char* aCode){
-            //! \TODO Implement Brackets.Compile
+        static Brackets* Compile(const char* const aCodeBegin, const char* const aCodeEnd){
+            if(*aCodeBegin != '(') return nullptr;
+
+            // Find closing bracket
+            uint32_t depth = 0;
+            const char* close = aCodeBegin + 1;
+            while(close < aCodeEnd){
+                const char c = *close;
+                if(c == '('){
+                    ++depth;
+                }else if(c == ')'){
+                    if(depth == 0){
+                        // Build body
+                        FunctionCommand* body = CompileBody(aCodeBegin + 1, close);
+                        if(body == nullptr) return nullptr;
+                        return new Brackets(body);
+                    }
+                    --depth;
+                }
+                ++close;
+            }
+
             return nullptr;
         }
 
@@ -252,7 +325,7 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
     class And : public BinaryOperator<truth_t>{
     public:
-        static And* Compile(const char* aCode){
+        static And* Compile(const char* aCodeBegin, const char* aCodeEnd){
             //! \TODO Implement And.Compile
             return nullptr;
         }
@@ -275,7 +348,7 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
 
     class Or : public BinaryOperator<truth_t>{
     public:
-        static Or* Compile(const char* aCode){
+        static Or* Compile(const char* aCodeBegin, const char* aCodeEnd){
             //! \TODO Implement Or.Compile
             return nullptr;
         }
@@ -364,6 +437,38 @@ namespace Solaire{ namespace Logic{ namespace Fuzzy{
             }
         }
     };
+
+    static FunctionCommand<truth_t>* CompileBody(const char* aCodeBegin, const char* const aCodeEnd){
+        using namespace Utility::Strings;
+
+        // Skip whitespace
+        while(IsWhitespace(*aCodeBegin)) ++aCodeBegin;
+
+        const char c = *aCodeBegin;
+        char c2;
+        switch(c){
+        case '(':
+            return Brackets::Compile(aCodeBegin, aCodeEnd);
+        case 'I':
+            c2 = *(aCodeBegin + 1);
+            if(c2 == 'F') return If::Compile(aCodeBegin, aCodeEnd);
+            if(c2 == 'S') return Is::Compile(aCodeBegin, aCodeEnd);
+            break;
+        case 'A':
+            return And::Compile(aCodeBegin, aCodeEnd);
+        case 'O':
+            return Or::Compile(aCodeBegin, aCodeEnd);
+        case 'N':
+            return Not::Compile(aCodeBegin, aCodeEnd);
+        }
+
+        const char* nextWord = Command::FindWordEnd(aCodeBegin, aCodeEnd);
+        if(nextWord != nullptr && nextWord < aCodeEnd){
+            return CompileBody(nextWord + 1, aCodeEnd);
+        }else{
+            return nullptr;
+        }
+    }
 }}}
 
 
