@@ -400,71 +400,92 @@ namespace Solaire{ namespace Utility{ namespace Strings{
         }
      }
 
-     static ParseResult ParseDouble(const char* const aBegin, const char* const aEnd, double& aOutput){
-         return ParseNumber(aBegin, aEnd, aOutput, true, true);
-     }
+    template<typename T>
+    static ParseResult Parse(const char* const aBegin, const char* const aEnd, T& aOutput) = delete;
 
-     static ParseResult ParseFloat(const char* const aBegin, const char* const aEnd, float& aOutput){
-         double tmp;
-         const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, true);
-         aOutput = static_cast<float>(tmp);
-         return res;
-     }
+    template<>
+    ParseResult Parse<double>(const char* const aBegin, const char* const aEnd, double& aOutput){
+        return ParseNumber(aBegin, aEnd, aOutput, true, true);
+    }
 
-     static ParseResult ParseInt64(const char* const aBegin, const char* const aEnd, int64_t& aOutput){
-         double tmp;
-         const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
-         aOutput = static_cast<int64_t>(tmp);
-         return res;
-     }
+    template<>
+    ParseResult Parse<float>(const char* const aBegin, const char* const aEnd, float& aOutput){
+        double tmp;
+        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, true);
+        aOutput = static_cast<float>(tmp);
+        return res;
+    }
 
-     static ParseResult ParseInt32(const char* const aBegin, const char* const aEnd, int32_t& aOutput){
-         double tmp;
-         const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
-         aOutput = static_cast<int32_t>(tmp);
-         return res;
-     }
+    template<>
+    ParseResult Parse<int64_t>(const char* const aBegin, const char* const aEnd, int64_t& aOutput){
+        double tmp;
+        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
+        aOutput = static_cast<int64_t>(tmp);
+        return res;
+    }
 
-     static ParseResult ParseInt16(const char* const aBegin, const char* const aEnd, int16_t& aOutput){
-         double tmp;
-         const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
-         aOutput = static_cast<int16_t>(tmp);
-         return res;
-     }
+    template<>
+    ParseResult Parse<int32_t>(const char* const aBegin, const char* const aEnd, int32_t& aOutput){
+        double tmp;
+        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
+        aOutput = static_cast<int32_t>(tmp);
+        return res;
+    }
 
-     static ParseResult ParseInt8(const char* const aBegin, const char* const aEnd, int8_t& aOutput){
-         double tmp;
-         const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
-         aOutput = static_cast<int8_t>(tmp);
-         return res;
-     }
+    template<>
+    ParseResult Parse<int16_t>(const char* const aBegin, const char* const aEnd, int16_t& aOutput){
+        double tmp;
+        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
+        aOutput = static_cast<int16_t>(tmp);
+        return res;
+    }
 
-     static ParseResult ParseUint64(const char* const aBegin, const char* const aEnd, uint64_t& aOutput){
-         double tmp;
-         const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
-         aOutput = static_cast<uint64_t>(tmp);
-         return res;
-     }
+    template<>
+    ParseResult Parse<int8_t>(const char* const aBegin, const char* const aEnd, int8_t& aOutput){
+        double tmp;
+        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
+        aOutput = static_cast<int8_t>(tmp);
+        return res;
+    }
 
-     static ParseResult ParseUint32(const char* const aBegin, const char* const aEnd, uint32_t& aOutput){
-         double tmp;
-         const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
-         aOutput = static_cast<uint32_t>(tmp);
-         return res;
-     }
+    template<>
+    ParseResult Parse<uint64_t>(const char* const aBegin, const char* const aEnd, uint64_t& aOutput){
+        double tmp;
+        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
+        aOutput = static_cast<uint64_t>(tmp);
+        return res;
+    }
 
-     static ParseResult ParseUint16(const char* const aBegin, const char* const aEnd, uint16_t& aOutput){
-         double tmp;
-         const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
-         aOutput = static_cast<uint16_t>(tmp);
-         return res;
-     }
+    template<>
+    ParseResult Parse<uint32_t>(const char* const aBegin, const char* const aEnd, uint32_t& aOutput){
+        double tmp;
+        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
+        aOutput = static_cast<uint32_t>(tmp);
+        return res;
+    }
 
-     static ParseResult ParseUint8(const char* const aBegin, const char* const aEnd, uint8_t& aOutput){
-         double tmp;
-         const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
-         aOutput = static_cast<uint8_t>(tmp);
-         return res;
+    template<>
+    ParseResult Parse<uint16_t>(const char* const aBegin, const char* const aEnd, uint16_t& aOutput){
+        double tmp;
+        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
+        aOutput = static_cast<uint16_t>(tmp);
+        return res;
+    }
+
+    template<>
+    ParseResult Parse<uint8_t>(const char* const aBegin, const char* const aEnd, uint8_t& aOutput){
+        double tmp;
+        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
+        aOutput = static_cast<uint8_t>(tmp);
+        return res;
+    }
+
+     template<typename T>
+     static T Parse(const char* const aBegin, const char* const aEnd){
+         T tmp;
+         const ParseResult res = Parse<T>(aBegin, aEnd, tmp);
+         if(res == ParseResult::FAIL) throw std::runtime_error("Failed to parse value");
+         return tmp;
      }
 }}}
 
