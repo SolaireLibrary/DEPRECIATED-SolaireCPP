@@ -380,7 +380,7 @@ namespace Solaire{ namespace Utility{ namespace Strings{
                    (negative && ! aCanBeNegative) ||                    // Check if the parse has produced an illegal number
                    (decimalValue != 0 && ! aCanBeDecimal)
                 ){
-                    // Return parse failue
+                    // Return parse failure
                     aOutput = 0.0;
                     return nullptr;
                 }else{
