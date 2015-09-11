@@ -42,27 +42,38 @@ namespace Solaire{ namespace Utility{
     protected:
         friend Task;
 
-        virtual void SendProgress(Task& aTask, void* aProgress) = 0;
-        virtual void Schedule(Task& aTask) = 0;
+        virtual void SendProgress(Task* aTask, void* aProgress) = 0;
+        virtual void Schedule(Task* aTask) = 0;
     public:
         virtual ~TaskManager(){
 
         }
+
+        virtual void Update() = 0;
     };
+
+    class AsyncManager;
 
     class Task{
     private:
+        friend AsyncManager;
+
         std::atomic_bool mCanceled;
         TaskManager* mManager;
+
+        Task(const Task&) = delete;
+        Task(Task&&) = delete;
+        Task& operator=(const Task&) = delete;
+        Task& operator=(Task&&) = delete;
     protected:
         virtual void OnRecieveProgress(void* aProgress) = 0;
 
         void SendProgress(void* aProgress){
-            mManager->SendProgress(*this, aProgress);
+            mManager->SendProgress(this, aProgress);
         }
 
         void Schedule(){
-            mManager->Schedule(*this);
+            mManager->Schedule(this);
         }
 
         virtual void PreExecute() = 0;
