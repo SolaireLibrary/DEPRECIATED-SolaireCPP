@@ -48,20 +48,25 @@ namespace Solaire{ namespace Utility{
         std::vector<ProgressBundle> mProgressList;
         std::mutex mLock;
         std::atomic_bool mExit;
-        std::thread mTread;
+        std::vector<std::thread> mTread;
 
         AsyncManager(const AsyncManager&) = delete;
         AsyncManager(AsyncManager&&) = delete;
         AsyncManager& operator=(const AsyncManager&) = delete;
         AsyncManager& operator=(AsyncManager&&) = delete;
 
-        static void ThreadFunction(AsyncManager* aManager){
+        static void ThreadFunction(AsyncManager* const aManager, const size_t aIndex){
             Task* task = nullptr;
             while(! aManager->mExit){
                 aManager->mLock.lock();
                     if(! aManager->mPreTasks.empty()){
                         task = aManager->mPreTasks.back();
                         aManager->mPreTasks.pop_back();
+
+                        if(task->HasBeenCancled()){
+                            task = nullptr;
+                            aManager->mPostTasks.push_back(task);
+                        }
                     }
                 aManager->mLock.unlock();
 
@@ -69,7 +74,7 @@ namespace Solaire{ namespace Utility{
                     task->Execute();
 
                     aManager->mLock.lock();
-                        aManager->mPreTasks.push_back(task);
+                        aManager->mPostTasks.push_back(task);
                     aManager->mLock.unlock();
 
                     task = nullptr;
@@ -92,19 +97,26 @@ namespace Solaire{ namespace Utility{
             mLock.lock();
                 mPreTasks.push_back(aTask);
             mLock.unlock();
+            //! \TODO Notify threads that a new task has been scheduled
         }
     public:
-        AsyncManager() :
+        AsyncManager(const size_t aThreads = 1) :
             mExit(false)
         {
-            //! \TODO Launch thread
-            //mThread = std::thread(ThreadFunction, this);
+            if(aThreads < 1) throw std::runtime_error("AsyncManager must have at least one thread");
+            for(size_t i = 0; i < aThreads; ++i){
+                //! \TODO Launch thread
+                //mThreads.push_back(std::thread(ThreadFunction, this, i));
+            }
         }
 
         ~AsyncManager(){
             mExit = true;
-            //! \TODO Join with thread
-            //mThread.join();
+            //! \TODO Notify threads mExit has been set
+            //for(std::thread& i : mThreads){
+                //! \TODO Join with thread
+                //i.join();
+            //}
         }
 
         // Inherited from TaskManager

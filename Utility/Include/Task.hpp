@@ -76,6 +76,10 @@ namespace Solaire{ namespace Utility{
             mManager->Schedule(this);
         }
 
+        bool HasBeenCancled() const{
+            return mCanceled;
+        }
+
         virtual void PreExecute() = 0;
         virtual void Execute() = 0;
         virtual void PostExecute() = 0;
