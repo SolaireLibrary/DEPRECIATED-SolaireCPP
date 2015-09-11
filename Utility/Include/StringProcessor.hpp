@@ -266,22 +266,16 @@ namespace Solaire{ namespace Utility{ namespace Strings{
         return Equals(aString.c_str(), aString.c_str() + aString.size(), aSecondBegin, aSecondEnd);
     }
 
-    enum class ParseResult{
-        FAIL,             // Failed to parse
-        SUCCESS,            // Parsed using all available characters
-        PARTIAL_SUCCESS     // Parsed with characters remaining
-    };
-
-    static ParseResult ParseDigit(const char aChar, uint8_t& aOutput){
+    static bool ParseDigit(const char aChar, uint8_t& aOutput){
         if(IsNumber(aChar)){
             aOutput = aChar - '0';
-            return ParseResult::SUCCESS;
+            return true;
         }else{
-            return ParseResult::FAIL;
+            return false;
         }
     }
 
-    static ParseResult ParseNumber(const char* const aBegin, const char* const aEnd, double& aOutput, const bool aCanBeNegative, const bool aCanBeDecimal){
+    static const char* ParseNumber(const char* const aBegin, const char* const aEnd, double& aOutput, const bool aCanBeNegative, const bool aCanBeDecimal){
         enum State{
             FIND_SIGN,
             FIND_VALUE,
@@ -324,8 +318,8 @@ namespace Solaire{ namespace Utility{ namespace Strings{
                     decimalBegin = i;
                     ++i;
                 }else{
-                    ParseResult res = ParseDigit(*i, digit);
-                    if(res == ParseResult::FAIL){
+                    if(! ParseDigit(*i, digit)){
+                        --i;
                         state = RETURN;
                     }else{
                         value += static_cast<int64_t>(digit) * 10 * ((i - aBegin) + 1);
@@ -338,8 +332,8 @@ namespace Solaire{ namespace Utility{ namespace Strings{
                     state = FIND_E_SIGN;
                     ++i;
                 }else{
-                    ParseResult res = ParseDigit(*i, digit);
-                    if(res == ParseResult::FAIL){
+                    if(! ParseDigit(*i, digit)){
+                        --i;
                         state = RETURN;
                     }else{
                         decimalValue += static_cast<int64_t>(digit) * 10 * ((i - decimalBegin) + 1);
@@ -360,7 +354,8 @@ namespace Solaire{ namespace Utility{ namespace Strings{
                 state = FIND_E_VALUE;
                 break;
             case FIND_E_VALUE:
-                if(ParseDigit(*i, digit) == ParseResult::FAIL){
+                if(! ParseDigit(*i, digit)){
+                    --i;
                     state = RETURN;
                 }else{
                     eValue += static_cast<int64_t>(digit) * 10 * ((i - eBegin) + 1);
@@ -375,7 +370,7 @@ namespace Solaire{ namespace Utility{ namespace Strings{
                    (decimalBegin != nullptr && decimalPlaces == 0)
                 ){
                     aOutput = 0;
-                    return ParseResult::FAIL;
+                    return nullptr;
                 }else{
                     double val = value;
 
@@ -393,7 +388,7 @@ namespace Solaire{ namespace Utility{ namespace Strings{
                     }
 
                     aOutput = val;
-                    return i == aEnd ? ParseResult::SUCCESS : ParseResult::PARTIAL_SUCCESS;
+                    return i;
                 }
                 break;
             }
@@ -401,81 +396,81 @@ namespace Solaire{ namespace Utility{ namespace Strings{
      }
 
     template<typename T>
-    static ParseResult Parse(const char* const aBegin, const char* const aEnd, T& aOutput) = delete;
+    static const char* Parse(const char* const aBegin, const char* const aEnd, T& aOutput) = delete;
 
     template<>
-    ParseResult Parse<double>(const char* const aBegin, const char* const aEnd, double& aOutput){
+    const char* Parse<double>(const char* const aBegin, const char* const aEnd, double& aOutput){
         return ParseNumber(aBegin, aEnd, aOutput, true, true);
     }
 
     template<>
-    ParseResult Parse<float>(const char* const aBegin, const char* const aEnd, float& aOutput){
+    const char* Parse<float>(const char* const aBegin, const char* const aEnd, float& aOutput){
         double tmp;
-        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, true);
+        const char* const res = ParseNumber(aBegin, aEnd, tmp, true, true);
         aOutput = static_cast<float>(tmp);
         return res;
     }
 
     template<>
-    ParseResult Parse<int64_t>(const char* const aBegin, const char* const aEnd, int64_t& aOutput){
+    const char* Parse<int64_t>(const char* const aBegin, const char* const aEnd, int64_t& aOutput){
         double tmp;
-        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
+        const char* const res = ParseNumber(aBegin, aEnd, tmp, true, false);
         aOutput = static_cast<int64_t>(tmp);
         return res;
     }
 
     template<>
-    ParseResult Parse<int32_t>(const char* const aBegin, const char* const aEnd, int32_t& aOutput){
+    const char* Parse<int32_t>(const char* const aBegin, const char* const aEnd, int32_t& aOutput){
         double tmp;
-        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
+        const char* const res = ParseNumber(aBegin, aEnd, tmp, true, false);
         aOutput = static_cast<int32_t>(tmp);
         return res;
     }
 
     template<>
-    ParseResult Parse<int16_t>(const char* const aBegin, const char* const aEnd, int16_t& aOutput){
+    const char* Parse<int16_t>(const char* const aBegin, const char* const aEnd, int16_t& aOutput){
         double tmp;
-        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
+        const char* const res = ParseNumber(aBegin, aEnd, tmp, true, false);
         aOutput = static_cast<int16_t>(tmp);
         return res;
     }
 
     template<>
-    ParseResult Parse<int8_t>(const char* const aBegin, const char* const aEnd, int8_t& aOutput){
+    const char* Parse<int8_t>(const char* const aBegin, const char* const aEnd, int8_t& aOutput){
         double tmp;
-        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, true, false);
+        const char* const res = ParseNumber(aBegin, aEnd, tmp, true, false);
         aOutput = static_cast<int8_t>(tmp);
         return res;
     }
 
     template<>
-    ParseResult Parse<uint64_t>(const char* const aBegin, const char* const aEnd, uint64_t& aOutput){
+    const char* Parse<uint64_t>(const char* const aBegin, const char* const aEnd, uint64_t& aOutput){
         double tmp;
-        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
+        const char* const res = ParseNumber(aBegin, aEnd, tmp, false, false);
         aOutput = static_cast<uint64_t>(tmp);
         return res;
     }
 
     template<>
-    ParseResult Parse<uint32_t>(const char* const aBegin, const char* const aEnd, uint32_t& aOutput){
+    const char* Parse<uint32_t>(const char* const aBegin, const char* const aEnd, uint32_t& aOutput){
         double tmp;
-        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
+        const char* const res = ParseNumber(aBegin, aEnd, tmp, false, false);
         aOutput = static_cast<uint32_t>(tmp);
         return res;
     }
 
     template<>
-    ParseResult Parse<uint16_t>(const char* const aBegin, const char* const aEnd, uint16_t& aOutput){
+    const char* Parse<uint16_t>(const char* const aBegin, const char* const aEnd, uint16_t& aOutput){
         double tmp;
-        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
+        const char* const res = ParseNumber(aBegin, aEnd, tmp, false, false);
         aOutput = static_cast<uint16_t>(tmp);
         return res;
     }
 
     template<>
-    ParseResult Parse<uint8_t>(const char* const aBegin, const char* const aEnd, uint8_t& aOutput){
+    const char* Parse<uint8_t>(const char* const aBegin, const char* const aEnd, uint8_t& aOutput){
         double tmp;
-        const ParseResult res = ParseNumber(aBegin, aEnd, tmp, false, false);
+        const char* const res = ParseNumber(aBegin, aEnd, tmp, false, false);
         aOutput = static_cast<uint8_t>(tmp);
         return res;
     }
@@ -483,8 +478,8 @@ namespace Solaire{ namespace Utility{ namespace Strings{
      template<typename T>
      static T Parse(const char* const aBegin, const char* const aEnd){
          T tmp;
-         const ParseResult res = Parse<T>(aBegin, aEnd, tmp);
-         if(res == ParseResult::FAIL) throw std::runtime_error("Failed to parse value");
+         const char* const res = Parse<T>(aBegin, aEnd, tmp);
+         if(res == nullptr) throw std::runtime_error("Failed to parse value");
          return tmp;
      }
 }}}
