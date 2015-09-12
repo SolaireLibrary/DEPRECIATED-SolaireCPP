@@ -71,11 +71,12 @@ namespace Solaire{ namespace Utility{
 
                 if(task != nullptr){
 
-					if(! task->HasBeenCancled()) {
+					if(! task->mCanceled) {
 						task->mState = Task::EXECUTING;
-						task->Execute();
-						task->mState = Task::POST_EXECUTION;
+						task->OnExecute();
 					}
+
+					task->mState = Task::POST_EXECUTION;
 
 					{
 						std::lock_guard<std::mutex> lock(aManager->mLock);
@@ -138,11 +139,17 @@ namespace Solaire{ namespace Utility{
         }
 
         void Schedule(Task* aTask) override{
-            mLock.lock();
-				aTask->mCanceled = false;
-				aTask->mState = Task::SCHEDULED;
-                mScheduledTasks.push_back(aTask);
-            mLock.unlock();
+			if(aTask == nullptr) throw std::runtime_error("Cannot schedule null task");
+
+			const Task::State prev = aTask->GetState();
+			aTask->mState = Task::SCHEDULED;
+			aTask->mCanceled = false;
+			aTask->OnScheduled(prev);
+			{
+				std::lock_guard<std::mutex> lock(mLock);
+				mScheduledTasks.push_back(aTask);
+			}
+
             //! \TODO Notify threads that a new task has been scheduled
         }
     public:
@@ -190,13 +197,13 @@ namespace Solaire{ namespace Utility{
 
 			for(Task* i : mScheduledTasks){
 				i->mState = Task::PRE_EXECUTION;
-				i->PreExecute();
+				i->OnPreExecute();
 				mPreTasks.push_back(i);
 			}
 
 			for(Task* i : mPostTasks){
-                i->PostExecute();
-				i->mState = i->HasBeenCancled() ? Task::CANCELED : Task::EXECUTED;
+                i->OnPostExecute(i->mCanceled);
+				i->mState = i->mCanceled ? Task::CANCELED : Task::EXECUTED;
             }
 
             for(const ProgressBundle& i : mProgressList){

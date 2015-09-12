@@ -83,9 +83,9 @@ namespace Solaire{ namespace Utility{
     private:
         friend AsyncManager;
 
-        std::atomic_bool mCanceled;
         TaskManager* mManager;
 		std::atomic_uint8_t mState;
+		std::atomic_bool mCanceled;
 
         Task(const Task&) = delete;
         Task(Task&&) = delete;
@@ -98,16 +98,14 @@ namespace Solaire{ namespace Utility{
             mManager->SendProgress(this, aProgress);
         }
 
-        bool HasBeenCancled() const{
-            return mCanceled;
-        }
-
-		virtual void PreExecute() = 0;
-		virtual void Execute() = 0;
-		virtual void PostExecute() = 0;
+		virtual void OnScheduled(const State aPreviousState) = 0;
+		virtual void OnPreExecute() = 0;
+		virtual void OnExecute() = 0;
+		virtual void OnPostExecute(const bool aWasCanceled) = 0;
+		virtual void OnCanceled() = 0;
     public:
-        Task() :
-            mCanceled(false),
+		Task() :
+			mCanceled(false),
             mManager(nullptr),
 			mState(NOT_SCHEDULED)
         {
@@ -129,6 +127,7 @@ namespace Solaire{ namespace Utility{
 
         void Cancel(){
             mCanceled = true;
+			OnCanceled();
         }
 
 		void Wait() {
@@ -174,31 +173,24 @@ namespace Solaire{ namespace Utility{
     private:
         result_t mResult;
     protected:
-        virtual result_t ExecuteForResult() = 0;
-		virtual void PostExecute(result_t& aResult) = 0;
         virtual void OnRecieveProgress(progress_t& aProgress) = 0;
-
 
         void SendProgress(progress_t&& aProgress){
             progress_t* tmp = new progress_t(std::move(aProgress));
             Task::SendProgress(tmp);
         }
 
-        // Inherited from Task
+		void SetResult(result_t aResult){
+			mResult = aResult;
+		}
 
-        void Execute() override{
-            mResult = ExecuteForResult();
-        }
+        // Inherited from Task
 
         void OnRecieveProgress(void* aProgress) override{
             progress_t* ptr = static_cast<progress_t*>(aProgress);
             OnRecieveProgress(*ptr);
             delete ptr;
         }
-
-		void PostExecute() override{
-			PostExecute(mResult);
-		}
     public:
         ReturnTask()
         {
