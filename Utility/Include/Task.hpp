@@ -49,17 +49,28 @@ namespace Solaire{ namespace Utility{
 
         }
 
+		virtual bool CanUpdate() const = 0;
         virtual void Update() = 0;
     };
 
     class AsyncManager;
 
     class Task{
+	public:
+		enum State : uint8_t {
+			NOT_SCHEDULED,
+			PRE_EXECUTION,
+			EXECUTING,
+			POST_EXECUTION,
+			CANCELED,
+			EXECUTED
+		};
     private:
         friend AsyncManager;
 
         std::atomic_bool mCanceled;
         TaskManager* mManager;
+		std::atomic_uint8_t mState;
 
         Task(const Task&) = delete;
         Task(Task&&) = delete;
@@ -72,21 +83,18 @@ namespace Solaire{ namespace Utility{
             mManager->SendProgress(this, aProgress);
         }
 
-        void Schedule(){
-            mManager->Schedule(this);
-        }
-
         bool HasBeenCancled() const{
             return mCanceled;
         }
 
-        virtual void PreExecute() = 0;
-        virtual void Execute() = 0;
-        virtual void PostExecute() = 0;
+		virtual void PreExecute() = 0;
+		virtual void Execute() = 0;
+		virtual void PostExecute() = 0;
     public:
         Task() :
             mCanceled(false),
-            mManager(nullptr)
+            mManager(nullptr),
+			mState(NOT_SCHEDULED)
         {
 
         }
@@ -95,11 +103,48 @@ namespace Solaire{ namespace Utility{
 
         }
 
+		State GetState() const {
+			return static_cast<State>(mState.load());
+		}
+
+		void Schedule(TaskManager& aManager){
+			mManager = &aManager;
+			mManager->Schedule(this);
+		}
+
         void Cancel(){
             mCanceled = true;
         }
 
-        virtual bool IsRunning() const = 0;
+		void Wait() {
+			//! \TODO Implement better Task.Wait
+
+			auto IsDone = [&](){
+				const State state = GetState();
+				return state == CANCELED || state == EXECUTED;
+			};
+
+			while (!IsDone()) std::this_thread::sleep_for(std::chrono::milliseconds(30));
+		}
+
+		bool WaitFor(const size_t aMilliseconds) {
+			//! \TODO Implement better Task.WaitFor
+
+			auto IsDone = [&]() {
+				const State state = GetState();
+				return state == CANCELED || state == EXECUTED;
+			};
+
+			if(IsDone()) return true;
+			std::this_thread::sleep_for(std::chrono::milliseconds(aMilliseconds));
+			return IsDone();
+		}
+
+		bool WaitUntil(const size_t aTimeMilliseconds) {
+			//! \TODO Implement Task.WaitUntil
+			throw std::runtime_error("Not implemented");
+			// Return WaitFor(aTimeMilliseconds - currentTimeMilliseconds);
+		}
     };
 
     template<typename RESULT, typename PROGRESS>
@@ -112,10 +157,10 @@ namespace Solaire{ namespace Utility{
         typedef RESULT result_t;
         typedef PROGRESS progress_t;
     private:
-        std::atomic_bool mRunning;
         result_t mResult;
     protected:
         virtual result_t ExecuteForResult() = 0;
+		virtual void PostExecute(result_t& aResult) = 0;
         virtual void OnRecieveProgress(progress_t& aProgress) = 0;
 
 
@@ -127,9 +172,7 @@ namespace Solaire{ namespace Utility{
         // Inherited from Task
 
         void Execute() override{
-            mRunning = true;
             mResult = ExecuteForResult();
-            mRunning = false;
         }
 
         void OnRecieveProgress(void* aProgress) override{
@@ -137,9 +180,12 @@ namespace Solaire{ namespace Utility{
             OnRecieveProgress(*ptr);
             delete ptr;
         }
+
+		void PostExecute() override{
+			PostExecute(mResult);
+		}
     public:
-        ReturnTask() :
-            mRunning(false)
+        ReturnTask()
         {
 
         }
@@ -148,17 +194,10 @@ namespace Solaire{ namespace Utility{
 
         }
 
-        result_t Get(){
-            // wait
-            //! \TODO Implement Task.Wait
-            throw std::runtime_error("Not implemented");
-        }
-
-        // Inherited from Task
-
-        bool IsRunning() const override{
-            return mRunning;
-        }
+		result_t Get(){
+			if(GetState() != EXECUTED) throw std::runtime_error("Can only get result after a Task has successfully executed");
+			return mResult;
+		}
     };
 
 }}

@@ -46,9 +46,9 @@ namespace Solaire{ namespace Utility{
         std::vector<Task*> mPreTasks;
         std::vector<Task*> mPostTasks;
         std::vector<ProgressBundle> mProgressList;
-        std::mutex mLock;
+        mutable std::mutex mLock;
         std::atomic_bool mExit;
-        std::vector<std::thread> mTread;
+        std::vector<std::thread> mThreads;
 
         AsyncManager(const AsyncManager&) = delete;
         AsyncManager(AsyncManager&&) = delete;
@@ -62,16 +62,16 @@ namespace Solaire{ namespace Utility{
                     if(! aManager->mPreTasks.empty()){
                         task = aManager->mPreTasks.back();
                         aManager->mPreTasks.pop_back();
-
-                        if(task->HasBeenCancled()){
-                            task = nullptr;
-                            aManager->mPostTasks.push_back(task);
-                        }
                     }
                 aManager->mLock.unlock();
 
                 if(task != nullptr){
-                    task->Execute();
+
+					if(! task->HasBeenCancled()) {
+						task->mState = Task::EXECUTING;
+						task->Execute();
+						task->mState = Task::POST_EXECUTION;
+					}
 
                     aManager->mLock.lock();
                         aManager->mPostTasks.push_back(task);
@@ -93,6 +93,7 @@ namespace Solaire{ namespace Utility{
         }
 
         void Schedule(Task* aTask) override{
+			aTask->mState = Task::PRE_EXECUTION;
             aTask->PreExecute();
             mLock.lock();
                 mPreTasks.push_back(aTask);
@@ -105,35 +106,39 @@ namespace Solaire{ namespace Utility{
         {
             if(aThreads < 1) throw std::runtime_error("AsyncManager must have at least one thread");
             for(size_t i = 0; i < aThreads; ++i){
-                //! \TODO Launch thread
-                //mThreads.push_back(std::thread(ThreadFunction, this, i));
+                mThreads.push_back(std::thread(ThreadFunction, this, i));
             }
         }
 
         ~AsyncManager(){
             mExit = true;
             //! \TODO Notify threads mExit has been set
-            //for(std::thread& i : mThreads){
-                //! \TODO Join with thread
-                //i.join();
-            //}
+            for(std::thread& i : mThreads){
+                i.join();
+            }
         }
 
         // Inherited from TaskManager
 
+		bool CanUpdate() const override{
+			std::lock_guard<std::mutex> lock(mLock);
+			return (mPostTasks.size() + mProgressList.size()) > 0;
+		}
+
         void Update() override{
-            mLock.lock();
-                for(Task* i : mPostTasks){
-                    i->PostExecute();
-                }
+			std::lock_guard<std::mutex> lock(mLock);
 
-                for(const ProgressBundle& i : mProgressList){
-                    i.first->OnRecieveProgress(i.second);
-                }
+            for(Task* i : mPostTasks){
+                i->PostExecute();
+				i->mState = i->HasBeenCancled() ? Task::CANCELED : Task::EXECUTED;
+            }
 
-                mPostTasks.clear();
-                mProgressList.clear();
-            mLock.unlock();
+            for(const ProgressBundle& i : mProgressList){
+                i.first->OnRecieveProgress(i.second);
+            }
+
+            mPostTasks.clear();
+            mProgressList.clear();
         }
     };
 
