@@ -161,48 +161,54 @@ namespace Solaire{ namespace Utility{
 		}
     };
 
+	template<typename PROGRESS>
+	class TypedProgressTask : public Task {
+	public:
+		static_assert(std::is_move_constructible<PROGRESS>::value, "TypedProgressTask::progress_t must have a move constructor");
+	
+		typedef PROGRESS progress_t;
+	protected:
+		virtual void OnRecieveProgress(progress_t& aProgress) = 0;
+
+		void SendProgress(progress_t&& aProgress) {
+			progress_t* tmp = new progress_t(std::move(aProgress));
+			Task::SendProgress(tmp);
+		}
+
+		// Inherited from Task
+
+		void OnRecieveProgress(void* aProgress) override {
+			progress_t* ptr = static_cast<progress_t*>(aProgress);
+			OnRecieveProgress(*ptr);
+			delete ptr;
+		}
+	public:
+		virtual ~TypedProgressTask() {
+
+		}
+	};
+
     template<typename RESULT, typename PROGRESS>
-    class ReturnTask : public Task{
+    class ResultTask : public TypedProgressTask<PROGRESS>{
     public:
-        static_assert(std::is_default_constructible<RESULT>::value, "Task.result_t must have a default constructor");
-        static_assert(std::is_copy_assignable<RESULT>::value, "Task.result_t must have a copy assignment");
-        static_assert(std::is_copy_constructible<PROGRESS>::value, "Task.progress_t must have a copy constructor");
+        static_assert(std::is_default_constructible<RESULT>::value, "ResultTask::result_t must have a default constructor");
+        static_assert(std::is_copy_assignable<RESULT>::value, "ResultTask::result_t must have a copy assignment");
 
         typedef RESULT result_t;
-        typedef PROGRESS progress_t;
     private:
         result_t mResult;
     protected:
-        virtual void OnRecieveProgress(progress_t& aProgress) = 0;
-
-        void SendProgress(progress_t&& aProgress){
-            progress_t* tmp = new progress_t(std::move(aProgress));
-            Task::SendProgress(tmp);
-        }
-
 		void SetResult(result_t aResult){
 			mResult = aResult;
 		}
 
-        // Inherited from Task
-
-        void OnRecieveProgress(void* aProgress) override{
-            progress_t* ptr = static_cast<progress_t*>(aProgress);
-            OnRecieveProgress(*ptr);
-            delete ptr;
-        }
     public:
-        ReturnTask()
-        {
-
-        }
-
-        virtual ~ReturnTask(){
+        virtual ~ResultTask(){
 
         }
 
 		result_t Get(){
-			if(GetState() != EXECUTED) throw std::runtime_error("Can only get result after a Task has successfully executed");
+			Wait();
 			return mResult;
 		}
     };
