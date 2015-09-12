@@ -43,6 +43,7 @@ namespace Solaire{ namespace Utility{
         typedef std::pair<Task*, void*> ProgressBundle;
 
         Task* mActiveTask;
+		std::vector<Task*> mScheduledTasks;
         std::vector<Task*> mPreTasks;
         std::vector<Task*> mPostTasks;
         std::vector<ProgressBundle> mProgressList;
@@ -93,10 +94,8 @@ namespace Solaire{ namespace Utility{
         }
 
         void Schedule(Task* aTask) override{
-			aTask->mState = Task::PRE_EXECUTION;
-            aTask->PreExecute();
             mLock.lock();
-                mPreTasks.push_back(aTask);
+                mScheduledTasks.push_back(aTask);
             mLock.unlock();
             //! \TODO Notify threads that a new task has been scheduled
         }
@@ -122,13 +121,19 @@ namespace Solaire{ namespace Utility{
 
 		bool CanUpdate() const override{
 			std::lock_guard<std::mutex> lock(mLock);
-			return (mPostTasks.size() + mProgressList.size()) > 0;
+			return (mScheduledTasks.size() + mPostTasks.size() + mProgressList.size()) > 0;
 		}
 
         void Update() override{
 			std::lock_guard<std::mutex> lock(mLock);
 
-            for(Task* i : mPostTasks){
+			for(Task* i : mScheduledTasks){
+				i->mState = Task::PRE_EXECUTION;
+				i->PreExecute();
+				mPreTasks.push_back(i);
+			}
+
+			for(Task* i : mPostTasks){
                 i->PostExecute();
 				i->mState = i->HasBeenCancled() ? Task::CANCELED : Task::EXECUTED;
             }
@@ -137,6 +142,7 @@ namespace Solaire{ namespace Utility{
                 i.first->OnRecieveProgress(i.second);
             }
 
+			mScheduledTasks.clear();
             mPostTasks.clear();
             mProgressList.clear();
         }
