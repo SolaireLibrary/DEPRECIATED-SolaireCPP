@@ -56,7 +56,7 @@ namespace Solaire{ namespace Utility{
 		virtual size_t ForEachTask(std::function<void(Task&)> aFunction) = 0;
 		virtual size_t ForEachTask(std::function<void(const Task&)> aFunction) const = 0;
 
-		void WaitAll(const size_t aSleepTimeMilli = 30){
+		void WaitUntilEmpty(const size_t aSleepTimeMilli = 30){
 			while(GetNumberOfTasksQueued() > 0){
 				if(CanUpdate()){
 					Update();
@@ -73,6 +73,7 @@ namespace Solaire{ namespace Utility{
 	public:
 		enum State : uint8_t {
 			NOT_SCHEDULED,
+			SCHEDULED,
 			PRE_EXECUTION,
 			EXECUTING,
 			POST_EXECUTION,

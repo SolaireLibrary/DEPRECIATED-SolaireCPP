@@ -139,6 +139,8 @@ namespace Solaire{ namespace Utility{
 
         void Schedule(Task* aTask) override{
             mLock.lock();
+				aTask->mCanceled = false;
+				aTask->mState = Task::SCHEDULED;
                 mScheduledTasks.push_back(aTask);
             mLock.unlock();
             //! \TODO Notify threads that a new task has been scheduled
@@ -161,6 +163,10 @@ namespace Solaire{ namespace Utility{
                 i.join();
             }
         }
+
+		size_t GetNumberOfWorkers() const{
+			return mThreads.size();
+		}
 
         // Inherited from TaskManager
 
