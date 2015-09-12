@@ -42,7 +42,7 @@ namespace Solaire{ namespace Utility{
     private:
         typedef std::pair<Task*, void*> ProgressBundle;
 
-        Task* mActiveTask;
+		std::vector<Task*> mActiveTasks;
 		std::vector<Task*> mScheduledTasks;
         std::vector<Task*> mPreTasks;
         std::vector<Task*> mPostTasks;
@@ -59,12 +59,15 @@ namespace Solaire{ namespace Utility{
         static void ThreadFunction(AsyncManager* const aManager, const size_t aIndex){
             Task* task = nullptr;
             while(! aManager->mExit){
-                aManager->mLock.lock();
-                    if(! aManager->mPreTasks.empty()){
-                        task = aManager->mPreTasks.back();
-                        aManager->mPreTasks.pop_back();
-                    }
-                aManager->mLock.unlock();
+				{
+					std::lock_guard<std::mutex> lock(aManager->mLock);
+
+					if (! aManager->mPreTasks.empty()) {
+						task = aManager->mPreTasks.back();
+						aManager->mPreTasks.pop_back();
+					}
+					aManager->mActiveTasks[aIndex] = task;
+				}
 
                 if(task != nullptr){
 
@@ -74,16 +77,57 @@ namespace Solaire{ namespace Utility{
 						task->mState = Task::POST_EXECUTION;
 					}
 
-                    aManager->mLock.lock();
-                        aManager->mPostTasks.push_back(task);
-                    aManager->mLock.unlock();
-
-                    task = nullptr;
+					{
+						std::lock_guard<std::mutex> lock(aManager->mLock);
+						aManager->mPostTasks.push_back(task);
+						task = nullptr;
+						aManager->mActiveTasks[aIndex] = nullptr;
+					}
                 }else{
                     //! \TODO Sleep until a new task is added or mExit is set to true
                 }
             }
         }
+
+		size_t CountActiveTasks() const{
+			size_t count = 0;
+			for (const Task* i : mActiveTasks) {
+				if (i != nullptr){
+					++count;
+				}
+			}
+			return count;
+		}
+
+		template<class F>
+		size_t ForEachTaskInternal(F aFunction) const{
+			size_t count = 0;
+			std::lock_guard<std::mutex> lock(mLock);
+
+			for(Task* i : mScheduledTasks){
+				aFunction(*i);
+				++count;
+			}
+
+			for(Task* i : mPreTasks){
+				aFunction(*i);
+				++count;
+			}
+
+			for(Task* i : mActiveTasks){
+				if(i != nullptr){
+					aFunction(*i);
+					++count;
+				}
+			}
+
+			for(Task* i : mPostTasks){
+				aFunction(*i);
+				++count;
+			}
+
+			return count;
+		}
     protected:
         // Inherited from TaskManager
 
@@ -105,6 +149,7 @@ namespace Solaire{ namespace Utility{
         {
             if(aThreads < 1) throw std::runtime_error("AsyncManager must have at least one thread");
             for(size_t i = 0; i < aThreads; ++i){
+				mActiveTasks.push_back(nullptr);
                 mThreads.push_back(std::thread(ThreadFunction, this, i));
             }
         }
@@ -118,6 +163,16 @@ namespace Solaire{ namespace Utility{
         }
 
         // Inherited from TaskManager
+
+		size_t GetNumberOfTasksQueued() const{
+			std::lock_guard<std::mutex> lock(mLock);
+
+			return
+				mScheduledTasks.size() +
+				mPreTasks.size() +
+				mPostTasks.size() +
+				CountActiveTasks();
+		}
 
 		bool CanUpdate() const override{
 			std::lock_guard<std::mutex> lock(mLock);
@@ -146,6 +201,14 @@ namespace Solaire{ namespace Utility{
             mPostTasks.clear();
             mProgressList.clear();
         }
+
+		size_t ForEachTask(std::function<void(Task&)> aFunction) override{
+			return ForEachTaskInternal(aFunction);
+		}
+
+		size_t ForEachTask(std::function<void(const Task&)> aFunction) const override{
+			return ForEachTaskInternal(aFunction);
+		}
     };
 
 }}

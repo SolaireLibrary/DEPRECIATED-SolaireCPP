@@ -33,6 +33,7 @@
 
 #include <type_traits>
 #include <atomic>
+#include <functional>
 
 namespace Solaire{ namespace Utility{
 
@@ -49,8 +50,21 @@ namespace Solaire{ namespace Utility{
 
         }
 
+		virtual size_t GetNumberOfTasksQueued() const = 0;
 		virtual bool CanUpdate() const = 0;
         virtual void Update() = 0;
+		virtual size_t ForEachTask(std::function<void(Task&)> aFunction) = 0;
+		virtual size_t ForEachTask(std::function<void(const Task&)> aFunction) const = 0;
+
+		void WaitAll(const size_t aSleepTimeMilli = 30){
+			while(GetNumberOfTasksQueued() > 0){
+				if(CanUpdate()){
+					Update();
+				}else{
+					std::this_thread::sleep_for(std::chrono::milliseconds(aSleepTimeMilli));
+				}
+			}
+		}
     };
 
     class AsyncManager;
