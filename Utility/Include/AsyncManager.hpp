@@ -34,7 +34,9 @@
 #include <thread>
 #include <mutex>
 #include <vector>
+#include <deque>
 #include "Task.hpp"
+#include "Macros.hpp"
 
 namespace Solaire{ namespace Utility{
 
@@ -42,9 +44,10 @@ namespace Solaire{ namespace Utility{
     private:
         typedef std::pair<Task*, void*> ProgressBundle;
 
+		std::condition_variable mConditionVariable;
 		std::vector<Task*> mActiveTasks;
 		std::vector<Task*> mScheduledTasks;
-        std::vector<Task*> mPreTasks;
+        std::deque<Task*> mPreTasks;
         std::vector<Task*> mPostTasks;
         std::vector<ProgressBundle> mProgressList;
         mutable std::mutex mLock;
@@ -57,35 +60,61 @@ namespace Solaire{ namespace Utility{
         AsyncManager& operator=(AsyncManager&&) = delete;
 
         static void ThreadFunction(AsyncManager* const aManager, const size_t aIndex){
-            Task* task = nullptr;
-            while(! aManager->mExit){
-				{
-					std::lock_guard<std::mutex> lock(aManager->mLock);
+			std::mutex sleepLock;
+			std::mutex& managerLock = aManager->mLock;
+            Task* currentTask = nullptr;
 
+			const auto GetNextTask = [&]()->Task*{
+				Task* tmp = nullptr;
+
+				solaire_synchronized(managerLock,
 					if (! aManager->mPreTasks.empty()) {
-						task = aManager->mPreTasks.back();
-						aManager->mPreTasks.pop_back();
-					}
-					aManager->mActiveTasks[aIndex] = task;
+						tmp = aManager->mPreTasks.front();
+						aManager->mPreTasks.pop_front();
+					} 
+				)
+
+				return tmp;
+			};
+
+			const auto SetCurrentTask = [&](Task* const aTask)->void{
+				currentTask = aTask;
+
+				solaire_synchronized(managerLock,
+					aManager->mActiveTasks[aIndex] = aTask;
+				)
+			};
+
+			const auto ExecuteTask = [&](Task* const aTask) {
+				if (!currentTask->mCanceled) {
+					currentTask->mState = Task::EXECUTING;
+					currentTask->OnExecute();
 				}
 
-                if(task != nullptr){
+				currentTask->mState = Task::POST_EXECUTION;
 
-					if(! task->mCanceled) {
-						task->mState = Task::EXECUTING;
-						task->OnExecute();
-					}
+				solaire_synchronized(managerLock,
+					aManager->mPostTasks.push_back(aTask);
+				)
+			};
 
-					task->mState = Task::POST_EXECUTION;
+			const auto GetCurrentTask = [&]()->Task*{
+				return currentTask;
+			};
 
-					{
-						std::lock_guard<std::mutex> lock(aManager->mLock);
-						aManager->mPostTasks.push_back(task);
-						task = nullptr;
-						aManager->mActiveTasks[aIndex] = nullptr;
-					}
+			const auto HasCurrentTask = [&]()->bool{
+				return currentTask != nullptr;
+			};
+
+            while(! aManager->mExit){
+				SetCurrentTask(GetNextTask());
+
+                if(HasCurrentTask()){
+					ExecuteTask(GetCurrentTask());
+					SetCurrentTask(nullptr);
                 }else{
-                    //! \TODO Sleep until a new task is added or mExit is set to true
+					std::unique_lock<std::mutex> lock(sleepLock);
+					aManager->mConditionVariable.wait(lock);
                 }
             }
         }
@@ -103,29 +132,29 @@ namespace Solaire{ namespace Utility{
 		template<class F>
 		size_t ForEachTaskInternal(F aFunction) const{
 			size_t count = 0;
-			std::lock_guard<std::mutex> lock(mLock);
-
-			for(Task* i : mScheduledTasks){
-				aFunction(*i);
-				++count;
-			}
-
-			for(Task* i : mPreTasks){
-				aFunction(*i);
-				++count;
-			}
-
-			for(Task* i : mActiveTasks){
-				if(i != nullptr){
+			solaire_synchronized(mLock,
+				for(Task* i : mScheduledTasks){
 					aFunction(*i);
 					++count;
 				}
-			}
 
-			for(Task* i : mPostTasks){
-				aFunction(*i);
-				++count;
-			}
+				for(Task* i : mPreTasks){
+					aFunction(*i);
+					++count;
+				}
+
+				for(Task* i : mActiveTasks){
+					if(i != nullptr){
+						aFunction(*i);
+						++count;
+					}
+				}
+
+				for(Task* i : mPostTasks){
+					aFunction(*i);
+					++count;
+				}
+			)
 
 			return count;
 		}
@@ -133,9 +162,9 @@ namespace Solaire{ namespace Utility{
         // Inherited from TaskManager
 
         void SendProgress(Task* aTask, void* aProgress) override{
-            mLock.lock();
+			solaire_synchronized(mLock,
                 mProgressList.push_back(ProgressBundle(aTask, aProgress));
-            mLock.unlock();
+			)
         }
 
         void Schedule(Task* aTask) override{
@@ -144,13 +173,12 @@ namespace Solaire{ namespace Utility{
 			const Task::State prev = aTask->GetState();
 			aTask->mState = Task::SCHEDULED;
 			aTask->mCanceled = false;
-			aTask->OnScheduled(prev);
-			{
-				std::lock_guard<std::mutex> lock(mLock);
+			aTask->OnScheduled(prev); 
+			solaire_synchronized(mLock ,
 				mScheduledTasks.push_back(aTask);
-			}
+			)
 
-            //! \TODO Notify threads that a new task has been scheduled
+			mConditionVariable.notify_one();
         }
     public:
         AsyncManager(const size_t aThreads = 1) :
@@ -162,10 +190,10 @@ namespace Solaire{ namespace Utility{
                 mThreads.push_back(std::thread(ThreadFunction, this, i));
             }
         }
-
+		 
         ~AsyncManager(){
             mExit = true;
-            //! \TODO Notify threads mExit has been set
+		 	mConditionVariable.notify_all();
             for(std::thread& i : mThreads){
                 i.join();
             }
@@ -178,41 +206,42 @@ namespace Solaire{ namespace Utility{
         // Inherited from TaskManager
 
 		size_t GetNumberOfTasksQueued() const{
-			std::lock_guard<std::mutex> lock(mLock);
-
-			return
-				mScheduledTasks.size() +
-				mPreTasks.size() +
-				mPostTasks.size() +
-				CountActiveTasks();
-		}
+			solaire_synchronized(mLock,
+				return
+					mScheduledTasks.size() +
+		 			mPreTasks.size() +
+		 			mPostTasks.size() +
+		 			CountActiveTasks();
+		 	)
+		} 
 
 		bool CanUpdate() const override{
-			std::lock_guard<std::mutex> lock(mLock);
-			return (mScheduledTasks.size() + mPostTasks.size() + mProgressList.size()) > 0;
+			solaire_synchronized(mLock,
+				return (mScheduledTasks.size() + mPostTasks.size() + mProgressList.size()) > 0;
+			)
 		}
 
         void Update() override{
-			std::lock_guard<std::mutex> lock(mLock);
+			solaire_synchronized(mLock,
+				for(Task* i : mScheduledTasks){
+					i->mState = Task::PRE_EXECUTION;
+					i->OnPreExecute();
+					mPreTasks.push_back(i);
+				}
 
-			for(Task* i : mScheduledTasks){
-				i->mState = Task::PRE_EXECUTION;
-				i->OnPreExecute();
-				mPreTasks.push_back(i);
-			}
+				for(Task* i : mPostTasks){
+					i->OnPostExecute(i->mCanceled);
+					i->mState = i->mCanceled ? Task::CANCELED : Task::EXECUTED;
+				}
 
-			for(Task* i : mPostTasks){
-                i->OnPostExecute(i->mCanceled);
-				i->mState = i->mCanceled ? Task::CANCELED : Task::EXECUTED;
-            }
+				for(const ProgressBundle& i : mProgressList){
+					i.first->OnRecieveProgress(i.second);
+				}
 
-            for(const ProgressBundle& i : mProgressList){
-                i.first->OnRecieveProgress(i.second);
-            }
-
-			mScheduledTasks.clear();
-            mPostTasks.clear();
-            mProgressList.clear();
+				mScheduledTasks.clear();
+				mPostTasks.clear();
+				mProgressList.clear();
+			)
         }
 
 		size_t ForEachTask(std::function<void(Task&)> aFunction) override{
