@@ -33,12 +33,6 @@
 
 #define solaire_synchronized(aLock, aCode)\
 {\
-	std::lock_guard<decltype(aLock)> _solaire_guard_ ## alock(aLock);\
-	aCode\
-}
-
-#define solaire_synchronized_alt(aLock, aCode)\
-{\
 	std::lock_guard<decltype(aLock)> _solaire_guard(aLock);\
 	aCode\
 }
