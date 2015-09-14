@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_MACROS_HPP
-#define SOLAIRE_UTILITY_MACROS_HPP
+#ifndef SOLAIRE_CORE_MACROS_HPP
+#define SOLAIRE_CORE_MACROS_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -28,8 +28,18 @@
 	\version 1.0
 	\date
 	Created			: 13th September 2015
-	Last Modified	: 13th September 2015
+	Last Modified	: 14th September 2015
 */
+
+#define SOLAIRE_EXCEPTION(aName, aMessage)\
+class aName : public std::exception {\
+public:\
+	const char* what() const override {\
+		return aMessage;\
+	}\
+};
+
+#define solaire_runtime_assert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage);
 
 #define solaire_synchronized(aLock, aCode)\
 {\
