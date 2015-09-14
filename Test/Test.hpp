@@ -47,15 +47,15 @@ namespace Solaire{ namespace Test{
 	protected:
 		virtual void Run() const = 0;
 
-		void Pass(const std::string& aMessage) {
+		void Pass(const std::string& aMessage) const{
 			if(Listener == nullptr) throw ListenerNotSetException();
 			Listener->OnTestPass(*this, aMessage);
 			throw InternalException();
 		}
 
-		void Fail(const std::string& aMessage) {
+		void Fail(const std::string& aMessage) const{
 			if(Listener == nullptr) throw ListenerNotSetException();
-			Listener->OnTestPass(*this, aMessage);
+			Listener->OnTestFail(*this, aMessage);
 			throw InternalException();
 		}
 	public:
@@ -89,6 +89,22 @@ namespace Solaire{ namespace Test{
 				Listener->OnTestError(*this, "Non-exception was thrown");
 			}
 		}
+	};
+
+#define SOLAIRE_TEST(aClassName, aTestName, aCode)\
+	class Test ## aClassName ## aTestName : public Solaire::Test::Test{\
+	protected:\
+		void Run() const override{\
+			aCode\
+		}\
+	public:\
+		std::string GetClassName() const override{\
+			return #aClassName;\
+		}\
+		\
+		std::string GetTestName() const override{\
+			return #aTestName;\
+		}\
 	};
 }}
 

@@ -19,12 +19,13 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include "..\..\..\Test\TestManager.hpp"
 #include "..\Distance.hpp"
 #include "Testing.hpp"
 
 namespace Solaire{ namespace Units { namespace Testing{
 
-	static bool DistanceTest00(){
+	SOLAIRE_TEST(Distance, SelfConvert,
 		// Create converter
 		Distance<double> converter;
 
@@ -32,7 +33,19 @@ namespace Solaire{ namespace Units { namespace Testing{
 		converter.Metres = 100.0;
 
 		// Check that the same value is returned
-		if(converter.Metres != 100.0) return false;
+		if(converter.Metres != 100.0){
+			Fail("Failed to convert METRE to METRE");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Distance, SmallUnits,
+		// Create converter
+		Distance<double> converter;
+
+		// Initialise with a value
+		converter.Metres = 100.0;
 
 		// Test that the unit is converted correctly
 		double threshold = 1.0;
@@ -41,42 +54,39 @@ namespace Solaire{ namespace Units { namespace Testing{
 
 		expectedResult = 3937.00787;
 		actualResult = converter.Inches;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-		
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert METRE to INCH");
+
 		expectedResult = 328.08399;
 		actualResult = converter.Feet;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert METRE to FOOT");
 
 		expectedResult = 109.36133;
 		actualResult = converter.Yards;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert METRE to Yard");
 
 		expectedResult = 0.0621371192;
 		actualResult = converter.Miles;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert METRE to MILE");
 
 		expectedResult = 4.97096954;
 		actualResult = converter.Chains;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-		
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert METRE to CHAIN");
+
 		expectedResult = 19.8838782;
 		actualResult = converter.Rods;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-		
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert METRE to ROD");
+
 		//! \TODO Test Links
 
-		return true;
-	}
+		Pass("METRE to LINK was not tested");
+	);
 
-	static bool DistanceTest01(){
+	SOLAIRE_TEST(Distance, MediumUnits,
 		// Create converter
 		Distance<double> converter;
 
 		// Initialise with a value
 		converter.Miles = 5.0;
-
-		// Check that the same value is returned
-		if(converter.Miles != 5.0) return false;
 
 		// Test that the unit is converted correctly
 		double threshold = 1.0;
@@ -85,30 +95,27 @@ namespace Solaire{ namespace Units { namespace Testing{
 
 		expectedResult = 40.0;
 		actualResult = converter.Furlongs;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-
-		//! \TODO Test LeagueUK & LeaugesUS
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert MILE to FURLONG");
 
 		expectedResult = 4.34488;
 		actualResult = converter.NauticalMiles;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert MILE to MILE_NAUTICAL");
 
 		expectedResult = 1.44829374;
 		actualResult = converter.NauticalLeagues;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-		
-		return true;
-	}
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert MILE to LEAUGE_NAUTICAL");
 
-	static bool DistanceTest02(){
+		//! \TODO Test LeagueUK & LeaugesUS
+
+		Pass("MILE to LEAGUGE_UK / LEAUGE_US were not tested");
+	);
+
+	SOLAIRE_TEST(Distance, BigUnits,
 		// Create converter
 		Distance<double> converter;
 
 		// Initialise with a value
 		converter.Lightyears = 1.0;
-
-		// Check that the same value is returned
-		if(converter.Lightyears != 1.0) return false;
 
 		// Test that the unit is converted correctly
 		double threshold = 1.0;
@@ -117,81 +124,52 @@ namespace Solaire{ namespace Units { namespace Testing{
 
 		expectedResult = 9.4605284e+15;
 		actualResult = converter.Metres;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-		
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert LIGHTYEAR to METRE");
+
 		expectedResult = 0.306594845;
 		actualResult = converter.Parsecs;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert LIGHTYEAR to PARSEC");
 
 		expectedResult = 9.4605284e+12;
 		actualResult = converter.Kilometres;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-		
-		return true;
-	}
-	
-	static bool DistanceTest03(){
-		// Create converter
-		Distance<float> converter;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) return Fail("Failed to convert LIGHTYEAR to KILO | METRE");
 
-		// Initialise with a value
-		converter.Miles = 5.0;
+		Pass("");
+	);
 
-		// Check that the same value is returned
-		if(converter.Miles != 5.0) return false;
-
-		// Test that the unit is converted correctly
-		float threshold = 1.0;
-		float expectedResult = 0.0;
-		float actualResult = 0.0;
-
-		expectedResult = 40.0;
-		actualResult = converter.Furlongs;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-
-		//! \TODO Test LeagueUK & LeaugesUS
-
-		expectedResult = 4.34488;
-		actualResult = converter.NauticalMiles;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-
-		expectedResult = 1.44829374;
-		actualResult = converter.NauticalLeagues;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-		
-		return true;
-	}
-	
-	static bool DistanceTest04(){
-		// Create converter
-		Distance<int> converter;
-
-		// Initialise with a value
-		converter.Miles = 5;
-
-		// Check that the same value is returned
-		if(converter.Miles != 5) return false;
-
+	SOLAIRE_TEST(Distance, StaticConvert,
 		// Test that the unit is converted correctly
 		double threshold = 1.0;
 		double expectedResult = 0.0;
 		double actualResult = 0.0;
 
-		expectedResult = 40.0;
-		actualResult = converter.Furlongs;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
+		expectedResult = 2;
+		actualResult = DistanceD::Convert(DistanceD::unit_t::YARD, DistanceD::unit_t::MILE, 3520);
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to static convert YARD to MILE using double values");
 
-		//! \TODO Test LeagueUK & LeaugesUS
+		Pass("");
+	);
 
-		expectedResult = std::floor(4.34488);
-		actualResult = converter.NauticalMiles;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
+	SOLAIRE_TEST(Distance, Integer,
+		// Test that the unit is converted correctly
+		double threshold = 1.0;
+		double expectedResult = 0.0;
+		double actualResult = 0.0;
 
-		expectedResult = std::floor(1.44829374);
-		actualResult = converter.NauticalLeagues;
-		if(PercentageDifference<double>(expectedResult, actualResult) > threshold) return false;
-		
-		return true;
+		expectedResult = 2;
+		actualResult = DistanceI::Convert(DistanceD::unit_t::YARD, DistanceD::unit_t::MILE, 3520);
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to static convert YARD to MILE using integer values");
+
+		Pass("");
+	);
+
+	static void DistanceTests(Test::TestManager& aManager){
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceSelfConvert()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceSmallUnits()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceMediumUnits()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceBigUnits()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceStaticConvert()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceInteger()));
 	}
 }}}
 

@@ -70,7 +70,7 @@ namespace Solaire { namespace Test {
 			}
 		}
 
-		void ForEachTest(std::function<void(const Test&)> aCallback) const{
+		void ForEachTest(std::function<void(Test&)> aCallback) const{
 			for(auto& i : mTests){
 				for(auto& j : i.second){
 					aCallback(*j.second);
@@ -78,7 +78,7 @@ namespace Solaire { namespace Test {
 			}
 		}
 
-		void ForEachTest(const std::string& aClassName, std::function<void(const Test&)> aCallback) const {
+		void ForEachTest(const std::string& aClassName, std::function<void(Test&)> aCallback) const {
 			auto& tests = FindTests(aClassName);
 			for(auto& i : tests){
 				aCallback(*i.second);
@@ -111,32 +111,32 @@ namespace Solaire { namespace Test {
 			});
 		}
 
-		void RunTest(const std::string& aClassName, const std::string& aTestName) const{
+		void Run(const std::string& aClassName, const std::string& aTestName) const{
 			FindTest(aClassName, aTestName)();
 		}
 
-		void RunTest(const std::string& aName) const{
+		void Run(const std::string& aName) const{
 			std::string className;
 			std::string testName;
 			ParseTestName(aName, className, testName);
-			RunTest(className, testName);
+			Run(className, testName);
 		}
 
-		void RunAllTests(const std::string& aClassName) const{
-			ForEachTest(aClassName, [](const Test& aTest){
+		void RunAll(const std::string& aClassName) const{
+			ForEachTest(aClassName, [](Test& aTest){
 				aTest();
 			});
 		}
 
 		void RunAll() const {
 			ForEachClass([this](const std::string& aName) {
-				RunAllTests(aName);
+				RunAll(aName);
 			});
 		}
 
-		void AddTest(std::shared_ptr<Test> aTest){
+		void Add(std::shared_ptr<Test> aTest){
 			const std::string className = aTest->GetClassName();
-			const std::string testName = aTest->GetClassName();
+			const std::string testName = aTest->GetTestName();
 
 			auto i = mTests.find(className);
 			if(i == mTests.end()){
