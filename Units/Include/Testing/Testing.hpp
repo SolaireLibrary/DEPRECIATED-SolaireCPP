@@ -32,6 +32,25 @@ namespace Solaire{ namespace Units{ namespace Testing{
 	static double PercentageDifference(T aFirst, T aSecond){
 		return (100.0 / aFirst)  * Difference<T>(aFirst, aSecond);
 	}
+
+	#define SOLAIRE_UNITS_TEST_CONVERT_DESCRIPTION(TYPE, inputValue, INPUT_UNIT, outputValue, OUTPUT_UNIT)\
+		std::string(TYPE) + " conversion of" + inputValue + " "  + INPUT_UNIT + " to " + outputValue + " " + OUTPUT_UNIT
+
+	#define SOLAIRE_UNITS_TEST_L_CONVERT(ConverterClass, T, INPUT_UNIT, inputValue, OUTPUT_UNIT, outputValue, threshold)\
+		const std::string description = SOLAIRE_UNITS_TEST_CONVERT_DESCRIPTION(#T, #inputValue, #INPUT_UNIT, #outputValue, #OUTPUT_UNIT);\
+		ConverterClass<T> converter;\
+		converter.Set(ConverterClass<T>::unit_t::INPUT_UNIT, inputValue);\
+		if (PercentageDifference<T>(outputValue, converter.Get(ConverterClass<T>::unit_t::OUTPUT_UNIT)) > threshold) Fail(description);\
+		Pass(description);
+
+	#define SOLAIRE_UNITS_TEST_LP_CONVERT(ConverterClass, T, INPUT_PREFIX, INPUT_UNIT, inputValue, OUTPUT_PREFIX, OUTPUT_UNIT, outputValue, threshold)\
+		const std::string inputUnit = std::string(#INPUT_PREFIX) + "/" + #INPUT_UNIT;\
+		const std::string outputUnit = std::string(#OUTPUT_PREFIX) + "/" + #OUTPUT_UNIT;\
+		const std::string description = SOLAIRE_UNITS_TEST_CONVERT_DESCRIPTION(#T, #inputValue, inputUnit, #outputValue, outputUnit);\
+		ConverterClass<T> converter;\
+		converter.Set(ConverterClass<T>::prefix_t::INPUT_PREFIX, ConverterClass<T>::unit_t::INPUT_UNIT, inputValue);\
+		if (PercentageDifference<T>(outputValue, converter.Get(ConverterClass<T>::prefix_t::OUTPUT_PREFIX, ConverterClass<T>::unit_t::OUTPUT_UNIT)) > threshold) Fail(description);\
+		Pass(description);
 }}}
 
 

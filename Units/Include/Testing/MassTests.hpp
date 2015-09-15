@@ -40,74 +40,70 @@ namespace Solaire{ namespace Units { namespace Testing{
 		}
 	);
 
-	SOLAIRE_TEST(Mass, SmallUnits,
-		// Create converter
-		Mass<double> converter;
-
-		// Initialise with a value
-		converter.Pounds = 4;
-
-		// Test that the unit is converted correctly
-		double threshold = 1.0;
-		double expectedResult = 0.0;
-		double actualResult = 0.0;
-
-		expectedResult = 1814.37;
-		actualResult = converter.Grams;
-		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to GRAM");
-
-		expectedResult = 64;
-		actualResult = converter.Ounces;
-		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to OUNCE");
-
-		expectedResult = 0.285714;
-		actualResult = converter.Stones;
-		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to STONE");
-
-		expectedResult = 0.00181437;
-		actualResult = converter.MetricTons;
-		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to METRIC_TON");
-
-		expectedResult = 0.002;
-		actualResult = converter.ShortTons;
-		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to SHORT_TON");
-
-		expectedResult = 0.00178571;
-		actualResult = converter.LongTons;
-		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to LONG_TON");
-
-		expectedResult = 58.3333333;
-		actualResult = converter.TroyOunces;
-		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to TROY_OUNCE");
-
-		expectedResult = 4.8612;
-		actualResult = converter.TroyPounds;
-		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to TROY_POUND");
-
-		expectedResult = 9.1215599e-31;
-		actualResult = converter.SolarMasses;
-		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to SOLAR_MASS");
-
-		Pass("");
+	SOLAIRE_TEST(
+		Mass,
+		LConvertPoundsToGrams,
+		SOLAIRE_UNITS_TEST_L_CONVERT(Mass, double, POUND, 4, GRAM, 1814.37, 1)
 	);
 
-	SOLAIRE_TEST(Mass, BigUnits,
-		// Create converter
-		Mass<double> converter;
+	SOLAIRE_TEST(
+		Mass,
+		LConvertPoundsToOunces,
+		SOLAIRE_UNITS_TEST_L_CONVERT(Mass, double, POUND, 4, OUNCE, 64, 1)
+	);
 
-		// Initialise with a value
-		converter.Kilograms = 2;
+	SOLAIRE_TEST(
+		Mass,
+		LConvertPoundsToStones,
+		SOLAIRE_UNITS_TEST_L_CONVERT(Mass, double, POUND, 4, STONE, 0.285714, 1)
+	);
 
-		// Test that the unit is converted correctly
-		double threshold = 1.0;
-		double expectedResult = 0.0;
-		double actualResult = 0.0;
+	SOLAIRE_TEST(
+		Mass,
+		LConvertPoundsToMetricTons,
+		SOLAIRE_UNITS_TEST_L_CONVERT(Mass, double, POUND, 4, METRIC_TON, 0.00181437, 1)
+	);
 
-		expectedResult = 70.5479;
-		actualResult = converter.Ounces;
-		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert KILOGRAN to OUNCE");
+	SOLAIRE_TEST(
+		Mass,
+		LConvertPoundsToShortTon,
+		SOLAIRE_UNITS_TEST_L_CONVERT(Mass, double, POUND, 4, SHORT_TON, 0.002, 1)
+	);
 
-		Pass("");
+	SOLAIRE_TEST(
+		Mass,
+		LConvertPoundsToLongTon,
+		SOLAIRE_UNITS_TEST_L_CONVERT(Mass, double, POUND, 4, LONG_TON, 0.00178571, 1)
+	);
+
+	SOLAIRE_TEST(
+		Mass,
+		LConvertPoundsToTroyOunces,
+		SOLAIRE_UNITS_TEST_L_CONVERT(Mass, double, POUND, 4, TROY_OUNCE, 58.3333333, 1)
+	);
+
+	SOLAIRE_TEST(
+		Mass,
+		LConvertPoundsToTroyPounds,
+		SOLAIRE_UNITS_TEST_L_CONVERT(Mass, double, POUND, 4, TROY_POUND, 4.8612, 1)
+	);
+
+	SOLAIRE_TEST(
+		Mass,
+		LConvertKilogramsToOunces,
+		SOLAIRE_UNITS_TEST_LP_CONVERT(Mass, double, KILO, GRAM, 2, NONE, OUNCE, 70.5479, 1)
+	);
+
+	SOLAIRE_TEST(
+		Mass,
+		LConvertOuncesToKilograms,
+		SOLAIRE_UNITS_TEST_LP_CONVERT(Mass, double, NONE, OUNCE, 70.5479, KILO, GRAM, 2, 1)
+	);
+
+	SOLAIRE_TEST(
+		Mass,
+		LConvertKilogramsToSolarMasses,
+		SOLAIRE_UNITS_TEST_LP_CONVERT(Mass, double, KILO, GRAM, 1.989e+30, NONE, SOLAR_MASS, 1, 1)
 	);
 
 	SOLAIRE_TEST(Mass, StaticConvert,
@@ -258,11 +254,21 @@ namespace Solaire{ namespace Units { namespace Testing{
 		}
 	);
 
-
 	static void MassTests(Test::TestManager& aManager){
 		aManager.Add(std::shared_ptr<Test::Test>(new TestMassSelfConvert()));
-		aManager.Add(std::shared_ptr<Test::Test>(new TestMassSmallUnits()));
-		aManager.Add(std::shared_ptr<Test::Test>(new TestMassBigUnits()));
+
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertPoundsToGrams()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertPoundsToOunces()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertPoundsToStones()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertPoundsToMetricTons()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertPoundsToShortTon()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertPoundsToLongTon()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertPoundsToTroyOunces()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertPoundsToTroyPounds()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertKilogramsToOunces()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertOuncesToKilograms()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassLConvertKilogramsToSolarMasses()));
+
 		aManager.Add(std::shared_ptr<Test::Test>(new TestMassStaticConvert()));
 		aManager.Add(std::shared_ptr<Test::Test>(new TestMassInteger()));
 		aManager.Add(std::shared_ptr<Test::Test>(new TestMassDefaultConstructor()));
