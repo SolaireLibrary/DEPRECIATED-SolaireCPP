@@ -21,6 +21,7 @@
 
 #include <string>
 #include <sstream>
+#include <typeinfo>
 #include "..\Distance.hpp"
 
 namespace Solaire{ namespace Units{ namespace Testing{
@@ -78,7 +79,7 @@ namespace Solaire{ namespace Units{ namespace Testing{
 
 		std::string GetDescription(const ConversionDescription& aDescription) const{
 			std::stringstream desc;
-			desc << 'T' << " conversion from " << solaire_inputValue << ' ' << solaire_inputName << " to " << solaire_outputValue << ' ' << solaire_outputName;
+			desc << typeid(T).name() << " conversion from " << solaire_inputValue << ' ' << solaire_inputName << " to " << solaire_outputValue << ' ' << solaire_outputName;
 
 			return desc.str();
 		}

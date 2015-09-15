@@ -106,6 +106,47 @@ namespace Solaire{ namespace Test{
 			return #aTestName;\
 		}\
 	};
+
+	static std::shared_ptr<Test> BuildTest(const std::string aClassName, const std::string aTestName, std::function<bool(std::string&)> aFunction){
+		class InternalTest : public Test{
+		private:
+			const std::string mClass;
+			const std::string mTest;
+			const std::function<bool(std::string&)> mFunction;
+		protected:
+
+			// Inherited from Test
+
+			void Run() const override{
+				std::string message;
+				if(mFunction(message)){
+					Pass(message);
+				}else{
+					Fail(message);
+				}
+			}
+		public:
+			InternalTest(const std::string aClassName, const std::string aTestName, std::function<bool(std::string&)> aFunction) :
+				mClass(aClassName),
+				mTest(aTestName),
+				mFunction(aFunction)
+			{
+
+			}
+
+			// Inherited from Test
+
+			std::string GetClassName() const override{
+				return mClass;
+			}
+
+			std::string GetTestName() const override{
+				return mTest;
+			}
+		};
+
+		return std::shared_ptr<Test>(new InternalTest(aClassName, aTestName, aFunction));
+	}
 }}
 
 
