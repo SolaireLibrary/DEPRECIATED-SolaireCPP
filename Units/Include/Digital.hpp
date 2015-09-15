@@ -121,12 +121,12 @@ namespace Solaire{namespace Units{
 
 		SOLAIRE_UNITS_CONVERTER_COMMON(Digital<conversion_t>)
 		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Digital<conversion_t>, Metric<conversion_t>)
-
-		typedef Digital<double> DigitalD;		//!< A Digital value that is a double.
-		typedef Digital<float> DigitalF;		//!< A Digital value that is a float.
-		typedef Digital<int32_t> DigitalI;		//!< A Digital value that is a signed 32 bit integer.
-		typedef Digital<uint32_t> DigitalU;		//!< A Digital value that is a unsigned 32 bit integer.
 	};
+
+	typedef Digital<double> DigitalD;		//!< A Digital value that is a double.
+	typedef Digital<float> DigitalF;		//!< A Digital value that is a float.
+	typedef Digital<int32_t> DigitalI;		//!< A Digital value that is a signed 32 bit integer.
+	typedef Digital<uint32_t> DigitalU;		//!< A Digital value that is a unsigned 32 bit integer.
 }}
 
 

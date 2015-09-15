@@ -25,8 +25,253 @@
 
 namespace Solaire{ namespace Units { namespace Testing{
 
-	static void MassTests(Test::TestManager& aManager){
+	SOLAIRE_TEST(Mass, SelfConvert,
+		// Create converter
+		Mass<double> converter;
 
+		// Initialise with a value
+		converter.Pounds = 100.0;
+
+		// Check that the same value is returned
+		if(converter.Pounds != 100.0){
+			Fail("Failed to convert POUND to POUND");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Mass, SmallUnits,
+		// Create converter
+		Mass<double> converter;
+
+		// Initialise with a value
+		converter.Pounds = 4;
+
+		// Test that the unit is converted correctly
+		double threshold = 1.0;
+		double expectedResult = 0.0;
+		double actualResult = 0.0;
+
+		expectedResult = 1814.37;
+		actualResult = converter.Grams;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to GRAM");
+
+		expectedResult = 64;
+		actualResult = converter.Ounces;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to OUNCE");
+
+		expectedResult = 0.285714;
+		actualResult = converter.Stones;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to STONE");
+
+		expectedResult = 0.00181437;
+		actualResult = converter.MetricTons;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to METRIC_TON");
+
+		expectedResult = 0.002;
+		actualResult = converter.ShortTons;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to SHORT_TON");
+
+		expectedResult = 0.00178571;
+		actualResult = converter.LongTons;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to LONG_TON");
+
+		expectedResult = 58.3333333;
+		actualResult = converter.TroyOunces;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to TROY_OUNCE");
+
+		expectedResult = 4.8612;
+		actualResult = converter.TroyPounds;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to TROY_POUND");
+
+		expectedResult = 9.1215599e-31;
+		actualResult = converter.SolarMasses;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert POUND to SOLAR_MASS");
+
+		Pass("");
+	);
+
+	SOLAIRE_TEST(Mass, BigUnits,
+		// Create converter
+		Mass<double> converter;
+
+		// Initialise with a value
+		converter.Kilograms = 2;
+
+		// Test that the unit is converted correctly
+		double threshold = 1.0;
+		double expectedResult = 0.0;
+		double actualResult = 0.0;
+
+		expectedResult = 70.5479;
+		actualResult = converter.Ounces;
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to convert KILOGRAN to OUNCE");
+
+		Pass("");
+	);
+
+	SOLAIRE_TEST(Mass, StaticConvert,
+		// Test that the unit is converted correctly
+		double threshold = 1.0;
+		double expectedResult = 0.0;
+		double actualResult = 0.0;
+
+		expectedResult = 64;
+		actualResult = MassD::Convert(MassD::unit_t::POUND, MassD::unit_t::OUNCE, 4);
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to static convert POUND to OUNCE using double values");
+
+		Pass("");
+	);
+
+	SOLAIRE_TEST(Mass, Integer,
+		// Test that the unit is converted correctly
+		double threshold = 1.0;
+		double expectedResult = 0.0;
+		double actualResult = 0.0;
+
+		expectedResult = 64;
+		actualResult = MassD::Convert(MassD::unit_t::POUND, MassD::unit_t::OUNCE, 4);
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to static convert POUND to OUNCE using integer values");
+
+		Pass("");
+	);
+
+	SOLAIRE_TEST(Mass, DefaultConstructor,
+		// Create converter
+		Mass<double> converter;
+
+		// Check that intial value is 0
+		if(converter.Pounds != 0.0){
+			Fail("Inital value is not 0");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Mass, UnitConstructor,
+		// Create converter
+		Mass<double> converter(MassD::unit_t::POUND, 5);
+
+		// Check that intial value is 0
+		if(converter.Pounds != 5){
+			Fail("Returned value is different than given in constructor");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Mass, CopyConstructor,
+		// Create converter
+		Mass<double> converterA(MassD::unit_t::POUND, 5);
+
+		// Copy converter
+		Mass<double> converterB = converterA;
+
+		// Use converterA
+		converterA.Pounds = 10;
+
+		// Check that intial value is 0
+		if(converterA.Pounds == converterB.Pounds || converterB.Pounds != 5){
+			Fail("Value was not coppied correctly");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Mass, Add,
+		// Create converters
+		const Mass<double> converterA(MassD::unit_t::POUND, 5);
+		const Mass<double> converterB(MassD::unit_t::POUND, 10);
+
+		// Perform operation
+		Mass<double> converterC = converterA + converterB;
+		Mass<double> converterD = converterA;
+		converterD += converterB;
+		Mass<double> converterE = converterA;
+		converterE.Pounds += converterB.Pounds;
+
+		// Check that intial value is 0
+		if(converterC.Pounds != converterD.Pounds || converterC.Pounds != converterE.Pounds || converterC.Pounds != 15){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Mass, Subtract,
+		// Create converters
+		const Mass<double> converterA(MassD::unit_t::POUND, 10);
+		const Mass<double> converterB(MassD::unit_t::POUND, 5);
+
+		// Perform operation
+		Mass<double> converterC = converterA - converterB;
+		Mass<double> converterD = converterA;
+		converterD -= converterB;
+		Mass<double> converterE = converterA;
+		converterE.Pounds -= converterB.Pounds;
+
+		// Check that intial value is 0
+		if(converterC.Pounds != converterD.Pounds || converterC.Pounds != converterE.Pounds || converterC.Pounds != 5){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Mass, Multiply,
+		// Create converters
+		const Mass<double> converterA(MassD::unit_t::POUND, 5);
+		const Mass<double> converterB(MassD::unit_t::POUND, 2);
+
+		// Perform operation
+		Mass<double> converterC = converterA * converterB;
+		Mass<double> converterD = converterA;
+		converterD *= converterB;
+		Mass<double> converterE = converterA;
+		converterE.Pounds *= converterB.Pounds;
+
+		// Check that intial value is 0
+		if(converterC.Pounds != converterD.Pounds || converterC.Pounds != converterE.Pounds || converterC.Pounds != 10){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Mass, Divide,
+		// Create converters
+		const Mass<double> converterA(MassD::unit_t::POUND, 10);
+		const Mass<double> converterB(MassD::unit_t::POUND, 2);
+
+		// Perform operation
+		Mass<double> converterC = converterA / converterB;
+		Mass<double> converterD = converterA;
+		converterD /= converterB;
+		Mass<double> converterE = converterA;
+		converterE.Pounds /= converterB.Pounds;
+
+		// Check that intial value is 0
+		if(converterC.Pounds != converterD.Pounds || converterC.Pounds != converterE.Pounds || converterC.Pounds != 5){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
+
+
+	static void MassTests(Test::TestManager& aManager){
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassSelfConvert()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassSmallUnits()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassBigUnits()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassStaticConvert()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassInteger()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassDefaultConstructor()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassUnitConstructor()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassCopyConstructor()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassAdd()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassSubtract()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassMultiply()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestMassDivide()));
 	}
 }}}
 

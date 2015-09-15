@@ -144,31 +144,31 @@ namespace Solaire{ namespace Units { namespace Testing{
 		Pass("");
 	);
 
-	//SOLAIRE_TEST(Digital, StaticConvert,
-	//	// Test that the unit is converted correctly
-	//	double threshold = 1.0;
-	//	double expectedResult = 0.0;
-	//	double actualResult = 0.0;
+	SOLAIRE_TEST(Digital, StaticConvert,
+		// Test that the unit is converted correctly
+		double threshold = 1.0;
+		double expectedResult = 0.0;
+		double actualResult = 0.0;
 
-	//	expectedResult = 32;
-	//	actualResult = DigitalD::Convert(DigitalD::unit_t::BYTE, DigitalD::unit_t::BIT, 4);
-	//	if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to static convert BYTE to BIT using double values");
+		expectedResult = 32;
+		actualResult = DigitalD::Convert(DigitalD::unit_t::BYTE, DigitalD::unit_t::BIT, 4);
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to static convert BYTE to BIT using double values");
 
-	//	Pass("");
-	//);
+		Pass("");
+	);
 
-	//SOLAIRE_TEST(Digital, Integer,
-	//	// Test that the unit is converted correctly
-	//	double threshold = 1.0;
-	//	double expectedResult = 0.0;
-	//	double actualResult = 0.0;
+	SOLAIRE_TEST(Digital, Integer,
+		// Test that the unit is converted correctly
+		double threshold = 1.0;
+		double expectedResult = 0.0;
+		double actualResult = 0.0;
 
-	//	expectedResult = 32;
-	//	actualResult = DigitalD::Convert(DigitalD::unit_t::BYTE, DigitalD::unit_t::BIT, 4);
-	//	if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to static convert BYTE to BIT using integer values");
+		expectedResult = 32;
+		actualResult = DigitalD::Convert(DigitalD::unit_t::BYTE, DigitalD::unit_t::BIT, 4);
+		if (PercentageDifference<double>(expectedResult, actualResult) > threshold) Fail("Failed to static convert BYTE to BIT using integer values");
 
-	//	Pass("");
-	//);
+		Pass("");
+	);
 
 	SOLAIRE_TEST(Digital, DefaultConstructor,
 		// Create converter
@@ -182,130 +182,130 @@ namespace Solaire{ namespace Units { namespace Testing{
 		}
 	);
 
-	//SOLAIRE_TEST(Digital, UnitConstructor,
-	//	// Create converter
-	//	Digital<double> converter(DigitalD::unit_t::BYTE, 5);
+	SOLAIRE_TEST(Digital, UnitConstructor,
+		// Create converter
+		Digital<double> converter(DigitalD::unit_t::BYTE, 5);
 
-	//	// Check that intial value is 0
-	//	if(converter.Bytes != 5){
-	//		Fail("Returned value is different than given in constructor");
-	//	}else{
-	//		Pass("");
-	//	}
-	//);
+		// Check that intial value is 0
+		if(converter.Bytes != 5){
+			Fail("Returned value is different than given in constructor");
+		}else{
+			Pass("");
+		}
+	);
 
-	//SOLAIRE_TEST(Digital, CopyConstructor,
-	//	// Create converter
-	//	Digital<double> converterA(DigitalD::unit_t::BYTE, 5);
+	SOLAIRE_TEST(Digital, CopyConstructor,
+		// Create converter
+		Digital<double> converterA(DigitalD::unit_t::BYTE, 5);
 
-	//	// Copy converter
-	//	Digital<double> converterB = converterA;
+		// Copy converter
+		Digital<double> converterB = converterA;
 
-	//	// Use converterA
-	//	converterA.Bytes = 10;
+		// Use converterA
+		converterA.Bytes = 10;
 
-	//	// Check that intial value is 0
-	//	if(converterA.Bytes == converterB.Bytes || converterB.Bytes != 5){
-	//		Fail("Value was not coppied correctly");
-	//	}else{
-	//		Pass("");
-	//	}
-	//);
+		// Check that intial value is 0
+		if(converterA.Bytes == converterB.Bytes || converterB.Bytes != 5){
+			Fail("Value was not coppied correctly");
+		}else{
+			Pass("");
+		}
+	);
 
-	//SOLAIRE_TEST(Digital, Add,
-	//	// Create converters
-	//	const Digital<double> converterA(DigitalD::unit_t::BYTE, 5);
-	//	const Digital<double> converterB(DigitalD::unit_t::BYTE, 10);
+	SOLAIRE_TEST(Digital, Add,
+		// Create converters
+		const Digital<double> converterA(DigitalD::unit_t::BYTE, 5);
+		const Digital<double> converterB(DigitalD::unit_t::BYTE, 10);
 
-	//	// Perform operation
-	//	Digital<double> converterC = converterA + converterB;
-	//	Digital<double> converterD = converterA;
-	//	converterD += converterB;
-	//	Digital<double> converterE = converterA;
-	//	converterE.Bytes += converterB.Bytes;
+		// Perform operation
+		Digital<double> converterC = converterA + converterB;
+		Digital<double> converterD = converterA;
+		converterD += converterB;
+		Digital<double> converterE = converterA;
+		converterE.Bytes += converterB.Bytes;
 
-	//	// Check that intial value is 0
-	//	if(converterC.Bytes != converterD.Bytes || converterC.Bytes != converterE.Bytes || converterC.Bytes != 15){
-	//		Fail("Operation returned incorrect value");
-	//	}else{
-	//		Pass("");
-	//	}
-	//);
+		// Check that intial value is 0
+		if(converterC.Bytes != converterD.Bytes || converterC.Bytes != converterE.Bytes || converterC.Bytes != 15){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
 
-	//SOLAIRE_TEST(Digital, Subtract,
-	//	// Create converters
-	//	const Digital<double> converterA(DigitalD::unit_t::BYTE, 10);
-	//	const Digital<double> converterB(DigitalD::unit_t::BYTE, 5);
+	SOLAIRE_TEST(Digital, Subtract,
+		// Create converters
+		const Digital<double> converterA(DigitalD::unit_t::BYTE, 10);
+		const Digital<double> converterB(DigitalD::unit_t::BYTE, 5);
 
-	//	// Perform operation
-	//	Digital<double> converterC = converterA - converterB;
-	//	Digital<double> converterD = converterA;
-	//	converterD -= converterB;
-	//	Digital<double> converterE = converterA;
-	//	converterE.Bytes -= converterB.Bytes;
+		// Perform operation
+		Digital<double> converterC = converterA - converterB;
+		Digital<double> converterD = converterA;
+		converterD -= converterB;
+		Digital<double> converterE = converterA;
+		converterE.Bytes -= converterB.Bytes;
 
-	//	// Check that intial value is 0
-	//	if(converterC.Bytes != converterD.Bytes || converterC.Bytes != converterE.Bytes || converterC.Bytes != 5){
-	//		Fail("Operation returned incorrect value");
-	//	}else{
-	//		Pass("");
-	//	}
-	//);
+		// Check that intial value is 0
+		if(converterC.Bytes != converterD.Bytes || converterC.Bytes != converterE.Bytes || converterC.Bytes != 5){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
 
-	//SOLAIRE_TEST(Digital, Multiply,
-	//	// Create converters
-	//	const Digital<double> converterA(DigitalD::unit_t::BYTE, 5);
-	//	const Digital<double> converterB(DigitalD::unit_t::BYTE, 2);
+	SOLAIRE_TEST(Digital, Multiply,
+		// Create converters
+		const Digital<double> converterA(DigitalD::unit_t::BYTE, 5);
+		const Digital<double> converterB(DigitalD::unit_t::BYTE, 2);
 
-	//	// Perform operation
-	//	Digital<double> converterC = converterA * converterB;
-	//	Digital<double> converterD = converterA;
-	//	converterD *= converterB;
-	//	Digital<double> converterE = converterA;
-	//	converterE.Bytes *= converterB.Bytes;
+		// Perform operation
+		Digital<double> converterC = converterA * converterB;
+		Digital<double> converterD = converterA;
+		converterD *= converterB;
+		Digital<double> converterE = converterA;
+		converterE.Bytes *= converterB.Bytes;
 
-	//	// Check that intial value is 0
-	//	if(converterC.Bytes != converterD.Bytes || converterC.Bytes != converterE.Bytes || converterC.Bytes != 10){
-	//		Fail("Operation returned incorrect value");
-	//	}else{
-	//		Pass("");
-	//	}
-	//);
+		// Check that intial value is 0
+		if(converterC.Bytes != converterD.Bytes || converterC.Bytes != converterE.Bytes || converterC.Bytes != 10){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
 
-	//SOLAIRE_TEST(Digital, Divide,
-	//	// Create converters
-	//	const Digital<double> converterA(DigitalD::unit_t::BYTE, 10);
-	//	const Digital<double> converterB(DigitalD::unit_t::BYTE, 2);
+	SOLAIRE_TEST(Digital, Divide,
+		// Create converters
+		const Digital<double> converterA(DigitalD::unit_t::BYTE, 10);
+		const Digital<double> converterB(DigitalD::unit_t::BYTE, 2);
 
-	//	// Perform operation
-	//	Digital<double> converterC = converterA / converterB;
-	//	Digital<double> converterD = converterA;
-	//	converterD /= converterB;
-	//	Digital<double> converterE = converterA;
-	//	converterE.Bytes /= converterB.Bytes;
+		// Perform operation
+		Digital<double> converterC = converterA / converterB;
+		Digital<double> converterD = converterA;
+		converterD /= converterB;
+		Digital<double> converterE = converterA;
+		converterE.Bytes /= converterB.Bytes;
 
-	//	// Check that intial value is 0
-	//	if(converterC.Bytes != converterD.Bytes || converterC.Bytes != converterE.Bytes || converterC.Bytes != 5){
-	//		Fail("Operation returned incorrect value");
-	//	}else{
-	//		Pass("");
-	//	}
-	//);
+		// Check that intial value is 0
+		if(converterC.Bytes != converterD.Bytes || converterC.Bytes != converterE.Bytes || converterC.Bytes != 5){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
 
 
 	static void DigitalTests(Test::TestManager& aManager){
 		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalSelfConvert()));
 		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalSmallUnits()));
 		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalBigUnits()));
-		//aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalStaticConvert()));
-		//aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalInteger()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalStaticConvert()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalInteger()));
 		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalDefaultConstructor()));
-		//aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalUnitConstructor()));
-		//aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalCopyConstructor()));
-		//aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalAdd()));
-		//aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalSubtract()));
-		//aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalMultiply()));
-		//aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalDivide()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalUnitConstructor()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalCopyConstructor()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalAdd()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalSubtract()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalMultiply()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDigitalDivide()));
 	}
 }}}
 
