@@ -188,23 +188,31 @@ namespace Solaire{ namespace Units { namespace Testing{
 		}
 	);
 
-	static void MassTests(Test::TestManager& aManager){
-		typedef ConversionTest<double, MassD> ConversionTest;
+	template<typename T>
+	static void MassLConvertTests(Test::TestManager& aManager){
+		typedef ConversionTest<T, Mass<T>> ConversionTest;
 		typedef ConversionTest::ConversionDescription Conversion;
+		typedef Mass<T>::prefix_t prefix_t;
+		typedef Mass<T>::unit_t unit_t;
 
-		aManager.Add(std::shared_ptr<Test::Test>(new ConversionTest("Mass", "Test", {
-			Conversion("pounds",	MassD::prefix_t::NONE,	MassD::unit_t::POUND,	4,			"grams",		MassD::prefix_t::NONE,	MassD::unit_t::GRAM,		1814.37,	1),
-			Conversion("pounds",	MassD::prefix_t::NONE,	MassD::unit_t::POUND,	4,			"ounces",		MassD::prefix_t::NONE,	MassD::unit_t::OUNCE,		64,			1),
-			Conversion("pounds",	MassD::prefix_t::NONE,	MassD::unit_t::POUND,	4,			"stones",		MassD::prefix_t::NONE,	MassD::unit_t:: STONE,		0.285714,	1),
-			Conversion("pounds",	MassD::prefix_t::NONE,	MassD::unit_t::POUND,	4,			"metric tons",	MassD::prefix_t::NONE,	MassD::unit_t::METRIC_TON,	0.00181437,	1),
-			Conversion("pounds",	MassD::prefix_t::NONE,	MassD::unit_t::POUND,	4,			"short tons",	MassD::prefix_t::NONE,	MassD::unit_t::SHORT_TON,	0.002,		1),
-			Conversion("pounds",	MassD::prefix_t::NONE,	MassD::unit_t::POUND,	4,			"short tons",	MassD::prefix_t::NONE,	MassD::unit_t::LONG_TON,	0.00178571,	1),
-			Conversion("pounds",	MassD::prefix_t::NONE,	MassD::unit_t::POUND,	4,			"troy ounces",	MassD::prefix_t::NONE,	MassD::unit_t::TROY_OUNCE,	58.3333333,	1),
-			Conversion("pounds",	MassD::prefix_t::NONE,	MassD::unit_t::POUND,	4,			"troy pounds",	MassD::prefix_t::NONE,	MassD::unit_t::TROY_POUND,	4.8612,		1),
-			Conversion("kilograms",	MassD::prefix_t::KILO,	MassD::unit_t::GRAM,	2,			"ounces",		MassD::prefix_t::NONE,	MassD::unit_t::OUNCE,		70.5479,	1),
-			Conversion("ounces",	MassD::prefix_t::NONE,	MassD::unit_t::OUNCE,	70.5479,	"kilograms",	MassD::prefix_t::KILO,	MassD::unit_t::GRAM,		2,			1),
-			Conversion("kilograms",	MassD::prefix_t::KILO,	MassD::unit_t::GRAM,	1.989e+30,	"solar masses",	MassD::prefix_t::NONE,	MassD::unit_t::SOLAR_MASS,	1,			1)
+		aManager.Add(std::shared_ptr<Test::Test>(new ConversionTest("Mass", "Conversions", {
+			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"grams",		prefix_t::NONE,	unit_t::GRAM,		1814.37,	1),
+			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"ounces",		prefix_t::NONE,	unit_t::OUNCE,		64,			1),
+			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"stones",		prefix_t::NONE,	unit_t::STONE,		0.285714,	1),
+			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"metric tons",	prefix_t::NONE,	unit_t::METRIC_TON,	0.00181437,	1),
+			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"short tons",	prefix_t::NONE,	unit_t::SHORT_TON,	0.002,		1),
+			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"short tons",	prefix_t::NONE,	unit_t::LONG_TON,	0.00178571,	1),
+			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"troy ounces",	prefix_t::NONE,	unit_t::TROY_OUNCE,	58.3333333,	1),
+			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"troy pounds",	prefix_t::NONE,	unit_t::TROY_POUND,	4.8612,		1),
+			Conversion("kilograms",	prefix_t::KILO,	unit_t::GRAM,	2,			"ounces",		prefix_t::NONE,	unit_t::OUNCE,		70.5479,	1),
+			Conversion("ounces",	prefix_t::NONE,	unit_t::OUNCE,	70.5479,	"kilograms",	prefix_t::KILO,	unit_t::GRAM,		2,			1),
+			Conversion("kilograms",	prefix_t::KILO,	unit_t::GRAM,	1.989e+30,	"solar masses",	prefix_t::NONE,	unit_t::SOLAR_MASS,	1,			1)
 		})));
+	}
+
+	static void MassTests(Test::TestManager& aManager){
+
+		MassLConvertTests<double>(aManager);
 
 		aManager.Add(std::shared_ptr<Test::Test>(new TestMassSelfConvert()));
 
