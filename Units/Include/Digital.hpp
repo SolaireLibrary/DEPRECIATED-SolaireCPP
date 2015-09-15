@@ -51,14 +51,22 @@ namespace Solaire{namespace Units{
 			ConverterProperty<Digital, unit_t::BIT>				Bits;
 			ConverterProperty<Digital, unit_t::NYBBLE>			Nybbles;
 			ConverterProperty<Digital, unit_t::BYTE>			Bytes;
-			PrefixConverterProperty<Digital, prefix_t::KIBI, unit_t::BIT>			Kilobits;
-			PrefixConverterProperty<Digital, prefix_t::MEBI, unit_t::BIT>			Megabits;
-			PrefixConverterProperty<Digital, prefix_t::GIBI, unit_t::BIT>			Gigabits;
-			PrefixConverterProperty<Digital, prefix_t::TEBI, unit_t::BIT>			Terabits;
-			PrefixConverterProperty<Digital, prefix_t::KIBI, unit_t::BYTE>			Kilobytes;
-			PrefixConverterProperty<Digital, prefix_t::MEBI, unit_t::BYTE>			Megabytes;
-			PrefixConverterProperty<Digital, prefix_t::GIBI, unit_t::BYTE>			Gigabytes;
-			PrefixConverterProperty<Digital, prefix_t::TEBI, unit_t::BYTE>			Terabytes;
+			PrefixConverterProperty<Digital, prefix_t::KIBI, unit_t::BIT>			Kibibits;
+			PrefixConverterProperty<Digital, prefix_t::MEBI, unit_t::BIT>			Mebibits;
+			PrefixConverterProperty<Digital, prefix_t::GIBI, unit_t::BIT>			Gibibits;
+			PrefixConverterProperty<Digital, prefix_t::TEBI, unit_t::BIT>			Tebibits;
+			PrefixConverterProperty<Digital, prefix_t::KIBI, unit_t::BYTE>			Kibibytes;
+			PrefixConverterProperty<Digital, prefix_t::MEBI, unit_t::BYTE>			Mebibytes;
+			PrefixConverterProperty<Digital, prefix_t::GIBI, unit_t::BYTE>			Gibibytes;
+			PrefixConverterProperty<Digital, prefix_t::TEBI, unit_t::BYTE>			Tebibytes;
+			PrefixConverterProperty<Digital, prefix_t::KILO, unit_t::BIT>			Kilobits;
+			PrefixConverterProperty<Digital, prefix_t::MEGA, unit_t::BIT>			Megabits;
+			PrefixConverterProperty<Digital, prefix_t::GIGA, unit_t::BIT>			Gigabits;
+			PrefixConverterProperty<Digital, prefix_t::TERA, unit_t::BIT>			Terabits;
+			PrefixConverterProperty<Digital, prefix_t::KILO, unit_t::BYTE>			Kilobytes;
+			PrefixConverterProperty<Digital, prefix_t::MEGA, unit_t::BYTE>			Megabytes;
+			PrefixConverterProperty<Digital, prefix_t::GIGA, unit_t::BYTE>			Gigabytes;
+			PrefixConverterProperty<Digital, prefix_t::TERA, unit_t::BYTE>			Terabytes;
 		};
 #endif
 
