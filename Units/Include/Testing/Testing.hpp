@@ -19,6 +19,8 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <string>
+#include <sstream>
 #include "..\Distance.hpp"
 
 namespace Solaire{ namespace Units{ namespace Testing{
@@ -33,24 +35,109 @@ namespace Solaire{ namespace Units{ namespace Testing{
 		return (100.0 / aFirst)  * Difference<T>(aFirst, aSecond);
 	}
 
-	#define SOLAIRE_UNITS_TEST_CONVERT_DESCRIPTION(TYPE, inputValue, INPUT_UNIT, outputValue, OUTPUT_UNIT)\
-		std::string(TYPE) + " conversion of" + inputValue + " "  + INPUT_UNIT + " to " + outputValue + " " + OUTPUT_UNIT
+	template<class T, class Converter>
+	class ConversionTest : public Solaire::Test::Test {
+	public:
+		typedef std::tuple<
+			std::string,
+			typename Converter::prefix_t, 
+			typename Converter::unit_t, 
+			T,
+			std::string,
+			typename Converter::prefix_t, 
+			typename Converter::unit_t, 
+			T,
+			T
+		> ConversionDescription;
+	
+		enum{
+			INPUT_NAME,
+			INPUT_PREFIX,
+			INPUT_UNIT,
+			INPUT_VALUE,
+			OUTPUT_NAME,
+			OUTPUT_PREFIX,
+			OUTPUT_UNIT,
+			OUTPUT_VALUE,
+			THRESHOLD
+		};
+	private:
+		const std::string mClassName;
+		const std::string mTestName;
+		const std::vector<ConversionDescription> mConversions;
 
-	#define SOLAIRE_UNITS_TEST_L_CONVERT(ConverterClass, T, INPUT_UNIT, inputValue, OUTPUT_UNIT, outputValue, threshold)\
-		const std::string description = SOLAIRE_UNITS_TEST_CONVERT_DESCRIPTION(#T, #inputValue, #INPUT_UNIT, #outputValue, #OUTPUT_UNIT);\
-		ConverterClass<T> converter;\
-		converter.Set(ConverterClass<T>::unit_t::INPUT_UNIT, inputValue);\
-		if (PercentageDifference<T>(outputValue, converter.Get(ConverterClass<T>::unit_t::OUTPUT_UNIT)) > threshold) Fail(description);\
-		Pass(description);
+#define solaire_inputName std::get<INPUT_NAME>(aDescription)
+#define solaire_inputPrefix std::get<INPUT_PREFIX>(aDescription)
+#define solaire_inputUnit std::get<INPUT_UNIT>(aDescription)
+#define solaire_inputValue std::get<INPUT_VALUE>(aDescription)
+#define solaire_outputName std::get<OUTPUT_NAME>(aDescription)
+#define solaire_outputPrefix std::get<OUTPUT_PREFIX>(aDescription)
+#define solaire_outputUnit std::get<OUTPUT_UNIT>(aDescription)
+#define solaire_outputValue std::get<OUTPUT_VALUE>(aDescription)
+#define solaire_threshold std::get<THRESHOLD>(aDescription)
 
-	#define SOLAIRE_UNITS_TEST_LP_CONVERT(ConverterClass, T, INPUT_PREFIX, INPUT_UNIT, inputValue, OUTPUT_PREFIX, OUTPUT_UNIT, outputValue, threshold)\
-		const std::string inputUnit = std::string(#INPUT_PREFIX) + "/" + #INPUT_UNIT;\
-		const std::string outputUnit = std::string(#OUTPUT_PREFIX) + "/" + #OUTPUT_UNIT;\
-		const std::string description = SOLAIRE_UNITS_TEST_CONVERT_DESCRIPTION(#T, #inputValue, inputUnit, #outputValue, outputUnit);\
-		ConverterClass<T> converter;\
-		converter.Set(ConverterClass<T>::prefix_t::INPUT_PREFIX, ConverterClass<T>::unit_t::INPUT_UNIT, inputValue);\
-		if (PercentageDifference<T>(outputValue, converter.Get(ConverterClass<T>::prefix_t::OUTPUT_PREFIX, ConverterClass<T>::unit_t::OUTPUT_UNIT)) > threshold) Fail(description);\
-		Pass(description);
+		std::string GetDescription(const ConversionDescription& aDescription) const{
+			std::stringstream desc;
+			desc << 'T' << " conversion from " << solaire_inputValue << ' ' << solaire_inputName << " to " << solaire_outputValue << ' ' << solaire_outputName;
+
+			return desc.str();
+		}
+
+		bool PerformConversion(const ConversionDescription& aDescription) const{
+			Converter converter;
+			converter.Set(solaire_inputPrefix, solaire_inputUnit, solaire_inputValue);
+			const T realOutputValue = converter.Get(solaire_outputPrefix, solaire_outputUnit);
+			return PercentageDifference<T>(solaire_outputValue, realOutputValue) <= solaire_threshold;
+		}
+
+#undef solaire_inputName
+#undef solaire_inputPrefix
+#undef solaire_inputUnit
+#undef solaire_inputValue
+#undef solaire_outputName
+#undef solaire_outputPrefix
+#undef solaire_outputUnit
+#undef solaire_outputValue
+#undef solaire_threshold
+
+	protected:
+		// Inherited from test
+
+		void Run() const override{
+			std::string description = "\n";
+
+			for(const ConversionDescription& aDescription : mConversions){
+				const std::string desc = GetDescription(aDescription);
+				bool result = PerformConversion(aDescription);
+				if(! result){
+					Fail(desc);
+				}else{
+					description += desc;
+					description += '\n';
+				}
+			}
+
+			Pass(description);
+		}
+	public:
+		ConversionTest(const std::string aClassName, const std::string aTestName, const std::initializer_list<ConversionDescription> aConversions) :
+			mClassName(aClassName),
+			mTestName(aTestName),
+			mConversions(aConversions)
+		{
+
+		}
+
+		// Inherited from test
+
+		std::string GetClassName() const override{
+			return mClassName;
+		}
+
+		std::string GetTestName() const override{
+			return mTestName;
+		}
+	};
 }}}
 
 
