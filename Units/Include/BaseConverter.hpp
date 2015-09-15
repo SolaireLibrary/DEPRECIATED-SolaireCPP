@@ -157,6 +157,42 @@ class_name& operator*=(const class_name aOther){\
 class_name& operator/=(const class_name aOther){\
 	mValue /= aOther.mValue;\
 	return *this;\
+}\
+/*!\
+\brief Add two converters.\
+\param aOther The converter to add.\
+\return The result of the operation.\
+\see operator+=\
+*/\
+class_name operator+(const class_name aOther) const{\
+	return class_name(*this)+=(aOther);\
+}\
+/*!\
+\brief Subtract two converters.\
+\param aOther The converter to subtract.\
+\return The result of the operation.\
+\see operator-=\
+*/\
+class_name operator-(const class_name aOther) const{\
+	return class_name(*this)-=(aOther);\
+}\
+/*!\
+	\brief Multiply two converters.\
+	\param aOther The converter to multiply by.\
+	\return The result of the operation.\
+	\see operator*=\
+	*/\
+class_name operator*(const class_name aOther) const{\
+	return class_name(*this)*=(aOther);\
+}\
+/*!\
+	\brief Divide two converters.\
+	\param aOther The converter to divide by.\
+	\return The result of the operation.\
+	\see operator*=\
+	*/\
+class_name operator/(const class_name aOther) const{\
+	return class_name(*this)/=(aOther);\
 }
 
 namespace Solaire{ namespace Units{

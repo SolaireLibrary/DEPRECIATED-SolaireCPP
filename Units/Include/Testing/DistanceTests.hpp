@@ -163,6 +163,132 @@ namespace Solaire{ namespace Units { namespace Testing{
 		Pass("");
 	);
 
+	SOLAIRE_TEST(Distance, DefaultConstructor,
+		// Create converter
+		Distance<double> converter;
+
+		// Check that intial value is 0
+		if(converter.Metres != 0.0){
+			Fail("Inital value is not 0");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Distance, UnitConstructor,
+		// Create converter
+		Distance<double> converter(DistanceD::unit_t::YARD, 5);
+
+		// Check that intial value is 0
+		if(converter.Yards != 5){
+			Fail("Returned value is different than given in constructor");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Distance, CopyConstructor,
+		// Create converter
+		Distance<double> converterA(DistanceD::unit_t::YARD, 5);
+
+		// Copy converter
+		Distance<double> converterB = converterA;
+
+		// Use converterA
+		converterA.Yards = 10;
+
+		// Check that intial value is 0
+		if(converterA.Yards == converterB.Yards || converterB.Yards != 5){
+			Fail("Value was not coppied correctly");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Distance, Add,
+		// Create converters
+		const Distance<double> converterA(DistanceD::unit_t::YARD, 5);
+		const Distance<double> converterB(DistanceD::unit_t::YARD, 10);
+
+		// Perform operation
+		Distance<double> converterC = converterA + converterB;
+		Distance<double> converterD = converterA;
+		converterD += converterB;
+		Distance<double> converterE = converterA;
+		converterE.Yards += converterB.Yards;
+
+		// Check that intial value is 0
+		if(converterC.Yards != converterD.Yards || converterC.Yards != converterE.Yards || converterC.Yards != 15){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
+
+	SOLAIRE_TEST(Distance, Subtract,
+		// Create converters
+		const Distance<double> converterA(DistanceD::unit_t::YARD, 10);
+		const Distance<double> converterB(DistanceD::unit_t::YARD, 5);
+
+		// Perform operation
+		Distance<double> converterC = converterA - converterB;
+		Distance<double> converterD = converterA;
+		converterD -= converterB;
+		Distance<double> converterE = converterA;
+		converterE.Yards -= converterB.Yards;
+
+		// Check that intial value is 0
+		if(converterC.Yards != converterD.Yards || converterC.Yards != converterE.Yards || converterC.Yards != 5){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
+
+	
+
+	SOLAIRE_TEST(Distance, Multiply,
+		// Create converters
+		const Distance<double> converterA(DistanceD::unit_t::YARD, 5);
+		const Distance<double> converterB(DistanceD::unit_t::YARD, 2);
+
+		// Perform operation
+		Distance<double> converterC = converterA * converterB;
+		Distance<double> converterD = converterA;
+		converterD *= converterB;
+		Distance<double> converterE = converterA;
+		converterE.Yards *= converterB.Yards;
+
+		// Check that intial value is 0
+		if(converterC.Yards != converterD.Yards || converterC.Yards != converterE.Yards || converterC.Yards != 10){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
+
+	
+
+	SOLAIRE_TEST(Distance, Divide,
+		// Create converters
+		const Distance<double> converterA(DistanceD::unit_t::YARD, 10);
+		const Distance<double> converterB(DistanceD::unit_t::YARD, 2);
+
+		// Perform operation
+		Distance<double> converterC = converterA / converterB;
+		Distance<double> converterD = converterA;
+		converterD /= converterB;
+		Distance<double> converterE = converterA;
+		converterE.Yards /= converterB.Yards;
+
+		// Check that intial value is 0
+		if(converterC.Yards != converterD.Yards || converterC.Yards != converterE.Yards || converterC.Yards != 5){
+			Fail("Operation returned incorrect value");
+		}else{
+			Pass("");
+		}
+	);
+
 	static void DistanceTests(Test::TestManager& aManager){
 		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceSelfConvert()));
 		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceSmallUnits()));
@@ -170,6 +296,13 @@ namespace Solaire{ namespace Units { namespace Testing{
 		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceBigUnits()));
 		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceStaticConvert()));
 		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceInteger()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceDefaultConstructor()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceUnitConstructor()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceCopyConstructor()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceAdd()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceSubtract()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceMultiply()));
+		aManager.Add(std::shared_ptr<Test::Test>(new TestDistanceDivide()));
 	}
 }}}
 
