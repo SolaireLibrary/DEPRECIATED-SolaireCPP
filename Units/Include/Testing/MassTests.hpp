@@ -105,7 +105,7 @@ namespace Solaire{ namespace Units { namespace Testing{
 	std::shared_ptr<Test::Test> MassCopyConstructor(){
 		return Test::BuildTest(
 			"Mass",
-			"UnitConstructor",
+			"CopyConstructor",
 			[](std::string& aMessage)->bool{
 				// Create converter
 				Mass<double> converterA(MassD::unit_t::POUND, 5);
@@ -128,89 +128,9 @@ namespace Solaire{ namespace Units { namespace Testing{
 		);
 	}
 
-	SOLAIRE_TEST(Mass, Add,
-		// Create converters
-		const Mass<double> converterA(MassD::unit_t::POUND, 5);
-		const Mass<double> converterB(MassD::unit_t::POUND, 10);
-
-		// Perform operation
-		Mass<double> converterC = converterA + converterB;
-		Mass<double> converterD = converterA;
-		converterD += converterB;
-		Mass<double> converterE = converterA;
-		converterE.Pounds += converterB.Pounds;
-
-		// Check that intial value is 0
-		if(converterC.Pounds != converterD.Pounds || converterC.Pounds != converterE.Pounds || converterC.Pounds != 15){
-			Fail("Operation returned incorrect value");
-		}else{
-			Pass("");
-		}
-	);
-
-	SOLAIRE_TEST(Mass, Subtract,
-		// Create converters
-		const Mass<double> converterA(MassD::unit_t::POUND, 10);
-		const Mass<double> converterB(MassD::unit_t::POUND, 5);
-
-		// Perform operation
-		Mass<double> converterC = converterA - converterB;
-		Mass<double> converterD = converterA;
-		converterD -= converterB;
-		Mass<double> converterE = converterA;
-		converterE.Pounds -= converterB.Pounds;
-
-		// Check that intial value is 0
-		if(converterC.Pounds != converterD.Pounds || converterC.Pounds != converterE.Pounds || converterC.Pounds != 5){
-			Fail("Operation returned incorrect value");
-		}else{
-			Pass("");
-		}
-	);
-
-	SOLAIRE_TEST(Mass, Multiply,
-		// Create converters
-		const Mass<double> converterA(MassD::unit_t::POUND, 5);
-		const Mass<double> converterB(MassD::unit_t::POUND, 2);
-
-		// Perform operation
-		Mass<double> converterC = converterA * converterB;
-		Mass<double> converterD = converterA;
-		converterD *= converterB;
-		Mass<double> converterE = converterA;
-		converterE.Pounds *= converterB.Pounds;
-
-		// Check that intial value is 0
-		if(converterC.Pounds != converterD.Pounds || converterC.Pounds != converterE.Pounds || converterC.Pounds != 10){
-			Fail("Operation returned incorrect value");
-		}else{
-			Pass("");
-		}
-	);
-
-	SOLAIRE_TEST(Mass, Divide,
-		// Create converters
-		const Mass<double> converterA(MassD::unit_t::POUND, 10);
-		const Mass<double> converterB(MassD::unit_t::POUND, 2);
-
-		// Perform operation
-		Mass<double> converterC = converterA / converterB;
-		Mass<double> converterD = converterA;
-		converterD /= converterB;
-		Mass<double> converterE = converterA;
-		converterE.Pounds /= converterB.Pounds;
-
-		// Check that intial value is 0
-		if(converterC.Pounds != converterD.Pounds || converterC.Pounds != converterE.Pounds || converterC.Pounds != 5){
-			Fail("Operation returned incorrect value");
-		}else{
-			Pass("");
-		}
-	);
-
 	template<typename T>
 	static std::shared_ptr<Test::Test> MassLConvertTest(){
-		typedef ConversionTest<T, Mass<T>> ConversionTest;
+		typedef ConversionTest<Mass<T>> ConversionTest;
 		typedef ConversionTest::ConversionDescription Conversion;
 		typedef Mass<T>::prefix_t prefix_t;
 		typedef Mass<T>::unit_t unit_t;
@@ -230,6 +150,23 @@ namespace Solaire{ namespace Units { namespace Testing{
 		}));
 	}
 
+	template<typename T>
+	static std::shared_ptr<Test::Test> MassMathsTest() {
+		typedef MathsTest<Mass<T>> MathsTest;
+		typedef MathsTest::Test Test;
+		typedef Mass<T>::prefix_t prefix_t;
+		typedef Mass<T>::unit_t unit_t;
+
+		return std::shared_ptr<Solaire::Test::Test>(new MathsTest(
+			"Mass", 
+			std::string("Maths") + typeid(T).name(),
+			Test("pounds",	unit_t::POUND,	5,	10,	15,	1),
+			Test("pounds",	unit_t::POUND,	15,	10,	5,	1),
+			Test("pounds",	unit_t::POUND,	5,	2,	10,	1),
+			Test("pounds",	unit_t::POUND,	10,	2,	5,	1)
+		));
+	}
+
 	static void MassTests(Test::TestManager& aManager){
 		aManager.Add(MassLConvertTest<double>());
 		aManager.Add(MassLConvertTest<float>());
@@ -240,11 +177,11 @@ namespace Solaire{ namespace Units { namespace Testing{
 		aManager.Add(MassUnitConstructor());
 		aManager.Add(MassCopyConstructor());
 
+		aManager.Add(MassMathsTest<double>());
+		aManager.Add(MassMathsTest<float>());
+		aManager.Add(MassMathsTest<int>());
+
 		aManager.Add(std::shared_ptr<Test::Test>(new TestMassStaticConvert()));
-		aManager.Add(std::shared_ptr<Test::Test>(new TestMassAdd()));
-		aManager.Add(std::shared_ptr<Test::Test>(new TestMassSubtract()));
-		aManager.Add(std::shared_ptr<Test::Test>(new TestMassMultiply()));
-		aManager.Add(std::shared_ptr<Test::Test>(new TestMassDivide()));
 	}
 }}}
 

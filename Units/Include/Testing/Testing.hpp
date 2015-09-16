@@ -36,19 +36,23 @@ namespace Solaire{ namespace Units{ namespace Testing{
 		return (100.0 / aFirst)  * Difference<T>(aFirst, aSecond);
 	}
 
-	template<class T, class Converter>
+	template<class Converter>
 	class ConversionTest : public Solaire::Test::Test {
 	public:
+		typedef typename Converter::prefix_t prefix_t;
+		typedef typename Converter::unit_t unit_t;
+		typedef typename Converter::conversion_t conversion_t;
+
 		typedef std::tuple<
 			std::string,
-			typename Converter::prefix_t, 
-			typename Converter::unit_t, 
-			T,
+			prefix_t,
+			unit_t,
+			conversion_t,
 			std::string,
-			typename Converter::prefix_t, 
-			typename Converter::unit_t, 
-			T,
-			T
+			prefix_t,
+			unit_t,
+			conversion_t,
+			conversion_t
 		> ConversionDescription;
 	
 		enum{
@@ -79,7 +83,7 @@ namespace Solaire{ namespace Units{ namespace Testing{
 
 		std::string GetDescription(const ConversionDescription& aDescription) const{
 			std::stringstream desc;
-			desc << typeid(T).name() << " conversion from " << solaire_inputValue << ' ' << solaire_inputName << " to " << solaire_outputValue << ' ' << solaire_outputName;
+			desc << typeid(conversion_t).name() << " conversion from " << solaire_inputValue << ' ' << solaire_inputName << " to " << solaire_outputValue << ' ' << solaire_outputName;
 
 			return desc.str();
 		}
@@ -87,8 +91,8 @@ namespace Solaire{ namespace Units{ namespace Testing{
 		bool PerformConversion(const ConversionDescription& aDescription) const{
 			Converter converter;
 			converter.Set(solaire_inputPrefix, solaire_inputUnit, solaire_inputValue);
-			const T realOutputValue = converter.Get(solaire_outputPrefix, solaire_outputUnit);
-			return PercentageDifference<T>(solaire_outputValue, realOutputValue) <= solaire_threshold;
+			const conversion_t realOutputValue = converter.Get(solaire_outputPrefix, solaire_outputUnit);
+			return PercentageDifference<conversion_t>(solaire_outputValue, realOutputValue) <= solaire_threshold;
 		}
 
 #undef solaire_inputName
@@ -125,6 +129,168 @@ namespace Solaire{ namespace Units{ namespace Testing{
 			mClassName(aClassName),
 			mTestName(aTestName),
 			mConversions(aConversions)
+		{
+
+		}
+
+		// Inherited from test
+
+		std::string GetClassName() const override{
+			return mClassName;
+		}
+
+		std::string GetTestName() const override{
+			return mTestName;
+		}
+	};
+
+	template<class Converter>
+	class MathsTest : public Solaire::Test::Test {
+	public:
+		typedef typename Converter::unit_t unit_t;
+		typedef typename Converter::conversion_t conversion_t;
+
+		typedef std::tuple<std::string, unit_t, conversion_t, conversion_t, conversion_t, double> Test;
+
+		enum {
+			UNIT_NAME,
+			UNIT,
+			FIRST_VALUE,
+			SECOND_VALUE,
+			RESULT_VALUE,
+			THRESHOLD
+		};
+	private:
+		const std::string mClassName;
+		const std::string mTestName;
+		const Test mAdd;
+		const Test mSubtract;
+		const Test mMultiply;
+		const Test mDivide;
+
+		static std::string GetDescription(const Test& aTest, const std::string aOperation){
+			std::stringstream ss;
+			const std::string unit = std::get<UNIT_NAME>(aTest);
+
+			ss << typeid(conversion_t).name();
+			ss << ' ';
+			ss << aOperation;
+			ss << " of ";
+			ss << std::get<FIRST_VALUE>(aTest);
+			ss << ' ';
+			ss << unit;
+			ss << " and ";
+			ss << std::get<SECOND_VALUE>(aTest);
+			ss << ' ';
+			ss << unit;
+			ss << " for result of ";
+			ss << std::get<RESULT_VALUE>(aTest);
+			ss << ' ';
+			ss << unit;
+
+			return ss.str();
+		}
+
+		static bool Compare(const conversion_t aFirst, const conversion_t aSecond, double aThreshold){
+			return PercentageDifference<conversion_t>(aFirst, aSecond) <= aThreshold;
+		}
+
+		static bool TestAdd(const Test& aTest, std::string& aMessage){
+			const unit_t unit = std::get<UNIT>(aTest);
+
+			const Converter a(unit, std::get<FIRST_VALUE>(aTest));
+			const Converter b(unit, std::get<SECOND_VALUE>(aTest));
+
+			Converter c = a;
+			c += b;
+			const Converter d = a + b;
+
+			const conversion_t result = c.Get(unit);
+			const double threshold = std::get<THRESHOLD>(aTest);
+			aMessage = GetDescription(aTest, "addition");
+			return Compare(result, d.Get(unit), threshold) && Compare(result, std::get<RESULT_VALUE>(aTest), threshold);
+		}
+
+		static bool TestSubtract(const Test& aTest, std::string& aMessage){
+			const unit_t unit = std::get<UNIT>(aTest);
+
+			const Converter a(unit, std::get<FIRST_VALUE>(aTest));
+			const Converter b(unit, std::get<SECOND_VALUE>(aTest));
+
+			Converter c = a;
+			c -= b;
+			const Converter d = a - b;
+
+			const conversion_t result = c.Get(unit);
+			const double threshold = std::get<THRESHOLD>(aTest);
+			aMessage = GetDescription(aTest, "subtraction");
+			return Compare(result, d.Get(unit), threshold) && Compare(result, std::get<RESULT_VALUE>(aTest), threshold);
+		}
+
+		static bool TestMultiply(const Test& aTest, std::string& aMessage){
+			const unit_t unit = std::get<UNIT>(aTest);
+
+			const Converter a(unit, std::get<FIRST_VALUE>(aTest));
+			const Converter b(unit, std::get<SECOND_VALUE>(aTest));
+
+			Converter c = a;
+			c *= b;
+			const Converter d = a * b;
+
+			const conversion_t result = c.Get(unit);
+			const double threshold = std::get<THRESHOLD>(aTest);
+			aMessage = GetDescription(aTest, "multiplication");
+			return Compare(result, d.Get(unit), threshold) && Compare(result, std::get<RESULT_VALUE>(aTest), threshold);
+		}
+
+		static bool TestDivide(const Test& aTest, std::string& aMessage){
+			const unit_t unit = std::get<UNIT>(aTest);
+
+			const Converter a(unit, std::get<FIRST_VALUE>(aTest));
+			const Converter b(unit, std::get<SECOND_VALUE>(aTest));
+
+			Converter c = a;
+			c /= b;
+			const Converter d = a / b;
+
+			const conversion_t result = c.Get(unit);
+			const double threshold = std::get<THRESHOLD>(aTest);
+			aMessage = GetDescription(aTest, "division");
+			return Compare(result, d.Get(unit), threshold) && Compare(result, std::get<RESULT_VALUE>(aTest), threshold);
+		}
+
+		void RunTest(std::string& aMessage, bool(*aFn)(const Test& aTest, std::string& aMessage), const Test& aTest) const{
+			std::string tmp;
+
+			if(aFn(aTest, tmp)){
+				aMessage += tmp;
+				aMessage += '\n';
+			}else{
+				Fail(tmp);
+			}
+		}
+
+	protected:
+		// Inherited from test
+
+		void Run() const override{
+			std::string description = "\n";
+			
+			RunTest(description, TestAdd, mAdd);
+			RunTest(description, TestSubtract, mSubtract);
+			RunTest(description, TestMultiply, mMultiply);
+			RunTest(description, TestDivide, mDivide);
+
+			Pass(description);
+		}
+	public:
+		MathsTest(const std::string aClassName, const std::string aTestName, const Test aAdd, const Test aSubtract, const Test aMultiply, const Test aDivide) :
+			mClassName(aClassName),
+			mTestName(aTestName),
+			mAdd(aAdd),
+			mSubtract(aSubtract),
+			mMultiply(aMultiply),
+			mDivide(aDivide)
 		{
 
 		}
