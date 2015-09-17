@@ -25,30 +25,6 @@
 
 namespace Solaire{ namespace Units { namespace Testing{
 
-	std::shared_ptr<Test::Test> MassSelfConvert(){
-		return Test::BuildTest(
-			"Mass",
-			"SelfConvert",
-			[](std::string& aMessage)->bool{
-				// Create converter
-				Mass<double> converter;
-
-				// Initialise with a value
-				converter.Pounds = 100.0;
-
-				// Check that the same value is returned
-				if (converter.Pounds != 100.0){
-					aMessage = "Failed to convert POUND to POUND";
-					return false;
-				}else{
-					aMessage = "";
-					return true;
-				}
-			}
-		);
-	}
-
-
 	SOLAIRE_TEST(Mass, StaticConvert,
 		// Test that the unit is converted correctly
 		double threshold = 1.0;
@@ -136,6 +112,9 @@ namespace Solaire{ namespace Units { namespace Testing{
 		typedef Mass<T>::unit_t unit_t;
 
 		return std::shared_ptr<Test::Test>(new ConversionTest("Mass", std::string("Conversions") + typeid(T).name(), {
+			// Self conversion
+			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"pounds",		prefix_t::NONE,	unit_t::POUND,		4,			1),
+			// Small units
 			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"grams",		prefix_t::NONE,	unit_t::GRAM,		1814.37,	1),
 			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"ounces",		prefix_t::NONE,	unit_t::OUNCE,		64,			1),
 			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"stones",		prefix_t::NONE,	unit_t::STONE,		0.285714,	1),
@@ -144,6 +123,7 @@ namespace Solaire{ namespace Units { namespace Testing{
 			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"short tons",	prefix_t::NONE,	unit_t::LONG_TON,	0.00178571,	1),
 			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"troy ounces",	prefix_t::NONE,	unit_t::TROY_OUNCE,	58.3333333,	1),
 			Conversion("pounds",	prefix_t::NONE,	unit_t::POUND,	4,			"troy pounds",	prefix_t::NONE,	unit_t::TROY_POUND,	4.8612,		1),
+			// Large units
 			Conversion("kilograms",	prefix_t::KILO,	unit_t::GRAM,	2,			"ounces",		prefix_t::NONE,	unit_t::OUNCE,		70.5479,	1),
 			Conversion("ounces",	prefix_t::NONE,	unit_t::OUNCE,	70.5479,	"kilograms",	prefix_t::KILO,	unit_t::GRAM,		2,			1),
 			Conversion("kilograms",	prefix_t::KILO,	unit_t::GRAM,	1.989e+30,	"solar masses",	prefix_t::NONE,	unit_t::SOLAR_MASS,	1,			1)
@@ -172,7 +152,6 @@ namespace Solaire{ namespace Units { namespace Testing{
 		aManager.Add(MassLConvertTest<float>());
 		aManager.Add(MassLConvertTest<int>());
 
-		aManager.Add(MassSelfConvert());
 		aManager.Add(MassDefaultConstructor());
 		aManager.Add(MassUnitConstructor());
 		aManager.Add(MassCopyConstructor());
