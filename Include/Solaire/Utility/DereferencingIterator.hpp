@@ -51,6 +51,10 @@ namespace Solaire{ namespace Utility{
 			mIterator(aOther)
 		{}
 
+		size_t operator-(const this_t aOther) const{
+			return mIterator - aOther.mIterator;
+		}
+
 		this_t& operator++(){
 			++mIterator;
 			return *this;

@@ -184,7 +184,7 @@ namespace Solaire{ namespace Components{
 
 		typedef Utility::DereferencingIterator<Component&, const Component&, _vector_it> _dref_it;
 
-		typedef Utility::ConditionalIterator<Component&, const Component&, _dref_it> _cond_it;
+		typedef Utility::ConditionalIterator<Component&, const Component&, _dref_it, std::function<bool(_dref_it)>> _cond_it;
 		typedef Utility::ConstGenericIterator<const Component&, _cond_it> _const_cond_it;
 
 		typedef _cond_it component_iterator;

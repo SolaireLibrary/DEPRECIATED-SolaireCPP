@@ -81,6 +81,18 @@ namespace Solaire{ namespace Utility{
 			return WordIterator(const_cast<char*>(mEnd), mEnd);
 		}
 
+		size_t operator-(const WordIterator aOther) const{
+			if(mBegin != aOther.mBegin) throw std::runtime_error("Iterators are not matched");
+
+			size_t count = 0;
+			WordIterator tmp(*this);
+			while(tmp != aOther && tmp.mCurrent > mBegin) {
+				--tmp;
+				++count;
+			}
+			return count;
+		}
+
 		WordIterator& operator++(){
 			if(mCurrent == mEnd) return *this;
 

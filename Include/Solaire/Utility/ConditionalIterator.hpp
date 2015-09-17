@@ -36,25 +36,19 @@
 
 namespace Solaire{ namespace Utility{
 
-	template<class T, class CONST_T, class ITERATOR>
+	template<class T, class CONST_T, class ITERATOR, class CONDITION>
 	class ConditionalIterator{
 	public:
-		typedef ConditionalIterator<T, CONST_T, ITERATOR> this_t;
-		typedef std::function<bool(ITERATOR)> condition_t;
+		typedef ConditionalIterator<T, CONST_T, ITERATOR, CONDITION> this_t;
 	private:
 		ITERATOR mBegin;
 		ITERATOR mEnd;
 		ITERATOR mIterator;
-		condition_t mCondition;
-	public:
-		ConditionalIterator() :
-			mBegin(),
-			mEnd(),
-			mIterator(),
-			mCondition([](ITERATOR aIt)->bool{throw std::runtime_error("Condition not set");})
-		{}
+		CONDITION mCondition;
 
-		ConditionalIterator(const ITERATOR aIterator, const ITERATOR aBegin, const ITERATOR aEnd, const condition_t aCondition) :
+		ConditionalIterator() = delete;
+	public:
+		ConditionalIterator(const ITERATOR aIterator, const ITERATOR aBegin, const ITERATOR aEnd, const CONDITION aCondition) :
 			mBegin(aBegin),
 			mEnd(aEnd),
 			mIterator(aIterator),
@@ -63,6 +57,10 @@ namespace Solaire{ namespace Utility{
 			if(mIterator < mEnd){
 				while(! mCondition(mIterator) && mIterator < mEnd) ++mIterator;
 			}
+		}
+
+		size_t operator-(const this_t& aOther) const{
+			return mIterator - aOther.mIterator;
 		}
 
 		this_t& operator++(){
@@ -127,27 +125,27 @@ namespace Solaire{ namespace Utility{
 			return *mIterator;
 		}
 
-		bool operator==(const this_t aOther) const{
+		bool operator==(const this_t& aOther) const{
 			return mIterator == aOther.mIterator;
 		}
 
-		bool operator!=(const this_t aOther) const{
+		bool operator!=(const this_t& aOther) const{
 			return mIterator == aOther.mIterator;
 		}
 
-		bool operator<(const this_t aOther) const{
+		bool operator<(const this_t& aOther) const{
 			return mIterator < aOther.mIterator;
 		}
 
-		bool operator>(const this_t aOther) const{
+		bool operator>(const this_t& aOther) const{
 			return mIterator > aOther.mIterator;
 		}
 
-		bool operator<=(const this_t aOther) const{
+		bool operator<=(const this_t& aOther) const{
 			return mIterator <= aOther.mIterator;
 		}
 
-		bool operator>=(const this_t aOther) const{
+		bool operator>=(const this_t& aOther) const{
 			return mIterator >= aOther.mIterator;
 		}
 	};
