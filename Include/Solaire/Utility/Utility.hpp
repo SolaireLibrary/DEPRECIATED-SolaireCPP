@@ -35,5 +35,7 @@ Last Modified	: 17th September 2015
 #include "FunctionalTasks.hpp"
 #include "StringProcessor.hpp"
 #include "Task.hpp"
+#include "Strings\StringFragment.hpp"
+#include "Strings\WordIterator.hpp"
 
 #endif
