@@ -59,8 +59,17 @@ namespace Solaire{ namespace Utility{
 			}
 		}
 
-		size_t operator-(const this_t& aOther) const{
-			return mIterator - aOther.mIterator;
+		size_t operator-(const this_t aOther) const {
+			if (mBegin != aOther.mBegin) throw std::runtime_error("Iterators are not matched");
+
+			size_t count = 0;
+			this_t tmp(*this);
+			while(tmp != aOther){
+				--tmp;
+				++count;
+			}
+
+			return count;
 		}
 
 		this_t& operator++(){
@@ -125,27 +134,27 @@ namespace Solaire{ namespace Utility{
 			return *mIterator;
 		}
 
-		bool operator==(const this_t& aOther) const{
+		bool operator==(const this_t aOther) const{
 			return mIterator == aOther.mIterator;
 		}
 
-		bool operator!=(const this_t& aOther) const{
+		bool operator!=(const this_t aOther) const{
 			return mIterator == aOther.mIterator;
 		}
 
-		bool operator<(const this_t& aOther) const{
+		bool operator<(const this_t aOther) const{
 			return mIterator < aOther.mIterator;
 		}
 
-		bool operator>(const this_t& aOther) const{
+		bool operator>(const this_t aOther) const{
 			return mIterator > aOther.mIterator;
 		}
 
-		bool operator<=(const this_t& aOther) const{
+		bool operator<=(const this_t aOther) const{
 			return mIterator <= aOther.mIterator;
 		}
 
-		bool operator>=(const this_t& aOther) const{
+		bool operator>=(const this_t aOther) const{
 			return mIterator >= aOther.mIterator;
 		}
 	};
