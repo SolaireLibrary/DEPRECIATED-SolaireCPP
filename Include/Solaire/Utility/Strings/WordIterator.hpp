@@ -81,6 +81,10 @@ namespace Solaire{ namespace Utility{
 			++*this;
 		}
 
+		WordIterator End() const{
+			return WordIterator(const_cast<char*>(mEnd), mEnd);
+		}
+
 		WordIterator& operator++(){
 			if(mCurrent == mEnd) return *this;
 
@@ -188,6 +192,30 @@ namespace Solaire{ namespace Utility{
 		ConstStringFragment operator->() const{
 			return ConstStringFragment(mCurrent, mCurrent + mCurrentLength);
 		}
+
+		bool operator==(const WordIterator aOther) const {
+			return mCurrent == aOther.mCurrent;
+		}
+
+		bool operator!=(const WordIterator aOther) const {
+			return mCurrent == aOther.mCurrent;
+		}
+
+		bool operator<(const WordIterator aOther) const {
+			return mCurrent < aOther.mCurrent;
+		}
+
+		bool operator>(const WordIterator aOther) const {
+			return mCurrent > aOther.mCurrent;
+		}
+
+		bool operator<=(const WordIterator aOther) const {
+			return mCurrent <= aOther.mCurrent;
+		}
+
+		bool operator>=(const WordIterator aOther) const {
+			return mCurrent >= aOther.mCurrent;
+		}
 	};
 
 	class ConstWordIterator {
@@ -214,6 +242,10 @@ namespace Solaire{ namespace Utility{
 		ConstWordIterator(const std::string& aString) :
 			mIterator(const_cast<std::string&>(aString))
 		{}
+
+		ConstWordIterator End() const {
+			return mIterator.End();
+		}
 
 		ConstWordIterator& operator++() {
 			++mIterator;
@@ -243,7 +275,7 @@ namespace Solaire{ namespace Utility{
 		}
 
 		ConstWordIterator operator+(const size_t aNumber) const {
-			return ConstWordIterator(*this) += aNumber;
+			return mIterator + aNumber;
 		}
 
 		ConstWordIterator& operator-=(const size_t aNumber) {
@@ -252,7 +284,7 @@ namespace Solaire{ namespace Utility{
 		}
 
 		ConstWordIterator operator-(const size_t aNumber) const {
-			return ConstWordIterator(*this) -= aNumber;
+			return mIterator - aNumber;
 		}
 
 		ConstStringFragment operator*() const {
@@ -261,6 +293,30 @@ namespace Solaire{ namespace Utility{
 
 		ConstStringFragment operator->() const {
 			return *mIterator;
+		}
+
+		bool operator==(const ConstWordIterator aOther) const {
+			return mIterator == aOther.mIterator;
+		}
+
+		bool operator!=(const ConstWordIterator aOther) const {
+			return mIterator == aOther.mIterator;
+		}
+
+		bool operator<(const ConstWordIterator aOther) const {
+			return mIterator < aOther.mIterator;
+		}
+
+		bool operator>(const ConstWordIterator aOther) const {
+			return mIterator > aOther.mIterator;
+		}
+
+		bool operator<=(const ConstWordIterator aOther) const {
+			return mIterator <= aOther.mIterator;
+		}
+
+		bool operator>=(const ConstWordIterator aOther) const {
+			return mIterator >= aOther.mIterator;
 		}
 	};
 }}

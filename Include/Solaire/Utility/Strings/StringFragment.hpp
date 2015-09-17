@@ -89,54 +89,54 @@ namespace Solaire { namespace Utility {
 			if(aOther.Size() != size) return true;
 			return std::memcmp(mBegin, aOther.mBegin, size) != 0;
 		}
+
+		operator std::string() const{
+			return std::string(mBegin, Size());
+		}
 	};
 
 	class ConstStringFragment{
 	private:
-		const char* mBegin;
-		const char* mEnd;
+		StringFragment mFragment;
 	public:
 		constexpr ConstStringFragment(const char* const aBegin, const char* const aEnd) :
-			mBegin(aBegin),
-			mEnd(aEnd)
+			mFragment(const_cast<char*>(aBegin), aEnd)
 		{}
 
 		constexpr ConstStringFragment(const char* const aBegin, const size_t aLength) :
-			mBegin(aBegin),
-			mEnd(aBegin + aLength)
+			mFragment(const_cast<char*>(aBegin), aLength)
 		{}
 
 		ConstStringFragment(const std::string& aString) :
-			mBegin(&aString[0]),
-			mEnd(&aString[0] + aString.size())
+			mFragment(const_cast<std::string&>(aString))
 		{}
 
 		constexpr size_t Size() const{
-			return mEnd - mBegin;
+			return mFragment.Size();
 		}
 
 		constexpr const char* begin() const{
-			return mBegin;
+			return mFragment.begin();
 		}
 
 		constexpr const char* end() const{
-			return mEnd;
+			return mFragment.end();
 		}
 
 		constexpr char operator[](const size_t aIndex) const {
-			return mBegin[aIndex];
+			return mFragment[aIndex];
 		}
 
 		bool operator==(const ConstStringFragment aOther) const{
-			const size_t size = Size();
-			if(aOther.Size() != size) return false;
-			return std::memcmp(mBegin, aOther.mBegin, size) == 0;
+			return mFragment == aOther.mFragment;
 		}
 
 		bool operator!=(const ConstStringFragment aOther) const{
-			const size_t size = Size();
-			if(aOther.Size() != size) return true;
-			return std::memcmp(mBegin, aOther.mBegin, size) != 0;
+			return mFragment == aOther.mFragment;
+		}
+
+		operator std::string() const {
+			return mFragment;
 		}
 	};
 }}
