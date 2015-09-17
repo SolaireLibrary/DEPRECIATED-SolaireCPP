@@ -60,13 +60,15 @@ namespace Solaire{ namespace Utility{
 			mIterator(aIterator),
 			mCondition(aCondition)
 		{
-			++*this;
+			if(mIterator < mEnd){
+				while(! mCondition(mIterator) && mIterator < mEnd) ++mIterator;
+			}
 		}
 
 		this_t& operator++(){
 			if(mIterator < mEnd){
 				++mIterator;
-				while(! mCondition(mIterator) && mIterator < mEnd) ++mIterator;
+				while(mIterator < mEnd && ! mCondition(mIterator)) ++mIterator;
 			}
 			return *this;
 		}
@@ -80,7 +82,7 @@ namespace Solaire{ namespace Utility{
 		this_t& operator--(){
 			if(mIterator > mBegin){
 				--mIterator;
-				while (!mCondition(mIterator) && mIterator > mBegin) --mIterator;
+				while(mIterator > mBegin && ! mCondition(mIterator)) --mIterator;
 			}
 			return *this;
 		}
