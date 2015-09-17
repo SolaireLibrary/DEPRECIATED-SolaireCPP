@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_GENERIC_ITERATOR_HPP
-#define SOLAIRE_UTILITY_GENERIC_ITERATOR_HPP
+#ifndef SOLAIRE_UTILITY_CONDITIONAL_ITERATOR_HPP
+#define SOLAIRE_UTILITY_CONDITIONAL_ITERATOR_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file GenericIterator.hpp
+	\file ConditionalIterator.hpp
 	\brief
 	\author
 	Created			: Adam Smith
@@ -31,25 +31,43 @@
 	Last Modified	: 17th September 2015
 */
 
+#include <functional>
+#include <stdexcept>
+
 namespace Solaire{ namespace Utility{
 
-	template<class T, class ITERATOR>
-	class ConstGenericIterator{
-	private:
-		ITERATOR mIterator;
+	template<class T, class CONST_T, class ITERATOR>
+	class ConditionalIterator{
 	public:
-		typedef ConstGenericIterator<T, ITERATOR> this_t;
-
-		ConstGenericIterator() :
-			mIterator()
+		typedef ConditionalIterator<T, CONST_T, ITERATOR> this_t;
+		typedef std::function<bool(ITERATOR)> condition_t;
+	private:
+		ITERATOR mBegin;
+		ITERATOR mEnd;
+		ITERATOR mIterator;
+		condition_t mCondition;
+	public:
+		ConditionalIterator() :
+			mBegin(),
+			mEnd(),
+			mIterator(),
+			mCondition([](ITERATOR aIt)->bool{throw std::runtime_error("Condition not set");})
 		{}
 
-		ConstGenericIterator(const ITERATOR aOther) :
-			mIterator(aOther)
-		{}
+		ConditionalIterator(const ITERATOR aIterator, const ITERATOR aBegin, const ITERATOR aEnd, const condition_t aCondition) :
+			mBegin(aBegin),
+			mEnd(aEnd),
+			mIterator(aIterator),
+			mCondition(aCondition)
+		{
+			++*this;
+		}
 
 		this_t& operator++(){
-			++mIterator;
+			if(mIterator < mEnd){
+				++mIterator;
+				while(! mCondition(mIterator) && mIterator < mEnd) ++mIterator;
+			}
 			return *this;
 		}
 
@@ -60,7 +78,10 @@ namespace Solaire{ namespace Utility{
 		}
 
 		this_t& operator--(){
-			--mIterator;
+			if(mIterator > mBegin){
+				--mIterator;
+				while (!mCondition(mIterator) && mIterator > mBegin) --mIterator;
+			}
 			return *this;
 		}
 
@@ -76,7 +97,7 @@ namespace Solaire{ namespace Utility{
 		}
 
 		this_t operator+(const size_t aNumber) const{
-			return mIterator + aNumber;
+			return this_t(mIterator, mCondition) += aNumber;
 		}
 
 		this_t& operator-=(const size_t aNumber){
@@ -85,14 +106,22 @@ namespace Solaire{ namespace Utility{
 		}
 
 		this_t operator-(const size_t aNumber) const{
-			return mIterator - aNumber;
+			return this_t(mIterator, mCondition) -= aNumber;
 		}
 
-		T operator*() const{
+		T operator*(){
 			return *mIterator;
 		}
 
-		T operator->() const{
+		CONST_T operator*() const {
+			return *mIterator;
+		}
+
+		T operator->(){
+			return *mIterator;
+		}
+
+		CONST_T operator->() const {
 			return *mIterator;
 		}
 

@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_GENERIC_ITERATOR_HPP
-#define SOLAIRE_UTILITY_GENERIC_ITERATOR_HPP
+#ifndef SOLAIRE_UTILITY_DEREFERENCE_ITERATOR_HPP
+#define SOLAIRE_UTILITY_DEREFERENCE_ITERATOR_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file GenericIterator.hpp
+	\file DereferencingIterator.hpp
 	\brief
 	\author
 	Created			: Adam Smith
@@ -31,20 +31,23 @@
 	Last Modified	: 17th September 2015
 */
 
+#include <functional>
+#include <stdexcept>
+
 namespace Solaire{ namespace Utility{
 
-	template<class T, class ITERATOR>
-	class ConstGenericIterator{
+	template<class T, class CONST_T, class ITERATOR>
+	class DereferencingIterator{
 	private:
 		ITERATOR mIterator;
 	public:
-		typedef ConstGenericIterator<T, ITERATOR> this_t;
+		typedef DereferencingIterator<T, CONST_T, ITERATOR> this_t;
 
-		ConstGenericIterator() :
+		DereferencingIterator() :
 			mIterator()
 		{}
 
-		ConstGenericIterator(const ITERATOR aOther) :
+		DereferencingIterator(const ITERATOR aOther) :
 			mIterator(aOther)
 		{}
 
@@ -88,12 +91,20 @@ namespace Solaire{ namespace Utility{
 			return mIterator - aNumber;
 		}
 
-		T operator*() const{
-			return *mIterator;
+		T operator*(){
+			return **mIterator;
 		}
 
-		T operator->() const{
-			return *mIterator;
+		CONST_T operator*() const{
+			return **mIterator;
+		}
+
+		T operator->(){
+			return **mIterator;
+		}
+
+		CONST_T operator->() const{
+			return **mIterator;
 		}
 
 		bool operator==(const this_t aOther) const{

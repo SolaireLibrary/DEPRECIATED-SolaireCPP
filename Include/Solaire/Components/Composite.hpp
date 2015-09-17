@@ -35,6 +35,8 @@
 #include <vector>
 #include <functional>
 #include "Component.hpp"
+#include "..\Utility\ConditionalIterator.hpp"
+#include "..\Utility\DereferencingIterator.hpp"
 
 namespace Solaire{ namespace Components{
 	class Composite
@@ -174,23 +176,64 @@ namespace Solaire{ namespace Components{
 
 		// Iterators
 
-		typedef std::vector<Component::pointer_t>::iterator component_iterator;
-		typedef std::vector<Component::pointer_t>::const_iterator const_component_iterator;
+		//typedef std::vector<Component::pointer_t>::iterator component_iterator;
+		//typedef std::vector<Component::pointer_t>::const_iterator const_component_iterator;
 
+		typedef std::vector<Component::pointer_t>::iterator _vector_it;
+		typedef std::vector<Component::pointer_t>::const_iterator _const_vector_it;
+
+		typedef Utility::DereferencingIterator<Component&, const Component&, _vector_it> _dref_it;
+
+		typedef Utility::ConditionalIterator<Component&, const Component&, _dref_it> _cond_it;
+		typedef Utility::ConstGenericIterator<const Component&, _cond_it> _const_cond_it;
+
+		typedef _cond_it component_iterator;
+		typedef _const_cond_it const_component_iterator;
+
+		component_iterator ComponentBegin(const std::function<bool(const Component&)> aCondition = [](const Component&)->bool{return true;}){
+			return _cond_it(
+				_dref_it(mComponents.begin()), 
+				_dref_it(mComponents.begin()),
+				_dref_it(mComponents.end()),
+				[=](_dref_it aIterator)->bool{aCondition(*aIterator);}
+			);
+		}
+		
+		const_component_iterator ComponentBegin(const std::function<bool(const Component&)> aCondition = [](const Component&)->bool{return true;}) const{
+			return _const_cond_it(const_cast<Composite*>(this)->ComponentBegin(aCondition));
+		}
+
+		component_iterator ComponentEnd(const std::function<bool(const Component&)> aCondition = [](const Component&)->bool{return true;}){
+			return _cond_it(
+				_dref_it(mComponents.end()),
+				_dref_it(mComponents.begin()),
+				_dref_it(mComponents.end()),
+				[=](_dref_it aIterator)->bool{return aCondition(*aIterator);}
+			);
+		}
+		
+		const_component_iterator ComponentEnd(const std::function<bool(const Component&)> aCondition = [](const Component&)->bool{return true;}) const{
+			return _const_cond_it(const_cast<Composite*>(this)->ComponentEnd(aCondition));
+		}
+
+		template<class T>
 		component_iterator ComponentBegin(){
-			return mComponents.begin();
-		}
-		
-		const_component_iterator ComponentBegin() const{
-			return mComponents.begin();
+			return ComponentBegin(Component::CheckType<T>);
 		}
 
-		component_iterator ComponentEnd(){
-			return mComponents.end();
+		template<class T>
+		const_component_iterator ComponentBegin() const{
+			return ComponentBegin(Component::CheckType<T>);
 		}
-		
+
+		template<class T>
+		component_iterator ComponentEnd() {
+			return ComponentEnd(Component::CheckType<T>);
+		}
+
+		template<class T>
 		const_component_iterator ComponentEnd() const{
-			return mComponents.end();
+			return ComponentEnd(Component::CheckType<T>);
 		}
 
 		// Foreach loops
@@ -255,8 +298,9 @@ namespace Solaire{ namespace Components{
 
 		size_t GetComponentCount(component_condition aCondition) const{
 			size_t count = 0;
-			for(Component::const_pointer_t i : mComponents){
-				if(aCondition(*i)) ++count;
+			const const_component_iterator end = ComponentEnd(aCondition);
+			for (const_component_iterator i = ComponentBegin(aCondition); i != end; ++i){
+				++count;
 			}
 			return count;
 		}
@@ -264,56 +308,6 @@ namespace Solaire{ namespace Components{
 		template<class T>
 		size_t GetComponentCount() const{
 			return GetComponentCount(Component::CheckType<T>);
-		}
-
-		// Component find
-
-		std::vector<const_component_iterator> GetComponents(component_condition aCondition) const{
-			const const_component_iterator end = mComponents.end();
-			std::vector<const_component_iterator> tmp(mComponents.size());
-			for(const_component_iterator i = mComponents.begin(); i != end; ++i){
-				if(aCondition(**i)) tmp.push_back(i);
-			}
-			return tmp;
-		}
-
-		std::vector<component_iterator> GetComponents(component_condition aCondition){
-			const component_iterator end = mComponents.end();
-			std::vector<component_iterator> tmp(mComponents.size());
-			for(component_iterator i = mComponents.begin(); i != end; ++i){
-				if(aCondition(**i)) tmp.push_back(i);
-			}
-			return tmp;
-		}
-
-		const_component_iterator GetComponent(component_condition aCondition, size_t aIndex = 0) const{
-			std::vector<const_component_iterator> list = GetComponents(aCondition);
-			return aIndex >= list.size() ? mComponents.end() : list[aIndex];
-		}
-
-		component_iterator GetComponent(component_condition aCondition, size_t aIndex = 0){
-			std::vector<component_iterator> list = GetComponents(aCondition);
-			return aIndex >= list.size() ? mComponents.end() : list[aIndex];
-		}
-
-		template<class T>
-		std::vector<const_component_iterator> GetComponents() const{
-			return GetComponents(Component::CheckType<T>);
-		}
-
-		template<class T>
-		std::vector<component_iterator> GetComponents(){
-			return GetComponents(Component::CheckType<T>);
-		}
-
-		template<class T>
-		const_component_iterator GetComponent(size_t aIndex = 0) const{
-			return GetComponent(Component::CheckType<T>, aIndex);
-		}
-
-		template<class T>
-		component_iterator GetComponent(size_t aIndex = 0){
-			return GetComponent(Component::CheckType<T>, aIndex);
 		}
 	};
 }}
