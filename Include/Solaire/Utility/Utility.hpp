@@ -37,5 +37,6 @@ Last Modified	: 17th September 2015
 #include "Task.hpp"
 #include "Strings\StringFragment.hpp"
 #include "Strings\WordIterator.hpp"
+#include "GenericIterator.hpp"
 
 #endif

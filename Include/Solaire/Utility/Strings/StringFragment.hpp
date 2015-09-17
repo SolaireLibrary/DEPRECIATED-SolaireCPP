@@ -70,11 +70,11 @@ namespace Solaire { namespace Utility {
 			return mEnd;
 		}
 
-		char& operator[](const size_t aIndex) {
+		char& operator[](const size_t aIndex){
 			return mBegin[aIndex];
 		}
 
-		constexpr char operator[](const size_t aIndex) const {
+		constexpr char operator[](const size_t aIndex) const{
 			return mBegin[aIndex];
 		}
 
@@ -123,7 +123,7 @@ namespace Solaire { namespace Utility {
 			return mFragment.end();
 		}
 
-		constexpr char operator[](const size_t aIndex) const {
+		constexpr char operator[](const size_t aIndex) const{
 			return mFragment[aIndex];
 		}
 
@@ -135,7 +135,7 @@ namespace Solaire { namespace Utility {
 			return mFragment == aOther.mFragment;
 		}
 
-		operator std::string() const {
+		operator std::string() const{
 			return mFragment;
 		}
 	};

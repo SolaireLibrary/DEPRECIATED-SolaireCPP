@@ -36,23 +36,19 @@
 
 namespace Solaire{ namespace Utility{
 
-	class ConstWordIterator;
-
 	class WordIterator{
 	private:
 		const char* mBegin;
 		const char* mEnd;
 		char* mCurrent;
 		size_t mCurrentLength;
-
+	public:
 		WordIterator() :
 			mBegin(nullptr),
 			mEnd(nullptr),
 			mCurrent(nullptr),
 			mCurrentLength(0)
 		{}
-	public:
-		friend ConstWordIterator;
 
 		WordIterator(char* const aBegin, const char* const aEnd) :
 			mBegin(aBegin),
@@ -221,12 +217,11 @@ namespace Solaire{ namespace Utility{
 	class ConstWordIterator {
 	private:
 		WordIterator mIterator;
-
+	public:
 		ConstWordIterator() :
 			mIterator()
 		{}
 
-	public:
 		ConstWordIterator(const WordIterator aOther) :
 			mIterator(aOther)
 		{}
