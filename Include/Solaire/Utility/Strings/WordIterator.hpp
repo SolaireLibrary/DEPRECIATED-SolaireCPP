@@ -86,10 +86,11 @@ namespace Solaire{ namespace Utility{
 
 			size_t count = 0;
 			WordIterator tmp(*this);
-			while(tmp != aOther && tmp.mCurrent > mBegin) {
+			while(tmp != aOther){
 				--tmp;
 				++count;
 			}
+
 			return count;
 		}
 

@@ -184,36 +184,57 @@ namespace Solaire{ namespace Components{
 
 		typedef Utility::DereferencingIterator<Component&, const Component&, _vector_it> _dref_it;
 
-		typedef Utility::ConditionalIterator<Component&, const Component&, _dref_it, std::function<bool(_dref_it)>> _cond_it;
+		typedef std::function<bool(_dref_it)> iterator_condition_t;
+
+		typedef Utility::ConditionalIterator<Component&, const Component&, _dref_it, iterator_condition_t> _cond_it;
 		typedef Utility::ConstGenericIterator<const Component&, _cond_it> _const_cond_it;
 
 		typedef _cond_it component_iterator;
 		typedef _const_cond_it const_component_iterator;
 
-		component_iterator ComponentBegin(const std::function<bool(const Component&)> aCondition = [](const Component&)->bool{return true;}){
+
+		static const iterator_condition_t DEFAULT_ITERATOR_CONDITION;
+
+		component_iterator ComponentBegin(const iterator_condition_t& aCondition){
 			return _cond_it(
 				_dref_it(mComponents.begin()), 
 				_dref_it(mComponents.begin()),
 				_dref_it(mComponents.end()),
-				[=](_dref_it aIterator)->bool{aCondition(*aIterator);}
+				aCondition
 			);
 		}
 		
-		const_component_iterator ComponentBegin(const std::function<bool(const Component&)> aCondition = [](const Component&)->bool{return true;}) const{
+		const_component_iterator ComponentBegin(const iterator_condition_t& aCondition) const{
 			return _const_cond_it(const_cast<Composite*>(this)->ComponentBegin(aCondition));
 		}
 
-		component_iterator ComponentEnd(const std::function<bool(const Component&)> aCondition = [](const Component&)->bool{return true;}){
+		component_iterator ComponentEnd(const iterator_condition_t& aCondition){
 			return _cond_it(
 				_dref_it(mComponents.end()),
 				_dref_it(mComponents.begin()),
 				_dref_it(mComponents.end()),
-				[=](_dref_it aIterator)->bool{return aCondition(*aIterator);}
+				aCondition
 			);
 		}
 		
-		const_component_iterator ComponentEnd(const std::function<bool(const Component&)> aCondition = [](const Component&)->bool{return true;}) const{
+		const_component_iterator ComponentEnd(const iterator_condition_t& aCondition) const{
 			return _const_cond_it(const_cast<Composite*>(this)->ComponentEnd(aCondition));
+		}
+
+		component_iterator ComponentBegin() {
+			return ComponentBegin(DEFAULT_ITERATOR_CONDITION);
+		}
+
+		const_component_iterator ComponentBegin(iterator_condition_t& aCondition) const {
+			return ComponentBegin(DEFAULT_ITERATOR_CONDITION);
+		}
+
+		component_iterator ComponentEnd(iterator_condition_t& aCondition) {
+			return ComponentEnd(DEFAULT_ITERATOR_CONDITION);
+		}
+
+		const_component_iterator ComponentEnd(iterator_condition_t& aCondition) const {
+			return ComponentEnd(DEFAULT_ITERATOR_CONDITION);
 		}
 
 		template<class T>
@@ -297,9 +318,12 @@ namespace Solaire{ namespace Components{
 		}
 
 		size_t GetComponentCount(component_condition aCondition) const{
+
+			const iterator_condition_t condition = [&](_dref_it aIterator)->bool{return aCondition(*aIterator);};
+
 			size_t count = 0;
-			const const_component_iterator end = ComponentEnd(aCondition);
-			for (const_component_iterator i = ComponentBegin(aCondition); i != end; ++i){
+			const const_component_iterator end = ComponentEnd(condition);
+			for (const_component_iterator i = ComponentBegin(condition); i != end; ++i){
 				++count;
 			}
 			return count;
@@ -310,6 +334,8 @@ namespace Solaire{ namespace Components{
 			return GetComponentCount(Component::CheckType<T>);
 		}
 	};
+
+	const Composite::iterator_condition_t Composite::DEFAULT_ITERATOR_CONDITION = [](Composite::_dref_it)->bool{return true;};
 }}
 
 

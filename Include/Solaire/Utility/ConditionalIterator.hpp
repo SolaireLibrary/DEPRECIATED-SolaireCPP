@@ -44,18 +44,18 @@ namespace Solaire{ namespace Utility{
 		ITERATOR mBegin;
 		ITERATOR mEnd;
 		ITERATOR mIterator;
-		CONDITION mCondition;
+		const CONDITION* mCondition;
 
 		ConditionalIterator() = delete;
 	public:
-		ConditionalIterator(const ITERATOR aIterator, const ITERATOR aBegin, const ITERATOR aEnd, const CONDITION aCondition) :
+		ConditionalIterator(const ITERATOR aIterator, const ITERATOR aBegin, const ITERATOR aEnd, const CONDITION& aCondition) :
 			mBegin(aBegin),
 			mEnd(aEnd),
 			mIterator(aIterator),
-			mCondition(aCondition)
+			mCondition(&aCondition)
 		{
 			if(mIterator < mEnd){
-				while(! mCondition(mIterator) && mIterator < mEnd) ++mIterator;
+				while((*mCondition)(mIterator) && mIterator < mEnd) ++mIterator;
 			}
 		}
 
@@ -66,7 +66,7 @@ namespace Solaire{ namespace Utility{
 		this_t& operator++(){
 			if(mIterator < mEnd){
 				++mIterator;
-				while(mIterator < mEnd && ! mCondition(mIterator)) ++mIterator;
+				while(mIterator < mEnd && ! (*mCondition)(mIterator)) ++mIterator;
 			}
 			return *this;
 		}
@@ -80,7 +80,7 @@ namespace Solaire{ namespace Utility{
 		this_t& operator--(){
 			if(mIterator > mBegin){
 				--mIterator;
-				while(mIterator > mBegin && ! mCondition(mIterator)) --mIterator;
+				while(mIterator > mBegin && ! (*mCondition)(mIterator)) --mIterator;
 			}
 			return *this;
 		}
