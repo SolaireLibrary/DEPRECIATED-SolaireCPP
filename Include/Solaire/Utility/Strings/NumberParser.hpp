@@ -188,7 +188,7 @@ namespace Solaire { namespace Utility {
 			GenericFindValueState(
 				CanHaveExponent() ? STATE_FIND_EXPONENT_SIGN : STATE_ERROR,
 				STATE_ERROR, 
-				STATE_ERROR, 
+				STATE_RETURN,
 				mDecimal, 
 				nullptr
 			);
@@ -233,16 +233,9 @@ namespace Solaire { namespace Utility {
 
 		static T ConstructBody(const T aBody, const T aDecimal){
 			if(CanHaveDecimal()){
-				// Count digits in decimal
-				int64_t value = aDecimal;
-				size_t digits = 1;
-				while(value != 0){
-					value -= 10 * digits;
-					++digits;
-				}
-			
 				// Shift the decimal value down
-				const double decimal = static_cast<double>(aDecimal) / (10 * digits);
+				double decimal = static_cast<double>(aDecimal);
+				while(decimal >= 1.0) decimal /= 10.0;
 
 				// Combine the values
 				return static_cast<T>(aBody) + decimal;
