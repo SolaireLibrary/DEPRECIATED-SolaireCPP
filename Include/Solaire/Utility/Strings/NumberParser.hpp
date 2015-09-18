@@ -65,16 +65,17 @@ namespace Solaire { namespace Utility {
 		private:
 			char mStack[MAX_DIGITS];
 			struct{
-				uint8_t mHead : 7;
+				uint8_t mHead : 4;
 				uint8_t mSign : 1;
 			};
+			static_assert(MAX_DIGITS < 16, "NumberParser::Section Stack head compression failed");
 		public:
 			operator int64_t() const{
 				int64_t value = 0;
 
 				const int32_t end = -1;
 				for(int32_t i = mHead - 1; i != end; --i) {
-					value += static_cast<int64_t>(mStack[i] - '0') * static_cast<uint64_t>(POWERS_10[10, mHead - i]);
+					value += static_cast<int64_t>(mStack[i] - '0') * static_cast<int64_t>(POWERS_10[10, mHead - i]);
 				}
 
 				return mSign == SIGN_POSITIVE ? value : value * -1;
