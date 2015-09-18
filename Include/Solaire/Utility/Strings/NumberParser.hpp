@@ -40,10 +40,10 @@ namespace Solaire { namespace Utility {
 	namespace NumberParserInternals{
 
 		enum {
-			MAX_DIGITS = 16
+			MAX_DIGITS = 11
 		};
 
-		static constexpr const uint16_t POWERS_10[MAX_DIGITS] = {
+		static constexpr const uint32_t POWERS_10[MAX_DIGITS] = {
 			1,
 			10,
 			100,
@@ -53,59 +53,55 @@ namespace Solaire { namespace Utility {
 			1000000,
 			10000000,
 			100000000,
-			1000000000,
-			10000000000,
-			100000000000,
-			1000000000000,
-			10000000000000,
-			100000000000000,
-			1000000000000000
+			1000000000
 		};
 
 		class Section {
-		private:
-			Section(const Section&) = delete;
-			Section(Section&&) = delete;
-
-			Section& operator=(const Section&) = delete;
-			Section& operator=(Section&&) = delete;
-
-			char mStack[MAX_DIGITS];
-			uint8_t mHead;
-			bool mIsPositive;
 		public:
-			operator int64_t() const {
+			enum Sign : bool{
+				SIGN_NEGATIVE,
+				SIGN_POSITIVE
+			};
+		private:
+			char mStack[MAX_DIGITS];
+			struct{
+				uint8_t mHead : 7;
+				uint8_t mSign : 1;
+			};
+		public:
+			operator int64_t() const{
 				int64_t value = 0;
 
 				const int32_t end = -1;
 				for(int32_t i = mHead - 1; i != end; --i) {
-					value += (mStack[i] - '0') * POWERS_10[10, mHead - i];
+					value += static_cast<int64_t>(mStack[i] - '0') * static_cast<uint64_t>(POWERS_10[10, mHead - i]);
 				}
 
-				return mIsPositive ? value : value * -1;
+				return mSign == SIGN_POSITIVE ? value : value * -1;
 			}
 
-			Section& operator+=(const char aChar) {
+			Section& operator+=(const char aChar){
+				if(mHead == MAX_DIGITS) throw std::runtime_error("NumberParser::Section Maximum digits exceeded");
 				mStack[mHead++] = aChar;
 				return *this;
 			}
 
-			void SetSign(const bool aSign) {
-				mIsPositive = aSign;
+			void SetSign(const Sign aSign){
+				mSign = aSign;
 			}
 
-			bool GetSign() const {
-				return mIsPositive;
+			Sign GetSign() const{
+				return static_cast<Sign>(mSign);
 			}
 
-			void Clear() {
+			void Clear(){
 				mHead = 0;
-				mIsPositive = true;
+				mSign = 1;
 			}
 
 			Section() :
 				mHead(0),
-				mIsPositive(true)
+				mSign(SIGN_POSITIVE)
 			{}
 		};
 	}
@@ -154,13 +150,13 @@ namespace Solaire { namespace Utility {
 			while(i < aEnd){
 				const char c = *i;
 				if(c == '+'){
-					aSection.SetSign(true);
+					aSection.SetSign(Section::SIGN_POSITIVE);
 					return i + 1;
 				}else if(c >= '0' && c <= '9'){
-					aSection.SetSign(true);
+					aSection.SetSign(Section::SIGN_POSITIVE);
 					return i;
 				}else if(c == '-'){
-					aSection.SetSign(false);
+					aSection.SetSign(Section::SIGN_NEGATIVE);
 					return i + 1;
 				}else{
 					throw std::runtime_error("Could not determine sign");
