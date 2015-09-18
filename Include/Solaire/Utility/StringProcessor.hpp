@@ -280,7 +280,7 @@ namespace Solaire{ namespace Utility{ namespace Strings{
 
     template<>
     const char* Parse<double>(const char* const aBegin, const char* const aEnd, double& aOutput){
-		NumberParser parser;
+		NumberParser<double> parser;
 		std::pair<double, const char*> result = parser(aBegin, aEnd);
 		aOutput = result.first;
 		return result.second;
@@ -288,75 +288,81 @@ namespace Solaire{ namespace Utility{ namespace Strings{
 
     template<>
     const char* Parse<float>(const char* const aBegin, const char* const aEnd, float& aOutput){
-		double tmp = 0.0;
-		const char* const ptr = Parse<double>(aBegin, aEnd, tmp);
-		aOutput = static_cast<float>(aOutput);
-		return ptr;
+		NumberParser<float> parser;
+		std::pair<float, const char*> result = parser(aBegin, aEnd);
+		aOutput = result.first;
+		return result.second;
     }
 
     template<>
     const char* Parse<int64_t>(const char* const aBegin, const char* const aEnd, int64_t& aOutput){
-		double tmp = 0.0;
-		const char* const ptr = Parse<double>(aBegin, aEnd, tmp);
-		aOutput = static_cast<int64_t>(aOutput);
-		return ptr;
+		NumberParser<int64_t> parser;
+		std::pair<int64_t, const char*> result = parser(aBegin, aEnd);
+		aOutput = result.first;
+		return result.second;
     }
 
     template<>
     const char* Parse<int32_t>(const char* const aBegin, const char* const aEnd, int32_t& aOutput){
-		int64_t tmp = 0;
-		const char* const ptr = Parse<int64_t>(aBegin, aEnd, tmp);
-		aOutput = static_cast<int32_t>(aOutput);
-		return ptr;
+		NumberParser<int32_t> parser;
+		std::pair<int32_t, const char*> result = parser(aBegin, aEnd);
+		aOutput = result.first;
+		return result.second;
     }
 
     template<>
     const char* Parse<int16_t>(const char* const aBegin, const char* const aEnd, int16_t& aOutput){
-		int64_t tmp = 0;
-		const char* const ptr = Parse<int64_t>(aBegin, aEnd, tmp);
-		aOutput = static_cast<int32_t>(aOutput);
-		return ptr;
+		NumberParser<int16_t> parser;
+		std::pair<int16_t, const char*> result = parser(aBegin, aEnd);
+		aOutput = result.first;
+		return result.second;
     }
 
     template<>
     const char* Parse<int8_t>(const char* const aBegin, const char* const aEnd, int8_t& aOutput){
-		int64_t tmp = 0;
-		const char* const ptr = Parse<int64_t>(aBegin, aEnd, tmp);
-		aOutput = static_cast<int32_t>(aOutput);
-		return ptr;
+		NumberParser<int8_t> parser;
+		std::pair<int8_t, const char*> result = parser(aBegin, aEnd);
+		aOutput = result.first;
+		return result.second;
     }
 
     template<>
     const char* Parse<uint64_t>(const char* const aBegin, const char* const aEnd, uint64_t& aOutput){
-		double tmp = 0.0;
-		const char* const ptr = Parse<double>(aBegin, aEnd, tmp);
-		aOutput = static_cast<uint64_t>(aOutput);
-		return ptr;
+		NumberParser<uint64_t> parser;
+		std::pair<uint64_t, const char*> result = parser(aBegin, aEnd);
+		aOutput = result.first;
+		return result.second;
     }
 
     template<>
     const char* Parse<uint32_t>(const char* const aBegin, const char* const aEnd, uint32_t& aOutput){
-		uint64_t tmp = 0;
-		const char* const ptr = Parse<uint64_t>(aBegin, aEnd, tmp);
-		aOutput = static_cast<uint32_t>(aOutput);
-		return ptr;
+		NumberParser<uint32_t> parser;
+		std::pair<uint32_t, const char*> result = parser(aBegin, aEnd);
+		aOutput = result.first;
+		return result.second;
     }
 
     template<>
     const char* Parse<uint16_t>(const char* const aBegin, const char* const aEnd, uint16_t& aOutput){
-		uint64_t tmp = 0;
-		const char* const ptr = Parse<uint64_t>(aBegin, aEnd, tmp);
-		aOutput = static_cast<uint16_t>(aOutput);
-		return ptr;
+		NumberParser<uint16_t> parser;
+		std::pair<uint16_t, const char*> result = parser(aBegin, aEnd);
+		aOutput = result.first;
+		return result.second;
     }
 
     template<>
     const char* Parse<uint8_t>(const char* const aBegin, const char* const aEnd, uint8_t& aOutput){
-		uint64_t tmp = 0;
-		const char* const ptr = Parse<uint64_t>(aBegin, aEnd, tmp);
-		aOutput = static_cast<uint8_t>(aOutput);
-		return ptr;
+		NumberParser<uint8_t> parser;
+		std::pair<uint8_t, const char*> result = parser(aBegin, aEnd);
+		aOutput = result.first;
+		return result.second;
     }
+	
+	template<>
+	const char* Parse<char>(const char* const aBegin, const char* const aEnd, char& aOutput) {
+		aOutput = *aBegin;
+		return aBegin + 1;
+	}
 
     /*!
         \brief Attempt to parse a value from a c-string segment.

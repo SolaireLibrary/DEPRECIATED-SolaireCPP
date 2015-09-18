@@ -31,12 +31,30 @@ Created			: 18th September 2015
 Last Modified	: 18th September 2015
 */
 
+#include <vector>
+#include <type_traits>
 #include "StringFragment.hpp"
 
 namespace Solaire { namespace Utility {
 
+	template<class T>
 	class NumberParser{
 	private:
+
+		static_assert(std::is_arithmetic<T>::value, "Solaire::Utility::NumberParser Parsed type must be a number");
+
+		static bool CanHaveDecimal(){
+			return ! std::is_integral<T>::value;
+		}
+
+		static bool CanHaveExponent() {
+			return true;
+		}
+
+		static bool CanBeNegative() {
+			return ! std::is_unsigned<T>::value;
+		}
+
 		// The states for the parsing FSA
 		enum State{
 			STATE_FIND_SIGN,					// Initial state, determines if the value is positive or negative
@@ -49,19 +67,54 @@ namespace Solaire { namespace Utility {
 			STATE_ERROR
 		};
 
-		struct Section{
-			const char* begin;
-			int64_t value;
-			bool isNegative;
+		class Section{
+		private:
+			static void AddDigit(T& aValue, const char aCharacter, const size_t aOffset) {
+				aValue += static_cast<int64_t>(aCharacter - '0') * static_cast<T>(std::pow(10, aOffset));
+			}
+			
+			Section(const Section&) = delete;
+			Section(Section&&) = delete;
 
-			double ConstructValue() const{
-				return static_cast<double>(value) * isNegative ? -1.f : 1.f;
+			Section& operator=(const Section&) = delete;
+			Section& operator=(Section&&) = delete;
+
+			std::vector<char> mChars;
+			bool mIsPositive;
+		public:
+			operator T() const{
+				T value = static_cast<T>(0);
+
+				const auto end = mChars.rend();
+				const auto begin = mChars.rbegin();
+				for(auto i = begin; i != end; ++i){
+					AddDigit(value, *i, i - begin);
+				}
+
+				return mIsPositive ? value : value * static_cast<T>(-1);
+			}
+
+			Section& operator+=(const char aChar){
+				mChars.push_back(aChar);
+				return *this;
+			}
+
+			void SetSign(const bool aSign){
+				mIsPositive = aSign;
+			}
+
+			bool GetSign() const{
+				return mIsPositive;
+			}
+
+			void Clear(){
+				mChars.clear();
+				mIsPositive = true;
 			}
 
 			Section() :
-				begin(nullptr),
-				value(0),
-				isNegative(false)
+				mChars(16),
+				mIsPositive(true)
 			{}
 		};
 
@@ -76,45 +129,28 @@ namespace Solaire { namespace Utility {
 
 		uint32_t mDecimalPlaces;				// Stores how many decimal places are in the decimal value
 		State mState;							// The current FSA state
-		double mReturnValue;
+		T mReturnValue;
 
-		enum Sign : uint32_t{
-			SIGN_POSITIVE,
-			SIGN_NEGATIVE,
-			SIGN_INVALID
-		};
-
-		static Sign EvaluateSign(const char aCharacter){
-			if(aCharacter == '+' || (aCharacter >= '0' && aCharacter <= '9')){
-				return SIGN_POSITIVE;
-			}else if(aCharacter == '-'){
-				return SIGN_NEGATIVE;
-			}else{
-				return SIGN_INVALID;
-			}
-		}
-
-		static const char* FindSign(bool& aSign, const char* const aBegin, const char* aEnd){
+		static const char* FindSign(Section& aSection, const char* const aBegin, const char* aEnd){
 			const char* i = aBegin;
-			Sign mode = SIGN_INVALID;
 
-			while(i < aEnd && mode == SIGN_INVALID){
-				mode = EvaluateSign(*i);
+			while(i < aEnd){
+				const char c = *i;
+				if(c == '+'){
+					aSection.SetSign(true);
+					return i + 1;
+				}else if(c >= '0' && c <= '9'){
+					aSection.SetSign(true);
+					return i;
+				}else if(c == '-'){
+					aSection.SetSign(false);
+					return i + 1;
+				}else{
+					throw std::runtime_error("Could not determine sign");
+				}
 				++i;
 			}
-
-			if (mode == SIGN_INVALID)  throw std::runtime_error("Could not determine sign of string " + std::string(aBegin + (aEnd - aBegin)));
-			aSign = mode == SIGN_POSITIVE;
-			return --i;
-		}
-
-		static bool AddDigit(int64_t& aValue, const char aCharacter, const size_t aOffset) {
-			if(aCharacter >= '0' && aCharacter <= '9'){
-				aValue += static_cast<int64_t>(aCharacter - '0') * 10 * aOffset;
-				return true;
-			}else{
-				return false;
-			}
+			throw std::runtime_error("Could not determine sign");
 		}
 
 		void GenericFindValueState(const State aIfExponent, const State aIfDecimal, const State aIfInvalidChar, Section& aBodySection, Section* aDecimalSection) {
@@ -125,13 +161,11 @@ namespace Solaire { namespace Utility {
 			}else if (c == '.'){
 				if(aIfDecimal != STATE_ERROR){
 					++mCurrentChar;
-					aDecimalSection->begin = mCurrentChar;
 				}
 				mState = aIfDecimal;
 			}else{
-				// Calculate the offset from the beginning of the body
-				const size_t offset = (mCurrentChar - aBodySection.begin) + 1;
-				if (AddDigit(aBodySection.value, c, offset)) {
+				if(c >= '0' && c <= '9'){
+					aBodySection += c;
 					++mCurrentChar;
 				}else{
 					--mCurrentChar;
@@ -141,28 +175,49 @@ namespace Solaire { namespace Utility {
 		}
 
 		void StateFindValue(){
-			GenericFindValueState(STATE_FIND_EXPONENT_SIGN, STATE_FIND_DECIMAL_VALUE, STATE_RETURN, mBody, &mDecimal);
+			GenericFindValueState(
+				CanHaveExponent() ? STATE_FIND_EXPONENT_SIGN : STATE_ERROR, 
+				CanHaveDecimal() ? STATE_FIND_DECIMAL_VALUE : STATE_ERROR,
+				STATE_RETURN, 
+				mBody, 
+				&mDecimal
+			);
 		}
 
 		void StateFindDecimalValue(){
-			GenericFindValueState(STATE_FIND_EXPONENT_SIGN, STATE_ERROR, STATE_ERROR, mDecimal, nullptr);
+			GenericFindValueState(
+				CanHaveExponent() ? STATE_FIND_EXPONENT_SIGN : STATE_ERROR,
+				STATE_ERROR, 
+				STATE_ERROR, 
+				mDecimal, 
+				nullptr
+			);
 		}
 
 		void StateFindExponentValue(){
-			GenericFindValueState(STATE_ERROR, STATE_FIND_EXPONENT_DECIMAL, STATE_RETURN, mExponent, &mExponentDecimal);
+			GenericFindValueState(
+				STATE_ERROR,
+				CanHaveDecimal() ? STATE_FIND_EXPONENT_DECIMAL : STATE_ERROR,
+				STATE_RETURN,
+				mExponent,
+				&mExponentDecimal
+			);
 		}
 
 		void StateFindExponentDecimal(){
-			GenericFindValueState(STATE_FIND_EXPONENT_SIGN, STATE_ERROR, STATE_RETURN, mExponentDecimal, nullptr);
+			GenericFindValueState(
+				STATE_FIND_EXPONENT_SIGN, 
+				STATE_ERROR, 
+				STATE_RETURN, 
+				mExponentDecimal, 
+				nullptr
+			);
 		}
 
 		void GenericFindSign(const State aValueState, Section& aSection){
 			try{
-				mCurrentChar = FindSign(aSection.isNegative, mCurrentChar, mEnd);
-				++mCurrentChar;
-				aSection.begin = mCurrentChar;
-
-				mState = aValueState;
+				mCurrentChar = FindSign(aSection, mCurrentChar, mEnd);
+				mState = (! aSection.GetSign()) && (! CanBeNegative()) ? STATE_ERROR : aValueState;
 			}catch(...){
 				mState = STATE_ERROR;
 			}
@@ -176,26 +231,30 @@ namespace Solaire { namespace Utility {
 			GenericFindSign(STATE_FIND_EXPONENT_VALUE, mExponent);
 		}
 
-		static double ConstructBody(const int64_t aBody, const int64_t aDecimal){
-			// Count digits in decimal
-			int64_t value = aDecimal;
-			size_t digits = 1;
-			while(value != 0){
-				value -= 10 * digits;
-				++digits;
-			}
+		static T ConstructBody(const T aBody, const T aDecimal){
+			if(CanHaveDecimal()){
+				// Count digits in decimal
+				int64_t value = aDecimal;
+				size_t digits = 1;
+				while(value != 0){
+					value -= 10 * digits;
+					++digits;
+				}
 			
-			// Shift the decimal value down
-			const double decimal = static_cast<double>(aDecimal) / (10.f * digits);
+				// Shift the decimal value down
+				const double decimal = static_cast<double>(aDecimal) / (10 * digits);
 
-			// Combine the values
-			return static_cast<double>(aBody) + decimal;
+				// Combine the values
+				return static_cast<T>(aBody) + decimal;
+			}else{
+				return static_cast<T>(aBody);
+			}
 		}
 
 		void StateReturn(){
-			const double body = ConstructBody(mBody.ConstructValue(), mDecimal.ConstructValue());
-			const double exponent = ConstructBody(mExponent.ConstructValue(), mExponentDecimal.ConstructValue());
-			mReturnValue = exponent == 0.f ? body : std::pow(body, 10 * exponent);
+			const T body = ConstructBody(mBody, mDecimal);
+			const T exponent = CanHaveExponent() ? ConstructBody(mExponent, mExponentDecimal) : static_cast<T>(0);
+			mReturnValue = exponent == static_cast<T>(0) ? body : static_cast<T>(std::pow(body, 10 * exponent));
 		}
 
 		void StateError(){
@@ -231,43 +290,44 @@ namespace Solaire { namespace Utility {
 			}
 		}
 
-		void Reset() {
+		void Clear() {
 			mState = STATE_FIND_SIGN;
 			mBegin = nullptr;
 			mEnd = nullptr;
 			mReturnValue = 0.f;
-			mBody = Section();
-			mDecimal = Section();
-			mExponent = Section();
-			mExponentDecimal = Section();
+			mBody.Clear();
+			mDecimal.Clear();
+			mExponent.Clear();
+			mExponentDecimal.Clear();
 		}
 	public:
-		static constexpr const double PARSE_FAILURE = NAN;
-
-		std::pair<double, const char*> operator()(const char* const aBegin, const char* const aEnd){
+		std::pair<T, const char*> operator()(const char* const aBegin, const char* const aEnd){
 			// Initialise
-			Reset();
+			Clear();
 			mBegin = aBegin;
 			mEnd = aEnd;
+			mCurrentChar = mBegin;
 
 			// FSA loop
 			do{
 				EvaluateState();
 			}while(mState != STATE_ERROR && mState != STATE_RETURN);
 
+			EvaluateState();
+
 			// Determine output of FSA
-			return std::pair<double, const char*>(mState == STATE_ERROR ? PARSE_FAILURE : mReturnValue, mCurrentChar);
+			return std::pair<T, const char*>(mReturnValue, mState == STATE_ERROR ?  nullptr : mCurrentChar);
 		}
 
-		std::pair<double, const char*> operator()(const char* const aBegin, const size_t aSize) {
+		std::pair<T, const char*> operator()(const char* const aBegin, const size_t aSize) {
 			return operator()(aBegin, aBegin + aSize);
 		}
 
-		std::pair<double, const char*> operator()(const ConstStringFragment aString){
+		std::pair<T, const char*> operator()(const ConstStringFragment aString){
 			return operator()(aString.begin(), aString.Size());
 		}
 
-		std::pair<double, const char*> operator()(const std::string& aString){
+		std::pair<T, const char*> operator()(const std::string& aString){
 			return operator()(aString.c_str(), aString.size());
 		}
 	};
