@@ -37,23 +37,71 @@ Last Modified	: 18th September 2015
 
 namespace Solaire { namespace Utility {
 
+	namespace NumberParserInternals{
+		class Section {
+		private:
+			static void AddDigit(int64_t& aValue, const char aCharacter, const size_t aOffset) {
+				aValue += static_cast<int64_t>(aCharacter - '0') * static_cast<int64_t>(std::pow(10, aOffset));
+			}
+
+			Section(const Section&) = delete;
+			Section(Section&&) = delete;
+
+			Section& operator=(const Section&) = delete;
+			Section& operator=(Section&&) = delete;
+
+			std::vector<char> mChars;
+			bool mIsPositive;
+		public:
+			operator int64_t() const {
+				int64_t value = 0;
+
+				const auto end = mChars.crend();
+				const auto begin = mChars.crbegin();
+				for (auto i = begin; i != end; ++i) {
+					AddDigit(value, *i, i - begin);
+				}
+
+				return mIsPositive ? value : value * -1;
+			}
+
+			Section& operator+=(const char aChar) {
+				mChars.push_back(aChar);
+				return *this;
+			}
+
+			void SetSign(const bool aSign) {
+				mIsPositive = aSign;
+			}
+
+			bool GetSign() const {
+				return mIsPositive;
+			}
+
+			void Clear() {
+				mChars.clear();
+				mIsPositive = true;
+			}
+
+			Section() :
+				mChars(16),
+				mIsPositive(true)
+			{}
+		};
+	}
+
 	template<class T>
 	class NumberParser{
 	private:
-
 		static_assert(std::is_arithmetic<T>::value, "Solaire::Utility::NumberParser Parsed type must be a number");
 
-		static bool CanHaveDecimal(){
-			return ! std::is_integral<T>::value;
-		}
+		typedef NumberParserInternals::Section Section;
 
-		static bool CanHaveExponent() {
-			return true;
-		}
-
-		static bool CanBeNegative() {
-			return ! std::is_unsigned<T>::value;
-		}
+		enum Traits : bool{
+			HAS_DECIMAL = !std::is_integral<T>::value,
+			HAS_EXPONENT = true,
+			CAN_BE_NEGATIVE = std::is_unsigned<T>::value
+		};
 
 		// The states for the parsing FSA
 		enum State{
@@ -65,57 +113,6 @@ namespace Solaire { namespace Utility {
 			STATE_FIND_EXPONENT_DECIMAL,
 			STATE_RETURN,						// Final parsing of the value for return
 			STATE_ERROR
-		};
-
-		class Section{
-		private:
-			static void AddDigit(T& aValue, const char aCharacter, const size_t aOffset) {
-				aValue += static_cast<int64_t>(aCharacter - '0') * static_cast<T>(std::pow(10, aOffset));
-			}
-			
-			Section(const Section&) = delete;
-			Section(Section&&) = delete;
-
-			Section& operator=(const Section&) = delete;
-			Section& operator=(Section&&) = delete;
-
-			std::vector<char> mChars;
-			bool mIsPositive;
-		public:
-			operator T() const{
-				T value = static_cast<T>(0);
-
-				const auto end = mChars.rend();
-				const auto begin = mChars.rbegin();
-				for(auto i = begin; i != end; ++i){
-					AddDigit(value, *i, i - begin);
-				}
-
-				return mIsPositive ? value : value * static_cast<T>(-1);
-			}
-
-			Section& operator+=(const char aChar){
-				mChars.push_back(aChar);
-				return *this;
-			}
-
-			void SetSign(const bool aSign){
-				mIsPositive = aSign;
-			}
-
-			bool GetSign() const{
-				return mIsPositive;
-			}
-
-			void Clear(){
-				mChars.clear();
-				mIsPositive = true;
-			}
-
-			Section() :
-				mChars(16),
-				mIsPositive(true)
-			{}
 		};
 
 		Section mBody;
@@ -176,8 +173,8 @@ namespace Solaire { namespace Utility {
 
 		void StateFindValue(){
 			GenericFindValueState(
-				CanHaveExponent() ? STATE_FIND_EXPONENT_SIGN : STATE_ERROR, 
-				CanHaveDecimal() ? STATE_FIND_DECIMAL_VALUE : STATE_ERROR,
+				HAS_EXPONENT ? STATE_FIND_EXPONENT_SIGN : STATE_ERROR,
+				HAS_EXPONENT ? STATE_FIND_DECIMAL_VALUE : STATE_ERROR,
 				STATE_RETURN, 
 				mBody, 
 				&mDecimal
@@ -186,7 +183,7 @@ namespace Solaire { namespace Utility {
 
 		void StateFindDecimalValue(){
 			GenericFindValueState(
-				CanHaveExponent() ? STATE_FIND_EXPONENT_SIGN : STATE_ERROR,
+				HAS_EXPONENT ? STATE_FIND_EXPONENT_SIGN : STATE_ERROR,
 				STATE_ERROR, 
 				STATE_RETURN,
 				mDecimal, 
@@ -197,7 +194,7 @@ namespace Solaire { namespace Utility {
 		void StateFindExponentValue(){
 			GenericFindValueState(
 				STATE_ERROR,
-				CanHaveDecimal() ? STATE_FIND_EXPONENT_DECIMAL : STATE_ERROR,
+				HAS_DECIMAL ? STATE_FIND_EXPONENT_DECIMAL : STATE_ERROR,
 				STATE_RETURN,
 				mExponent,
 				&mExponentDecimal
@@ -217,7 +214,7 @@ namespace Solaire { namespace Utility {
 		void GenericFindSign(const State aValueState, Section& aSection){
 			try{
 				mCurrentChar = FindSign(aSection, mCurrentChar, mEnd);
-				mState = (! aSection.GetSign()) && (! CanBeNegative()) ? STATE_ERROR : aValueState;
+				mState = (! aSection.GetSign()) && (! CAN_BE_NEGATIVE) ? STATE_ERROR : aValueState;
 			}catch(...){
 				mState = STATE_ERROR;
 			}
@@ -231,14 +228,14 @@ namespace Solaire { namespace Utility {
 			GenericFindSign(STATE_FIND_EXPONENT_VALUE, mExponent);
 		}
 
-		static T ConstructBody(const T aBody, const T aDecimal){
-			if(CanHaveDecimal()){
+		static T ConstructBody(const int64_t aBody, const int64_t aDecimal){
+			if(HAS_DECIMAL){
 				// Shift the decimal value down
 				double decimal = static_cast<double>(aDecimal);
 				while(decimal >= 1.0) decimal /= 10.0;
 
 				// Combine the values
-				if(aBody < static_cast<T>(0)) decimal *= -1.0;
+				if(aBody < 0) decimal *= -1.0;
 				return static_cast<T>(static_cast<double>(aBody) + decimal);
 			}else{
 				return static_cast<T>(aBody);
@@ -247,7 +244,7 @@ namespace Solaire { namespace Utility {
 
 		void StateReturn(){
 			const T body = ConstructBody(mBody, mDecimal);
-			const T exponent = CanHaveExponent() ? ConstructBody(mExponent, mExponentDecimal) : static_cast<T>(0);
+			const T exponent = HAS_EXPONENT ? ConstructBody(mExponent, mExponentDecimal) : static_cast<T>(0);
 			mReturnValue = exponent == static_cast<T>(0) ? body : body * static_cast<T>(std::pow(10, exponent));
 		}
 
@@ -288,7 +285,7 @@ namespace Solaire { namespace Utility {
 			mState = STATE_FIND_SIGN;
 			mBegin = nullptr;
 			mEnd = nullptr;
-			mReturnValue = 0.f;
+			mReturnValue = static_cast<T>(0);
 			mBody.Clear();
 			mDecimal.Clear();
 			mExponent.Clear();
