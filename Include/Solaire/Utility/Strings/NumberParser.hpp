@@ -38,12 +38,32 @@ Last Modified	: 18th September 2015
 namespace Solaire { namespace Utility {
 
 	namespace NumberParserInternals{
+
+		enum {
+			MAX_DIGITS = 16
+		};
+
+		static constexpr const uint16_t POWERS_10[MAX_DIGITS] = {
+			1,
+			10,
+			100,
+			1000,
+			10000,
+			100000,
+			1000000,
+			10000000,
+			100000000,
+			1000000000,
+			10000000000,
+			100000000000,
+			1000000000000,
+			10000000000000,
+			100000000000000,
+			1000000000000000
+		};
+
 		class Section {
 		private:
-			static void AddDigit(int64_t& aValue, const char aCharacter, const size_t aOffset) {
-				aValue += static_cast<int64_t>(aCharacter - '0') * static_cast<int64_t>(std::pow(10, aOffset));
-			}
-
 			Section(const Section&) = delete;
 			Section(Section&&) = delete;
 
@@ -59,7 +79,7 @@ namespace Solaire { namespace Utility {
 				const auto end = mChars.crend();
 				const auto begin = mChars.crbegin();
 				for (auto i = begin; i != end; ++i) {
-					AddDigit(value, *i, i - begin);
+					value += (*i - '0') * POWERS_10[10, i - begin];
 				}
 
 				return mIsPositive ? value : value * -1;
@@ -84,7 +104,7 @@ namespace Solaire { namespace Utility {
 			}
 
 			Section() :
-				mChars(16),
+				mChars(MAX_DIGITS),
 				mIsPositive(true)
 			{}
 		};
