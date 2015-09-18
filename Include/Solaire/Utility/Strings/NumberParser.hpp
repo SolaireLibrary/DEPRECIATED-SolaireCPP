@@ -70,23 +70,23 @@ namespace Solaire { namespace Utility {
 			Section& operator=(const Section&) = delete;
 			Section& operator=(Section&&) = delete;
 
-			std::vector<char> mChars;
+			char mStack[MAX_DIGITS];
+			uint8_t mHead;
 			bool mIsPositive;
 		public:
 			operator int64_t() const {
 				int64_t value = 0;
 
-				const auto end = mChars.crend();
-				const auto begin = mChars.crbegin();
-				for (auto i = begin; i != end; ++i) {
-					value += (*i - '0') * POWERS_10[10, i - begin];
+				const int32_t end = -1;
+				for(int32_t i = mHead - 1; i != end; --i) {
+					value += (mStack[i] - '0') * POWERS_10[10, mHead - i];
 				}
 
 				return mIsPositive ? value : value * -1;
 			}
 
 			Section& operator+=(const char aChar) {
-				mChars.push_back(aChar);
+				mStack[mHead++] = aChar;
 				return *this;
 			}
 
@@ -99,12 +99,12 @@ namespace Solaire { namespace Utility {
 			}
 
 			void Clear() {
-				mChars.clear();
+				mHead = 0;
 				mIsPositive = true;
 			}
 
 			Section() :
-				mChars(MAX_DIGITS),
+				mHead(0),
 				mIsPositive(true)
 			{}
 		};
