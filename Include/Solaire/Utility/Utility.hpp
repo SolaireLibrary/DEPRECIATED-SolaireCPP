@@ -28,7 +28,7 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 17th September 2015
-Last Modified	: 17th September 2015
+Last Modified	: 18th September 2015
 */
 
 #include "AsyncManager.hpp"
@@ -38,5 +38,6 @@ Last Modified	: 17th September 2015
 #include "Strings\StringFragment.hpp"
 #include "Strings\WordIterator.hpp"
 #include "GenericIterator.hpp"
+#include "Hash.hpp"
 
 #endif

@@ -32,6 +32,7 @@ Last Modified	: 17th September 2015
 */
 
 #include <string>
+#include "..\Hash.hpp"
 
 namespace Solaire { namespace Utility {
 	class StringFragment{
@@ -139,6 +140,11 @@ namespace Solaire { namespace Utility {
 			return mFragment;
 		}
 	};
+
+	template<>
+	uint32_t Hash<StringFragment>(const StringFragment& aData, HashFunction aFunction) {
+		return aFunction(aData.begin(), aData.Size());
+	}
 }}
 
 
