@@ -238,7 +238,8 @@ namespace Solaire { namespace Utility {
 				while(decimal >= 1.0) decimal /= 10.0;
 
 				// Combine the values
-				return static_cast<T>(aBody) + decimal;
+				if(aBody < static_cast<T>(0)) decimal *= -1.0;
+				return static_cast<T>(static_cast<double>(aBody) + decimal);
 			}else{
 				return static_cast<T>(aBody);
 			}
