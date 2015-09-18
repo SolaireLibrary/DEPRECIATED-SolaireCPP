@@ -32,6 +32,7 @@
 */
 
 #include <string>
+#include "Strings\NumberParser.hpp"
 
 namespace Solaire{ namespace Utility{ namespace Strings{
 
@@ -266,151 +267,6 @@ namespace Solaire{ namespace Utility{ namespace Strings{
         return Equals(aString.c_str(), aString.c_str() + aString.size(), aSecondBegin, aSecondEnd);
     }
 
-    static bool ParseDigit(const char aChar, uint8_t& aOutput){
-        if(IsNumber(aChar)){
-            aOutput = aChar - '0';
-            return true;
-        }else{
-            return false;
-        }
-    }
-
-    static const char* ParseNumber(const char* const aBegin, const char* const aEnd, double& aOutput, const bool aCanBeNegative, const bool aCanBeDecimal){
-        // The states for the parsing FSA
-        enum State{
-            FIND_SIGN,                          // Initial state, determines if the value is positive or negative
-            FIND_VALUE,                         // Looking for the body of the value
-            FIND_DECIMAL_VALUE,                 // Looking for the decimal places in the value
-            FIND_EXPONENT_SIGN,                 // Determines if an exponent is in the form eN, e+N or e-N
-            FIND_EXPONENT_VALUE,                // Looking for the exponent value
-            RETURN                              // Final parsing of the value for return
-        };
-
-        bool negative = false;                  // Set to true if the value is determined to be negative
-        bool exponentNegative = false;          // Set to true if the exponent is determined to be e-N
-
-        int64_t value = 0;                      // The main value body
-        int64_t exponentValue = 0;              // The value of the exponent
-        int64_t decimalValue = 0;               // The value of the decimal places
-
-        const char* valueBegin = nullptr;       // Set to the first character in the value
-        const char* exponentBegin = nullptr;    // Set to the first character in the exponent value
-        const char* decimalBegin = nullptr;     // Set to the first character in the decimal value
-        const char* i = aBegin;                 // The current character
-
-        uint32_t decimalPlaces = 0;             // Stores how many decimal places are in the decimal value
-        uint8_t digit;                          // Captures the output of ParseDigit
-        State state = State::FIND_SIGN;         // The current FSA state
-
-        // Internal FSM logic escapes the loop
-        while(true){
-            // If there are no more characters to examine jump straight to the RETURN state
-            if(i >= aEnd) state = RETURN;
-
-            switch(state){
-            case FIND_SIGN:
-                if(*i == '-'){          // Check if the current character is a sign
-                    negative = true;    // Set the negative value flag
-                    ++i;                // Move to the next character, which should be the first number in the value
-                }
-                valueBegin = i;
-                state = FIND_VALUE;     // Jump to the FIND_VALUE state
-                break;
-            case FIND_VALUE:
-                if(*i == 'e' || *i == 'E'){         // Check for an exponent
-                    ++i;                            // Move to the next character, which should be the first number in the exponent, or it's sign
-                    state = FIND_EXPONENT_SIGN;     // Jump to the FIND_EXPONENT_SIGN state
-                }else if(*i == '.'){                // Check for a decimal place
-                    ++i;                            // Move to the next character, which should be the first number in the decimal value
-                    decimalBegin = i;               // Record which character the decimal value stated from
-                    state = FIND_DECIMAL_VALUE;     // Jump to the FIND_DECIMAL_VALUE state
-                }else{
-                    if(! ParseDigit(*i, digit)){    // Check if the value is not a valid number
-                        --i;                        // Move back the the previous character, which was the last character used in the value
-                        state = RETURN;             // Jump to the return state
-                    }else{
-                        const int64_t offset = (i - valueBegin) + 1;            // Calculate the offset from the beginning of the value
-                        value += static_cast<int64_t>(digit) * 10 * offset;     // Update the value with the new character
-                        ++i;                                                    // Move to the next number in the value
-                    }
-                }
-                break;
-            case FIND_DECIMAL_VALUE:
-                if(*i == 'e' || *i == 'E'){         // Check for an exponent
-                    ++i;                            // Move to the next character, which should be the first number in the exponent, or it's sign
-                    state = FIND_EXPONENT_SIGN;     // Jump to the FIND_EXPONENT_SIGN state
-                }else{
-                    if(! ParseDigit(*i, digit)){    // Check if the value is not a valid number
-                        --i;                        // Move back the the previous character, which was the last character used in the decimal value
-                        state = RETURN;             // Jump to the return state
-                    }else{
-                        const int64_t offset = (i - decimalBegin) + 1;                  // Calculate the offset from the beginning of the decimal value
-                        decimalValue += static_cast<int64_t>(digit) * 10 * offset;      // Update the decimal value with the new character
-                        ++i;                                                            // Move to the next number in the decimal
-                    }
-                }
-                break;
-            case FIND_EXPONENT_SIGN:
-                if(*i == '-'){                  // Check for an exponent sign
-                    exponentNegative = true;    // Set the exponent sign flag
-                    ++i;                        // Move to the next character, which should be the first number in the exponent value
-                }else if(*i == '+'){            // Check for an exponent sign
-                    exponentNegative = false;   // Set the exponent sign flag
-                    ++i;                        // Check for an exponent sign
-                }else{
-                    exponentNegative = false;   // Set the exponent sign flag
-                }
-                exponentBegin = i;              // Record which character the exponent value started from
-                state = FIND_EXPONENT_VALUE;    // Jump to the FIND_EXPONENT_VALUE state
-                break;
-            case FIND_EXPONENT_VALUE:
-                if(! ParseDigit(*i, digit)){    // Check if the character is not a valid number
-                    --i;                        // Move back the the previous character, which was the last character used in the exponent value
-                    state = RETURN;             // Jump to the return state
-                }else{
-                    const int64_t offset = (i - exponentBegin) + 1;                  // Calculate the offset from the beginning of the exponent value
-                    exponentValue += static_cast<int64_t>(digit) * 10 * offset;      // Update the exponent value with the new character
-                    ++i;                                                             // Move to the next number in the exponent value
-                }
-                break;
-            case RETURN:
-                if(
-                   (valueBegin == nullptr) ||                           // Check if the parse has failed
-                   (decimalBegin != nullptr && decimalPlaces == 0) ||
-                   (negative && ! aCanBeNegative) ||                    // Check if the parse has produced an illegal number
-                   (decimalValue != 0 && ! aCanBeDecimal)
-                ){
-                    // Return parse failure
-                    aOutput = 0.0;
-                    return nullptr;
-                }else{
-                    // Construct the value body
-                    double val = value;
-                    if(negative) val *= -1.0;
-
-                    if(decimalBegin != nullptr){        // Check if a decimal value was parsed
-                        // Add the decimal value
-                        double dec = decimalValue;
-                        dec /= 10.0 * decimalPlaces;    // Shift the decimal places down
-                        val += dec;
-                    }
-
-                    if(exponentBegin != nullptr){       // Check if an exponent value was parsed
-                        // Multiply by the exponent
-                        int64_t exp = exponentValue;
-                        if(exponentNegative) exp *= -1;
-                        val *= std::pow(10, exp);
-                    }
-
-                    // Return parse success
-                    aOutput = val;
-                    return i;
-                }
-                break;
-            }
-        }
-     }
-
     /*!
         \brief Attempt to parse a value from a c-string segment.
         \tparam T The type to parse.
@@ -424,79 +280,82 @@ namespace Solaire{ namespace Utility{ namespace Strings{
 
     template<>
     const char* Parse<double>(const char* const aBegin, const char* const aEnd, double& aOutput){
-        return ParseNumber(aBegin, aEnd, aOutput, true, true);
+		NumberParser parser;
+		std::pair<double, const char*> result = parser(aBegin, aEnd);
+		aOutput = result.first;
+		return result.second;
     }
 
     template<>
     const char* Parse<float>(const char* const aBegin, const char* const aEnd, float& aOutput){
-        double tmp;
-        const char* const res = ParseNumber(aBegin, aEnd, tmp, true, true);
-        aOutput = static_cast<float>(tmp);
-        return res;
+		double tmp = 0.0;
+		const char* const ptr = Parse<double>(aBegin, aEnd, tmp);
+		aOutput = static_cast<float>(aOutput);
+		return ptr;
     }
 
     template<>
     const char* Parse<int64_t>(const char* const aBegin, const char* const aEnd, int64_t& aOutput){
-        double tmp;
-        const char* const res = ParseNumber(aBegin, aEnd, tmp, true, false);
-        aOutput = static_cast<int64_t>(tmp);
-        return res;
+		double tmp = 0.0;
+		const char* const ptr = Parse<double>(aBegin, aEnd, tmp);
+		aOutput = static_cast<int64_t>(aOutput);
+		return ptr;
     }
 
     template<>
     const char* Parse<int32_t>(const char* const aBegin, const char* const aEnd, int32_t& aOutput){
-        double tmp;
-        const char* const res = ParseNumber(aBegin, aEnd, tmp, true, false);
-        aOutput = static_cast<int32_t>(tmp);
-        return res;
+		int64_t tmp = 0;
+		const char* const ptr = Parse<int64_t>(aBegin, aEnd, tmp);
+		aOutput = static_cast<int32_t>(aOutput);
+		return ptr;
     }
 
     template<>
     const char* Parse<int16_t>(const char* const aBegin, const char* const aEnd, int16_t& aOutput){
-        double tmp;
-        const char* const res = ParseNumber(aBegin, aEnd, tmp, true, false);
-        aOutput = static_cast<int16_t>(tmp);
-        return res;
+		int64_t tmp = 0;
+		const char* const ptr = Parse<int64_t>(aBegin, aEnd, tmp);
+		aOutput = static_cast<int32_t>(aOutput);
+		return ptr;
     }
 
     template<>
     const char* Parse<int8_t>(const char* const aBegin, const char* const aEnd, int8_t& aOutput){
-        double tmp;
-        const char* const res = ParseNumber(aBegin, aEnd, tmp, true, false);
-        aOutput = static_cast<int8_t>(tmp);
-        return res;
+		int64_t tmp = 0;
+		const char* const ptr = Parse<int64_t>(aBegin, aEnd, tmp);
+		aOutput = static_cast<int32_t>(aOutput);
+		return ptr;
     }
 
     template<>
     const char* Parse<uint64_t>(const char* const aBegin, const char* const aEnd, uint64_t& aOutput){
-        double tmp;
-        const char* const res = ParseNumber(aBegin, aEnd, tmp, false, false);
-        aOutput = static_cast<uint64_t>(tmp);
-        return res;
+		double tmp = 0.0;
+		const char* const ptr = Parse<double>(aBegin, aEnd, tmp);
+		aOutput = static_cast<uint64_t>(aOutput);
+		return ptr;
     }
 
     template<>
     const char* Parse<uint32_t>(const char* const aBegin, const char* const aEnd, uint32_t& aOutput){
-        double tmp;
-        const char* const res = ParseNumber(aBegin, aEnd, tmp, false, false);
-        aOutput = static_cast<uint32_t>(tmp);
-        return res;
+		uint64_t tmp = 0;
+		const char* const ptr = Parse<uint64_t>(aBegin, aEnd, tmp);
+		aOutput = static_cast<uint32_t>(aOutput);
+		return ptr;
     }
 
     template<>
     const char* Parse<uint16_t>(const char* const aBegin, const char* const aEnd, uint16_t& aOutput){
-        double tmp;
-        const char* const res = ParseNumber(aBegin, aEnd, tmp, false, false);
-        aOutput = static_cast<uint16_t>(tmp);
-        return res;
+		uint64_t tmp = 0;
+		const char* const ptr = Parse<uint64_t>(aBegin, aEnd, tmp);
+		aOutput = static_cast<uint16_t>(aOutput);
+		return ptr;
     }
 
     template<>
     const char* Parse<uint8_t>(const char* const aBegin, const char* const aEnd, uint8_t& aOutput){
-        double tmp;
-        const char* const res = ParseNumber(aBegin, aEnd, tmp, false, false);
-        aOutput = static_cast<uint8_t>(tmp);
-        return res;
+		uint64_t tmp = 0;
+		const char* const ptr = Parse<uint64_t>(aBegin, aEnd, tmp);
+		aOutput = static_cast<uint8_t>(aOutput);
+		return ptr;
     }
 
     /*!

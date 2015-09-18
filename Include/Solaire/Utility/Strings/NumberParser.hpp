@@ -31,9 +31,11 @@ Created			: 18th September 2015
 Last Modified	: 18th September 2015
 */
 
+#include "StringFragment.hpp"
+
 namespace Solaire { namespace Utility {
 
-	class ParseNumberClass{
+	class NumberParser{
 	private:
 		// The states for the parsing FSA
 		enum State{
@@ -56,15 +58,11 @@ namespace Solaire { namespace Utility {
 				return static_cast<double>(value) * isNegative ? -1.f : 1.f;
 			}
 
-			size_t CountDigits() const{
-				int64_t value = this->value;
-				size_t digits = 1;
-				while(value != 0){
-					value -= 10 * digits;
-					++digits;
-				}
-				return digits;
-			}
+			Section() :
+				begin(nullptr),
+				value(0),
+				isNegative(false)
+			{}
 		};
 
 		Section mBody;
@@ -78,6 +76,7 @@ namespace Solaire { namespace Utility {
 
 		uint32_t mDecimalPlaces;				// Stores how many decimal places are in the decimal value
 		State mState;							// The current FSA state
+		double mReturnValue;
 
 		enum Sign : uint32_t{
 			SIGN_POSITIVE,
@@ -177,12 +176,30 @@ namespace Solaire { namespace Utility {
 			GenericFindSign(STATE_FIND_EXPONENT_VALUE, mExponent);
 		}
 
+		static double ConstructBody(const int64_t aBody, const int64_t aDecimal){
+			// Count digits in decimal
+			int64_t value = aDecimal;
+			size_t digits = 1;
+			while(value != 0){
+				value -= 10 * digits;
+				++digits;
+			}
+			
+			// Shift the decimal value down
+			const double decimal = static_cast<double>(aDecimal) / (10.f * digits);
+
+			// Combine the values
+			return static_cast<double>(aBody) + decimal;
+		}
+
 		void StateReturn(){
-			//! \TODO implement
+			const double body = ConstructBody(mBody.ConstructValue(), mDecimal.ConstructValue());
+			const double exponent = ConstructBody(mExponent.ConstructValue(), mExponentDecimal.ConstructValue());
+			mReturnValue = exponent == 0.f ? body : std::pow(body, 10 * exponent);
 		}
 
 		void StateError(){
-			//! \TODO implement
+			
 		}
 
 		void EvaluateState(){
@@ -212,6 +229,46 @@ namespace Solaire { namespace Utility {
 			default:
 				StateError();
 			}
+		}
+
+		void Reset() {
+			mState = STATE_FIND_SIGN;
+			mBegin = nullptr;
+			mEnd = nullptr;
+			mReturnValue = 0.f;
+			mBody = Section();
+			mDecimal = Section();
+			mExponent = Section();
+			mExponentDecimal = Section();
+		}
+	public:
+		static constexpr const double PARSE_FAILURE = NAN;
+
+		std::pair<double, const char*> operator()(const char* const aBegin, const char* const aEnd){
+			// Initialise
+			Reset();
+			mBegin = aBegin;
+			mEnd = aEnd;
+
+			// FSA loop
+			do{
+				EvaluateState();
+			}while(mState != STATE_ERROR && mState != STATE_RETURN);
+
+			// Determine output of FSA
+			return std::pair<double, const char*>(mState == STATE_ERROR ? PARSE_FAILURE : mReturnValue, mCurrentChar);
+		}
+
+		std::pair<double, const char*> operator()(const char* const aBegin, const size_t aSize) {
+			return operator()(aBegin, aBegin + aSize);
+		}
+
+		std::pair<double, const char*> operator()(const ConstStringFragment aString){
+			return operator()(aString.begin(), aString.Size());
+		}
+
+		std::pair<double, const char*> operator()(const std::string& aString){
+			return operator()(aString.c_str(), aString.size());
 		}
 	};
 }}
