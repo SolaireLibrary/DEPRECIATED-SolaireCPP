@@ -248,7 +248,7 @@ namespace Solaire { namespace Utility {
 		void StateReturn(){
 			const T body = ConstructBody(mBody, mDecimal);
 			const T exponent = CanHaveExponent() ? ConstructBody(mExponent, mExponentDecimal) : static_cast<T>(0);
-			mReturnValue = exponent == static_cast<T>(0) ? body : static_cast<T>(std::pow(body, 10 * exponent));
+			mReturnValue = exponent == static_cast<T>(0) ? body : body * static_cast<T>(std::pow(10, exponent));
 		}
 
 		void StateError(){
