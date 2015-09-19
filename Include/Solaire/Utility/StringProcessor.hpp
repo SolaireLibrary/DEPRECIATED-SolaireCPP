@@ -278,84 +278,68 @@ namespace Solaire{ namespace Utility{ namespace Strings{
     template<typename T>
     static const char* Parse(const char* const aBegin, const char* const aEnd, T& aOutput) = delete;
 
+	namespace ParseInternal{
+		template<class T>
+		const char* ParseNumber(const char* const aBegin, const char* const aEnd, T& aOutput){
+			NumberParser<T> parser;
+			if(parser.Parse(aBegin, aEnd)){
+				aOutput = parser.GetResult();
+				return parser.GetEnd();
+			}else{
+				aOutput = static_cast<T>(0);
+				return nullptr;
+			}
+		}
+	}
+	
     template<>
     const char* Parse<double>(const char* const aBegin, const char* const aEnd, double& aOutput){
-		NumberParser<double> parser;
-		std::pair<double, const char*> result = parser(aBegin, aEnd);
-		aOutput = result.first;
-		return result.second;
+		return ParseInternal::ParseNumber<double>(aBegin, aEnd, aOutput);
     }
 
     template<>
     const char* Parse<float>(const char* const aBegin, const char* const aEnd, float& aOutput){
-		NumberParser<float> parser;
-		std::pair<float, const char*> result = parser(aBegin, aEnd);
-		aOutput = result.first;
-		return result.second;
+		return ParseInternal::ParseNumber<float>(aBegin, aEnd, aOutput);
     }
 
     template<>
     const char* Parse<int64_t>(const char* const aBegin, const char* const aEnd, int64_t& aOutput){
-		NumberParser<int64_t> parser;
-		std::pair<int64_t, const char*> result = parser(aBegin, aEnd);
-		aOutput = result.first;
-		return result.second;
+		return ParseInternal::ParseNumber<int64_t>(aBegin, aEnd, aOutput);
     }
 
     template<>
     const char* Parse<int32_t>(const char* const aBegin, const char* const aEnd, int32_t& aOutput){
-		NumberParser<int32_t> parser;
-		std::pair<int32_t, const char*> result = parser(aBegin, aEnd);
-		aOutput = result.first;
-		return result.second;
+		return ParseInternal::ParseNumber<int32_t>(aBegin, aEnd, aOutput);
     }
 
     template<>
     const char* Parse<int16_t>(const char* const aBegin, const char* const aEnd, int16_t& aOutput){
-		NumberParser<int16_t> parser;
-		std::pair<int16_t, const char*> result = parser(aBegin, aEnd);
-		aOutput = result.first;
-		return result.second;
+		return ParseInternal::ParseNumber<int16_t>(aBegin, aEnd, aOutput);
     }
 
     template<>
     const char* Parse<int8_t>(const char* const aBegin, const char* const aEnd, int8_t& aOutput){
-		NumberParser<int8_t> parser;
-		std::pair<int8_t, const char*> result = parser(aBegin, aEnd);
-		aOutput = result.first;
-		return result.second;
+		return ParseInternal::ParseNumber<int8_t>(aBegin, aEnd, aOutput);
     }
 
     template<>
     const char* Parse<uint64_t>(const char* const aBegin, const char* const aEnd, uint64_t& aOutput){
-		NumberParser<uint64_t> parser;
-		std::pair<uint64_t, const char*> result = parser(aBegin, aEnd);
-		aOutput = result.first;
-		return result.second;
+		return ParseInternal::ParseNumber<uint64_t>(aBegin, aEnd, aOutput);
     }
 
     template<>
     const char* Parse<uint32_t>(const char* const aBegin, const char* const aEnd, uint32_t& aOutput){
-		NumberParser<uint32_t> parser;
-		std::pair<uint32_t, const char*> result = parser(aBegin, aEnd);
-		aOutput = result.first;
-		return result.second;
+		return ParseInternal::ParseNumber<uint32_t>(aBegin, aEnd, aOutput);
     }
 
     template<>
     const char* Parse<uint16_t>(const char* const aBegin, const char* const aEnd, uint16_t& aOutput){
-		NumberParser<uint16_t> parser;
-		std::pair<uint16_t, const char*> result = parser(aBegin, aEnd);
-		aOutput = result.first;
-		return result.second;
+		return ParseInternal::ParseNumber<uint16_t>(aBegin, aEnd, aOutput);
     }
 
     template<>
     const char* Parse<uint8_t>(const char* const aBegin, const char* const aEnd, uint8_t& aOutput){
-		NumberParser<uint8_t> parser;
-		std::pair<uint8_t, const char*> result = parser(aBegin, aEnd);
-		aOutput = result.first;
-		return result.second;
+		return ParseInternal::ParseNumber<uint8_t>(aBegin, aEnd, aOutput);
     }
 	
 	template<>

@@ -276,7 +276,7 @@ namespace Solaire { namespace Utility {
 	}
 
 	template<class T>
-	std::pair<T, const char*> NumberParser<T>::operator()(const char* const aBegin, const char* const aEnd){
+	bool NumberParser<T>::Parse(const char* const aBegin, const char* const aEnd){
 		// Initialise
 		Clear();
 		mEnd = aEnd;
@@ -290,22 +290,34 @@ namespace Solaire { namespace Utility {
 		EvaluateState();
 
 		// Determine output of FSA
-		return std::pair<T, const char*>(mReturnValue, mState == STATE_ERROR ?  nullptr : mCurrentChar);
+		return mState != STATE_ERROR;
 	}
 
 	template<class T>
-	std::pair<T, const char*> NumberParser<T>::operator()(const char* const aBegin, const size_t aSize) {
-		return operator()(aBegin, aBegin + aSize);
+	bool NumberParser<T>::Parse(const char* const aBegin, const size_t aSize) {
+		return Parse(aBegin, aBegin + aSize);
 	}
 
 	template<class T>
-	std::pair<T, const char*> NumberParser<T>::operator()(const ConstStringFragment aString){
-		return operator()(aString.begin(), aString.Size());
+	bool NumberParser<T>::Parse(const ConstStringFragment aString){
+		return Parse(aString.begin(), aString.Size());
 	}
 
 	template<class T>
-	std::pair<T, const char*> NumberParser<T>::operator()(const std::string& aString){
-		return operator()(aString.c_str(), aString.size());
+	bool NumberParser<T>::Parse(const std::string& aString){
+		return Parse(aString.c_str(), aString.size());
+	}
+
+	template<class T>
+	const char* NumberParser<T>::GetEnd() const{
+		if(mState != STATE_RETURN) throw std::runtime_error("Parse was not successful");
+		return mCurrentChar;
+	}
+
+	template<class T>
+	T NumberParser<T>::GetResult() const{
+		if (mState != STATE_RETURN) throw std::runtime_error("Parse was not successful");
+		return mReturnValue;
 	}
 }}
 

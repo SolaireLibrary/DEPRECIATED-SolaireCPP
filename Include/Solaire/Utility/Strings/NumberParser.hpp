@@ -108,10 +108,13 @@ namespace Solaire { namespace Utility {
 
 		void Clear();
 	public:
-		std::pair<T, const char*> operator()(const char* const aBegin, const char* const aEnd);
-		std::pair<T, const char*> operator()(const char* const aBegin, const size_t aSize);
-		std::pair<T, const char*> operator()(const ConstStringFragment aString);
-		std::pair<T, const char*> operator()(const std::string& aString);
+		bool Parse(const char* const aBegin, const char* const aEnd);
+		bool Parse(const char* const aBegin, const size_t aSize);
+		bool Parse(const ConstStringFragment aString);
+		bool Parse(const std::string& aString);
+		
+		const char* GetEnd() const;
+		T GetResult() const;
 	};
 }}
 
