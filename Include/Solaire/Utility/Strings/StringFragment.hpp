@@ -28,11 +28,10 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 17th September 2015
-Last Modified	: 17th September 2015
+Last Modified	: 18th September 2015
 */
 
 #include <string>
-#include "..\Hash.hpp"
 
 namespace Solaire { namespace Utility {
 	class StringFragment{
@@ -40,112 +39,45 @@ namespace Solaire { namespace Utility {
 		char* mBegin;
 		const char* mEnd;
 	public:
-		constexpr StringFragment(char* const aBegin, const char* const aEnd) :
-			mBegin(aBegin),
-			mEnd(aEnd)
-		{}
+		constexpr StringFragment(char* const aBegin, const char* const aEnd);
+		constexpr StringFragment(char* const aBegin, const size_t aLength);
+		StringFragment(std::string& aString);
 
-		constexpr StringFragment(char* const aBegin, const size_t aLength) :
-			mBegin(aBegin),
-			mEnd(aBegin + aLength)
-		{}
+		char* begin();
+		constexpr const char* begin() const;
+		constexpr const char* end() const;
 
-		StringFragment(std::string& aString) :
-			mBegin(&aString[0]),
-			mEnd(&aString[0] + aString.size())
-		{}
+		constexpr char operator[](const size_t aIndex) const;
+		char& operator[](const size_t aIndex);
+		constexpr size_t Size() const;
 
-		constexpr size_t Size() const{
-			return mEnd - mBegin;
-		}
+		bool operator==(const StringFragment aOther) const;
+		bool operator!=(const StringFragment aOther) const;
 
-		char* begin(){
-			return mBegin;
-		}
-
-		constexpr const char* begin() const{
-			return mBegin;
-		}
-
-		constexpr const char* end() const{
-			return mEnd;
-		}
-
-		char& operator[](const size_t aIndex){
-			return mBegin[aIndex];
-		}
-
-		constexpr char operator[](const size_t aIndex) const{
-			return mBegin[aIndex];
-		}
-
-		bool operator==(const StringFragment aOther) const{
-			const size_t size = Size();
-			if(aOther.Size() != size) return false;
-			return std::memcmp(mBegin, aOther.mBegin, size) == 0;
-		}
-
-		bool operator!=(const StringFragment aOther) const{
-			const size_t size = Size();
-			if(aOther.Size() != size) return true;
-			return std::memcmp(mBegin, aOther.mBegin, size) != 0;
-		}
-
-		operator std::string() const{
-			return std::string(mBegin, Size());
-		}
+		operator std::string() const;
 	};
 
 	class ConstStringFragment{
 	private:
 		StringFragment mFragment;
 	public:
-		constexpr ConstStringFragment(const char* const aBegin, const char* const aEnd) :
-			mFragment(const_cast<char*>(aBegin), aEnd)
-		{}
+		constexpr ConstStringFragment(const char* const aBegin, const char* const aEnd);
+		constexpr ConstStringFragment(const char* const aBegin, const size_t aLength);
+		ConstStringFragment(const std::string& aString);
 
-		constexpr ConstStringFragment(const char* const aBegin, const size_t aLength) :
-			mFragment(const_cast<char*>(aBegin), aLength)
-		{}
+		constexpr const char* begin() const;
+		constexpr const char* end() const;
 
-		ConstStringFragment(const std::string& aString) :
-			mFragment(const_cast<std::string&>(aString))
-		{}
+		constexpr char operator[](const size_t aIndex) const;
+		constexpr size_t Size() const;
 
-		constexpr size_t Size() const{
-			return mFragment.Size();
-		}
+		bool operator==(const ConstStringFragment aOther) const;
+		bool operator!=(const ConstStringFragment aOther) const;
 
-		constexpr const char* begin() const{
-			return mFragment.begin();
-		}
-
-		constexpr const char* end() const{
-			return mFragment.end();
-		}
-
-		constexpr char operator[](const size_t aIndex) const{
-			return mFragment[aIndex];
-		}
-
-		bool operator==(const ConstStringFragment aOther) const{
-			return mFragment == aOther.mFragment;
-		}
-
-		bool operator!=(const ConstStringFragment aOther) const{
-			return mFragment == aOther.mFragment;
-		}
-
-		operator std::string() const{
-			return mFragment;
-		}
+		operator std::string() const;
 	};
-
-	template<>
-	uint32_t Hash<StringFragment>(const StringFragment& aData, HashFunction aFunction) {
-		return aFunction(aData.begin(), aData.Size());
-	}
 }}
 
+#include "StringFragment.inl"
 
 #endif
