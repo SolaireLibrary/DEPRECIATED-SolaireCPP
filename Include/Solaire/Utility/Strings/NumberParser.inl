@@ -267,7 +267,6 @@ namespace Solaire { namespace Utility {
 		static_assert(std::is_arithmetic<T>::value, "Solaire::Utility::NumberParser Parsed type must be a number");
 
 		mState = STATE_FIND_SIGN;
-		mBegin = nullptr;
 		mEnd = nullptr;
 		mReturnValue = static_cast<T>(0);
 		mBody.Clear();
@@ -280,9 +279,8 @@ namespace Solaire { namespace Utility {
 	std::pair<T, const char*> NumberParser<T>::operator()(const char* const aBegin, const char* const aEnd){
 		// Initialise
 		Clear();
-		mBegin = aBegin;
 		mEnd = aEnd;
-		mCurrentChar = mBegin;
+		mCurrentChar = aBegin;
 
 		// FSA loop
 		do{

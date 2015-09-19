@@ -71,7 +71,7 @@ namespace Solaire { namespace Utility {
 		typedef NumberParserInternals::Section Section;
 
 		// The states for the parsing FSA
-		enum State{
+		enum State : uint8_t{
 			STATE_FIND_SIGN,					// Initial state, determines if the value is positive or negative
 			STATE_FIND_VALUE,					// Looking for the body of the value
 			STATE_FIND_DECIMAL_VALUE,			// Looking for the decimal places in the value
@@ -82,18 +82,16 @@ namespace Solaire { namespace Utility {
 			STATE_ERROR
 		};
 
+		const char* mCurrentChar;				// The current character
+		const char* mEnd;
+
 		Section mBody;
 		Section mDecimal;
 		Section mExponent;
 		Section mExponentDecimal;
 
-		const char* mCurrentChar;				// The current character
-		const char* mBegin;
-		const char* mEnd;
-
-		uint32_t mDecimalPlaces;				// Stores how many decimal places are in the decimal value
-		State mState;							// The current FSA state
 		T mReturnValue;
+		State mState;							// The current FSA state
 
 		void GenericFindValueState(const State aIfExponent, const State aIfDecimal, const State aIfInvalidChar, Section& aBodySection, Section* aDecimalSection);
 		void GenericFindSign(const State aValueState, Section& aSection);
