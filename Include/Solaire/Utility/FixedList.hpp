@@ -550,26 +550,10 @@ namespace Solaire{ namespace Utility{
 			return *this;
 		}
 
-		void GenerateLookupTable(pointer_t aArray) const{
-			const const_iterator_t end = this->end();
-			for(const_iterator_t i = begin(); i != end; ++i){
-				*aArray = *i;
-				++aArray;
-			}
-		}
-
-		void GenerateRefLookupTable(pointer_t* aArray) {
+		void GenerateLookupTable(data_t* aArray){
 			const iterator_t end = this->end();
-			for(iterator_t i = begin(); i != end; ++i) {
-				*aArray = &*i;
-				++aArray;
-			}
-		}
-
-		void GenerateRefLookupTable(const_pointer_t* aArray) const{
-			const const_iterator_t end = this->end();
-			for(const_iterator_t i = begin(); i != end; ++i) {
-				*aArray = &*i;
+			for(iterator_t i = begin(); i != end; ++i){
+				*aArray = *i;
 				++aArray;
 			}
 		}
