@@ -135,7 +135,7 @@ namespace Solaire{ namespace Utility{
 		data_t Pop(){
 			if(mHead > 0) throw std::runtime_error("FixedStack is empty");
 
-			const pointer_t ptr = &back();
+			const pointer_t ptr = &Back();
 			--mHead;
 
 			data_t tmp(*ptr);

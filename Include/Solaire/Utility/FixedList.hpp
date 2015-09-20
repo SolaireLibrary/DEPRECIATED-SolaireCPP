@@ -69,15 +69,15 @@ namespace Solaire{ namespace Utility{
 				Clear();
 			}
 
+			//! \TODO Optimise LinkForward / LinkBackward
+
 			void LinkForward(const list_t& aList, Node& aNext){
 				Node* const next = &aNext;
-				if (next == &aList.mEnd){
+				if(next == &aList.mEnd){
 					mNext = NODE_END;
-				}
-				else if (next == &aList.mBegin){
+				}else if(next == &aList.mBegin){
 					throw std::runtime_error("Node next pointer cannot be node begin");
-				}
-				else {
+				}else{
 					mNext = next - aList.mNodes;
 				}
 				next->mPrevious = this - aList.mNodes;
@@ -85,13 +85,11 @@ namespace Solaire{ namespace Utility{
 
 			void LinkBackward(const list_t& aList, Node& aPrevious){
 				Node* const previous = &aPrevious;
-				if (previous == &aList.mEnd){
+				if(previous == &aList.mEnd){
 					throw std::runtime_error("Node next pointer cannot be node begin");
-				}
-				else if (previous == &aList.mBegin){
+				}else if(previous == &aList.mBegin){
 					mPrevious = NODE_BEGIN;
-				}
-				else {
+				}else{
 					mPrevious = previous - aList.mNodes;
 				}
 				previous->mNext = this - aList.mNodes;
@@ -191,10 +189,9 @@ namespace Solaire{ namespace Utility{
 
 			ref_t Set(const_ref_t aData){
 				pointer_t ptr = reinterpret_cast<pointer_t>(mData);
-				if (IsLive()){
+				if(IsLive()){
 					*ptr = aData;
-				}
-				else {
+				}else{
 					new(ptr) data_t(aData);
 				}
 				return *ptr;

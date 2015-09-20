@@ -31,6 +31,8 @@
 	Last Modified	: 20sth September 2015
 */
 
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 #endif
