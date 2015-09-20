@@ -63,6 +63,22 @@ namespace Solaire{ namespace Utility{
 			}
 		}
 
+		FixedStack(const std::initializer_list<data_t> aList) :
+			mHead(0)
+		{
+			for(data_t i : aList) Push(i);
+		}
+
+		template<class external_iterator_t>
+		FixedStack(external_iterator_t aBegin, const external_iterator_t aEnd) :
+			mHead(0)
+		{
+			while(aBegin != aEnd) {
+				Push(*aBegin);
+				++aBegin;
+			}
+		}
+
 		~FixedStack(){
 
 		}
