@@ -552,13 +552,11 @@ namespace Solaire{ namespace Utility{
 		}
 
 		void Remove(const_iterator_t aPos){
-			if(n >= end()) throw std::runtime_error("Cannot remove FixedList end");
-
 			Node& target = const_cast<Node&>(*aPos.mNode);
+			if (&target == &mEnd) throw std::runtime_error("Cannot remove FixedList end");
 
 			// Link nodes
-			target.LinkForward(n->GetNext(*this));
-			target.LinkBackward(n->GetPrevious(*this));
+			target.GetNext(*this).LinkBackward(*this, target.GetPrevious(*this));
 
 			// Delete value
 			target.Clear();
