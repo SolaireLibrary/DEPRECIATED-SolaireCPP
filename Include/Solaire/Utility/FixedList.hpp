@@ -483,8 +483,33 @@ namespace Solaire{ namespace Utility{
 			}
 		}
 
+		FixedList(const FixedList<data_t, SIZE>& aOther){
+			WriteSize(0);
+			mBegin.LinkForward(*this, mEnd);
+			operator=(aOther);
+		}
+
+		FixedList(FixedList<data_t, SIZE>&& aOther) {
+			WriteSize(0);
+			mBegin.LinkForward(*this, mEnd);
+			operator=(std::move(aOther));
+		}
+
 		~FixedList(){
 
+		}
+
+		FixedList<data_t, SIZE>& operator=(const FixedList<data_t, SIZE>& aOther) {
+			Clear();
+			for(const data_t& i : aOther) AddBack(i);
+			return *this;
+		}
+
+		FixedList<data_t, SIZE>& operator=(FixedList<data_t, SIZE>&& aOther) {
+			Clear();
+			for(const data_t& i : aOther) AddBack(i);
+			aOther.Clear();
+			return *this;
 		}
 
 		void Clear(){
