@@ -33,7 +33,6 @@
 
 #include <cstdint>
 #include <stdexcept>
-#include "FixedStack.hpp"
 
 namespace Solaire{ namespace Utility{
 
@@ -551,13 +550,12 @@ namespace Solaire{ namespace Utility{
 			return *this;
 		}
 
-		FixedStack<iterator_t, SIZE> GenerateLookupTable(){
-			FixedStack<iterator_t, SIZE> tmp;
+		void GenerateLookupTable(data_t* aArray){
 			const iterator_t end = this->end();
 			for(iterator_t i = begin(); i != end; ++i){
-				tmp.Push(i);
+				*aArray = *i;
+				++aArray;
 			}
-			return tmp;
 		}
 
 		void Clear(){
