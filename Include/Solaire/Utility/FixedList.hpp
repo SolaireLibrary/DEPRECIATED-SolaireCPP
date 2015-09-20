@@ -31,6 +31,7 @@
 	Last Modified	: 20th September 2015
 */
 
+#include <limits>
 #include <cstdint>
 #include <stdexcept>
 
@@ -516,7 +517,7 @@ namespace Solaire{ namespace Utility{
 			mBegin.LinkForward(*this, mEnd);
 			operator=(std::move(aOther));
 		}
-		
+
 		FixedList(const std::initializer_list<data_t> aList){
 			WriteSize(0);
 			mBegin.LinkForward(*this, mEnd);
@@ -545,7 +546,7 @@ namespace Solaire{ namespace Utility{
 
 		FixedList<data_t, SIZE, INDEX>& operator=(FixedList<data_t, SIZE, INDEX>&& aOther){
 			Clear();
-			for(const data_t& i : aO.ther) AddBack(i);
+			for(const data_t& i : aOther) AddBack(i);
 			aOther.Clear();
 			return *this;
 		}

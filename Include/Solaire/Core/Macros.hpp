@@ -31,6 +31,28 @@
 	Last Modified	: 14th September 2015
 */
 
+#define SOLAIRE_WINDOWS 0
+#define SOLAIRE_LINUX 1
+#define SOLAIRE_ERROR -1
+
+#ifdef _WIN32
+    #define SOLAIRE_OS SOLAIRE_WINDOWS
+    #define SOLAIRE_OS_BITS 32
+#endif
+
+#ifdef _WIN64
+    #define SOLAIRE_OS SOLAIRE_WINDOWS
+    #define SOLAIRE_OS_BITS 64
+#endif
+
+#ifndef SOLAIRE_OS
+    #error SolaireCPP : Could not determine target OS
+#endif
+
+#ifndef SOLAIRE_OS_BITS
+    #error SolaireCPP : Could not determine target bit size
+#endif
+
 #define SOLAIRE_EXCEPTION(aName, aMessage)\
 class aName : public std::exception {\
 public:\
