@@ -213,7 +213,7 @@ namespace Solaire{ namespace Utility{
 			}else{
 				uint8_t data[2];
 				data[0] = *reinterpret_cast<const uint8_t*>(mBegin.GetMemory());
-				data[1] = *reinterpret_cast<const uint8_t*>(mBegin.GetMemory());
+				data[1] = *reinterpret_cast<const uint8_t*>(mEnd.GetMemory());
 				return *reinterpret_cast<const uint16_t*>(data);
 			}
 		}
@@ -224,7 +224,7 @@ namespace Solaire{ namespace Utility{
 			}else{
 				const uint8_t* const data = reinterpret_cast<const uint8_t*>(&aSize);
 				*reinterpret_cast<uint8_t*>(mBegin.GetMemory()) = data[0];
-				*reinterpret_cast<uint8_t*>(mBegin.GetMemory()) = data[1];
+				*reinterpret_cast<uint8_t*>(mEnd.GetMemory()) = data[1];
 			}
 		}
 
