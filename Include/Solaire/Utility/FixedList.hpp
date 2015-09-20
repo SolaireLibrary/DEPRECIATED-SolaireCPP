@@ -36,7 +36,7 @@
 
 namespace Solaire{ namespace Utility{
 
-    template<class TYPE, const size_t SIZE>
+    template<class TYPE, const size_t SIZE, class INDEX = uint16_t>
 	class FixedList{
 	public:
 		typedef TYPE data_t;
@@ -48,16 +48,16 @@ namespace Solaire{ namespace Utility{
 	private:
 		class Node{
 		private:
-			uint16_t mPrevious;
-			uint16_t mNext;
 			uint8_t mData[sizeof(data_t)];
+			INDEX mPrevious;
+			INDEX mNext;
 
 			Node(Node&& aOther) = delete;
 			Node(const Node& aOther) = delete;
 			Node& operator=(Node&& aOther) = delete;
 			Node& operator=(const Node& aOther) = delete;
 		public:
-			typedef FixedList<data_t, SIZE> list_t;
+			typedef FixedList<data_t, SIZE, INDEX> list_t;
 
 			Node() :
 				mPrevious(NODE_NULL),
@@ -199,32 +199,47 @@ namespace Solaire{ namespace Utility{
 		Node mBegin;
 		Node mEnd;
 
-		enum : uint16_t{
-			NODE_NULL = UINT16_MAX,
+		enum : INDEX{
+			NODE_NULL = std::numeric_limits<INDEX>::max(),
 			NODE_END = NODE_NULL - 1,
 			NODE_BEGIN = NODE_END - 1
 		};
 
 		static_assert(SIZE < NODE_BEGIN, "FixedList::SIZE is too large");
+		static_assert((sizeof(data_t) * 2) >= sizeof(INDEX), "Cannot store INDEX type in begin/end nodes");
 		
-		uint16_t ReadSize() const{
-			if(sizeof(data_t) >= 2){
-				return *reinterpret_cast<const uint16_t*>(mBegin.GetMemory());
+		INDEX ReadSize() const{
+			if(sizeof(data_t) >= sizeof(INDEX)){
+				return *reinterpret_cast<const INDEX*>(mBegin.GetMemory());
 			}else{
-				uint8_t data[2];
-				data[0] = *reinterpret_cast<const uint8_t*>(mBegin.GetMemory());
-				data[1] = *reinterpret_cast<const uint8_t*>(mEnd.GetMemory());
+				const uint8_t* src = reinterpret_cast<const uint8_t*>(mBegin.GetMemory());
+				uint8_t data[sizeof(INDEX)];
+
+				for(size_t i = 0; i < sizeof(INDEX); ++i){
+					if(i == (sizeof(data_t) + 1)){
+						src = reinterpret_cast<const uint8_t*>(mEnd.GetMemory());
+					}
+					data[i] = *src;
+					++src;
+				}
 				return *reinterpret_cast<const uint16_t*>(data);
 			}
 		}
 
-		void WriteSize(const uint16_t aSize){
-			if(sizeof(data_t) >= 2){
-				*reinterpret_cast<uint16_t*>(mBegin.GetMemory()) = aSize;
+		void WriteSize(const INDEX aSize){
+			if(sizeof(data_t) >= sizeof(INDEX)){
+				*reinterpret_cast<INDEX*>(mBegin.GetMemory()) = aSize;
 			}else{
 				const uint8_t* const data = reinterpret_cast<const uint8_t*>(&aSize);
-				*reinterpret_cast<uint8_t*>(mBegin.GetMemory()) = data[0];
-				*reinterpret_cast<uint8_t*>(mEnd.GetMemory()) = data[1];
+				uint8_t* dst = reinterpret_cast<uint8_t*>(mBegin.GetMemory());
+
+				for (size_t i = 0; i < sizeof(INDEX); ++i) {
+					if(i == (sizeof(data_t) + 1)){
+						dst = reinterpret_cast<uint8_t*>(mEnd.GetMemory());
+					}
+					*dst = data[i];
+					++dst;
+				}
 			}
 		}
 
@@ -233,10 +248,10 @@ namespace Solaire{ namespace Utility{
 
 		class iterator_t{
 		private:
-			FixedList<data_t, SIZE>* mParent;
+			FixedList<data_t, SIZE, INDEX>* mParent;
 			Node* mNode;
 		public:
-			friend FixedList<data_t, SIZE>;
+			friend FixedList<data_t, SIZE, INDEX>;
 			friend const_iterator_t;
 
 			iterator_t() :
@@ -244,7 +259,7 @@ namespace Solaire{ namespace Utility{
 				mNode(nullptr)
 			{}
 
-			iterator_t(FixedList<data_t, SIZE>& aParent, Node& aNode) :
+			iterator_t(FixedList<data_t, SIZE, INDEX>& aParent, Node& aNode) :
 				mParent(&aParent),
 				mNode(&aNode)
 			{}
@@ -368,7 +383,7 @@ namespace Solaire{ namespace Utility{
 
 		class const_iterator_t{
 		private:
-			const FixedList<data_t, SIZE>* mParent;
+			const FixedList<data_t, SIZE, INDEX>* mParent;
 			const Node* mNode;
 
 			inline iterator_t& Cast(){
@@ -379,14 +394,14 @@ namespace Solaire{ namespace Utility{
 				return *reinterpret_cast<const iterator_t*>(this);
 			}
 		public:
-			friend FixedList<data_t, SIZE>;
+			friend FixedList<data_t, SIZE, INDEX>;
 
 			const_iterator_t() :
 				mParent(nullptr),
 				mNode(nullptr)
 			{}
 
-			const_iterator_t(FixedList<data_t, SIZE>& aParent, Node& aNode) :
+			const_iterator_t(FixedList<data_t, SIZE, INDEX>& aParent, Node& aNode) :
 				mParent(&aParent),
 				mNode(&aNode)
 			{}
@@ -483,13 +498,13 @@ namespace Solaire{ namespace Utility{
 			}
 		}
 
-		FixedList(const FixedList<data_t, SIZE>& aOther){
+		FixedList(const FixedList<data_t, SIZE, INDEX>& aOther){
 			WriteSize(0);
 			mBegin.LinkForward(*this, mEnd);
 			operator=(aOther);
 		}
 
-		FixedList(FixedList<data_t, SIZE>&& aOther) {
+		FixedList(FixedList<data_t, SIZE, INDEX>&& aOther) {
 			WriteSize(0);
 			mBegin.LinkForward(*this, mEnd);
 			operator=(std::move(aOther));
@@ -499,15 +514,15 @@ namespace Solaire{ namespace Utility{
 
 		}
 
-		FixedList<data_t, SIZE>& operator=(const FixedList<data_t, SIZE>& aOther) {
+		FixedList<data_t, SIZE, INDEX>& operator=(const FixedList<data_t, SIZE, INDEX>& aOther) {
 			Clear();
 			for(const data_t& i : aOther) AddBack(i);
 			return *this;
 		}
 
-		FixedList<data_t, SIZE>& operator=(FixedList<data_t, SIZE>&& aOther) {
+		FixedList<data_t, SIZE, INDEX>& operator=(FixedList<data_t, SIZE, INDEX>&& aOther) {
 			Clear();
-			for(const data_t& i : aOther) AddBack(i);
+			for(const data_t& i : aO.ther) AddBack(i);
 			aOther.Clear();
 			return *this;
 		}
