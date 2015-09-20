@@ -48,6 +48,8 @@ namespace Solaire{ namespace Utility{
 	private:
 		class Node{
 		private:
+			uint16_t mPrevious;
+			uint16_t mNext;
 			uint8_t mData[sizeof(data_t)];
 
 			Node(Node&& aOther) = delete;
@@ -55,62 +57,168 @@ namespace Solaire{ namespace Utility{
 			Node& operator=(Node&& aOther) = delete;
 			Node& operator=(const Node& aOther) = delete;
 		public:
-			Node* previous;
-			Node* next;
-			struct{
-				uint8_t live : 1;
-			};
+			typedef FixedList<data_t, SIZE> list_t;
 
 			Node() :
-				previous(nullptr),
-				next(nullptr),
-				live(0)
+				mPrevious(NODE_NULL),
+				mNext(NODE_NULL)
 			{}
 
 			~Node(){
 				Clear();
 			}
 
+			void LinkForward(const list_t& aList, Node& aNext){
+				Node* const next = &aNext;
+				if(next == &aList.mEnd){
+					mNext = NODE_END;
+				}else if(next == &aList.mBegin) {
+					throw std::runtime_error("Node next pointer cannot be node begin");
+				}else{
+					mNext = next - aList.mNodes;
+				}
+				next->mPrevious = this - aList.mNodes;
+			}
+
+			void LinkBackward(const list_t& aList, Node& aPrevious){
+				Node* const previous = &aPrevious;
+				if(previous == &aList.mEnd){
+					throw std::runtime_error("Node next pointer cannot be node begin");
+				}else if(previous == &aList.mBegin) {
+					mPrevious = NODE_BEGIN;
+				}else{
+					mPrevious = previous - aList.mNodes;
+				}
+				previous->mNext = this - aList.mNodes;
+			}
+
+			bool HasNext(){
+				return mNext != NODE_NULL;
+			}
+
+			bool HasPrevious() {
+				return mPrevious != NODE_NULL;
+			}
+
+			Node& GetNext(list_t& aList){
+				switch(mNext)
+				{
+				case NODE_NULL:
+					throw std::runtime_error("Node does not have next pointer");
+				case NODE_END:
+					return aList.mEnd;
+				case NODE_BEGIN:
+					throw std::runtime_error("Node next pointer cannot point to list begin");
+				default:
+					return aList.mNodes[mNext];
+				}
+			}
+
+			const Node& GetNext(const list_t& aList) const{
+				switch (mNext)
+				{
+				case NODE_NULL:
+					throw std::runtime_error("Node does not have next pointer");
+				case NODE_END:
+					return aList.mEnd;
+				case NODE_BEGIN:
+					throw std::runtime_error("Node next pointer cannot point to list begin");
+				default:
+					return aList.mNodes[mNext];
+				}
+			}
+
+			Node& GetPrevious(list_t& aList){
+				switch(mPrevious)
+				{
+				case NODE_NULL:
+					throw std::runtime_error("Node does not have previous pointer");
+				case NODE_END:
+					throw std::runtime_error("Node previous pointer cannot point to list end");
+				case NODE_BEGIN:
+					return aList.mBegin;
+				default:
+					return aList.mNodes[mPrevious];
+				}
+			}
+
+			const Node& GetPrevious(const list_t& aList) const{
+				switch(mPrevious)
+				{
+				case NODE_NULL:
+					throw std::runtime_error("Node does not have previous pointer");
+				case NODE_END:
+					throw std::runtime_error("Node previous pointer cannot point to list end");
+				case NODE_BEGIN:
+					return aList.mBegin;
+				default:
+					return aList.mNodes[mPrevious];
+				}
+			}
+
+			bool IsLive() const{
+				return mNext != NODE_NULL;
+			}
+
 			void Clear(){
-				if(live) Get().~data_t();
-				previous = nullptr;
-				next = nullptr;
-				live = 0;
+				if(IsLive()) Get().~data_t();
+				mPrevious = NODE_NULL;
+				mNext = NODE_NULL;
+			}
+
+			pointer_t GetMemory(){
+				return reinterpret_cast<pointer_t>(mData);
+			}
+
+			const_pointer_t GetMemory() const{
+				return reinterpret_cast<pointer_t>(mData);
 			}
 
 			ref_t Get(){
-				return *reinterpret_cast<pointer_t>(mData);
+				if(! IsLive()) throw std::runtime_error("FixedList::Node can only be dereferenced while live");
+				return *GetMemory();
 			}
 
 			const_ref_t Get() const{
-				return *reinterpret_cast<pointer_t>(mData);
+				if(! IsLive()) throw std::runtime_error("FixedList::Node can only be dereferenced while live");
+				return *GetMemory();
 			}
 
-			Node& operator=(move_t aData){
+			ref_t Set(const_ref_t aData){
 				pointer_t ptr = reinterpret_cast<pointer_t>(mData);
-				if(live){
-					*ptr = std::move(aData);
-				}else{
-					new(ptr) data_t(std::move(aData));
-					live = 1;
-				}
-				return *this;
-			}
-
-			Node& operator=(const_ref_t aData){
-				pointer_t ptr = reinterpret_cast<pointer_t>(mData);
-				if(live){
+				if(IsLive()){
 					*ptr = aData;
 				}else{
 					new(ptr) data_t(aData);
-					live = 1;
 				}
-				return *this;
+				return *ptr;
 			}
 		};
-		Node* mBegin;
+
 		Node mNodes[SIZE];
+		Node mBegin;
 		Node mEnd;
+
+		enum : uint16_t{
+			NODE_NULL = UINT16_MAX,
+			NODE_END = NODE_NULL - 1,
+			NODE_BEGIN = NODE_END - 1
+		};
+
+		static_assert(SIZE < NODE_BEGIN, "FixedList::SIZE is too large");
+		
+		void WriteFree(const void* aData, const size_t aBytes){
+			if(aBytes > (sizeof(data_t) * 2)) throw std::runtime_error("FixedList does not have that much unused space");
+			std::memcpy(mEnd.GetMemory(), aData, aBytes);
+			sgsgs
+		}
+
+		void ReadFree(void* aData, const size_t aBytes) {
+			if(aBytes > (sizeof(data_t) * 2)) throw std::runtime_error("FixedList does not have that much unused space");
+			std::memcpy(aData, mEnd.GetMemory(), aBytes);
+			wgwgw
+		}
+
 	public:
 		class const_iterator_t;
 
@@ -137,7 +245,7 @@ namespace Solaire{ namespace Utility{
 			}
 
 			iterator_t& operator++(){
-				mNode = mNode->next;
+				mNode = &mNode->GetNext(*mParent);
 				return *this;
 			}
 
@@ -148,7 +256,7 @@ namespace Solaire{ namespace Utility{
 			}
 
 			iterator_t& operator--(){
-				mNode = mNode->previous;
+				mNode = &mNode->GetPrevious(*mParent);
 				return *this;
 			}
 
@@ -172,7 +280,7 @@ namespace Solaire{ namespace Utility{
 				return tmp;
 			}
 
-			iterator_t& operator-=(const size_t aNumber){
+			iterator_t& operator-=(size_t aNumber){
 				while(aNumber > 0){
 					--*this;
 					--aNumber;
@@ -207,26 +315,26 @@ namespace Solaire{ namespace Utility{
 			}
 
 			bool operator!=(const iterator_t aOther) const{
-				return mNode !- aOther.mNode;
+				return mNode !=
+					aOther.mNode;
 			}
 
 			bool operator<(const iterator_t aOther) const{
-				if(mParent != aOther.mParent || aOther.mNode->previous == nullptr) return false;
-				const Node* n = aOther.mNode->previous;
-				while(n != nullptr){
+				if(mParent != aOther.mParent) return false;
+				const Node* n = aOther.mNode->GetPrevious(*mParent);
+				while(n->HasPrevious()){
 					if(n == mNode) return true;
-					n = n->previous;
+					n = &n->GetPrevious(&mParent);
 				}
 				return false;
 			}
 
 			bool operator>(const iterator_t aOther) const{
-				const Node* const end = &mParent->mEnd;
-				if (mParent != aOther.mParent || aOther.mNode->next == end) return false;
-				const Node* n = aOther.mNode->next;
-				while(n != end){
-					if (n == mNode) return true;
-					n = n->next;
+				if(mParent != aOther.mParent) return false;
+				const Node* n = aOther.mNode->GetNext(*mParent);
+				while(n->HasNext()){
+					if(n == mNode) return true;
+					n = &n->GetNext(&mParent);
 				}
 				return false;
 			}
@@ -253,6 +361,8 @@ namespace Solaire{ namespace Utility{
 				return *reinterpret_cast<const iterator_t*>(this);
 			}
 		public:
+			friend FixedList<data_t, SIZE>;
+
 			const_iterator_t() :
 				mParent(nullptr),
 				mNode(nullptr)
@@ -341,13 +451,13 @@ namespace Solaire{ namespace Utility{
 			}
 		};
 
-		FixedList() :
-			mBegin(nullptr)
-		{}
+		FixedList(){
+			mBegin.LinkForward(*this, mEnd);
+		}
 
-		FixedList(const_ref_t aValue, const size_t aCopies) :
-			mBegin(nullptr)
-		{
+		FixedList(const_ref_t aValue, const size_t aCopies){
+			mBegin.LinkFoward(*this, mEnd);
+
 			for(size_t i = 0; i < aCopies; ++i){
 				InsertBack(aValue);
 			}
@@ -359,19 +469,19 @@ namespace Solaire{ namespace Utility{
 
 		void Clear(){
 			for(Node& i : mNodes) i.Clear();
-			mBegin = nullptr;
-			mEnd = nullptr;
+			mBegin.LinkFoward(*this, mEnd);
 		}
 
 		bool IsEmpty() const{
-			return mBegin != nullptr;
+			return &mBegin.GetNext(*this) == &mEnd;
 		}
 
 		size_t Size() const{
 			size_t count = 0;
+			const Node* const end = &mEnd;
 			const Node* n = mBegin;
-			while(n != nullptr){
-				n = n->next;
+			while(n != end){
+				n = &n->GetNext(*this);
 				++count;
 			}
 			return count;
@@ -383,11 +493,11 @@ namespace Solaire{ namespace Utility{
 
 		ref_t operator[](const size_t aIndex){
 			size_t count = 0;
-			const Node* n = mBegin;
+			Node* n = mBegin;
 			const Node* end = &mEnd;
-			while (n != end){
-				if(count == aIndex) return n->Get();
-				n = n->next;
+			while(n != end){
+				if(count == aIndex + 1) return n->Get();
+				n = &n->GetNext(*this);
 				++count;
 			}
 			throw std::runtime_error("Index out of bounds");
@@ -397,20 +507,20 @@ namespace Solaire{ namespace Utility{
 			size_t count = 0;
 			const Node* n = mBegin;
 			const Node* end = &mEnd;
-			while (n != end){
-				if(count == aIndex) return n->Get();
-				n = n->next;
+			while(n != end) {
+				if(count == aIndex + 1) return n->Get();
+				n = &n->GetNext(*this);
 				++count;
 			}
 			throw std::runtime_error("Index out of bounds");
 		}
 
 		ref_t InsertBefore(const_iterator_t aPos, const_ref_t aItem){
-			Node& target = *aPos.mNode;
+			Node& target = const_cast<Node&>(*aPos.mNode);
 
 			// Find empty node
 			Node* n = nullptr;
-			for (Node& i : mNodes) if (! i.live){
+			for(Node& i : mNodes) if(! i.IsLive()){
 				n = &i;
 				break;
 			}
@@ -419,19 +529,11 @@ namespace Solaire{ namespace Utility{
 
 			// Link nodes
 
-			if(&target == mBegin) mBegin = n;
-
-			n->next = &target;
-			n->previous->target.previous;
-
-			target.previous->next = n;
-			target.previous = n
-
-			n->next = &target;
-			n->previous = target.previous;
+			n->LinkBackward(*this, target.GetPrevious(*this));
+			n->LinkForward(*this, target);
 
 			// Assign node
-			*n = aItem;
+			n->Set(aItem);
 
 			// Return reference
 			return n->Get();
@@ -442,7 +544,7 @@ namespace Solaire{ namespace Utility{
 		}
 
 		ref_t AddBack(const_ref_t aItem){
-			return InsertBefore(begin() + (size() - 1), aItem);
+			return InsertBefore(end(), aItem);
 		}
 
 		ref_t AddFront(const_ref_t aItem){
@@ -450,23 +552,20 @@ namespace Solaire{ namespace Utility{
 		}
 
 		void Remove(const_iterator_t aPos){
-			if (n >= end()) throw std::runtime_error("Cannot remove FixedList end");
+			if(n >= end()) throw std::runtime_error("Cannot remove FixedList end");
 
-			Node& target = *aPos.mNode;
+			Node& target = const_cast<Node&>(*aPos.mNode);
 
 			// Link nodes
-
-			if (&target == mBegin) mBegin = target.next;
-
-			target.next->previous = target.previous;
-			target.previous->next = target.next; //! \TODO Fix nullptr exception when target is mBegin
+			target.LinkForward(n->GetNext(*this));
+			target.LinkBackward(n->GetPrevious(*this));
 
 			// Delete value
 			target.Clear();
 		}
 
 		void RemoveBack(){
-			Remove(begin() + (size() - 1));
+			Remove(end() - 1);
 		}
 
 		void RemoveFront(){
@@ -474,31 +573,27 @@ namespace Solaire{ namespace Utility{
 		}
 
 		ref_t Front(){
-			if(mBegin == nullptr) throw std::runtime_error("FixedList is empty");
-			return mBegin->Get();
+			return *begin();
 		}
 
 		const_ref_t Front() const{
-			if(mBegin == nullptr) throw std::runtime_error("FixedList is empty");
-			return mBegin->Get();
+			return *begin();
 		}
 
 		ref_t Back(){
-			if(mEnd == nullptr) throw std::runtime_error("FixedList is empty");
-			return mEnd->Get();
+			return *(end() - 1);
 		}
 
 		const_ref_t Back() const{
-			if(mEnd == nullptr) throw std::runtime_error("FixedList is empty");
-			return mEnd->Get();
+			return *(end() - 1);
 		}
 
 		iterator_t begin(){
-			return iterator_t(*this, *mBegin);
+			return iterator_t(*this, mBegin.GetNext(*this));
 		}
 
 		const_iterator_t begin() const{
-			return const_iterator_t(*this, *mBegin);
+			return iterator_t(*this, mBegin.GetNext(*this));
 		}
 
 		iterator_t end(){
