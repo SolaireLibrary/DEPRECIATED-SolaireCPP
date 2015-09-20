@@ -171,7 +171,7 @@ namespace Solaire{ namespace Utility{
 			}
 
 			const_pointer_t GetMemory() const{
-				return reinterpret_cast<pointer_t>(mData);
+				return reinterpret_cast<const_pointer_t>(mData);
 			}
 
 			ref_t Get(){
@@ -207,16 +207,25 @@ namespace Solaire{ namespace Utility{
 
 		static_assert(SIZE < NODE_BEGIN, "FixedList::SIZE is too large");
 		
-		void WriteFree(const void* aData, const size_t aBytes){
-			if(aBytes > (sizeof(data_t) * 2)) throw std::runtime_error("FixedList does not have that much unused space");
-			std::memcpy(mEnd.GetMemory(), aData, aBytes);
-			sgsgs
+		uint16_t ReadSize() const{
+			if(sizeof(data_t) >= 2){
+				return *reinterpret_cast<const uint16_t*>(mBegin.GetMemory());
+			}else{
+				uint8_t data[2];
+				data[0] = *reinterpret_cast<const uint8_t*>(mBegin.GetMemory());
+				data[1] = *reinterpret_cast<const uint8_t*>(mBegin.GetMemory());
+				return *reinterpret_cast<const uint16_t*>(data);
+			}
 		}
 
-		void ReadFree(void* aData, const size_t aBytes) {
-			if(aBytes > (sizeof(data_t) * 2)) throw std::runtime_error("FixedList does not have that much unused space");
-			std::memcpy(aData, mEnd.GetMemory(), aBytes);
-			wgwgw
+		void WriteSize(const uint16_t aSize){
+			if(sizeof(data_t) >= 2){
+				*reinterpret_cast<uint16_t*>(mBegin.GetMemory()) = aSize;
+			}else{
+				const uint8_t* const data = reinterpret_cast<const uint8_t*>(&aSize);
+				*reinterpret_cast<uint8_t*>(mBegin.GetMemory()) = data[0];
+				*reinterpret_cast<uint8_t*>(mBegin.GetMemory()) = data[1];
+			}
 		}
 
 	public:
@@ -241,7 +250,16 @@ namespace Solaire{ namespace Utility{
 			{}
 
 			size_t operator-(const iterator_t aOther) const{
-				
+				if(mParent != aOther.mParent) throw std::runtime_error("Cannot compare iterators from seperate lists");
+				if(mNode == aOther.mNode) return 0;
+				size_t count = 0;
+				const Node* n = mNode;
+				while(n->HasPrevious()){
+					if(n == aOther.mNode) return count;
+					++count;
+					n = &n->GetPrevious(*this);
+				}
+				throw std::runtime_error("Second iterator is not less than first iterator");
 			}
 
 			iterator_t& operator++(){
@@ -452,10 +470,12 @@ namespace Solaire{ namespace Utility{
 		};
 
 		FixedList(){
+			WriteSize(0);
 			mBegin.LinkForward(*this, mEnd);
 		}
 
 		FixedList(const_ref_t aValue, const size_t aCopies){
+			WriteSize(0);
 			mBegin.LinkFoward(*this, mEnd);
 
 			for(size_t i = 0; i < aCopies; ++i){
@@ -470,21 +490,15 @@ namespace Solaire{ namespace Utility{
 		void Clear(){
 			for(Node& i : mNodes) i.Clear();
 			mBegin.LinkFoward(*this, mEnd);
+			WriteSize(0);
 		}
 
 		bool IsEmpty() const{
-			return &mBegin.GetNext(*this) == &mEnd;
+			return ReadSize() == 0;
 		}
 
 		size_t Size() const{
-			size_t count = 0;
-			const Node* const end = &mEnd;
-			const Node* n = mBegin;
-			while(n != end){
-				n = &n->GetNext(*this);
-				++count;
-			}
-			return count;
+			return ReadSize();
 		}
 
 		size_t Capacity() const{
@@ -528,12 +542,12 @@ namespace Solaire{ namespace Utility{
 			if(n == nullptr) throw std::runtime_error("FixedList is full");
 
 			// Link nodes
-
 			n->LinkBackward(*this, target.GetPrevious(*this));
 			n->LinkForward(*this, target);
 
 			// Assign node
 			n->Set(aItem);
+			WriteSize(ReadSize() + 1);
 
 			// Return reference
 			return n->Get();
@@ -557,6 +571,7 @@ namespace Solaire{ namespace Utility{
 
 			// Link nodes
 			target.GetNext(*this).LinkBackward(*this, target.GetPrevious(*this));
+			WriteSize(ReadSize() - 1);
 
 			// Delete value
 			target.Clear();
