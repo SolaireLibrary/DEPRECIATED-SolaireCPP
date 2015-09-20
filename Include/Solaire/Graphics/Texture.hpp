@@ -159,7 +159,9 @@ namespace Solaire{ namespace Graphics{
         virtual BindList GetBoundTargets() const = 0;
 
         virtual ~TextureBase(){
-            DestroyTexture();
+            if(IsCreated()){
+                DestroyTexture();
+            }
         }
 
         // Inherited from Resource

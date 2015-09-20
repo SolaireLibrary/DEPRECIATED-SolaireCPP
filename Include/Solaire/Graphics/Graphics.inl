@@ -37,6 +37,22 @@ Last Modified	: 20th September 2015
 namespace Solaire{ namespace Graphics{
     typedef Maths::Vector3<uint8_t> ColourRGB;
     typedef Maths::Vector4<uint8_t> ColourRGBA;
+
+    static ColourRGB DEFAULT_RGB(0, 0, 0);
+    static ColourRGBA DEFAULT_RGBA(0, 0, 0, 255);
+
+    template<class FORMAT>
+    static FORMAT DefaultColour() = delete;
+
+    template<>
+    ColourRGB DefaultColour<ColourRGB>(){
+        return DEFAULT_RGB;
+    }
+
+    template<>
+    ColourRGBA DefaultColour<ColourRGBA>(){
+        return DEFAULT_RGBA;
+    }
 }}
 
 // OpenGL
