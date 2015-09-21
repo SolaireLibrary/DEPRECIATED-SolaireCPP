@@ -31,10 +31,10 @@ Created			: 20th September 2015
 Last Modified	: 20th September 2015
 */
 
+#include <map>
 #include <algorithm>
 #include <vector>
 #include "..\Utility\ResourceFactory.hpp"
-#include "..\Utility\FixedStack.hpp"
 #include "..\Maths\Vector2.hpp"
 #include "Graphics.inl"
 
@@ -132,6 +132,25 @@ namespace Solaire{ namespace Graphics{
     //! \TODO Implement Texture classes
 
     class TextureBase : public Utility::Resource{
+    private:
+        static std::map<GLenum, std::vector<TextureBase*>> BINDING_MAP;
+
+        static std::vector<TextureBase*>& GetBoundTextures(const GLenum aTarget){
+            auto i = BINDING_MAP.find(aTarget);
+            if(i == BINDING_MAP.end()){
+                i = BINDING_MAP.emplace(aTarget, std::vector<TextureBase*>()).first;
+            }
+            return i->second;
+        }
+
+        static std::vector<GLenum> GetBoundTargets(const TextureBase& aTexture){
+            std::vector<GLenum> bindings;
+            for(const std::pair<GLenum, std::vector<TextureBase*>>& i : BINDING_MAP){
+                auto it = std::find(i.second.begin(), i.second.end(), &aTexture);
+                if(it != i.second.end()) bindings.push_back(i.first);
+            }
+            return bindings;
+        }
     protected:
         enum : GLuint{
             INVALID_TEXTURE_ID = 0
@@ -140,25 +159,63 @@ namespace Solaire{ namespace Graphics{
         virtual void CreateTexture() = 0;
         virtual void DestroyTexture() = 0;
         virtual bool IsCreated() const = 0;
+        virtual GLuint GetTextureID() const = 0;
+
+        void ForceUnbindAll(){
+            // Unbind all instances of this texture from the bind stacks
+            const std::vector<GLenum> list = GetBoundTargets(*this);
+            for(const GLenum target : list){
+                std::vector<TextureBase*>& bindings = GetBoundTextures(target);
+                    while(bindings.back() == this){
+                        Unbind(target);
+                    }
+                auto it = std::find(bindings.begin(), bindings.end(), this);
+                while(it != bindings.end()){
+                    bindings.erase(it);
+                    OnForcedUnbind(target);
+                    it = std::find(bindings.begin(), bindings.end(), this);
+                }
+            }
+        }
+
+        virtual void OnForcedUnbind(const GLenum aTarget) = 0;
 
     public:
-        virtual void Bind(const GLenum aTarget) = 0;
-        virtual void Unbind(const GLenum aTarget) = 0;
-
-        virtual bool IsBound(const GLenum aTarget) const = 0;
-        typedef Utility::FixedStack<GLenum, 16> BindList;
-        virtual BindList GetBoundTargets() const = 0;
-
         virtual ~TextureBase(){
             if(IsCreated()){
                 DestroyTexture();
             }
         }
 
+        virtual void Bind(const GLenum aTarget){
+            if(IsCreated()){
+                GetBoundTextures(aTarget).push_back(this);
+                //glBindTexture(aTarget, getTextureID());
+            }else{
+                throw std::runtime_error("Texture must be created before it can be bound");
+            }
+        }
+
+       virtual void Unbind(const GLenum aTarget){
+            if(IsCreated()){
+                std::vector<TextureBase*>& list = GetBoundTextures(aTarget);
+                if(list.back() != this) throw std::runtime_error("This texture is not at the top of the binding stack for this target");
+                list.pop_back();
+                //glBindTexture(aTarget, list.empty() ? INVALID_TEXTURE_ID : list.back());
+            }else{
+                throw std::runtime_error("Texture must be created before it can be unbound");
+            }
+        }
+
+        virtual bool IsBound(const GLenum aTarget) const{
+            const std::vector<TextureBase*>& list = GetBoundTextures(aTarget);
+            return std::find(list.begin(), list.end(), this) != list.end();
+        }
+
         // Inherited from Resource
         virtual void Reload() override{
             if(IsCreated()){
-                const BindList list = GetBoundTargets();
+                const std::vector<GLenum> list = GetBoundTargets(*this);
                 for(const GLenum i : list) Unbind(i);
                 DestroyTexture();
                 CreateTexture();
@@ -199,10 +256,17 @@ namespace Solaire{ namespace Graphics{
         Texture2DFactory* mDataFactory;
         TextureParamFactory* mParamFactory;
 
-        std::vector<GLenum> mBindList;
         GLuint mID;
     protected:
         // Inherited from TextureBase
+
+        GLuint GetTextureID() const override{
+            return mID;
+        };
+
+        void OnForcedUnbind(const GLenum aTarget) override{
+
+        }
 
         void CreateTexture() override{
 
@@ -219,7 +283,7 @@ namespace Solaire{ namespace Graphics{
 
             //glGenTextures(1& mID);
 
-            //glBindTexture(GL_TEXTURE_2D, mID);
+            TextureBindGuard guard(*this, GL_TEXTURE_2D);
 
             //glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, size.X, size.Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
@@ -256,6 +320,7 @@ namespace Solaire{ namespace Graphics{
         }
 
         void DestroyTexture() override{
+            ForceUnbindAll();
             //glDeleteTextures (1, &mID);
         }
 
@@ -266,30 +331,6 @@ namespace Solaire{ namespace Graphics{
     public:
         virtual ~Texture2D(){
 
-        }
-
-        // Inherited from TextureBase
-
-        void Bind(const GLenum aTarget) override{
-            if(! IsBound(aTarget)){
-                //glBindTexture(aTarget, mID);
-                mBindList.push_back(aTarget);
-            }
-        }
-
-        void Unbind(const GLenum aTarget) override{
-            if(IsBound(aTarget)){
-                //glBindTexture(aTarget, INVALID_TEXTURE_ID);
-                mBindList.erase(std::find(mBindList.begin(), mBindList.end(), aTarget));
-            }
-        }
-
-        bool IsBound(const GLenum aTarget) const override{
-            return std::find(mBindList.begin(), mBindList.end(), aTarget) != mBindList.end();
-        }
-
-        BindList GetBoundTargets() const override{
-            return BindList(mBindList.begin(), mBindList.end());
         }
 
     };

@@ -49,6 +49,33 @@ typedef int GLsizeiptrARB;
 typedef int GLfixed;
 typedef int GLclampx;
 
+// Misc
+#define GL_FOG                            0x0B60
+#define GL_LIGHTING                       0x0B50
+#define GL_TEXTURE_2D                     0x0DE1
+#define GL_CULL_FACE                      0x0B44
+#define GL_ALPHA_TEST                     0x0BC0
+#define GL_BLEND                          0x0BE2
+#define GL_COLOR_LOGIC_OP                 0x0BF2
+#define GL_DITHER                         0x0BD0
+#define GL_STENCIL_TEST                   0x0B90
+#define GL_DEPTH_TEST                     0x0B71
+#define GL_POINT_SMOOTH                   0x0B10
+#define GL_LINE_SMOOTH                    0x0B20
+#define GL_SCISSOR_TEST                   0x0C11
+#define GL_COLOR_MATERIAL                 0x0B57
+#define GL_NORMALIZE                      0x0BA1
+#define GL_RESCALE_NORMAL                 0x803A
+#define GL_POLYGON_OFFSET_FILL            0x8037
+#define GL_VERTEX_ARRAY                   0x8074
+#define GL_NORMAL_ARRAY                   0x8075
+#define GL_COLOR_ARRAY                    0x8076
+#define GL_TEXTURE_COORD_ARRAY            0x8078
+#define GL_MULTISAMPLE                    0x809D
+#define GL_SAMPLE_ALPHA_TO_COVERAGE       0x809E
+#define GL_SAMPLE_ALPHA_TO_ONE            0x809F
+#define GL_SAMPLE_COVERAGE                0x80A0
+
 // ClearBufferMask
 #define GL_DEPTH_BUFFER_BIT               0x00000100
 #define GL_STENCIL_BUFFER_BIT             0x00000400
