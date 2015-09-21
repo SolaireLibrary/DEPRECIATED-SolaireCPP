@@ -51,6 +51,7 @@ namespace Solaire{ namespace Utility {
         uint8_t* const mArenaEnd;
         uint8_t* mArenaHead;
         const size_t mArenaSize;
+        MemoryArena* mNext;
 
         MemoryArena(const MemoryArena& aOther) = delete;
         MemoryArena(MemoryArena&& aOther) = delete;
@@ -68,21 +69,33 @@ namespace Solaire{ namespace Utility {
             mArenaBegin(static_cast<uint8_t*>(operator new(aSize))),
             mArenaEnd(mArenaBegin + aSize),
             mArenaHead(mArenaBegin),
-            mArenaSize(aSize)
+            mArenaSize(aSize),
+            mNext(nullptr)
         {}
 
         ~MemoryArena(){
             CallDestructors();
             operator delete(mArenaBegin);
+            if(mNext != nullptr){
+                delete mNext;
+            }
         }
 
         void Clear(){
             CallDestructors();
             mArenaHead = mArenaBegin;
+            if(mNext != nullptr){
+                mNext->Clear();
+            }
         }
 
         void* Allocate(const size_t aSize){
-            if(mArenaEnd - mArenaHead < aSize) return nullptr;
+            if(mArenaEnd - mArenaHead < aSize){
+                if(mNext == nullptr){
+                    mNext = new MemoryArena(mArenaSize);
+                }
+                return mNext->Allocate(aSize);
+            }
             void* const ptr = mArenaHead;
             mArenaHead += aSize;
             return ptr;
