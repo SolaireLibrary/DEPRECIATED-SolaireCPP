@@ -28,9 +28,10 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 20th September 2015
-Last Modified	: 20th September 2015
+Last Modified	: 21st September 2015
 */
 
+#include <algorithm>
 #include <functional>
 #include "Texture.hpp"
 
@@ -93,25 +94,17 @@ namespace Solaire{ namespace Graphics{
         }
     };
 
-    /*class Image1D : public Image<ColourRGBA>, public Texture1DFactory{
-    private:
-
+    template<class FORMAT, class INDEX, class FACTORY>
+    class ImageND : public Image<FORMAT>, public FACTORY{
     public:
-        virtual ~Image1D(){
-
-        }
-    };*/
-
-    template<class FORMAT>
-    class Image2D : public Image<FORMAT>, public Texture2DFactory{
+        typedef ImageND<FORMAT, INDEX, FACTORY> ImageNDTemplate;
     private:
-        TextureCoord2D mSize;
-
-        size_t EncodeCoords(const TextureCoord2D aCoords) const{
-            return aCoords.X + mSize.X * aCoords.Y;
-        }
+        INDEX mSize;
     protected:
-        // Inherited from Texture2DFactory
+        virtual size_t Mutiply(const INDEX aCoords) const = 0;
+        virtual size_t EncodeCoords(const INDEX aCoords) const = 0;
+
+        // Inherited from FACTORY
 
         void Lock() override{
 
@@ -121,44 +114,114 @@ namespace Solaire{ namespace Graphics{
 
         }
     public:
-        Image2D(const TextureCoord2D aSize) :
-            Image<FORMAT>(aSize.X * aSize.Y),
+        ImageND(const FORMAT aSize) :
+            Image<FORMAT>(Mutiply(aSize)),
             mSize(aSize)
         {}
 
-        Image2D(Image2D<FORMAT>&& aOther) :
-           Image<FORMAT>(aOther),
+        ImageND(ImageNDTemplate&& aOther) :
+           Image<FORMAT>(std::move(aOther)),
            mSize(aOther.mSize)
         {}
 
-       Image2D<FORMAT>& operator=(Image2D<FORMAT>&& aOther){
+       ImageNDTemplate& operator=(ImageNDTemplate&& aOther){
             Image<FORMAT>::operator=(std::move(aOther));
             std::swap(mSize, aOther.mSize);
         }
 
-        void Set(const TextureCoord2D aCoords, const FORMAT aPixel){
+        void Set(const INDEX aCoords, const FORMAT aPixel){
             Image<FORMAT>::GetPixels()[EncodeCoords(aCoords)] = aPixel;
         }
 
-        FORMAT& Get(const TextureCoord2D aCoords){
+        FORMAT& Get(const INDEX aCoords){
             return Image<FORMAT>::GetPixels()[EncodeCoords(aCoords)];
         }
 
-        FORMAT Get(const TextureCoord2D aCoords) const{
+        FORMAT Get(const INDEX aCoords) const{
             return Image<FORMAT>::GetPixels()[EncodeCoords(aCoords)];
         }
 
-        FORMAT& operator[](const TextureCoord2D aCoords){
+        FORMAT& operator[](const INDEX aCoords){
             return Get(aCoords);
         }
 
-        FORMAT operator[](const TextureCoord2D aCoords) const{
+        FORMAT operator[](const INDEX aCoords) const{
             return Get(aCoords);
         }
+
+        // Inherited from Texture2DFactory
+
+        INDEX Size() const override{
+            return mSize;
+        }
+
+        ColourRGBA GetColour(const INDEX aIndex) const override{
+            return Get(aIndex);
+        }
+    };
+
+    template<class FORMAT>
+    class Image1D : public ImageND<FORMAT, TextureCoord1D, Texture1DFactory>{
+    public:
+        typedef ImageND<FORMAT, TextureCoord1D, Texture1DFactory> ImageNDTemplate;
+    protected:
+        // Inherited from ImageND
+
+       size_t Mutiply(const TextureCoord1D aCoords) const override{
+            return aCoords;
+        }
+
+        size_t EncodeCoords(const TextureCoord1D aCoords) const override{
+            return aCoords;
+        }
+    public:
+        Image1D(const TextureCoord1D aSize) :
+            ImageNDTemplate(aSize)
+        {}
+
+        Image1D(Image1D<FORMAT>&& aOther) :
+           ImageNDTemplate(std::move(aOther))
+        {}
+
+        void Flip(){
+            FORMAT* const begin = ImageNDTemplate::GetPixels();
+            FORMAT* const last = begin + (ImageNDTemplate::Size() - 1);
+            std::reverse(begin, last);
+        }
+    };
+
+    template<class FORMAT>
+    class Image2D : public ImageND<FORMAT, TextureCoord2D, Texture2DFactory>{
+    public:
+        typedef ImageND<FORMAT, TextureCoord2D, Texture2DFactory> ImageNDTemplate;
+    protected:
+        // Inherited from ImageND
+
+       size_t Mutiply(const TextureCoord2D aCoords) const override{
+            return aCoords.X * aCoords.Y;
+        }
+
+        size_t EncodeCoords(const TextureCoord2D aCoords) const override{
+            //! \TODO Check if this is correct
+            return aCoords.X + ImageNDTemplate::Size().X * aCoords.Y;
+        }
+    public:
+        Image2D(const TextureCoord2D aSize) :
+            ImageNDTemplate(aSize)
+        {}
+
+        Image2D(Image2D<FORMAT>&& aOther) :
+           ImageNDTemplate(std::move(aOther))
+        {}
 
         void FlipHorisontal(){
-            //! \TODO Implement
-            throw std::runtime_error("Not implemented");
+            const TextureCoord2D size = ImageNDTemplate::Size();
+            TextureCoord2D i(0, 0);
+            for(i.Y = 0; i.Y < size.Y; ++i.Y){
+                FORMAT* const begin = &ImageNDTemplate::Get(i);
+                FORMAT* const last = begin + (size.X - 1);
+                std::reverse(begin, last);
+            }
         }
 
         void FlipVertical(){
@@ -175,24 +238,78 @@ namespace Solaire{ namespace Graphics{
             //! \TODO Implement
             throw std::runtime_error("Not implemented");
         }
-
-        // Inherited from Texture2DFactory
-
-        TextureCoord2D Size() const override{
-            return mSize;
-        }
-
-        ColourRGBA GetColour(const TextureCoord2D aIndex) const override{
-            return Get(aIndex);
-        }
     };
 
-    /*class Image3D : public Image<ColourRGBA>, public Texture3DFactory{
+    template<class FORMAT>
+    class Image3D : public ImageND<FORMAT, TextureCoord3D, Texture3DFactory>{
     public:
-        virtual ~Image3D(){
+        typedef ImageND<FORMAT, TextureCoord3D, Texture3DFactory> ImageNDTemplate;
+    protected:
+        // Inherited from ImageND
 
+       size_t Mutiply(const TextureCoord3D aCoords) const override{
+            return aCoords.X * aCoords.Y * aCoords.Z;
         }
-    };*/
+
+        size_t EncodeCoords(const TextureCoord3D aCoords) const override{
+            const TextureCoord3D size = ImageNDTemplate::Size();
+            //! \TODO Check if this is correct
+            return aCoords.X + size.X * aCoords.Y + size.Y * aCoords.Z;
+        }
+    public:
+        Image3D(const TextureCoord3D aSize) :
+            ImageNDTemplate(aSize)
+        {}
+
+        Image3D(Image3D<FORMAT>&& aOther) :
+           ImageNDTemplate(std::move(aOther))
+        {}
+
+        void FlipX(){
+            //! \TODO Implement
+            throw std::runtime_error("Not implemented");
+        }
+
+        void FlipY(){
+            //! \TODO Implement
+            throw std::runtime_error("Not implemented");
+        }
+
+        void FlipZ(){
+            //! \TODO Implement
+            throw std::runtime_error("Not implemented");
+        }
+
+        void RotateClockwiseX(){
+            //! \TODO Implement
+            throw std::runtime_error("Not implemented");
+        }
+
+        void RotateCounterClockwiseX(){
+            //! \TODO Implement
+            throw std::runtime_error("Not implemented");
+        }
+
+        void RotateClockwiseY(){
+            //! \TODO Implement
+            throw std::runtime_error("Not implemented");
+        }
+
+        void RotateCounterClockwiseY(){
+            //! \TODO Implement
+            throw std::runtime_error("Not implemented");
+        }
+
+        void RotateClockwiseZ(){
+            //! \TODO Implement
+            throw std::runtime_error("Not implemented");
+        }
+
+        void RotateCounterClockwiseZ(){
+            //! \TODO Implement
+            throw std::runtime_error("Not implemented");
+        }
+    };
 
 }}
 
