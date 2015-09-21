@@ -31,6 +31,8 @@ Created			: 20th September 2015
 Last Modified	: 20th September 2015
 */
 
+#include <algorithm>
+#include <vector>
 #include "..\Utility\ResourceFactory.hpp"
 #include "..\Utility\FixedStack.hpp"
 #include "..\Maths\Vector2.hpp"
@@ -97,11 +99,6 @@ namespace Solaire{ namespace Graphics{
         CLAMP_TO_EDGE = GL_CLAMP_TO_EDGE
     };
 
-    enum class MipmapFilter : GLenum{
-        NEAREST_NEIGHBOUR = GL_NEAREST,
-        LINEAR = GL_LINEAR
-    };
-
     class TextureParamFactory : public Utility::ResourceFactory{
     public:
         static TextureFilter DEFAULT_FILTER;
@@ -119,8 +116,8 @@ namespace Solaire{ namespace Graphics{
             return DEFAULT_WRAP_MODE;
         }
 
-        virtual MipmapFilter MipMapFilter() const{
-            return DEFAULT_FILTER == TextureFilter::NEAREST_NEIGHBOUR ? MipmapFilter::NEAREST_NEIGHBOUR : MipmapFilter::LINEAR;
+        virtual TextureFilter MipMapFilter() const{
+            return DEFAULT_FILTER;
         }
 
         virtual bool MipmapsEnabled() const{
@@ -136,9 +133,7 @@ namespace Solaire{ namespace Graphics{
 
     class TextureBase : public Utility::Resource{
     protected:
-        GLenum mTextureID;
-
-        enum : GLenum{
+        enum : GLuint{
             INVALID_TEXTURE_ID = 0
         };
 
@@ -147,10 +142,6 @@ namespace Solaire{ namespace Graphics{
         virtual bool IsCreated() const = 0;
 
     public:
-        TextureBase():
-            mTextureID(INVALID_TEXTURE_ID)
-        {}
-
         virtual void Bind(const GLenum aTarget) = 0;
         virtual void Unbind(const GLenum aTarget) = 0;
 
@@ -207,10 +198,100 @@ namespace Solaire{ namespace Graphics{
     private:
         Texture2DFactory* mDataFactory;
         TextureParamFactory* mParamFactory;
+
+        std::vector<GLenum> mBindList;
+        GLuint mID;
+    protected:
+        // Inherited from TextureBase
+
+        void CreateTexture() override{
+
+            const TextureCoord2D size = mDataFactory->Size();
+            ColourRGBA* const pixels = new ColourRGBA[size.X * size.Y];
+
+            TextureCoord2D i(0,0);
+            for(i.X; i.X < size.X; ++i.X){
+                for(i.Y; i.Y < size.Y; ++i.Y){
+                    //! \TODO Check row major order
+                    pixels[i.X + size.X * size.Y] = mDataFactory->GetColour(i);
+                }
+            }
+
+            //glGenTextures(1& mID);
+
+            //glBindTexture(GL_TEXTURE_2D, mID);
+
+            //glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, size.X, size.Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+            delete[] pixels;
+
+            const TextureFilter filter = mParamFactory->Filter();
+            if(mParamFactory->MipmapsEnabled()){
+                TextureFilter mipmapFilter = mParamFactory->MipMapFilter();
+
+                if(mipmapFilter == TextureFilter::NEAREST_NEIGHBOUR){
+                    if(filter == TextureFilter::NEAREST_NEIGHBOUR){
+                        mipmapFilter = static_cast<TextureFilter>(GL_NEAREST_MIPMAP_NEAREST);
+                    }else if(filter == TextureFilter::LINEAR){
+                        mipmapFilter = static_cast<TextureFilter>(GL_NEAREST_MIPMAP_LINEAR);
+                    }
+                }else if(mipmapFilter == TextureFilter::LINEAR){
+                    if(filter == TextureFilter::NEAREST_NEIGHBOUR){
+                        mipmapFilter = static_cast<TextureFilter>(GL_LINEAR_MIPMAP_NEAREST);
+                    }else if(filter == TextureFilter::LINEAR){
+                        mipmapFilter = static_cast<TextureFilter>(GL_LINEAR_MIPMAP_LINEAR);
+                    }
+                }
+                //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, static_cast<GLenum>(filter));
+                //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLenum>(mipmapFilter));
+                //glGenerateMipmap(GL_TEXTURE_2D);
+            }else{
+                //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, static_cast<GLenum>(filter));
+                //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLenum>(filter));
+            }
+            const TextureWrap wrapMode = mParamFactory->WrapMode();
+            //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLenum>(wrapMode));
+            //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLenum>(wrapMode));
+
+        }
+
+        void DestroyTexture() override{
+            //glDeleteTextures (1, &mID);
+        }
+
+        bool IsCreated() const override{
+            return mID != INVALID_TEXTURE_ID;
+        }
+
     public:
         virtual ~Texture2D(){
 
         }
+
+        // Inherited from TextureBase
+
+        void Bind(const GLenum aTarget) override{
+            if(! IsBound(aTarget)){
+                //glBindTexture(aTarget, mID);
+                mBindList.push_back(aTarget);
+            }
+        }
+
+        void Unbind(const GLenum aTarget) override{
+            if(IsBound(aTarget)){
+                //glBindTexture(aTarget, INVALID_TEXTURE_ID);
+                mBindList.erase(std::find(mBindList.begin(), mBindList.end(), aTarget));
+            }
+        }
+
+        bool IsBound(const GLenum aTarget) const override{
+            return std::find(mBindList.begin(), mBindList.end(), aTarget) != mBindList.end();
+        }
+
+        BindList GetBoundTargets() const override{
+            return BindList(mBindList.begin(), mBindList.end());
+        }
+
     };
 
     class Texture3D : public TextureBase{
