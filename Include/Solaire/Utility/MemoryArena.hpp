@@ -126,51 +126,41 @@ namespace Solaire{ namespace Utility {
         }
     };
 
-    template<class IMPLEMENTOR>
-    class ArenaOnlyNoDestructor{
-    public:
-        static void* operator new(std::size_t aCount) = delete;
-        static void* operator new[](std::size_t aCount) = delete;
-        static void operator delete[](void* aPtr) = delete;
-        static void operator delete(void* aPtr, size_t aCount) = delete;
-        static void operator delete[](void* aPtr, size_t aCount) = delete;
+    #define SOLAIRE_ARENA_ONLY(aClass)\
+        static void* operator new(std::size_t aCount) = delete;\
+        static void* operator new[](std::size_t aCount) = delete;\
+        static void operator delete[](void* aPtr) = delete;\
+        static void operator delete(void* aPtr, size_t aCount) = delete;\
+        static void operator delete[](void* aPtr, size_t aCount) = delete;\
+        \
+        static void* operator new(std::size_t aCount, ::Solaire::Utility::MemoryArena& aArena){\
+            return aArena.Allocate<aClass>();\
+        }\
+        \
+        static void operator delete(void* aPtr){\
+            throw std::runtime_error("Cannot delete ArenaOnly class");\
+        }\
+        \
+        static void* operator new[](std::size_t aCount, ::Solaire::Utility::MemoryArena& aArena) = delete; //!< \TODO Implement
 
-        static void* operator new(std::size_t aCount, MemoryArena& aArena){
-            return aArena.Allocate<IMPLEMENTOR>();
-        }
-
-        static void operator delete(void* aPtr){
-            throw std::runtime_error("Cannot delete ArenaOnly class");
-        }
-
-        //! \TODO Implement
-        static void* operator new[](std::size_t aCount, MemoryArena& aArena) = delete;
-    };
-
-    template<class IMPLEMENTOR>
-    class ArenaOnly{
-    public:
-        static void* operator new(std::size_t aCount) = delete;
-        static void* operator new[](std::size_t aCount) = delete;
-        static void operator delete[](void* aPtr) = delete;
-        static void operator delete(void* aPtr, size_t aCount) = delete;
-        static void operator delete[](void* aPtr, size_t aCount) = delete;
-
-        static void* operator new(std::size_t aCount, MemoryArena& aArena){
-            return aArena.Allocate<IMPLEMENTOR>();
-        }
-
-        static void operator delete(void* aPtr){
-            throw std::runtime_error("Cannot delete ArenaOnly class");
-        }
-
-        //! \TODO Implement
-        static void* operator new[](std::size_t aCount, MemoryArena& aArena) = delete;
-
-        virtual ~ArenaOnly(){
-
-        }
-    };
+    #define SOLAIRE_ARENA_ONLY_WITH_DEFAULT(aClass, aDefaultArena)\
+        static void* operator new(std::size_t aCount){\
+            return aClass::operator new(aCount, aDefaultArena);\
+        }\
+        static void* operator new[](std::size_t aCount) = delete;\
+        static void operator delete[](void* aPtr) = delete;\
+        static void operator delete(void* aPtr, size_t aCount) = delete;\
+        static void operator delete[](void* aPtr, size_t aCount) = delete;\
+        \
+        static void* operator new(std::size_t aCount, ::Solaire::Utility::MemoryArena& aArena){\
+            return aArena.Allocate<aClass>();\
+        }\
+        \
+        static void operator delete(void* aPtr){\
+            throw std::runtime_error("Cannot delete ArenaOnly class");\
+        }\
+        \
+        static void* operator new[](std::size_t aCount, ::Solaire::Utility::MemoryArena& aArena) = delete; //!< \TODO Implement
 }}
 
 #endif
