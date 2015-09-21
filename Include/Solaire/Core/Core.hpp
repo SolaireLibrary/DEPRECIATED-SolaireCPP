@@ -28,9 +28,11 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 17th September 2015
-Last Modified	: 17th September 2015
+Last Modified	: 21st September 2015
 */
 
 #include "Macros.hpp"
+#include "Time.hpp"
+#include "MemoryArena.hpp"
 
 #endif

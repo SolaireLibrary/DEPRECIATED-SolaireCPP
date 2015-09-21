@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_MEMORY_ARENA_HPP
-#define SOLAIRE_UTILITY_MEMORY_ARENA_HPP
+#ifndef SOLAIRE_CORE_MEMORY_ARENA_HPP
+#define SOLAIRE_CORE_MEMORY_ARENA_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -34,7 +34,7 @@ Last Modified	: 21st September 2015
 #include <vector>
 #include <type_traits>
 
-namespace Solaire{ namespace Utility {
+namespace Solaire{ namespace Core {
 
     /*!
         \class MemoryArena
@@ -42,13 +42,9 @@ namespace Solaire{ namespace Utility {
         Use different MemoryArenas for different object lifetimes (eg. objects that are destroyed at the end of a frame)
     */
     class MemoryArena{
-    private:
-        template<class T>
-        static void CallDestructor(void* aObject){
-            static_cast<T*>(aObject)->~T();
-        }
-
+    public:
         typedef void(*DestructorFn)(void*);
+    private:
         typedef std::pair<void*, DestructorFn> DestructorCall;
 
         std::vector<DestructorCall> mDestructorList;
@@ -108,59 +104,50 @@ namespace Solaire{ namespace Utility {
             return ptr;
         }
 
-        template<class T>
-        void RegisterDestructor(T* aObject){
-            if(! std::is_trivially_destructible<T>::value){
-                mDestructorList.push_back(DestructorCall(aObject, CallDestructor<T>));
-            }
-        }
-
-        template<class T>
-       void* Allocate(const size_t aCount = 1){
-           static_assert(! std::is_abstract<T>::value, "Cannot allocate storage for an abstract class");
-
-            T* const ptr = static_cast<T*>(Allocate(sizeof(T) * aCount));
-            if(ptr == nullptr) return nullptr;
-            for(size_t i = 0; i < aCount; ++i) RegisterDestructor<T>(ptr + 0);
-            return ptr;
+        void OnDestroyed(void* aObject, DestructorFn aCallback){
+             mDestructorList.push_back(DestructorCall(aObject, aCallback));
         }
     };
 
-    #define SOLAIRE_ARENA_ONLY(aClass)\
-        static void* operator new(std::size_t aCount) = delete;\
-        static void* operator new[](std::size_t aCount) = delete;\
-        static void operator delete[](void* aPtr) = delete;\
-        static void operator delete(void* aPtr, size_t aCount) = delete;\
-        static void operator delete[](void* aPtr, size_t aCount) = delete;\
-        \
-        static void* operator new(std::size_t aCount, ::Solaire::Utility::MemoryArena& aArena){\
-            return aArena.Allocate<aClass>();\
-        }\
-        \
-        static void operator delete(void* aPtr){\
-            throw std::runtime_error("Cannot delete ArenaOnly class");\
-        }\
-        \
-        static void* operator new[](std::size_t aCount, ::Solaire::Utility::MemoryArena& aArena) = delete; //!< \TODO Implement
+    template<class IMPLEMENTOR>
+    class ArenaAllocatable{
+    public:
+        static void* operator new(std::size_t aCount, MemoryArena& aArena){
+            static_assert(! std::is_abstract<IMPLEMENTOR>::value, "Cannot allocate abstract class on MemoryArena");
 
-    #define SOLAIRE_ARENA_ONLY_WITH_DEFAULT(aClass, aDefaultArena)\
-        static void* operator new(std::size_t aCount){\
-            return aClass::operator new(aCount, aDefaultArena);\
-        }\
-        static void* operator new[](std::size_t aCount) = delete;\
-        static void operator delete[](void* aPtr) = delete;\
-        static void operator delete(void* aPtr, size_t aCount) = delete;\
-        static void operator delete[](void* aPtr, size_t aCount) = delete;\
-        \
-        static void* operator new(std::size_t aCount, ::Solaire::Utility::MemoryArena& aArena){\
-            return aArena.Allocate<aClass>();\
-        }\
-        \
-        static void operator delete(void* aPtr){\
-            throw std::runtime_error("Cannot delete ArenaOnly class");\
-        }\
-        \
-        static void* operator new[](std::size_t aCount, ::Solaire::Utility::MemoryArena& aArena) = delete; //!< \TODO Implement
+            void* const ptr = aArena.Allocate(aCount);
+
+            aArena.OnDestroyed(ptr, [](void* aObject){
+                static_cast<IMPLEMENTOR*>(aObject)->~IMPLEMENTOR();
+            });
+
+            return ptr;
+        }
+
+        static void* operator new[](std::size_t aCount, MemoryArena& aArena) = delete; //!< \TODO Implement
+
+        virtual ~ArenaAllocatable(){
+
+        }
+    };
+
+    template<class IMPLEMENTOR>
+    class ArenaAllocatableNoDestructor{
+    public:
+        static_assert(std::is_trivially_destructible<IMPLEMENTOR>::value, "Implementing class does not have a trivial destructor");
+
+        static void* operator new(std::size_t aCount, MemoryArena& aArena){
+            static_assert(! std::is_abstract<IMPLEMENTOR>::value, "Cannot allocate abstract class on MemoryArena");
+
+            return aArena.Allocate(aCount);
+        }
+
+        static void* operator new[](std::size_t aCount, MemoryArena& aArena) = delete; //!< \TODO Implement
+    };
 }}
+
+void* operator new(size_t aCount, Solaire::Core::MemoryArena& aArena){
+    return aArena.Allocate(aCount);
+}
 
 #endif
