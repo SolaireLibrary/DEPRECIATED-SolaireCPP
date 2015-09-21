@@ -308,7 +308,7 @@ namespace Solaire{ namespace Graphics{
     static const ColourRGB Khaki4(139,134,78);
     static const ColourRGB Khaki(240,230,140);
     static const ColourRGB PaleGoldenrod(238,232,170);
-    static const ColourRGB lemonchiffon1(255,250,205);
+    static const ColourRGB Lemonchiffon1(255,250,205);
     static const ColourRGB Lemonchiffon2(238,233,191);
     static const ColourRGB Lemonchiffon3(205,201,165);
     static const ColourRGB Lemonchiffon4(139,137,112);
@@ -316,7 +316,7 @@ namespace Solaire{ namespace Graphics{
     static const ColourRGB LightGoldenrod2(238,220,130);
     static const ColourRGB LightGoldenrod3(205,190,112);
     static const ColourRGB LightGoldenrod4(139,129,76);
-    static const ColourRGB Nanana(227,207,87);
+    static const ColourRGB Banana(227,207,87);
     static const ColourRGB Gold1(255,215,0);
     static const ColourRGB Gold2(238,201,0);
     static const ColourRGB Gold3(205,173,0);
@@ -329,7 +329,7 @@ namespace Solaire{ namespace Graphics{
     static const ColourRGB Goldenrod1(255,193,37);
     static const ColourRGB Goldenrod2(238,180,34);
     static const ColourRGB Goldenrod3(205,155,29);
-    static const ColourRGB goldenrod4(139,105,20);
+    static const ColourRGB Goldenrod4(139,105,20);
     static const ColourRGB DarkGoldenrod(184,134,11);
     static const ColourRGB DarkGoldenrod1(255,185,15);
     static const ColourRGB DarkGoldenrod2(238,173,14);
@@ -348,7 +348,7 @@ namespace Solaire{ namespace Graphics{
     static const ColourRGB Wheat4(139,126,102);
     static const ColourRGB Moccasin(255,228,181);
     static const ColourRGB Papayawhip(255,239,213);
-    static const ColourRGB blanchedalmond(255,235,205);
+    static const ColourRGB Blanchedalmond(255,235,205);
     static const ColourRGB NavajoWhite1(255,222,173);
     static const ColourRGB NavajoWhite2(238,207,161);
     static const ColourRGB NavajoWhite3(205,179,139);
@@ -356,7 +356,7 @@ namespace Solaire{ namespace Graphics{
     static const ColourRGB Eggshell(252,230,201);
     static const ColourRGB Tan(210,180,140);
     static const ColourRGB brick(156,102,31);
-    static const ColourRGB cadmiumYellow(255,153,18);
+    static const ColourRGB CadmiumYellow(255,153,18);
     static const ColourRGB AntiqueWhite(250,235,215);
     static const ColourRGB AntiqueWhite1(255,239,219);
     static const ColourRGB AntiqueWhite2(238,223,204);
@@ -393,7 +393,7 @@ namespace Solaire{ namespace Graphics{
     static const ColourRGB Seashell3(205,197,191);
     static const ColourRGB Seashell4(139,134,130);
     static const ColourRGB SandyBrown(244,164,96);
-    static const ColourRGB EawSienna(199,97,20);
+    static const ColourRGB RawSienna(199,97,20);
     static const ColourRGB Chocolate(210,105,30);
     static const ColourRGB Chocolate1(255,127,36);
     static const ColourRGB Chocolate2(238,118,33);
@@ -462,7 +462,7 @@ namespace Solaire{ namespace Graphics{
     static const ColourRGB Red3(205,0,0);
     static const ColourRGB Red4(139,0,0);
     static const ColourRGB Maroon(128,0,0);
-    static const ColourRGB SGIbeet(142,56,142);
+    static const ColourRGB SGIBeet(142,56,142);
     static const ColourRGB SGISlateBlue(113,113,198);
     static const ColourRGB SGILightBlue(125,158,192);
     static const ColourRGB SGITeal(56,142,142);
