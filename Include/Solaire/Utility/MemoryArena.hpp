@@ -107,7 +107,7 @@ namespace Solaire{ namespace Utility {
         }
 
         template<class T>
-        T* Allocate(){
+       void* Allocate(){
             T* const ptr = Allocate(sizeof(T));
             if(ptr == nullptr) return nullptr;
             if(! std::is_trivially_destructible<T>::value){
