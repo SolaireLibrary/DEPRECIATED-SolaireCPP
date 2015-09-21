@@ -36,6 +36,11 @@ Last Modified	: 21st September 2015
 
 namespace Solaire{ namespace Utility {
 
+    /*!
+        \class MemoryArena
+        \detail
+        Use different MemoryArenas for different object lifetimes (eg. objects that are destroyed at the end of a frame)
+    */
     class MemoryArena{
     private:
         template<class T>
@@ -103,16 +108,18 @@ namespace Solaire{ namespace Utility {
 
         template<class T>
         void RegisterDestructor(T* aObject){
-            mDestructorList.push_back(DestructorCall(aObject, CallDestructor<T>));
+            if(! std::is_trivially_destructible<T>::value){
+                mDestructorList.push_back(DestructorCall(aObject, CallDestructor<T>));
+            }
         }
 
         template<class T>
        void* Allocate(){
+           static_assert(! std::is_abstract<T>::value, "Cannot allocate storage for an abstract class");
+
             T* const ptr = Allocate(sizeof(T));
             if(ptr == nullptr) return nullptr;
-            if(! std::is_trivially_destructible<T>::value){
-                RegisterDestructor<T>(ptr);
-            }
+            RegisterDestructor<T>(ptr);
             return ptr;
         }
     };
