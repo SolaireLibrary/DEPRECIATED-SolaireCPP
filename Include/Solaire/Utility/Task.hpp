@@ -61,7 +61,9 @@ namespace Solaire{ namespace Utility{
 				if(CanUpdate()){
 					Update();
 				}else{
-					std::this_thread::sleep_for(std::chrono::milliseconds(aSleepTimeMilli));
+				    #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                        std::this_thread::sleep_for(std::chrono::milliseconds(aSleepTimeMilli));
+					#endif
 				}
 			}
 		}
@@ -84,8 +86,13 @@ namespace Solaire{ namespace Utility{
         friend AsyncManager;
 
         TaskManager* mManager;
-		std::atomic_uint8_t mState;
-		std::atomic_bool mCanceled;
+        #ifndef SOLAIRE_DISABLE_MULTITHREADING
+            std::atomic_uint8_t mState;
+            std::atomic_bool mCanceled;
+		#else
+            uint8_t mState;
+            bool mCanceled;
+		#endif
 
         Task(const Task&) = delete;
         Task(Task&&) = delete;
@@ -117,7 +124,7 @@ namespace Solaire{ namespace Utility{
         }
 
 		State GetState() const {
-			return static_cast<State>(mState.load());
+			return static_cast<State>(mState);
 		}
 
 		void Schedule(TaskManager& aManager){
@@ -137,8 +144,9 @@ namespace Solaire{ namespace Utility{
 				const State state = GetState();
 				return state == CANCELED || state == EXECUTED;
 			};
-
-			while (!IsDone()) std::this_thread::sleep_for(std::chrono::milliseconds(30));
+            #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                while (!IsDone()) std::this_thread::sleep_for(std::chrono::milliseconds(30));
+            #endif
 		}
 
 		bool WaitFor(const size_t aMilliseconds) {
@@ -149,8 +157,10 @@ namespace Solaire{ namespace Utility{
 				return state == CANCELED || state == EXECUTED;
 			};
 
-			if(IsDone()) return true;
-			std::this_thread::sleep_for(std::chrono::milliseconds(aMilliseconds));
+            #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                if(IsDone()) return true;
+                std::this_thread::sleep_for(std::chrono::milliseconds(aMilliseconds));
+            #endif
 			return IsDone();
 		}
 
@@ -165,7 +175,7 @@ namespace Solaire{ namespace Utility{
 	class TypedProgressTask : public Task {
 	public:
 		static_assert(std::is_move_constructible<PROGRESS>::value, "TypedProgressTask::progress_t must have a move constructor");
-	
+
 		typedef PROGRESS progress_t;
 	protected:
 		virtual void OnRecieveProgress(progress_t& aProgress) = 0;
@@ -208,7 +218,7 @@ namespace Solaire{ namespace Utility{
         }
 
 		result_t Get(){
-			Wait();
+			TypedProgressTask<PROGRESS>::Wait();
 			return mResult;
 		}
     };

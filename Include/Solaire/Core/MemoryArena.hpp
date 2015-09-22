@@ -105,6 +105,7 @@ namespace Solaire{ namespace Core {
         }
 
         bool Deallocate(void* const aAddress, const size_t aSize){
+            #ifdef SOLAIRE_MEMORY_ARENA_DEALLOCATION_DISABLED
             if(aAddress >= mArenaBegin && aAddress < mArenaEnd){
                 if(mArenaHead - aSize == aAddress){
                     if(! mDestructorList.empty()){
@@ -128,6 +129,7 @@ namespace Solaire{ namespace Core {
             }else if(mNext != nullptr){
                 return mNext->Deallocate(aAddress, aSize);
             }
+            #endif
             return false;
         }
 
@@ -244,9 +246,5 @@ namespace Solaire{ namespace Core {
         return false;
     }
 }}
-
-void* operator new(size_t aCount, Solaire::Core::MemoryArena& aArena){
-    return aArena.Allocate(aCount);
-}
 
 #endif

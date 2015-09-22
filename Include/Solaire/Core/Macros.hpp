@@ -31,27 +31,89 @@
 	Last Modified	: 14th September 2015
 */
 
-#define SOLAIRE_WINDOWS 0
-#define SOLAIRE_LINUX 1
 #define SOLAIRE_ERROR -1
 
+// Detect OS config
+
+#define SOLAIRE_WINDOWS 0
+#define SOLAIRE_LINUX 1
+
+#define SOLAIRE_OS SOLAIRE_ERROR
+#define SOLAIRE_OS_BITS SOLAIRE_ERROR
+
 #ifdef _WIN32
+    #undef SOLAIRE_OS
+    #undef SOLAIRE_OS_BITS
+
     #define SOLAIRE_OS SOLAIRE_WINDOWS
     #define SOLAIRE_OS_BITS 32
 #endif
 
 #ifdef _WIN64
+    #undef SOLAIRE_OS
+    #undef SOLAIRE_OS_BITS
+
     #define SOLAIRE_OS SOLAIRE_WINDOWS
     #define SOLAIRE_OS_BITS 64
 #endif
 
-#ifndef SOLAIRE_OS
+#if SOLAIRE_OS == SOLAIRE_ERROR
     #error SolaireCPP : Could not determine target OS
 #endif
 
-#ifndef SOLAIRE_OS_BITS
+#if SOLAIRE_OS_BITS == SOLAIRE_ERROR
     #error SolaireCPP : Could not determine target bit size
 #endif
+
+// Detect compiler
+
+#define SOLAIRE_MSVC 0
+#define SOLAIRE_GCC 1
+#define SOLAIRE_MINGW 2
+
+#define SOLAIRE_COMPILER SOLAIRE_ERROR
+#define SOLAIRE_COMPILER_VERSION SOLAIRE_ERROR
+
+#ifdef _MSC_VER
+    #undef SOLAIRE_COMPILER
+    #undef SOLAIRE_COMPILER_VERSION
+
+    #define SOLAIRE_COMPILER SOLAIRE_MSVC
+    #define SOLAIRE_COMPILER_VERSION _MSC_VER
+#endif
+
+#ifdef __GNUC__
+    #undef SOLAIRE_COMPILER
+    #undef SOLAIRE_COMPILER_VERSION
+
+    #define SOLAIRE_COMPILER SOLAIRE_GCC
+    #define SOLAIRE_COMPILER_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+
+#endif
+
+#ifdef __MINGW32__
+    #undef SOLAIRE_COMPILER
+    #undef SOLAIRE_COMPILER_VERSION
+
+    #define SOLAIRE_COMPILER SOLAIRE_MINGW
+    #define SOLAIRE_COMPILER_VERSION (__MINGW32_MAJOR_VERSION * 100 + __MINGW32_MINOR_VERSION)
+#endif
+
+#ifdef __MINGW64__
+    #undef SOLAIRE_COMPILER
+    #undef SOLAIRE_COMPILER_VERSION
+
+    #define SOLAIRE_COMPILER SOLAIRE_MINGW
+    #define SOLAIRE_COMPILER_VERSION (__MINGW64_MAJOR_VERSION * 100 + __MINGW64_MINOR_VERSION)
+#endif
+
+// Compiler specific settings
+
+#if SOLAIRE_COMPILER == SOLAIRE_MINGW
+    #define SOLAIRE_DISABLE_MULTITHREADING
+    #warning SolaireCPP : Multithreading is disabled when compiling with MinGW
+#endif
+
 
 #define SOLAIRE_EXCEPTION(aName, aMessage)\
 class aName : public std::exception {\
@@ -61,12 +123,20 @@ public:\
 	}\
 };
 
-#define solaire_runtime_assert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage);
+#define solaire_runtime_assert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage)
+#define solaire_static_assert static_assert(aCondition, aMessage)
 
-#define solaire_synchronized(aLock, aCode)\
-{\
-	std::lock_guard<decltype(aLock)> _solaire_guard(aLock);\
-	aCode\
-}
+#ifndef SOLAIRE_DISABLE_MULTITHREADING
+    #define solaire_synchronized(aLock, aCode)\
+    {\
+        std::lock_guard<decltype(aLock)> _solaire_guard(aLock);\
+        aCode\
+    }
+#else
+    #define solaire_synchronized(aLock, aCode)\
+    {\
+        aCode\
+    }
+#endif
 
 #endif

@@ -44,79 +44,122 @@ namespace Solaire{ namespace Utility{
     private:
         typedef std::pair<Task*, void*> ProgressBundle;
 
-		std::condition_variable mConditionVariable;
 		std::vector<Task*> mActiveTasks;
 		std::vector<Task*> mScheduledTasks;
         std::deque<Task*> mPreTasks;
         std::vector<Task*> mPostTasks;
         std::vector<ProgressBundle> mProgressList;
-        mutable std::mutex mLock;
-        std::atomic_bool mExit;
-        std::vector<std::thread> mThreads;
+
+        #ifndef SOLAIRE_DISABLE_MULTITHREADING
+            std::condition_variable mConditionVariable;
+            mutable std::mutex mLock;
+            std::atomic_bool mExit;
+            std::vector<std::thread> mThreads;
+        #else
+            bool mExit;
+        #endif
 
         AsyncManager(const AsyncManager&) = delete;
         AsyncManager(AsyncManager&&) = delete;
         AsyncManager& operator=(const AsyncManager&) = delete;
         AsyncManager& operator=(AsyncManager&&) = delete;
 
-        static void ThreadFunction(AsyncManager* const aManager, const size_t aIndex){
-			std::mutex sleepLock;
-			std::mutex& managerLock = aManager->mLock;
-            Task* currentTask = nullptr;
+        class Worker{
+        private:
+            #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                std::mutex mSleepLock;
+                std::mutex& mManagerLock;
+            #endif
+            Task* mTask;
+            AsyncManager& mManager;
+            const size_t mIndex;
+        public:
+            Worker(AsyncManager& aManager, const size_t aIndex) :
+                #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                    mManagerLock(aManager.mLock),
+                #endif
+                mTask(nullptr),
+                mManager(aManager),
+                mIndex(aIndex)
+            {}
 
-			const auto GetNextTask = [&]()->Task*{
-				Task* tmp = nullptr;
+            Task* PopTask(){
+                Task* task = nullptr;
+                solaire_synchronized(mManagerLock,
+                    if(! mManager.mPreTasks.empty()){
+                        task = mManager.mPreTasks.front();
+                        mManager.mPreTasks.pop_front();
+                    }
+                )
+                return task;
+            }
 
-				solaire_synchronized(managerLock,
-					if (! aManager->mPreTasks.empty()) {
-						tmp = aManager->mPreTasks.front();
-						aManager->mPreTasks.pop_front();
-					} 
-				)
+            void Execute(Task& aTask){
+                if(! aTask.mCanceled){
+                    aTask.mState = Task::EXECUTING;
+                    aTask.OnExecute();
+                }
 
-				return tmp;
-			};
+                aTask.mState = Task::POST_EXECUTION;
 
-			const auto SetCurrentTask = [&](Task* const aTask)->void{
-				currentTask = aTask;
+                solaire_synchronized(mManagerLock,
+                    mManager.mPostTasks.push_back(&aTask);
+                )
+            }
 
-				solaire_synchronized(managerLock,
-					aManager->mActiveTasks[aIndex] = aTask;
-				)
-			};
+            void SetTask(){
+                mTask = nullptr;
+                solaire_synchronized(mManagerLock,
+                    mManager.mActiveTasks[mIndex] = nullptr;
+                )
+            }
 
-			const auto ExecuteTask = [&](Task* const aTask) {
-				if (!currentTask->mCanceled) {
-					currentTask->mState = Task::EXECUTING;
-					currentTask->OnExecute();
-				}
+            void SetTask(Task& aTask){
+                mTask = &aTask;
+                solaire_synchronized(mManagerLock,
+                    mManager.mActiveTasks[mIndex] = &aTask;
+                )
+            }
 
-				currentTask->mState = Task::POST_EXECUTION;
+            Task& GetTask(){
+                return *mTask;
+            }
 
-				solaire_synchronized(managerLock,
-					aManager->mPostTasks.push_back(aTask);
-				)
-			};
+            bool HasTask() const{
+                return mTask != nullptr;
+            }
 
-			const auto GetCurrentTask = [&]()->Task*{
-				return currentTask;
-			};
-
-			const auto HasCurrentTask = [&]()->bool{
-				return currentTask != nullptr;
-			};
-
-            while(! aManager->mExit){
-				SetCurrentTask(GetNextTask());
-
-                if(HasCurrentTask()){
-					ExecuteTask(GetCurrentTask());
-					SetCurrentTask(nullptr);
+            bool ExecuteCycle(){
+                Task* task = PopTask();
+                if(task == nullptr){
+                    SetTask();
                 }else{
-					std::unique_lock<std::mutex> lock(sleepLock);
-					aManager->mConditionVariable.wait(lock);
+                    SetTask(*task);
+                }
+
+                if(HasTask()){
+                    Execute(GetTask());
+                    SetTask();
+                    return true;
+                }else{
+                    return false;
                 }
             }
+
+            void ExecuteCycleUntilExit(){
+                while(! mManager.mExit){
+                    if(! ExecuteCycle()){
+                        #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                            std::unique_lock<std::mutex> lock(mSleepLock);
+                            mManager.mConditionVariable.wait(lock);
+                        #endif
+                    }
+                }
+            }
+        };
+
+        static void ThreadFunction(Worker aWorker){
+            aWorker.ExecuteCycleUntilExit();
         }
 
 		size_t CountActiveTasks() const{
@@ -173,34 +216,46 @@ namespace Solaire{ namespace Utility{
 			const Task::State prev = aTask->GetState();
 			aTask->mState = Task::SCHEDULED;
 			aTask->mCanceled = false;
-			aTask->OnScheduled(prev); 
+			aTask->OnScheduled(prev);
 			solaire_synchronized(mLock ,
 				mScheduledTasks.push_back(aTask);
 			)
 
-			mConditionVariable.notify_one();
+            #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                mConditionVariable.notify_one();
+			#endif
         }
     public:
-        AsyncManager(const size_t aThreads = 1) :
+        AsyncManager(size_t aThreads = 1) :
             mExit(false)
         {
-            if(aThreads < 1) throw std::runtime_error("AsyncManager must have at least one thread");
-            for(size_t i = 0; i < aThreads; ++i){
-				mActiveTasks.push_back(nullptr);
-                mThreads.push_back(std::thread(ThreadFunction, this, i));
-            }
+            #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                if(aThreads < 1) throw std::runtime_error("AsyncManager must have at least one thread");
+                for(size_t i = 0; i < aThreads; ++i){
+                    mActiveTasks.push_back(nullptr);
+                    mThreads.push_back(std::thread(ThreadFunction, this, i));
+                }
+            #else
+                mActiveTasks.push_back(nullptr);
+            #endif
         }
-		 
+
         ~AsyncManager(){
             mExit = true;
-		 	mConditionVariable.notify_all();
-            for(std::thread& i : mThreads){
-                i.join();
-            }
+            #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                mConditionVariable.notify_all();
+                for(std::thread& i : mThreads){
+                    i.join();
+                }
+            #endif
         }
 
 		size_t GetNumberOfWorkers() const{
-			return mThreads.size();
+		    #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                return mThreads.size();
+            #else
+                return 1;
+            #endif
 		}
 
         // Inherited from TaskManager
@@ -213,7 +268,7 @@ namespace Solaire{ namespace Utility{
 		 			mPostTasks.size() +
 		 			CountActiveTasks();
 		 	)
-		} 
+		}
 
 		bool CanUpdate() const override{
 			solaire_synchronized(mLock,
@@ -222,6 +277,15 @@ namespace Solaire{ namespace Utility{
 		}
 
         void Update() override{
+
+            #ifdef SOLAIRE_DISABLE_MULTITHREADING
+                {
+                    Worker worker(*this, 0);
+                    do{
+                    }while(worker.ExecuteCycle());
+                }
+            #endif
+
 			solaire_synchronized(mLock,
 				for(Task* i : mScheduledTasks){
 					i->mState = Task::PRE_EXECUTION;
