@@ -26,7 +26,7 @@
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 2.0
-	\date 
+	\date
 	Created			: 7th September 2015
 	Last Modified	: 7th September 2015
 */
@@ -37,7 +37,7 @@ namespace Solaire{ namespace Components{
 
 	class Composite;
 
-	class Component : public std::enable_shared_from_this<Component>
+	class Component
 	{
 	private:
 		Component(Component&&);
@@ -54,9 +54,6 @@ namespace Solaire{ namespace Components{
 		virtual void PostDetach(Composite& aOldParent) = 0;
 	public:
 		friend Composite;
-
-		typedef std::shared_ptr<Component> pointer_t;
-		typedef std::shared_ptr<const Component> const_pointer_t;
 
 		template<class T>
 		static bool CheckType(const Component& aComponent){

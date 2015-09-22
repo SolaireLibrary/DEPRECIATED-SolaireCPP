@@ -29,7 +29,7 @@ private:
 	TemplatedComponentIterator() = delete;
 
 	static bool Condition(const _vector_it aIterator){
-		return Component::TypeCheck<T>(**aIterator);
+		return Component::CheckType<T>(**aIterator);
 	}
 public:
 	TemplatedComponentIterator(const _vector_it aIterator, const _vector_it aBegin, const _vector_it aEnd) :
@@ -89,7 +89,7 @@ public:
 	}
 
 	this_t operator+(const size_t aNumber) const{
-		return this_t(mIterator, mCondition) += aNumber;
+		return this_t(*this) += aNumber;
 	}
 
 	this_t& operator-=(const size_t aNumber){
@@ -98,7 +98,7 @@ public:
 	}
 
 	this_t operator-(const size_t aNumber) const{
-		return this_t(mIterator, mCondition) -= aNumber;
+		return this_t(*this) -= aNumber;
 	}
 
 	T& operator*(){
@@ -154,7 +154,7 @@ private:
 	ConstTemplatedComponentIterator() = delete;
 
 	static bool Condition(const _const_vector_it aIterator){
-		return Component::TypeCheck<T>(**aIterator);
+		return Component::CheckType<T>(**aIterator);
 	}
 public:
 	ConstTemplatedComponentIterator(const _const_vector_it aIterator, const _const_vector_it aBegin, const _const_vector_it aEnd) :
@@ -224,7 +224,7 @@ public:
 	}
 
 	this_t operator+(const size_t aNumber) const{
-		return this_t(mIterator, mCondition) += aNumber;
+		return this_t(*this) += aNumber;
 	}
 
 	this_t& operator-=(const size_t aNumber){
@@ -233,7 +233,7 @@ public:
 	}
 
 	this_t operator-(const size_t aNumber) const{
-		return this_t(mIterator, mCondition) -= aNumber;
+		return this_t(*this) -= aNumber;
 	}
 
 	const T& operator*() const {

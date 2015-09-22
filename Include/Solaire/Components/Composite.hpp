@@ -26,7 +26,7 @@
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 2.0
-	\date 
+	\date
 	Created			: 7th September 2015
 	Last Modified	: 18th September 2015
 */
@@ -45,10 +45,8 @@ namespace Solaire{ namespace Components{
 		Composite& operator=(Composite&&);
 		Composite& operator=(const Composite&);
 
-		std::vector<Component::pointer_t> mComponents;
-
-		static std::vector<Composite*> COMPOSITE_TRACKER;
-		static std::mutex COMPOSITE_TRACKER_LOCK;
+		std::vector<Component*> mComponents;
+		bool mInDestructor;
 	protected:
 		virtual bool PreAttach(const Component& aComponent) const = 0;
 		virtual void PostAttach(Component& aComponent) = 0;
@@ -62,74 +60,26 @@ namespace Solaire{ namespace Components{
 			return dynamic_cast<const T*>(&aComposite) != nullptr;
 		}
 
-		static size_t CompositeCount(){
-			size_t count = 0;
-			COMPOSITE_TRACKER_LOCK.lock();
-			count = COMPOSITE_TRACKER.size();
-			COMPOSITE_TRACKER_LOCK.unlock();
-			return count;
-		}
-
-		template<class CONDITION, class CALLBACK>
-		static size_t ForEachComposite(CONDITION aCondition, CALLBACK aCallback){
-			size_t count = 0;
-			COMPOSITE_TRACKER_LOCK.lock();
-			for(Composite* i : COMPOSITE_TRACKER){
-				if(aCondition(*i)){
-					++count;
-					aCallback(*i);
-				}
-			}
-			COMPOSITE_TRACKER_LOCK.unlock();
-			return count;
-		}
-
-		template<class COMPOSITE, class CALLBACK>
-		static size_t ForEachComposite(CALLBACK aCallback){
-			return ForEachComposite(Composite::CheckType<COMPOSITE>, aCallback);
-		}
-
-		template<class CONDITION, class CALLBACK>
-		static size_t ForEachComponent(CONDITION aCondition, CALLBACK aCallback){
-			size_t count = 0;
-			COMPOSITE_TRACKER_LOCK.lock();
-			for(Composite* i : COMPOSITE_TRACKER){
-				count += i->ForEachComponent(aCondition, aCallback);
-			}
-			COMPOSITE_TRACKER_LOCK.unlock();
-			return count;
-		}
-
-		template<class COMPONENT, class CALLBACK>
-		static size_t ForEachComponent(CALLBACK aCallback){
-			return ForEachComposite(Component::CheckType<COMPONENT>, [&](Component& aComponent){
-				aCallback(reinterpret_cast<T&>(aComponent));
-			});
-		}
-
-		Composite(){
-			// Register with tracker
-			COMPOSITE_TRACKER_LOCK.lock();
-			COMPOSITE_TRACKER.push_back(this);
-			COMPOSITE_TRACKER_LOCK.unlock();
-		}
+		Composite():
+            mInDestructor(false)
+        {}
 
 		virtual ~Composite(){
-			// Un-register with tracker
-			COMPOSITE_TRACKER_LOCK.lock();
-			COMPOSITE_TRACKER.erase(std::find(COMPOSITE_TRACKER.begin(), COMPOSITE_TRACKER.end(), this));
-			COMPOSITE_TRACKER_LOCK.unlock();
+		    mInDestructor = true;
+            for(Component* component : mComponents){
+                Detach(*component);
+            }
+		}
+
+		bool IsBeingDestroyed() const{
+		    return mInDestructor;
 		}
 
 		// Component management
 
-		bool Attach(Component::pointer_t aComponent){
-			// Get a reference to the component
-			if(aComponent.get() == nullptr) return false;
-			Component& ref = *aComponent;
-
+		bool Attach(Component& aComponent){
 			// Check if the component is already attached to another component
-			Composite* parent = ref.mParent;
+			Composite* parent = aComponent.mParent;
 			if(parent == this) {
 				return true;
 			}else if(parent != nullptr){
@@ -137,48 +87,41 @@ namespace Solaire{ namespace Components{
 			}
 
 			// Perform pre-checks
-			if(! (PreAttach(ref) && ref.PreAttach(*this))) return false;
+			if(! (PreAttach(aComponent) && aComponent.PreAttach(*this))) return false;
 
 			// Attach the component
-			mComponents.push_back(aComponent);
-			ref.mParent = this;
+			mComponents.push_back(&aComponent);
+			aComponent.mParent = this;
 
 			// Perform post-notifications
-			PostAttach(ref);
-			ref.PostAttach();
+			PostAttach(aComponent);
+			aComponent.PostAttach();
 			return true;
 		}
-		
-		bool Detach(Component::pointer_t aComponent){
-			// Get a reference to the component
-			if(aComponent.get() == nullptr) return false;
-			Component& ref = *aComponent;
 
+		bool Detach(Component& aComponent){
 			// Check if the component is attached to a component
-			if(ref.mParent != this) {
+			if(aComponent.mParent != this) {
 				return false;
 			}
 
 			// Perform pre-checks
-			if(! (PreDetach(ref) && ref.PreDetach())) return false;
+			if(! (PreDetach(aComponent) && aComponent.PreDetach())) return false;
 
 			// Detach the component
-			mComponents.erase(std::find(mComponents.begin(), mComponents.end(), aComponent));
-			ref.mParent = nullptr;
+			mComponents.erase(std::find(mComponents.begin(), mComponents.end(), &aComponent));
+			aComponent.mParent = nullptr;
 
 			// Perform post-notifications
-			PostDetach(ref);
-			ref.PostDetach(*this);
+			PostDetach(aComponent);
+			aComponent.PostDetach(*this);
 			return true;
 		}
 
 		// Iterators
 
-		//typedef std::vector<Component::pointer_t>::iterator component_iterator;
-		//typedef std::vector<Component::pointer_t>::const_iterator const_component_iterator;
-
-		typedef std::vector<Component::pointer_t>::iterator _vector_it;
-		typedef std::vector<Component::pointer_t>::const_iterator _const_vector_it;
+		typedef std::vector<Component*>::iterator _vector_it;
+		typedef std::vector<Component*>::const_iterator _const_vector_it;
 
 		typedef _vector_it component_iterator;
 		typedef _const_vector_it const_component_iterator;
@@ -188,7 +131,7 @@ namespace Solaire{ namespace Components{
 		component_iterator ComponentBegin(){
 			return mComponents.begin();
 		}
-		
+
 		const_component_iterator ComponentBegin() const{
 			return mComponents.begin();
 		}
@@ -196,7 +139,7 @@ namespace Solaire{ namespace Components{
 		component_iterator ComponentEnd(){
 			return mComponents.end();
 		}
-		
+
 		const_component_iterator ComponentEnd() const{
 			return mComponents.end();
 		}
