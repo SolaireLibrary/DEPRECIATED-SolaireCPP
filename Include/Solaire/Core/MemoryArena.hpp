@@ -93,9 +93,9 @@ namespace Solaire{ namespace Core {
         }
 
         void* Allocate(const size_t aSize){
-            if(mArenaEnd - mArenaHead < aSize){
+            if((mArenaEnd - mArenaHead) < static_cast<ptrdiff_t>(aSize)){
                 if(mNext == nullptr){
-                    mNext = new MemoryArena(mArenaSize);
+                    mNext = new MemoryArena(mArenaSize > aSize ? mArenaSize : aSize);
                 }
                 return mNext->Allocate(aSize);
             }
@@ -136,9 +136,9 @@ namespace Solaire{ namespace Core {
         }
     };
 
-    typedef MemoryArena&(*GetMemoryArenaFn)();
+    #define SolaireArenaAllocator(aType, aArenaPtr) Core::ArenaAllocator<aType, &aArenaPtr>
 
-    template <class T, const GetMemoryArenaFn GetMemoryArena>
+    template <class T, MemoryArena** ARENA>
     class ArenaAllocator {
     public:
         typedef T        value_type;
@@ -151,7 +151,7 @@ namespace Solaire{ namespace Core {
 
         template <class U>
         struct rebind {
-            typedef ArenaAllocator<U, GetMemoryArena> other;
+            typedef ArenaAllocator<U, ARENA> other;
         };
 
         pointer address (reference aValue) const {
@@ -171,7 +171,7 @@ namespace Solaire{ namespace Core {
         }
 
         template <class U>
-        ArenaAllocator(const ArenaAllocator<U, GetMemoryArena>&) throw(){
+        ArenaAllocator(const ArenaAllocator<U, ARENA>&) throw(){
 
         }
 
@@ -180,11 +180,13 @@ namespace Solaire{ namespace Core {
         }
 
         size_type max_size() const throw(){
-            return std::numeric_limits<size_t>::max() / sizeof(T);
+            MemoryArena* const arena = *ARENA;
+            return arena == nullptr ? 0 : std::numeric_limits<std::size_t>::max() / sizeof(T);;
         }
 
         pointer allocate(size_type aCount, const void* = 0){
-            return static_cast<pointer>(GetMemoryArena().Allocate(aCount * sizeof(T)));
+            MemoryArena* const arena = *ARENA;
+            return arena == nullptr ? nullptr : static_cast<T*>(arena->Allocate(aCount * sizeof(T)));
         }
 
         void construct(pointer aAddress, const T& aValue){
@@ -196,17 +198,18 @@ namespace Solaire{ namespace Core {
         }
 
         void deallocate(pointer aAddress, size_type aCount){
-            GetMemoryArena().Deallocate(aAddress, aCount * sizeof(T));
+            MemoryArena* const arena = *ARENA;
+            if(arena != nullptr) arena->Deallocate(aAddress, aCount * sizeof(T));
         }
     };
 
-    template <class T1, class T2, const GetMemoryArenaFn GetMemoryArena>
-    bool operator==(const ArenaAllocator<T1, GetMemoryArena>&, const ArenaAllocator<T2, GetMemoryArena>&) throw(){
+    template <class T1, class T2, const MemoryArena** ARENA>
+    bool operator==(const ArenaAllocator<T1, ARENA>&, const ArenaAllocator<T2, ARENA>&) throw(){
         return true;
     }
 
-    template <class T1, class T2, const GetMemoryArenaFn GetMemoryArena>
-    bool operator!=(const ArenaAllocator<T1, GetMemoryArena>&, const ArenaAllocator<T2, GetMemoryArena>&) throw(){
+    template <class T1, class T2, const MemoryArena** ARENA>
+    bool operator!=(const ArenaAllocator<T1, ARENA>&, const ArenaAllocator<T2, ARENA>&) throw(){
         return false;
     }
 }}
