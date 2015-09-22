@@ -26,7 +26,7 @@
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 2.0
-	\date 
+	\date
 	Created			: 7th September 2015
 	Last Modified	: 7th September 2015
 */
@@ -54,12 +54,12 @@ namespace Solaire{ namespace Components{
 
 		}
 
-		bool PreDetach() const{
+		bool PreDetach(const bool aCalledFromDestructor) const{
 			return true;
 		}
 
-		void PostDetach(Composite& aOldParent){
-			
+		void PostDetach(Composite& aOldParent, const bool aCalledFromDestructor){
+
 		}
 
 	public:

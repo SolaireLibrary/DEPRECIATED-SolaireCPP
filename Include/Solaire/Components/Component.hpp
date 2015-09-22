@@ -48,8 +48,8 @@ namespace Solaire{ namespace Components{
 		virtual bool PreAttach(Composite& aNewParent) const = 0;
 		virtual void PostAttach() = 0;
 
-		virtual bool PreDetach() const = 0;
-		virtual void PostDetach(Composite& aOldParent) = 0;
+		virtual bool PreDetach(const bool aCalledFromDestructor) const = 0;
+		virtual void PostDetach(Composite& aOldParent, const bool aCalledFromDestructor) = 0;
 	public:
 		friend Composite;
 

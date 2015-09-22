@@ -69,10 +69,6 @@ namespace Solaire{ namespace Components{
             }
 		}
 
-		bool IsBeingDestroyed() const{
-		    return mInDestructor;
-		}
-
 		// Component management
 
 		bool Attach(Component& aComponent){
@@ -104,7 +100,7 @@ namespace Solaire{ namespace Components{
 			}
 
 			// Perform pre-checks
-			if(! (PreDetach(aComponent) && aComponent.PreDetach())) return false;
+			if(! (PreDetach(aComponent) && aComponent.PreDetach(mInDestructor))) return false;
 
 			// Detach the component
 			mComponents.erase(std::find(mComponents.begin(), mComponents.end(), &aComponent));
@@ -112,7 +108,7 @@ namespace Solaire{ namespace Components{
 
 			// Perform post-notifications
 			PostDetach(aComponent);
-			aComponent.PostDetach(*this);
+			aComponent.PostDetach(*this, mInDestructor);
 			return true;
 		}
 
