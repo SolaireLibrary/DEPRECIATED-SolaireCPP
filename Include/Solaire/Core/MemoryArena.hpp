@@ -105,9 +105,28 @@ namespace Solaire{ namespace Core {
         }
 
         bool Deallocate(void* const aAddress, const size_t aSize){
-            if((mArenaHead - aSize) == aAddress){
-                mArenaHead -= aSize;
-                return true;
+            if(aAddress >= mArenaBegin && aAddress < mArenaEnd){
+                if(mArenaHead - aSize == aAddress){
+                    if(! mDestructorList.empty()){
+                        // Find destructor callbacks
+                        std::vector<DestructorCall> calls;
+                        for(const DestructorCall& call : mDestructorList){
+                            if(call.first >= aAddress) calls.push_back(call);
+                        }
+
+                        // Call destructor callbacks
+                        for(const DestructorCall& call : calls){
+                            call.second(call.first);
+                            mDestructorList.erase(std::find(mDestructorList.begin(), mDestructorList.end(), call));
+                        }
+                    }
+
+                    // Move the allocator head back
+                    mArenaHead -= aSize;
+                    return true;
+                }
+            }else if(mNext != nullptr){
+                return mNext->Deallocate(aAddress, aSize);
             }
             return false;
         }
@@ -133,6 +152,18 @@ namespace Solaire{ namespace Core {
             }
 
             return ptr;
+        }
+
+        size_t AllocatedBytes() const{
+            return (mArenaHead - mArenaBegin) + mNext == nullptr ? 0 : mNext->AllocatedBytes();
+        }
+
+        size_t CurrentCapacity() const{
+            return mArenaSize + mNext == nullptr ? 0 : mNext->CurrentCapacity();
+        }
+
+        size_t MaxCapacity() const{
+            return std::numeric_limits<size_t>::max();
         }
     };
 
