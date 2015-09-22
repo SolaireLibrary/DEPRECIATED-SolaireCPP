@@ -104,66 +104,111 @@ namespace Solaire{ namespace Core {
             return ptr;
         }
 
+        bool Deallocate(void* const aAddress, const size_t aSize){
+            if((mArenaHead - aSize) == aAddress){
+                mArenaHead -= aSize;
+                return true;
+            }
+            return false;
+        }
+
         void OnDestroyed(void* aObject, DestructorFn aCallback){
              mDestructorList.push_back(DestructorCall(aObject, aCallback));
         }
 
         template<class T>
-        void* Allocate(){
+        void* Allocate(const size_t aCount = 1){
             static_assert(! std::is_abstract<T>::value, "Cannot allocate abstract class on MemoryArena");
 
-            void* const ptr = Allocate(sizeof(T));
+            void* const ptr = Allocate(sizeof(T) * aCount);
 
             if(! std::is_trivially_destructible<T>::value){
-                OnDestroyed(ptr, [](void* aObject){
+                const DestructorFn destructor = [](void* aObject){
                     static_cast<T*>(aObject)->~T();
-                });
+                };
+
+                for(size_t i = 0; i < aCount; ++i){
+                    OnDestroyed(static_cast<T*>(ptr) + i, destructor);
+                }
             }
 
             return ptr;
         }
     };
 
-    template<class IMPLEMENTOR>
-    class ArenaAllocatable{
+    typedef MemoryArena&(*GetMemoryArenaFn)();
+
+    template <class T, const GetMemoryArenaFn GetMemoryArena>
+    class ArenaAllocator {
     public:
-        static void* operator new(size_t aCount){
-            return malloc(aCount);
+        typedef T        value_type;
+        typedef T*       pointer;
+        typedef const T* const_pointer;
+        typedef T&       reference;
+        typedef const T& const_reference;
+        typedef size_t    size_type;
+        typedef ptrdiff_t difference_type;
+
+        template <class U>
+        struct rebind {
+            typedef ArenaAllocator<U, GetMemoryArena> other;
+        };
+
+        pointer address (reference aValue) const {
+            return &aValue;
         }
 
-        static void operator delete(void* aPtr){
-            free(aPtr);
+        const_pointer address (const_reference aValue) const {
+            return &aValue;
         }
 
-        static void* operator new(std::size_t aCount, MemoryArena& aArena){
-            return aArena.Allocate<IMPLEMENTOR>();
+        ArenaAllocator() throw(){
+
         }
 
-        //static void* operator new[](std::size_t aCount, MemoryArena& aArena) = delete; //!< \TODO Implement
+        ArenaAllocator(const ArenaAllocator&) throw(){
 
-        virtual ~ArenaAllocatable(){
+        }
 
+        template <class U>
+        ArenaAllocator(const ArenaAllocator<U, GetMemoryArena>&) throw(){
+
+        }
+
+        ~ArenaAllocator() throw(){
+
+        }
+
+        size_type max_size() const throw(){
+            return std::numeric_limits<size_t>::max() / sizeof(T);
+        }
+
+        pointer allocate(size_type aCount, const void* = 0){
+            return static_cast<pointer>(GetMemoryArena().Allocate(aCount * sizeof(T)));
+        }
+
+        void construct(pointer aAddress, const T& aValue){
+            new(aAddress)T(aValue);
+        }
+
+        void destroy(pointer aAddress){
+            aAddress->~T();
+        }
+
+        void deallocate(pointer aAddress, size_type aCount){
+            GetMemoryArena().Deallocate(aAddress, aCount * sizeof(T));
         }
     };
 
-    template<class IMPLEMENTOR>
-    class ArenaAllocatableNoDestructor{
-    public:
-        static void* operator new(size_t aCount){
-            return malloc(aCount);
-        }
+    template <class T1, class T2, const GetMemoryArenaFn GetMemoryArena>
+    bool operator==(const ArenaAllocator<T1, GetMemoryArena>&, const ArenaAllocator<T2, GetMemoryArena>&) throw(){
+        return true;
+    }
 
-        static void operator delete(void* aPtr){
-            free(aPtr);
-        }
-
-        static void* operator new(std::size_t aCount, MemoryArena& aArena){
-            static_assert(std::is_trivially_destructible<IMPLEMENTOR>::value, "Implementing class does not have a trivial destructor");
-            return aArena.Allocate<IMPLEMENTOR>();
-        }
-
-        //static void* operator new[](std::size_t aCount, MemoryArena& aArena) = delete; //!< \TODO Implement
-    };
+    template <class T1, class T2, const GetMemoryArenaFn GetMemoryArena>
+    bool operator!=(const ArenaAllocator<T1, GetMemoryArena>&, const ArenaAllocator<T2, GetMemoryArena>&) throw(){
+        return false;
+    }
 }}
 
 void* operator new(size_t aCount, Solaire::Core::MemoryArena& aArena){
