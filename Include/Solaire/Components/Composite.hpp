@@ -49,8 +49,8 @@ namespace Solaire{ namespace Components{
 		virtual bool PreAttach(const Component& aComponent) const = 0;
 		virtual void PostAttach(Component& aComponent) = 0;
 
-		virtual bool PreDetach(const Component& aComponent) const = 0;
-		virtual void PostDetach(Component& aComponent) = 0;
+		virtual bool PreDetach(const Component& aComponent, const bool aCalledFromDestructor) const = 0;
+		virtual void PostDetach(Component& aComponent, const bool aCalledFromDestructor) = 0;
 	public:
 		template<class T>
 		static bool CheckType(const Composite& aComposite){
@@ -100,14 +100,14 @@ namespace Solaire{ namespace Components{
 			}
 
 			// Perform pre-checks
-			if(! (PreDetach(aComponent) && aComponent.PreDetach(mInDestructor))) return false;
+			if(! (PreDetach(aComponent, mInDestructor) && aComponent.PreDetach(mInDestructor))) return false;
 
 			// Detach the component
 			mComponents.erase(std::find(mComponents.begin(), mComponents.end(), &aComponent));
 			aComponent.mParent = nullptr;
 
 			// Perform post-notifications
-			PostDetach(aComponent);
+			PostDetach(aComponent, mInDestructor);
 			aComponent.PostDetach(*this, mInDestructor);
 			return true;
 		}
