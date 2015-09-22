@@ -25,15 +25,13 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 2.0
+	\version 2.1
 	\date
 	Created			: 7th September 2015
-	Last Modified	: 18th September 2015
+	Last Modified	: 21st September 2015
 */
 
-#include <mutex>
 #include <vector>
-#include <functional>
 #include "Component.hpp"
 
 namespace Solaire{ namespace Components{
