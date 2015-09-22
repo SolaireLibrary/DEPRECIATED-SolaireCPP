@@ -45,7 +45,7 @@ namespace Solaire{ namespace Units{
 			return static_cast<conversion_t>(TemperatureInl::ConvertFromIntermediary(aUnit, static_cast<double>(aValue)));
 		}
 	public:
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 		union{
 			Temperature* const Self;
 			ConverterProperty<Temperature, unit_t::CELCIUS>						Celcius;
@@ -61,7 +61,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Temperature() :
 			mValue(static_cast<conversion_t>(0.0))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -70,7 +70,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Temperature(const conversion_t aValue) :
 			mValue(aValue)
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -79,7 +79,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Temperature(const unit_t aUnit, const conversion_t aValue) :
 			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -88,7 +88,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Temperature(const prefix_t aPrefix, const unit_t aUnit, const conversion_t aValue) :
 			mValue(Convert(aPrefix, aUnit, MetricD::unit_t::NONE, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -97,7 +97,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Temperature(const Temperature<conversion_t>& aOther) :
 			mValue(aOther.mValue)
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{

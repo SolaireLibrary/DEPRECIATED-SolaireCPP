@@ -45,7 +45,7 @@ namespace Solaire{namespace Units{
 			return static_cast<conversion_t>(static_cast<double>(aValue) * DigitalInl::GetScale(aUnit));
 		}
 	public:
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 		union{
 			Digital* Self;
 			ConverterProperty<Digital, unit_t::BIT>				Bits;
@@ -76,7 +76,7 @@ namespace Solaire{namespace Units{
 
 		constexpr Digital() :
 			mValue(static_cast<conversion_t>(0.0))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -85,7 +85,7 @@ namespace Solaire{namespace Units{
 
 		constexpr Digital(const conversion_t aValue) :
 			mValue(aValue)
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -94,7 +94,7 @@ namespace Solaire{namespace Units{
 
 		constexpr Digital(const unit_t aUnit, const conversion_t aValue) :
 			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -103,7 +103,7 @@ namespace Solaire{namespace Units{
 
 		constexpr Digital(const prefix_t aPrefix, const unit_t aUnit, const conversion_t aValue) :
 			mValue(Convert(aPrefix, aUnit, MetricD::unit_t::NONE, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -112,7 +112,7 @@ namespace Solaire{namespace Units{
 
 		constexpr Digital(const Digital<conversion_t>& aOther) :
 			mValue(aOther.mValue)
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{

@@ -105,7 +105,7 @@ namespace Solaire{ namespace Core {
         }
 
         bool Deallocate(void* const aAddress, const size_t aSize){
-            #ifdef SOLAIRE_MEMORY_ARENA_DEALLOCATION_DISABLED
+            #ifdef SOLAIRE_DISABLED_MEMORY_ARENA_DEALLOCATION
             if(aAddress >= mArenaBegin && aAddress < mArenaEnd){
                 if(mArenaHead - aSize == aAddress){
                     if(! mDestructorList.empty()){

@@ -45,7 +45,7 @@ namespace Solaire{ namespace Units{
 		}
 	public:
 
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 		union{
 			Mass* const Self;
 			ConverterProperty<Mass, unit_t::GRAM>								Grams;
@@ -71,7 +71,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Mass() :
 			mValue(static_cast<conversion_t>(0.0))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -80,7 +80,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Mass(const conversion_t aValue) :
 			mValue(aValue)
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -89,7 +89,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Mass(const unit_t aUnit, const conversion_t aValue) :
 			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -98,7 +98,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Mass(const prefix_t aPrefix, const unit_t aUnit, const conversion_t aValue) :
 			mValue(Convert(aPrefix, aUnit, MetricD::unit_t::NONE, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -107,7 +107,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Mass(const Mass<conversion_t>& aOther) :
 			mValue(aOther.mValue)
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{

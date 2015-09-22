@@ -41,7 +41,7 @@ namespace Solaire{ namespace Units{
 			return static_cast<conversion_t>(static_cast<double>(aValue) / MetricInl::GetScale(aUnit));
 		}
 	public:
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 		union{
 			Metric* const Self;
 			ConverterProperty<Metric, unit_t::NONE>		Value;
@@ -81,7 +81,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Metric() :
 			mValue(static_cast<conversion_t>(0.0))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -90,7 +90,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Metric(const conversion_t aValue) :
 			mValue(aValue)
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -99,7 +99,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Metric(const unit_t aUnit, const conversion_t aValue) :
 			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
@@ -108,7 +108,7 @@ namespace Solaire{ namespace Units{
 
 		constexpr Metric(const Metric<conversion_t>& aOther) :
 			mValue(aOther.mValue)
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
+#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 			, Self(this)
 #endif
 		{
