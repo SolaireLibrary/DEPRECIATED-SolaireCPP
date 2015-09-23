@@ -53,6 +53,8 @@ namespace Solaire{ namespace Maths{
 	template<typename TYPE, const uint32_t LENGTH>
 	class Vector{
     private:
+        static_assert(LENGTH >= 2, "Vector must contain at least 2 elements");
+
         TYPE mElements[LENGTH];
         typedef VectorLogic<TYPE, LENGTH> Logic;
 	public:
@@ -94,7 +96,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The other vector.
 		*/
 		template<class T2, const uint32_t LENGTH2>
-		Vector(const Vector<T2, LENGTH2> aOther){
+		Vector(const Vector<T2, LENGTH2>& aOther){
 		    Logic::Cast(mElements, aOther.mElements);
 		}
 
@@ -105,7 +107,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to compare this vector against.
 			\return True if all vector components are equal.
 		*/
-		inline bool operator==(const Vector<Element, LENGTH> aOther) const{
+		inline bool operator==(const Vector<Element, LENGTH>& aOther) const{
 			return Logic::Equals(mElements, aOther.mElements);
 		}
 
@@ -114,7 +116,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to compare this vector against.
 			\return True if at least one vector component is not equal.
 		*/
-		inline bool operator!=(const Vector<Element, LENGTH> aOther) const{
+		inline bool operator!=(const Vector<Element, LENGTH>& aOther) const{
 			return Logic::NotEquals(mElements, aOther.mElements);
 		}
 
@@ -123,7 +125,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to add to this vector.
 			\return A reference to this vector.
 		*/
-		inline Vector<Element, LENGTH>& operator+=(const Vector<Element, LENGTH> aOther){
+		inline Vector<Element, LENGTH>& operator+=(const Vector<Element, LENGTH>& aOther){
 			return *reinterpret_cast<Vector<Element, LENGTH>*>(Logic::AddEq(mElements, aOther.mElements));
 		}
 
@@ -141,7 +143,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to add to this vector.
 			\return The result of the operation.
 		*/
-		inline Vector<Element, LENGTH> operator+(const Vector<Element, LENGTH> aOther) const{
+		inline Vector<Element, LENGTH> operator+(const Vector<Element, LENGTH>& aOther) const{
 		    Vector<Element, LENGTH> tmp(*this);
 			return tmp += aOther;
 		}
@@ -161,7 +163,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to subtract from this vector.
 			\return A reference to this vector.
 		*/
-		inline Vector<Element, LENGTH>& operator-=(const Vector<Element, LENGTH> aOther){
+		inline Vector<Element, LENGTH>& operator-=(const Vector<Element, LENGTH>& aOther){
 			return *reinterpret_cast<Vector<Element, LENGTH>*>(Logic::SubEq(mElements, aOther.mElements));
 		}
 
@@ -179,7 +181,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to subtract from this vector.
 			\return The result of the operation.
 		*/
-		inline Vector<Element, LENGTH> operator-(const Vector<Element, LENGTH> aOther) const{
+		inline Vector<Element, LENGTH> operator-(const Vector<Element, LENGTH>& aOther) const{
 			Vector<Element, LENGTH> tmp(*this);
 			return tmp -= aOther;
 		}
@@ -199,7 +201,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to multiply this vector by.
 			\return A reference to this vector.
 		*/
-		inline Vector<Element, LENGTH>& operator*=(const Vector<Element, LENGTH> aOther){
+		inline Vector<Element, LENGTH>& operator*=(const Vector<Element, LENGTH>& aOther){
 			return *reinterpret_cast<Vector<Element, LENGTH>*>(Logic::MulEq(mElements, aOther.mElements));
 		}
 
@@ -217,7 +219,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to multiply this vector by.
 			\return The result of the operation.
 		*/
-		inline Vector<Element, LENGTH> operator*(const Vector<Element, LENGTH> aOther) const{
+		inline Vector<Element, LENGTH> operator*(const Vector<Element, LENGTH>& aOther) const{
 			Vector<Element, LENGTH> tmp(*this);
 			return tmp *= aOther;
 		}
@@ -238,7 +240,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to divide this vector by.
 			\return A reference to this vector.
 		*/
-		inline Vector<Element, LENGTH>& operator/=(const Vector<Element, LENGTH> aOther){
+		inline Vector<Element, LENGTH>& operator/=(const Vector<Element, LENGTH>& aOther){
 			return *reinterpret_cast<Vector<Element, LENGTH>*>(Logic::DivEq(mElements, aOther.mElements));
 		}
 
@@ -256,7 +258,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to divide this vector by.
 			\return The result of the operation.
 		*/
-		inline Vector<Element, LENGTH> operator/(const Vector<Element, LENGTH> aOther) const{
+		inline Vector<Element, LENGTH> operator/(const Vector<Element, LENGTH>& aOther) const{
 			Vector<Element, LENGTH> tmp(*this);
 			return tmp /= aOther;
 		}
@@ -300,7 +302,7 @@ namespace Solaire{ namespace Maths{
 			\return The component count.
 		*/
 		inline size_t Length() const{
-			return 4;
+			return LENGTH;
 		}
 
 		/*!
@@ -324,7 +326,7 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to calculate the dot product with.
 			\return The dot product.
 		*/
-		inline Element DotProduct(const Vector<Element, LENGTH> aOther) const{
+		inline Element DotProduct(const Vector<Element, LENGTH>& aOther) const{
 			return Logic::Dot(mElements, aOther.mElements);
 		}
 
@@ -333,7 +335,8 @@ namespace Solaire{ namespace Maths{
 			\param aOther The vector to calculate the cross product with.
 			\return The cross product.
 		*/
-		inline Vector<Element, LENGTH> CrossProduct(const Vector<Element, LENGTH> aOther) const{
+		template<class VectorType = Vector<Element, LENGTH>>
+        inline typename std::enable_if<LENGTH == 3, VectorType>::type CrossProduct(const Vector<Element, LENGTH>& aOther) const{
 			Vector<Element, LENGTH> tmp;
 			return Logic::Cross(tmp.mElements, mElements, aOther.mElements);
 			return tmp;
@@ -370,6 +373,38 @@ namespace Solaire{ namespace Maths{
 
 		// Other
 
+		inline Element& X(){
+		    return mElements[0];
+		}
+
+		inline const Element& X() const {
+		    return mElements[0];
+		}
+
+		inline Element& Y(){
+		    return mElements[1];
+		}
+
+		inline const Element& Y() const {
+		    return mElements[1];
+		}
+
+        SOLAIRE_ENABLE_IF(inline, LENGTH >= 3, Element&) Z(){
+		    return mElements[2];
+		}
+
+        SOLAIRE_ENABLE_IF(inline, LENGTH >= 3, const Element&) Z() const {
+		    return mElements[2];
+		}
+
+        SOLAIRE_ENABLE_IF(inline, LENGTH >= 4, Element&) W(){
+		    return mElements[3];
+		}
+
+        SOLAIRE_ENABLE_IF(inline, LENGTH >= 4, const Element&) W() const {
+		    return mElements[3];
+		}
+
         /*!
             \brief Check if this vector has been normalised.
             \return True if this vector is a unit vector.
@@ -394,7 +429,7 @@ namespace Solaire{ namespace Maths{
 			\param aSwizzle The indices to order the values by (must be at least 4 chars).
 			\return The resulting vector.
 		*/
-		inline Vector<Element, LENGTH> Swizzle(const Vector<uint32_t, LENGTH> aSwizzle){
+		inline Vector<Element, LENGTH> Swizzle(const Vector<uint32_t, LENGTH>& aSwizzle){
 			Vector<Element, LENGTH> tmp;
 			Logic::Swizzle(tmp.mElements, mElements, &aSwizzle.X);
 			return tmp;

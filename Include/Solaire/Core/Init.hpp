@@ -60,6 +60,10 @@
     #endif
 #endif
 
+#define SOLAIRE_ENABLE_IF(aMods, aCondition, aReturn)\
+template<class RETURN_TYPE = aReturn>\
+aMods typename std::enable_if<aCondition, RETURN_TYPE>::type
+
 #include <cstdint>
 
 namespace Solaire{
