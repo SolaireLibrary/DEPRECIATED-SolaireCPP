@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_MACROS_HPP
-#define SOLAIRE_CORE_MACROS_HPP
+#ifndef SOLAIRE_CORE_INIT_WINDOWS_INL
+#define SOLAIRE_CORE_INIT_WINDOWS_INL
 
 //Copyright 2015 Adam Smith
 //
@@ -20,41 +20,32 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file Macros.hpp
+	\file Windows.inl
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 13th September 2015
+	Created			: 22nd September 2015
 	Last Modified	: 22nd September 2015
 */
 
-#include "Init.hpp"
+#define SOLAIRE_OS SOLAIRE_WINDOWS
 
-#define SOLAIRE_EXCEPTION(aName, aMessage)\
-class aName : public std::exception {\
-public:\
-	const char* what() const override {\
-		return aMessage;\
-	}\
-};
-
-#define solaire_runtime_assert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage)
-#define solaire_static_assert static_assert(aCondition, aMessage)
-
-#ifndef SOLAIRE_DISABLE_MULTITHREADING
-    #define solaire_synchronized(aLock, aCode)\
-    {\
-        std::lock_guard<decltype(aLock)> _solaire_guard(aLock);\
-        aCode\
-    }
+#ifdef _WIN64
+    #define SOLAIRE_OS_BITS 64
 #else
-    #define solaire_synchronized(aLock, aCode)\
-    {\
-        aCode\
-    }
+    #define SOLAIRE_OS_BITS 32
 #endif
 
+#ifndef NOMINMAX
+    #define NOMINMAX
 #endif
+#ifndef WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+
+#endif
+

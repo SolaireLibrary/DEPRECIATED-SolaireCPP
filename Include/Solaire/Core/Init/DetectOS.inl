@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_MACROS_HPP
-#define SOLAIRE_CORE_MACROS_HPP
+#ifndef SOLAIRE_CORE_INIT_DETECT_OS
+#define SOLAIRE_CORE_INIT_DETECT_OS
 
 //Copyright 2015 Adam Smith
 //
@@ -20,41 +20,42 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file Macros.hpp
+	\file DetectOS.inl
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 13th September 2015
+	Created			: 22nd September 2015
 	Last Modified	: 22nd September 2015
 */
 
-#include "Init.hpp"
+// Pre-checks
 
-#define SOLAIRE_EXCEPTION(aName, aMessage)\
-class aName : public std::exception {\
-public:\
-	const char* what() const override {\
-		return aMessage;\
-	}\
-};
-
-#define solaire_runtime_assert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage)
-#define solaire_static_assert static_assert(aCondition, aMessage)
-
-#ifndef SOLAIRE_DISABLE_MULTITHREADING
-    #define solaire_synchronized(aLock, aCode)\
-    {\
-        std::lock_guard<decltype(aLock)> _solaire_guard(aLock);\
-        aCode\
-    }
-#else
-    #define solaire_synchronized(aLock, aCode)\
-    {\
-        aCode\
-    }
+#ifdef SOLAIRE_OS
+    #error SolaireCPP : SOLAIRE_OS was defined before DetectOS.inl was included
 #endif
+
+#ifdef SOLAIRE_OS_BITS
+    #error SolaireCPP : SOLAIRE_OS_BITS was defined before DetectOS.inl was included
+#endif
+
+// Detect OS and include config file
+
+#if defined(_WIN32) || defined(_WIN64)
+    #include "OS/Windows.inl"
+#endif
+
+// Post-checks
+
+#ifndef SOLAIRE_OS
+    #error SolaireCPP : DetectOS.inl could not detect the current OS
+#endif
+
+#ifndef SOLAIRE_OS_BITS
+    #error SolaireCPP : DetectOS.inl could not detect the current OS word length
+#endif
+
 
 #endif

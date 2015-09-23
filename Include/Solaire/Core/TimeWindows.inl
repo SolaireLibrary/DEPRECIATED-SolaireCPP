@@ -28,13 +28,12 @@
 	\version 1.0
 	\date
 	Created			: 20th September 2015
-	Last Modified	: 20sth September 2015
+	Last Modified	: 22nd September 2015
 */
 
 #include <cstdint>
 #include <vector>
 #include <stdexcept>
-#include "SolaireWindows.inl"
 
 namespace Solaire{ namespace Utility{
 

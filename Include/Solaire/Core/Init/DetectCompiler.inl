@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_MACROS_HPP
-#define SOLAIRE_CORE_MACROS_HPP
+#ifndef SOLAIRE_CORE_INIT_DETECT_COMPILER
+#define SOLAIRE_CORE_INIT_DETECT_COMPILER
 
 //Copyright 2015 Adam Smith
 //
@@ -20,41 +20,41 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file Macros.hpp
+	\file DetectCompiler.inl
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 13th September 2015
+	Created			: 22nd September 2015
 	Last Modified	: 22nd September 2015
 */
 
-#include "Init.hpp"
+// Pre-checks
 
-#define SOLAIRE_EXCEPTION(aName, aMessage)\
-class aName : public std::exception {\
-public:\
-	const char* what() const override {\
-		return aMessage;\
-	}\
-};
-
-#define solaire_runtime_assert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage)
-#define solaire_static_assert static_assert(aCondition, aMessage)
-
-#ifndef SOLAIRE_DISABLE_MULTITHREADING
-    #define solaire_synchronized(aLock, aCode)\
-    {\
-        std::lock_guard<decltype(aLock)> _solaire_guard(aLock);\
-        aCode\
-    }
-#else
-    #define solaire_synchronized(aLock, aCode)\
-    {\
-        aCode\
-    }
+#ifdef SOLAIRE_COMPILER
+    #error SolaireCPP : SOLAIRE_COMPILER was defined before DetectCompiler.inl was included
 #endif
+
+// Detect compiler and include config file
+
+#ifdef _MSC_VER
+    #include "Compiler/MSVC.inl"
+#endif
+
+#ifdef __GNUC__
+    #include "Compiler/GCC.inl"
+    #if defined(__MINGW32__) || defined(__MINGW64__)
+        #include "Compiler/MinGW.inl"
+    #endif
+#endif
+
+// Post-checks
+
+#ifndef SOLAIRE_COMPILER
+    #error SolaireCPP : DetectCompiler.inl could not detect the current compiler
+#endif
+
 
 #endif

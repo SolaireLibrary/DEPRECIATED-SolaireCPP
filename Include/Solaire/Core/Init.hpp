@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_MACROS_HPP
-#define SOLAIRE_CORE_MACROS_HPP
+#ifndef SOLAIRE_CORE_INIT_HPP
+#define SOLAIRE_CORE_INIT_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,41 +20,32 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file Macros.hpp
+	\file Init.hpp
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 13th September 2015
+	Created			: 22nd September 2015
 	Last Modified	: 22nd September 2015
 */
 
-#include "Init.hpp"
+// Misc
+#define SOLAIRE_ERROR -1
 
-#define SOLAIRE_EXCEPTION(aName, aMessage)\
-class aName : public std::exception {\
-public:\
-	const char* what() const override {\
-		return aMessage;\
-	}\
-};
+// SOLAIRE_OS
 
-#define solaire_runtime_assert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage)
-#define solaire_static_assert static_assert(aCondition, aMessage)
+#define SOLAIRE_WINDOWS 0
+#define SOLAIRE_LINUX 1
 
-#ifndef SOLAIRE_DISABLE_MULTITHREADING
-    #define solaire_synchronized(aLock, aCode)\
-    {\
-        std::lock_guard<decltype(aLock)> _solaire_guard(aLock);\
-        aCode\
-    }
-#else
-    #define solaire_synchronized(aLock, aCode)\
-    {\
-        aCode\
-    }
-#endif
+// SOLAIRE_COMPILER
+
+#define SOLAIRE_MSVC 0
+#define SOLAIRE_GCC 1
+#define SOLAIRE_MINGW 2
+
+#include "Init/DetectCompiler.inl"
+#include "Init/DetectOS.inl"
 
 #endif
