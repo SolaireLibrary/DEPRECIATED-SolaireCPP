@@ -252,6 +252,43 @@ namespace Solaire{ namespace Maths{
         static inline T* Normalise(T* const aOutput, const T* const aVector){
             return NormaliseEq(Copy(aOutput, aVector));
         }
+
+        static inline T* Fill(T* const aVector, const T aScalar){
+            for(uint32_t i = 0; i < LENGTH; ++i){
+                aVector[i] = aScalar;
+            }
+            return aVector;
+        }
+
+        template<class T2>
+        static T* Cast(T* const aFirst, const T2* const aSecond, const uint32_t aLength2, const T aDefault = static_cast<T>(0)){
+            const size_t min = LENGTH < aLength2 ? LENGTH : aLength2;
+
+            for(uint32_t i = 0; i < min; ++i){
+                aFirst[i] = static_cast<T>(aSecond[i]);
+            }
+
+            for(uint32_t i = aLength2; i < LENGTH; ++i){
+                aFirst[i] = aDefault;
+            }
+
+            return aFirst;
+        }
+
+        template<class T2, const uint32_t LENGTH2>
+        static T* Cast(T* const aFirst, const T2* const aSecond, const T aDefault = static_cast<T>(0)){
+            const size_t min = LENGTH < LENGTH2 ? LENGTH : LENGTH2;
+
+            for(uint32_t i = 0; i < min; ++i){
+                aFirst[i] = static_cast<T>(aSecond[i]);
+            }
+
+            for(uint32_t i = LENGTH2; i < LENGTH; ++i){
+                aFirst[i] = aDefault;
+            }
+
+            return aFirst;
+        }
     };
 }}
 
