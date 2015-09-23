@@ -32,9 +32,9 @@
 */
 
 #include <stdexcept>
-#include "Init.hpp"
+#include <chrono>
 
-namespace Solaire{ namespace Utility{
+namespace Solaire{ namespace Core{
 
     class Timer{
     private:
@@ -45,25 +45,8 @@ namespace Solaire{ namespace Utility{
             TIME_UNDEFINED = 0
         };
     public:
-        SOLAIRE_ENABLE_IF(static, SOLAIRE_OS == SOLAIRE_WINDOWS, uint64_t) GetCurrentTime(){
-            static double MULTIPLIER = 0;
-            static bool ONCE = true;
-
-            if(ONCE){
-                ONCE = false;
-
-                LARGE_INTEGER frequency;
-                if(! QueryPerformanceFrequency(&frequency)) throw std::runtime_error("QueryPerformanceFrequency  failed");
-                MULTIPLIER = 1000.0 / static_cast<double>(frequency.QuadPart);
-            }
-
-            LARGE_INTEGER tmp;
-            if(! QueryPerformanceCounter(&tmp)) throw std::runtime_error("QueryPerformanceCounter failed");
-            return static_cast<uint64_t>(static_cast<double>(tmp.QuadPart) * MULTIPLIER);
-        }
-
-        SOLAIRE_ENABLE_IF(static, SOLAIRE_OS != SOLAIRE_WINDOWS, uint64_t) GetCurrentTime(){
-            throw std::runtime_error("SolaireCPP : Timer implementation for current OS was not found");
+        static uint64_t GetCurrentTime(){
+            return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         }
 
         bool IsStarted() const{
