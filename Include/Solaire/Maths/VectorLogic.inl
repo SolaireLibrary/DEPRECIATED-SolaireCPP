@@ -37,18 +37,22 @@
 #include <stdexcept>
 #include "..\Core\Init.hpp"
 
-#if (SOLAIRE_COMPILER == SOLAIRE_GCC || SOLAIRE_COMPILER == SOLAIRE_MINGW || SOLAIRE_COMPILER == SOLAIRE_CLANG) && ! defined(SOLAIRE_ENABLE_VECTOR_ATTRIBUTE)
-    #define SOLAIRE_ENABLE_VECTOR_ATTRIBUTE 1
-#else
-    #define SOLAIRE_ENABLE_VECTOR_ATTRIBUTE 0
-#endif
-
 namespace Solaire{ namespace Maths{
 
     template<class T, const uint32_t LENGTH>
     struct VectorLogic{
     private:
+        // Check which implementation can be used
+        //!< \TODO Implement optimised vectorisation for MSVC
         enum{
+            #if (SOLAIRE_COMPILER == SOLAIRE_GCC || SOLAIRE_COMPILER == SOLAIRE_MINGW || SOLAIRE_COMPILER == SOLAIRE_CLANG)
+                HAS_GCC_VECTORS = 1,
+            #else
+               HAS_GCC_VECTORS = 0,
+            #endif
+
+            HAS_MSVC_VECTORS = 0,
+
             IS_POWER_OF_TWO =
                 LENGTH == 2 ||
                 LENGTH == 4 ||
@@ -59,18 +63,10 @@ namespace Solaire{ namespace Maths{
                 LENGTH == 128 ||
                 LENGTH == 256 ||
                 LENGTH == 512,
-            ENABLE_VECTOR_ATTRIBUTE = SOLAIRE_ENABLE_VECTOR_ATTRIBUTE && IS_POWER_OF_TWO
 
-        };
-
-        template<const uint32_t LENGTH2, class Enable = void>
-        struct Types{
-        };
-
-        template<const uint32_t LENGTH2>
-        struct Types<LENGTH2, typename enable_if<ENABLE_VECTOR_ATTRIBUTE>::type>{
-            typedef T VectorType __attribute__ ((vector_size (sizeof(T) * LENGTH)));
-            typedef uint32_t SwizzleType __attribute__ ((vector_size (sizeof(uint32_t) * LENGTH)));
+            GCC_VECTORS = HAS_GCC_VECTORS && IS_POWER_OF_TWO,
+            MSVC_VECTORS = HAS_MSVC_VECTORS && IS_POWER_OF_TWO,
+            NO_VECTORS = ! (GCC_VECTORS || MSVC_VECTORS)
         };
     public:
 
@@ -82,48 +78,52 @@ namespace Solaire{ namespace Maths{
         // Vector / Vector
 
 
-		SOLAIRE_ENABLE_IF(static inline, ENABLE_VECTOR_ATTRIBUTE, T*) AddEq(T* const aFirst, const T* const aSecond){
-            *reinterpret_cast<typename Types<LENGTH>::VectorType*>(aFirst) += *reinterpret_cast<const typename Types<LENGTH>::VectorType*>(aSecond);
+		SOLAIRE_ENABLE_IF(static inline, GCC_VECTORS, T*) AddEq(T* const aFirst, const T* const aSecond){
+		    typedef T VectorType __attribute__ ((vector_size (sizeof(T) * LENGTH)));
+            *reinterpret_cast<VectorType*>(aFirst) += *reinterpret_cast<const VectorType*>(aSecond);
             return aFirst;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ! ENABLE_VECTOR_ATTRIBUTE, T*) AddEq(T* const aFirst, const T* const aSecond){
+        SOLAIRE_ENABLE_IF(static inline, NO_VECTORS, T*) AddEq(T* const aFirst, const T* const aSecond){
             for(uint32_t i = 0; i < LENGTH; ++i){
                 aFirst[i] += aSecond[i];
             }
             return aFirst;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ENABLE_VECTOR_ATTRIBUTE, T*) SubEq(T* const aFirst, const T* const aSecond){
-            *reinterpret_cast<typename Types<LENGTH>::VectorType*>(aFirst) -= *reinterpret_cast<const typename Types<LENGTH>::VectorType*>(aSecond);
+        SOLAIRE_ENABLE_IF(static inline, GCC_VECTORS, T*) SubEq(T* const aFirst, const T* const aSecond){
+		    typedef T VectorType __attribute__ ((vector_size (sizeof(T) * LENGTH)));
+            *reinterpret_cast<VectorType*>(aFirst) -= *reinterpret_cast<const VectorType*>(aSecond);
             return aFirst;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ! ENABLE_VECTOR_ATTRIBUTE, T*) SubEq(T* const aFirst, const T* const aSecond){
+        SOLAIRE_ENABLE_IF(static inline, NO_VECTORS, T*) SubEq(T* const aFirst, const T* const aSecond){
             for(uint32_t i = 0; i < LENGTH; ++i){
                 aFirst[i] -= aSecond[i];
             }
             return aFirst;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ENABLE_VECTOR_ATTRIBUTE, T*) MulEq(T* const aFirst, const T* const aSecond){
-            *reinterpret_cast<typename Types<LENGTH>::VectorType*>(aFirst) *= *reinterpret_cast<const typename Types<LENGTH>::VectorType*>(aSecond);
+        SOLAIRE_ENABLE_IF(static inline, GCC_VECTORS, T*) MulEq(T* const aFirst, const T* const aSecond){
+		    typedef T VectorType __attribute__ ((vector_size (sizeof(T) * LENGTH)));
+            *reinterpret_cast<VectorType*>(aFirst) *= *reinterpret_cast<const VectorType*>(aSecond);
             return aFirst;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ! ENABLE_VECTOR_ATTRIBUTE, T*) MulEq(T* const aFirst, const T* const aSecond){
+        SOLAIRE_ENABLE_IF(static inline, NO_VECTORS, T*) MulEq(T* const aFirst, const T* const aSecond){
             for(uint32_t i = 0; i < LENGTH; ++i){
                 aFirst[i] *= aSecond[i];
             }
             return aFirst;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ENABLE_VECTOR_ATTRIBUTE, T*) DivEq(T* const aFirst, const T* const aSecond){
-            *reinterpret_cast<typename Types<LENGTH>::VectorType*>(aFirst) /= *reinterpret_cast<const typename Types<LENGTH>::VectorType*>(aSecond);
+        SOLAIRE_ENABLE_IF(static inline, GCC_VECTORS, T*) DivEq(T* const aFirst, const T* const aSecond){
+		    typedef T VectorType __attribute__ ((vector_size (sizeof(T) * LENGTH)));
+            *reinterpret_cast<VectorType*>(aFirst) /= *reinterpret_cast<const VectorType*>(aSecond);
             return aFirst;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ! ENABLE_VECTOR_ATTRIBUTE, T*) DivEq(T* const aFirst, const T* const aSecond){
+        SOLAIRE_ENABLE_IF(static inline, NO_VECTORS, T*) DivEq(T* const aFirst, const T* const aSecond){
             for(uint32_t i = 0; i < LENGTH; ++i){
                 aFirst[i] /= aSecond[i];
             }
@@ -157,48 +157,52 @@ namespace Solaire{ namespace Maths{
 
         // Vector / Scalar
 
-        SOLAIRE_ENABLE_IF(static inline, ENABLE_VECTOR_ATTRIBUTE, T*) AddEq(T* const aVector, const T aScalar){
-            *reinterpret_cast<typename Types<LENGTH>::VectorType*>(aVector) += aScalar;
+        SOLAIRE_ENABLE_IF(static inline, GCC_VECTORS, T*) AddEq(T* const aVector, const T aScalar){
+		    typedef T VectorType __attribute__ ((vector_size (sizeof(T) * LENGTH)));
+            *reinterpret_cast<VectorType*>(aVector) += aScalar;
             return aVector;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ! ENABLE_VECTOR_ATTRIBUTE, T*) AddEq(T* const aVector, const T aScalar){
+        SOLAIRE_ENABLE_IF(static inline, NO_VECTORS, T*) AddEq(T* const aVector, const T aScalar){
             for(uint32_t i = 0; i < LENGTH; ++i){
                 aVector[i] += aScalar;
             }
             return aVector;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ENABLE_VECTOR_ATTRIBUTE, T*) SubEq(T* const aVector, const T aScalar){
-            *reinterpret_cast<typename Types<LENGTH>::VectorType*>(aVector) -= aScalar;
+        SOLAIRE_ENABLE_IF(static inline, GCC_VECTORS, T*) SubEq(T* const aVector, const T aScalar){
+		    typedef T VectorType __attribute__ ((vector_size (sizeof(T) * LENGTH)));
+            *reinterpret_cast<VectorType*>(aVector) -= aScalar;
             return aVector;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ! ENABLE_VECTOR_ATTRIBUTE, T*) SubEq(T* const aVector, const T aScalar){
+        SOLAIRE_ENABLE_IF(static inline, NO_VECTORS, T*) SubEq(T* const aVector, const T aScalar){
             for(uint32_t i = 0; i < LENGTH; ++i){
                 aVector[i] -= aScalar;
             }
             return aVector;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ENABLE_VECTOR_ATTRIBUTE, T*) MulEq(T* const aVector, const T aScalar){
-            *reinterpret_cast<typename Types<LENGTH>::VectorType*>(aVector) *= aScalar;
+        SOLAIRE_ENABLE_IF(static inline, GCC_VECTORS, T*) MulEq(T* const aVector, const T aScalar){
+		    typedef T VectorType __attribute__ ((vector_size (sizeof(T) * LENGTH)));
+            *reinterpret_cast<VectorType*>(aVector) *= aScalar;
             return aVector;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ! ENABLE_VECTOR_ATTRIBUTE, T*) MulEq(T* const aVector, const T aScalar){
+        SOLAIRE_ENABLE_IF(static inline, NO_VECTORS, T*) MulEq(T* const aVector, const T aScalar){
             for(uint32_t i = 0; i < LENGTH; ++i){
                 aVector[i] *= aScalar;
             }
             return aVector;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ENABLE_VECTOR_ATTRIBUTE, T*) DivEq(T* const aVector, const T aScalar){
-            *reinterpret_cast<typename Types<LENGTH>::VectorType*>(aVector) /= aScalar;
+        SOLAIRE_ENABLE_IF(static inline, GCC_VECTORS, T*) DivEq(T* const aVector, const T aScalar){
+		    typedef T VectorType __attribute__ ((vector_size (sizeof(T) * LENGTH)));
+            *reinterpret_cast<VectorType*>(aVector) /= aScalar;
             return aVector;
         }
 
-        SOLAIRE_ENABLE_IF(static inline, ! ENABLE_VECTOR_ATTRIBUTE, T*) DivEq(T* const aVector, const T aScalar){
+        SOLAIRE_ENABLE_IF(static inline, NO_VECTORS, T*) DivEq(T* const aVector, const T aScalar){
             for(uint32_t i = 0; i < LENGTH; ++i){
                 aVector[i] /= aScalar;
             }
@@ -259,17 +263,9 @@ namespace Solaire{ namespace Maths{
         }
 
         static inline T* Swizzle(T* const aOutput, const T* const aVector, const uint32_t* const aSwizzle){
-            //#if SOLAIRE_ENABLE_VECTOR_ATTRIBUTE
-            //    typename Types<LENGTH>::VectorType& output = *reinterpret_cast<typename Types<LENGTH>::VectorType*>(aOutput);
-            //    const typename Types<LENGTH>::VectorType& vector = *reinterpret_cast<const typename Types<LENGTH>::VectorType*>(aVector);
-            //    const  typename Types<LENGTH>::SwizzleType& swizzle = *reinterpret_cast<const SwizzleType*>(aSwizzle);
-            //
-            //    output = __builtin_shuffle (vector, swizzle);
-            //#else
-                for(uint32_t i = 0; i < LENGTH; ++i){
-                    aOutput[i] = aVector[aSwizzle[i]];
-                }
-            //#endif
+            for(uint32_t i = 0; i < LENGTH; ++i){
+                aOutput[i] = aVector[aSwizzle[i]];
+            }
             return aOutput;
         }
 
