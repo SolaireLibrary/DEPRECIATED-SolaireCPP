@@ -45,8 +45,12 @@ namespace Solaire{ namespace Core{
             TIME_UNDEFINED = 0
         };
     public:
-        static uint64_t GetCurrentTime(){
+        static uint64_t GetSystemTimeMilli(){
             return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        }
+
+        static uint64_t GetSystemTimeMicro(){
+            return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         }
 
         bool IsStarted() const{
@@ -68,14 +72,14 @@ namespace Solaire{ namespace Core{
         void Start(){
             if(IsStarted()) throw std::runtime_error("Timer has already been started");
 
-            mFrames.push_back(Frame(GetCurrentTime(), TIME_UNDEFINED));
+            mFrames.push_back(Frame(GetSystemTimeMicro(), TIME_UNDEFINED));
         }
 
         void Pause(){
             if(IsPaused()) throw std::runtime_error("Timer has already been paused");
 
             Frame& frame = mFrames.back();
-            frame.second = GetCurrentTime();
+            frame.second = GetSystemTimeMicro();
             mFrames.push_back(Frame(TIME_UNDEFINED, TIME_UNDEFINED));
         }
 
@@ -84,7 +88,7 @@ namespace Solaire{ namespace Core{
             if(! IsPaused()) throw std::runtime_error("Timer has not been paused");
 
             Frame& frame = mFrames.back();
-            frame.first = GetCurrentTime();
+            frame.first = GetSystemTimeMicro();
         }
 
         uint64_t Stop(){
@@ -92,7 +96,7 @@ namespace Solaire{ namespace Core{
 
             if(IsPaused()) mFrames.pop_back();
             Frame& frame = mFrames.back();
-            frame.second = GetCurrentTime();
+            frame.second = GetSystemTimeMicro();
 
             uint64_t sum = 0;
             for(const Frame& i : mFrames){
@@ -108,7 +112,7 @@ namespace Solaire{ namespace Core{
 
             uint64_t sum = 0;
             for(const Frame& i : mFrames){
-                sum += (i.second == TIME_UNDEFINED ? GetCurrentTime() : i.second) - i.first;
+                sum += (i.second == TIME_UNDEFINED ? GetSystemTimeMicro() : i.second) - i.first;
             }
             return sum;
         }
