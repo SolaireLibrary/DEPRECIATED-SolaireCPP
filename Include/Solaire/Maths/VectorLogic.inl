@@ -65,7 +65,7 @@ namespace Solaire{ namespace Maths{
                 LENGTH == 512,
 
             GCC_VECTORS = HAS_GCC_VECTORS && IS_POWER_OF_TWO,
-            MSVC_VECTORS = HAS_MSVC_VECTORS && IS_POWER_OF_TWO,
+            MSVC_VECTORS = HAS_MSVC_VECTORS,
             NO_VECTORS = ! (GCC_VECTORS || MSVC_VECTORS)
         };
     public:
