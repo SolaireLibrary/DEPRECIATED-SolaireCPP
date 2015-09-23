@@ -46,7 +46,7 @@ namespace Solaire{ namespace Game{
         virtual Core::MemoryArena& GetArena();
 
         virtual void Pause() = 0;
-        virtual void Resume() = 0;
+        virtual uint64_t Resume() = 0;
         virtual bool IsPaused() const = 0;
 
         virtual void AddListener(GameListener& aListener) = 0;
@@ -67,13 +67,13 @@ namespace Solaire{ namespace Game{
         virtual ~GameListener() = 0;
 
         virtual void OnPause(Game& aGame) = 0;
-        virtual void OnResume(Game& aGame) = 0;
+        virtual void OnResume(Game& aGame, const uint64_t aTimePaused) = 0;
 
         virtual void OnFrameBegin(Game& aGame) = 0;
-        virtual void OnFrameEnd(Game& aGame) = 0;
+        virtual void OnFrameEnd(Game& aGame, const uint64_t aTimeInFrame) = 0;
 
         virtual void OnLevelLoaded(Game& aGame) = 0;
-        virtual void OnLevelUnloaded(Game& aGame) = 0;
+        virtual void OnLevelUnloaded(Game& aGame, const uint64_t aTimeInLevel) = 0;
     };
 
 }}
