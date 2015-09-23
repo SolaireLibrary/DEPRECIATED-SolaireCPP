@@ -225,7 +225,7 @@ namespace Solaire{ namespace Maths{
             return aOutput;
         }
 
-        static inline T* Swizzle(T*const  aOutput, const T* const aVector, const uint32_t* const aSwizzle){
+        static inline T* Swizzle(T* const aOutput, const T* const aVector, const uint32_t* const aSwizzle){
             //#ifdef SOLAIRE_ENABLE_VECTOR_ATTRIBUTE
             //    VectorType& output = *reinterpret_cast<VectorType*>(aOutput);
             //    const VectorType& vector = *reinterpret_cast<const VectorType*>(aVector);
@@ -240,9 +240,17 @@ namespace Solaire{ namespace Maths{
             return aOutput;
         }
 
-        static inline T* SwizzleEq(T*const  aVector, const uint32_t* const aSwizzle){
+        static inline T* SwizzleEq(T* const aVector, const uint32_t* const aSwizzle){
             T tmp[LENGTH];
             return Swizzle(aVector, Copy(tmp, aVector), aSwizzle);
+        }
+
+        static inline T* NormaliseEq(T* const aVector){
+            return DivEq(aVector, Mag(aVector));
+        }
+
+        static inline T* Normalise(T* const aOutput, const T* const aVector){
+            return NormaliseEq(Copy(aOutput, aVector));
         }
     };
 }}
