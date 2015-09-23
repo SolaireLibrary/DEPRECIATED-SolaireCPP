@@ -43,6 +43,10 @@
     #include "Compiler/MSVC.inl"
 #endif
 
+#ifdef __clang__
+    #include "Compiler/Clang.inl"
+#endif
+
 #ifdef __GNUC__
     #include "Compiler/GCC.inl"
     #if defined(__MINGW32__) || defined(__MINGW64__)

@@ -44,8 +44,32 @@
 #define SOLAIRE_MSVC 0
 #define SOLAIRE_GCC 1
 #define SOLAIRE_MINGW 2
+#define SOLAIRE_CLANG 3
+
+// Detect environment
 
 #include "Init/DetectCompiler.inl"
 #include "Init/DetectOS.inl"
+
+// Misc
+#ifndef SOLAIRE_THREADLOCAL
+    #ifdef SOLAIRE_DISABLE_MULTITHREADING
+        #define SOLAIRE_THREADLOCAL
+    #else
+        #define SOLAIRE_THREADLOCAL thread_local
+    #endif
+#endif
+
+#include <cstdint>
+
+namespace Solaire{
+    typedef uint16_t ErrorCode;
+
+    enum : ErrorCode{
+        ERROR_NO_ERROR = 0,
+        ERROR_INDEX_OUT_OF_BOUNDS = 1,
+        ERROR_NULL_POINTER = 2
+    };
+}
 
 #endif

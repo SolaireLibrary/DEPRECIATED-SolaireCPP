@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_INIT_GCC_INL
-#define SOLAIRE_CORE_INIT_GCC_INL
+#ifndef SOLAIRE_CORE_INIT_CLANG_INL
+#define SOLAIRE_CORE_INIT_CLANG_INL
 
 //Copyright 2015 Adam Smith
 //
@@ -20,19 +20,19 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file GCC.inl
+	\file Clang.inl
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 22nd September 2015
-	Last Modified	: 22nd September 2015
+	Created			: 23rd September 2015
+	Last Modified	: 23rd September 2015
 */
 
-#define SOLAIRE_COMPILER SOLAIRE_GCC
-#define SOLAIRE_COMPILER_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#define SOLAIRE_COMPILER SOLAIRE_CLANG
+#define SOLAIRE_COMPILER_VERSION (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
 
 #define SOLAIRE_INLINE __attribute__ ((always_inline))
 
