@@ -133,8 +133,7 @@ namespace Solaire{ namespace Utility{
 
         void OnPostExecuteInternal(){
             OnPostExecute();
-            mLock.unlock();
-            mManager = nullptr;
+            OnEndState();
         }
 
         void OnPauseInternal(){
@@ -154,6 +153,10 @@ namespace Solaire{ namespace Utility{
 
         void OnCancelInternal(){
             OnCanceled();
+        }
+
+        void OnEndState(){
+            mLock.unlock();
             mManager = nullptr;
         }
 
@@ -311,6 +314,7 @@ namespace Solaire{ namespace Utility{
         std::vector<Task*> mInitialiseTasks;
         std::vector<Task*> mPreExecuteTasks;
         std::vector<Task*> mPostExecuteTasks;
+        std::vector<Task*> mCancelTasks;
         std::map<ThreadID, Task*> mExecutionTasks;
 
         ThreadID GetThreadID() const{
@@ -338,7 +342,7 @@ namespace Solaire{ namespace Utility{
             if(task == nullptr) goto TASK_NULL;
 
             // Check if the task is canceled
-            if(task->State() == Task::STATE_CANCELED) goto TASK_FAIL;
+            if(task->State() == Task::STATE_CANCELED) goto TASK_CANCELED;
 
 
             // If the task is paused, resume it
@@ -352,11 +356,20 @@ namespace Solaire{ namespace Utility{
             // Check if the task was paused during execution
             if(task->State() == Task::STATE_PAUSED) goto TASK_PAUSED;
 
+            // Check if the task was canceled during execution
+            if(task->State() == Task::STATE_CANCELED) goto TASK_CANCELED;
+
             // Task was executed successfully
             goto TASK_SUCCESS;
 
             TASK_NULL:
             return false;
+
+            TASK_CANCELED:
+            solaire_synchronized(mLock,
+                mCancelTasks.push_back(task);
+                mExecutionTasks.emplace(GetThreadID(), nullptr);
+            )
 
             TASK_PAUSED:
             solaire_synchronized(mLock,
@@ -385,18 +398,26 @@ namespace Solaire{ namespace Utility{
             solaire_synchronized(mLock,
                 for(Task* task : mInitialiseTasks){
                     task->Cancel();
+                    mCancelTasks.push_back(task);
                 }
                 mInitialiseTasks.clear();
 
                 for(Task* task : mPreExecuteTasks){
                     task->Cancel();
+                    mCancelTasks.push_back(task);
                 }
                 mPreExecuteTasks.clear();
 
                 for(Task* task : mPostExecuteTasks){
                     task->Cancel();
+                    mCancelTasks.push_back(task);
                 }
                 mPostExecuteTasks.clear();
+
+                for(Task* task : mCancelTasks){
+                    task->OnEndState();
+                }
+                mCancelTasks.clear();
             )
         }
 
@@ -414,16 +435,27 @@ namespace Solaire{ namespace Utility{
             solaire_synchronized(mLock,
                 for(Task* task : mInitialiseTasks){
                     task->Schedule(*this);
-                    if(task->State() != Task::STATE_CANCELED && task->PreExecute()){
+                    if(task->State() == Task::STATE_CANCELED){
+                        mCancelTasks.push_back(task);
+                    }else if(task->PreExecute()){
                         mPreExecuteTasks.push_back(task);
                     }
                 }
                 mInitialiseTasks.clear();
 
                 for(Task* task : mPostExecuteTasks){
-                    if(task->State() != Task::STATE_CANCELED && task->State() != Task::STATE_PAUSED) task->PostExecute();
+                    if(task->State() == Task::STATE_CANCELED){
+                        mCancelTasks.push_back(task);
+                    }else if(task->State() != Task::STATE_PAUSED){
+                        task->PostExecute();
+                    }
                 }
                 mPostExecuteTasks.clear();
+
+                for(Task* task : mCancelTasks){
+                    task->OnEndState();
+                }
+                mCancelTasks.clear();
             )
         }
 
@@ -438,6 +470,7 @@ namespace Solaire{ namespace Utility{
                 count += mInitialiseTasks.size();
                 count += mPreExecuteTasks.size();
                 count += mPostExecuteTasks.size();
+                count += mCancelTasks.size();
             )
             return count;
         }
