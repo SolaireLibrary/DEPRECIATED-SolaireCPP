@@ -58,13 +58,15 @@ namespace Solaire{ namespace Utility{
 			STATE_COMPLETE
 		};
         friend TaskManager;
-
-        void ResetInternal(){
-            mException = nullptr;
-            OnReset();
-        }
     private:
+        #ifdef SOLAIRE_DISABLE_MULTITHREADING
+            typedef DummyLock Mutex;
+        #else
+            typedef std::mutex Mutex;
+        #endif
+
         std::exception_ptr mException;
+        Mutex mLock;
         State mState;
 
         typedef bool(Task:: *StateCondition)() const;
@@ -114,10 +116,45 @@ namespace Solaire{ namespace Utility{
             return mState == STATE_CANCELED || mState == STATE_COMPLETE;
         }
 
+        void Schedule(){
+            mLock.lock();
+        }
+
+        void OnPreExecuteInternal(){
+            OnPreExecute();
+        }
+
+        void OnExecuteInternal(){
+            OnExecute();
+        }
+
+        void OnPostExecuteInternal(){
+            OnPostExecute();
+            mLock.unlock();
+        }
+
+        void OnPauseInternal(){
+            OnPause();
+        }
+
+        void OnResumeInternal(){
+            OnResume();
+        }
+
+        void OnResetInternal(){
+            mException = nullptr;
+            mLock.unlock();
+            OnReset();
+        }
+
+        void OnCancelInternal(){
+            OnCanceled();
+        }
+
         bool PreExecute(){
             return StateTransition(
                 &Task::PreExecuteCondition,
-                &Task::OnPreExecute,
+                &Task::OnPreExecuteInternal,
                 STATE_PRE_EXECUTION,
                 "pre-execution"
             );
@@ -126,7 +163,7 @@ namespace Solaire{ namespace Utility{
         bool Execute(){
             return StateTransition(
                 &Task::ExecuteCondition,
-                &Task::OnExecute,
+                &Task::OnExecuteInternal,
                 STATE_EXECUTION,
                 "execution"
             );
@@ -135,7 +172,7 @@ namespace Solaire{ namespace Utility{
         bool PostExecute(){
             return StateTransition(
                 &Task::PostExecuteCondition,
-                &Task::OnPostExecute,
+                &Task::OnPostExecuteInternal,
                 STATE_POST_EXECUTION,
                 "post-execution"
             );
@@ -145,7 +182,7 @@ namespace Solaire{ namespace Utility{
         virtual void OnPreExecute() = 0;
         virtual void OnExecute() = 0;
         virtual void OnPostExecute() = 0;
-        virtual void OnPaused() = 0;
+        virtual void OnPause() = 0;
         virtual void OnResume() = 0;
         virtual void OnCanceled() = 0;
         virtual void OnReset() = 0;
@@ -153,7 +190,7 @@ namespace Solaire{ namespace Utility{
         bool Pause(){
             return StateTransition(
                 &Task::PauseCondition,
-                &Task::OnPaused,
+                &Task::OnPauseInternal,
                 STATE_PAUSED,
                 "paused"
             );
@@ -162,7 +199,7 @@ namespace Solaire{ namespace Utility{
         bool Resume(){
             return StateTransition(
                 &Task::ResumeCondition,
-                &Task::OnResume,
+                &Task::OnResumeInternal,
                 STATE_PRE_EXECUTION,
                 "resumed"
             );
@@ -175,7 +212,7 @@ namespace Solaire{ namespace Utility{
         bool Cancel(){
             return StateTransition(
                 &Task::CancelCondition,
-                &Task::OnCanceled,
+                &Task::OnCancelInternal,
                 STATE_CANCELED,
                 "canceled"
             );
@@ -184,7 +221,7 @@ namespace Solaire{ namespace Utility{
         bool Reset(){
             return StateTransition(
                 &Task::ResetCondition,
-                &Task::ResetInternal,
+                &Task::OnResetInternal,
                 STATE_INITIALISED,
                 "reset"
             );
@@ -198,8 +235,20 @@ namespace Solaire{ namespace Utility{
             std::rethrow_exception(mException);
         }
 
+        void Wait(){
+            switch(mState){
+            case STATE_CANCELED:
+            case STATE_COMPLETE:
+            case STATE_INITIALISED:
+                break;
+            default:
+                mLock.lock();
+                mLock.unlock();
+                break;
+            }
+        }
+
         //! \TODO Return task
-        //! \TODO Wait
     };
 
     class TaskManager{
@@ -243,8 +292,9 @@ namespace Solaire{ namespace Utility{
                 }
             )
 
-            if(task != nullptr){
-                bool success = true;
+            bool success = task != nullptr;
+
+            if(success){
                 if(task->State() == Task::STATE_PAUSED){
                     success = success && task->Resume();
                 }
@@ -264,6 +314,7 @@ namespace Solaire{ namespace Utility{
                     mExecutionTasks.emplace(GetThreadID(), nullptr);
                 )
             }
+            return success;
         }
     public:
 
@@ -299,6 +350,7 @@ namespace Solaire{ namespace Utility{
         virtual void Update(){
             solaire_synchronized(mLock,
                 for(Task* task : mInitialiseTasks){
+                    task->Schedule();
                     if(task->PreExecute()){
                         mPreExecuteTasks.push_back(task);
                     }
@@ -310,6 +362,24 @@ namespace Solaire{ namespace Utility{
                 }
                 mInitialiseTasks.clear();
             )
+        }
+
+        virtual void Wait(const size_t aSleepTime = 33){
+            const auto HasTasks = [&]()->bool{
+                solaire_synchronized(mLock,
+                    for(const std::pair<ThreadID, Task*>& i : mExecutionTasks){
+                        if(i.second != nullptr) return true;
+                    }
+                    return (mInitialiseTasks.size() + mPreExecuteTasks.size() + mPostExecuteTasks.size()) > 0;
+                )
+            };
+
+            while(HasTasks()){
+                Update();
+                #ifndef SOLAIRE_DISABLE_MULTITHREADING
+                    std::this_thread::sleep_for(std::chrono::milliseconds(aSleepTime));
+                #endif
+            }
         }
     };
 }}
