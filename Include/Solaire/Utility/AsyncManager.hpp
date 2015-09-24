@@ -69,6 +69,11 @@ namespace Solaire{ namespace Utility{
         }
 
         // Inherited from TaskManager
+
+        size_t ThreadCount() const override{
+            return mThreads.size();
+        }
+
         bool Schedule(Task& aTask) override{
             if(TaskManager::Schedule(aTask)){
                 mConditionVariable.notify_one();

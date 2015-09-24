@@ -66,7 +66,7 @@ namespace Solaire{ namespace Utility{
         #endif
 
         std::exception_ptr mException;
-        Mutex mLock;
+        mutable Mutex mLock;
         State mState;
 
         typedef bool(Task:: *StateCondition)() const;
@@ -205,6 +205,10 @@ namespace Solaire{ namespace Utility{
             );
         }
     public:
+        virtual ~Task(){
+
+        }
+
         State State() const{
             return mState;
         }
@@ -235,7 +239,7 @@ namespace Solaire{ namespace Utility{
             std::rethrow_exception(mException);
         }
 
-        void Wait(){
+        void Wait() const{
             switch(mState){
             case STATE_CANCELED:
             case STATE_COMPLETE:
@@ -245,6 +249,22 @@ namespace Solaire{ namespace Utility{
                 mLock.lock();
                 mLock.unlock();
                 break;
+            }
+        }
+
+        bool TryWait() const{
+            switch(mState){
+            case STATE_CANCELED:
+            case STATE_COMPLETE:
+            case STATE_INITIALISED:
+                break;
+            default:
+                if(mLock.try_lock()){
+                    mLock.unlock();
+                    return true;
+                }else{
+                    return false;
+                }
             }
         }
 
@@ -364,21 +384,82 @@ namespace Solaire{ namespace Utility{
             )
         }
 
-        virtual void Wait(const size_t aSleepTime = 33){
-            const auto HasTasks = [&]()->bool{
-                solaire_synchronized(mLock,
-                    for(const std::pair<ThreadID, Task*>& i : mExecutionTasks){
-                        if(i.second != nullptr) return true;
-                    }
-                    return (mInitialiseTasks.size() + mPreExecuteTasks.size() + mPostExecuteTasks.size()) > 0;
-                )
-            };
+        virtual size_t ThreadCount() const = 0;
 
-            while(HasTasks()){
+        size_t TaskCount() const{
+            size_t count = 0;
+            solaire_synchronized(mLock,
+                for(const std::pair<ThreadID, Task*>& i : mExecutionTasks){
+                    if(i.second != nullptr) ++count;
+                }
+                count += mInitialiseTasks.size();
+                count += mPreExecuteTasks.size();
+                count += mPostExecuteTasks.size();
+            )
+            return count;
+        }
+
+        virtual void Wait(const size_t aSleepTime = 33){
+            while(TaskCount() > 0){
                 Update();
                 #ifndef SOLAIRE_DISABLE_MULTITHREADING
                     std::this_thread::sleep_for(std::chrono::milliseconds(aSleepTime));
                 #endif
+            }
+        }
+    };
+
+    template<class T>
+    class ResultTask : public Task{
+    private:
+        T mResult;
+    protected:
+        virtual void OnPreExecute(T& aResult) = 0;
+        virtual void OnExecute(T& aResult) = 0;
+        virtual void OnPostExecute(T& aResult) = 0;
+        virtual void OnCanceled(T& aResult) = 0;
+        virtual void OnReset(T& aResult) = 0;
+
+        // Inherited from Task
+
+        void OnReset() override{
+            OnReset(mResult);
+        }
+
+        void OnPreExecute() override{
+            OnPreExecute(mResult);
+        }
+
+        void OnExecute() override{
+            OnExecute(mResult);
+        }
+
+        void OnPostExecute() override{
+            OnPostExecute(mResult);
+        }
+
+        void OnCanceled() override{
+            OnCanceled(mResult);
+        }
+    public:
+
+        virtual ~ResultTask(){
+
+        }
+
+        const T& Get() const{
+            if(CaughtException()) RethrowException();
+
+            switch(State()){
+            case STATE_INITIALISED:
+                throw std::runtime_error("Cannot get result while in STATE_INITIALISED");
+            case STATE_CANCELED:
+                throw std::runtime_error("Cannot get result while in STATE_CANCELED");
+            case STATE_COMPLETE:
+                return mResult;
+            default:
+                Wait();
+                return Get();
             }
         }
     };
