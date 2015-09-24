@@ -302,8 +302,8 @@ namespace Solaire{ namespace Utility{
         Mutex mLock;
 
         bool Execute(){
+            // Acquire task from manager
             Task* task = nullptr;
-
             solaire_synchronized(mLock,
                 if(! mPreExecuteTasks.empty()){
                     task = mPreExecuteTasks.back();
@@ -312,29 +312,47 @@ namespace Solaire{ namespace Utility{
                 }
             )
 
-            bool success = task != nullptr;
+            // If a task could not be acquired
+            if(task == nullptr) return false;
 
-            if(success){
-                if(task->State() == Task::STATE_PAUSED){
-                    success = success && task->Resume();
-                }
+            // Check if the task is canceled
+            if(task->State() == Task::STATE_CANCELED) goto TASK_FAIL;
 
-                if(success){
-                    success = success && task->Execute();
-                }
 
-                solaire_synchronized(mLock,
-                    if(success){
-                        if(task->State() == Task::STATE_PAUSED){
-                            mPreExecuteTasks.push_back(task);
-                        }else{
-                            mPostExecuteTasks.push_back(task);
-                        }
-                    }
-                    mExecutionTasks.emplace(GetThreadID(), nullptr);
-                )
+            // If the task is paused, resume it
+            if(task->State() == Task::STATE_PAUSED){
+                if(! task->Resume()) goto TASK_FAIL;
             }
-            return success;
+
+            // Execute the task
+            if(! task->Execute()) goto TASK_FAIL;
+
+            // Check if the task was paused
+            if(task->State() == Task::STATE_PAUSED) goto TASK_PAUSED;
+
+            // Task was executed successfully
+            goto TASK_SUCCESS;
+
+            TASK_PAUSED:
+            solaire_synchronized(mLock,
+                mPreExecuteTasks.push_back(task);
+                mExecutionTasks.emplace(GetThreadID(), nullptr);
+            )
+            return true;
+
+            TASK_SUCCESS:
+            solaire_synchronized(mLock,
+                mPostExecuteTasks.push_back(task);
+                mExecutionTasks.emplace(GetThreadID(), nullptr);
+            )
+            return true;
+
+            TASK_FAIL:
+            solaire_synchronized(mLock,
+                mExecutionTasks.emplace(GetThreadID(), nullptr);
+            )
+            return true;
+
         }
     public:
 
@@ -371,16 +389,16 @@ namespace Solaire{ namespace Utility{
             solaire_synchronized(mLock,
                 for(Task* task : mInitialiseTasks){
                     task->Schedule();
-                    if(task->PreExecute()){
+                    if(task->State() != Task::STATE_CANCELED && task->PreExecute()){
                         mPreExecuteTasks.push_back(task);
                     }
                 }
                 mInitialiseTasks.clear();
 
                 for(Task* task : mPostExecuteTasks){
-                    if(task->PostExecuteCondition()) task->PostExecute();
+                    if(task->State() != Task::STATE_CANCELED && task->State() != Task::STATE_PAUSED) task->PostExecute();
                 }
-                mInitialiseTasks.clear();
+                mPostExecuteTasks.clear();
             )
         }
 
