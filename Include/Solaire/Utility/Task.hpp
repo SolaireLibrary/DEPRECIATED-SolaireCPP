@@ -353,14 +353,16 @@ namespace Solaire{ namespace Utility{
             // Execute the task
             if(! task->Execute()) goto TASK_FAIL;
 
-            // Check if the task was paused during execution
-            if(task->State() == Task::STATE_PAUSED) goto TASK_PAUSED;
+            // Check which state the task is in after execution
+            switch(task->State()){
+            case Task::STATE_PAUSED:
+                goto TASK_PAUSED;
+            case Task::STATE_CANCELED:
+                goto TASK_CANCELED;
+            default:
+                goto TASK_SUCCESS;
+            }
 
-            // Check if the task was canceled during execution
-            if(task->State() == Task::STATE_CANCELED) goto TASK_CANCELED;
-
-            // Task was executed successfully
-            goto TASK_SUCCESS;
 
             TASK_NULL:
             return false;
