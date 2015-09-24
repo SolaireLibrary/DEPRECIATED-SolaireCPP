@@ -83,7 +83,7 @@ namespace Solaire{ namespace Utility{
                     Cancel();
                 }
             }else{
-                mException = std::make_exception_ptr(std::runtime_error("Utility::Task : Can only enter " + aName + " while in STATE_SCHEDULED"));
+                mException = std::make_exception_ptr(std::runtime_error("Utility::Task : Can only enter " + aName));
             }
             return false;
         }
