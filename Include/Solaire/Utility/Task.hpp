@@ -25,204 +25,289 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 1.0
+	\version 2.0
 	\date
 	Created			: 11th September 2015
-	Last Modified	: 11th September 2015
+	Last Modified	: 24th September 2015
 */
 
-#include <type_traits>
-#include <atomic>
-#include <functional>
+#include <map>
+#include <vector>
+#ifndef SOLAIRE_DISABLE_MULTITHREADING
+    #include <thread>
+    #include <mutex>
+#else
+    #include "DummyLock.hpp"
+#endif
+#include "..\Core\Macros.hpp"
 
 namespace Solaire{ namespace Utility{
 
-    class Task;
-
-    class TaskManager{
-    protected:
-        friend Task;
-
-        virtual void SendProgress(Task* aTask, void* aProgress) = 0;
-        virtual void Schedule(Task* aTask) = 0;
-    public:
-        virtual ~TaskManager(){
-
-        }
-
-		virtual size_t GetNumberOfTasksQueued() const = 0;
-		virtual bool CanUpdate() const = 0;
-        virtual void Update() = 0;
-		virtual size_t ForEachTask(std::function<void(Task&)> aFunction) = 0;
-		virtual size_t ForEachTask(std::function<void(const Task&)> aFunction) const = 0;
-
-		void WaitUntilEmpty(const size_t aSleepTimeMilli = 30){
-			while(GetNumberOfTasksQueued() > 0){
-				if(CanUpdate()){
-					Update();
-				}else{
-				    #ifndef SOLAIRE_DISABLE_MULTITHREADING
-                        std::this_thread::sleep_for(std::chrono::milliseconds(aSleepTimeMilli));
-					#endif
-				}
-			}
-		}
-    };
-
-    class AsyncManager;
+    class TaskManager;
 
     class Task{
-	public:
-		enum State : uint8_t {
-			NOT_SCHEDULED,
-			SCHEDULED,
-			PRE_EXECUTION,
-			EXECUTING,
-			POST_EXECUTION,
-			CANCELED,
-			EXECUTED
+    public:
+        enum State : uint8_t {
+			STATE_INITIALISED,
+			STATE_SCHEDULED,
+			STATE_PRE_EXECUTION,
+			STATE_PAUSED,
+			STATE_EXECUTION,
+			STATE_POST_EXECUTION,
+			STATE_CANCELED,
+			STATE_COMPLETE
 		};
+        friend TaskManager;
     private:
-        friend AsyncManager;
+        std::exception_ptr mException;
+        State mState;
 
-        TaskManager* mManager;
-        #ifndef SOLAIRE_DISABLE_MULTITHREADING
-            std::atomic_uint8_t mState;
-            std::atomic_bool mCanceled;
-		#else
-            uint8_t mState;
-            bool mCanceled;
-		#endif
+        typedef bool(Task:: *StateCondition)() const;
+        typedef void(Task:: *StateAction)();
 
-        Task(const Task&) = delete;
-        Task(Task&&) = delete;
-        Task& operator=(const Task&) = delete;
-        Task& operator=(Task&&) = delete;
+        bool StateTransition(const StateCondition aCondition, const StateAction aAction, const State aTransition, const std::string& aName){
+            if((this->*aCondition)()){
+                try{
+                    (this->*aAction)();
+                    mState = aTransition;
+                    return true;
+                }catch(std::exception& e){
+                    mException = std::make_exception_ptr(e);
+                    Cancel();
+                }catch(...){
+                    mException = std::make_exception_ptr(std::runtime_error("Utility::Task : A non-exception was thrown during " + aName));
+                    Cancel();
+                }
+            }else{
+                mException = std::make_exception_ptr(std::runtime_error("Utility::Task : Can only enter " + aName + " while in STATE_SCHEDULED"));
+            }
+            return false;
+        }
+
+        bool PreExecuteCondition() const{
+            return mState == STATE_SCHEDULED;
+        }
+
+        bool ExecuteCondition() const{
+            return mState == STATE_PRE_EXECUTION;
+        }
+
+        bool PostExecuteCondition() const{
+            return mState == STATE_EXECUTION;
+        }
+
+        bool PauseCondition() const{
+            return mState == STATE_EXECUTION;
+        }
+
+        bool ResumeCondition() const{
+            return mState == STATE_PAUSED;
+        }
+
+        bool CancelCondition() const{
+            return mState != STATE_CANCELED;
+        }
+
+        bool ResetCondition() const{
+            return mState == STATE_CANCELED || mState == STATE_COMPLETE;
+        }
+
+        bool PreExecute(){
+            return StateTransition(
+                &Task::PreExecuteCondition,
+                &Task::OnPreExecute,
+                STATE_PRE_EXECUTION,
+                "pre-execution"
+            );
+        }
+
+        bool Execute(){
+            return StateTransition(
+                &Task::ExecuteCondition,
+                &Task::OnExecute,
+                STATE_EXECUTION,
+                "execution"
+            );
+        }
+
+        bool PostExecute(){
+            return StateTransition(
+                &Task::PostExecuteCondition,
+                &Task::OnPostExecute,
+                STATE_POST_EXECUTION,
+                "post-execution"
+            );
+        }
+
     protected:
-        virtual void OnRecieveProgress(void* aProgress) = 0;
+        virtual void OnPreExecute() = 0;
+        virtual void OnExecute() = 0;
+        virtual void OnPostExecute() = 0;
+        virtual void OnPaused() = 0;
+        virtual void OnResume() = 0;
+        virtual void OnCanceled() = 0;
+        virtual void OnReset() = 0;
 
-        void SendProgress(void* aProgress){
-            mManager->SendProgress(this, aProgress);
+        bool Pause(){
+            return StateTransition(
+                &Task::PauseCondition,
+                &Task::OnPaused,
+                STATE_PAUSED,
+                "paused"
+            );
         }
 
-		virtual void OnScheduled(const State aPreviousState) = 0;
-		virtual void OnPreExecute() = 0;
-		virtual void OnExecute() = 0;
-		virtual void OnPostExecute(const bool aWasCanceled) = 0;
-		virtual void OnCanceled() = 0;
+        bool Resume(){
+            return StateTransition(
+                &Task::ResumeCondition,
+                &Task::OnResume,
+                STATE_PRE_EXECUTION,
+                "resumed"
+            );
+        }
     public:
-		Task() :
-			mCanceled(false),
-            mManager(nullptr),
-			mState(NOT_SCHEDULED)
-        {
-
+        State State() const{
+            return mState;
         }
 
-        virtual ~Task(){
-
+        bool Cancel(){
+            return StateTransition(
+                &Task::CancelCondition,
+                &Task::OnCanceled,
+                STATE_CANCELED,
+                "canceled"
+            );
         }
 
-		State GetState() const {
-			return static_cast<State>(mState);
-		}
-
-		void Schedule(TaskManager& aManager){
-			mManager = &aManager;
-			mManager->Schedule(this);
-		}
-
-        void Cancel(){
-            mCanceled = true;
-			OnCanceled();
+        bool Reset(){
+            return StateTransition(
+                &Task::ResetCondition,
+                &Task::OnReset,
+                STATE_INITIALISED,
+                "reset"
+            );
         }
 
-		void Wait() {
-			//! \TODO Implement better Task.Wait
-
-			auto IsDone = [&](){
-				const State state = GetState();
-				return state == CANCELED || state == EXECUTED;
-			};
-            #ifndef SOLAIRE_DISABLE_MULTITHREADING
-                while (!IsDone()) std::this_thread::sleep_for(std::chrono::milliseconds(30));
-            #endif
-		}
-
-		bool WaitFor(const size_t aMilliseconds) {
-			//! \TODO Implement better Task.WaitFor
-
-			auto IsDone = [&]() {
-				const State state = GetState();
-				return state == CANCELED || state == EXECUTED;
-			};
-
-            #ifndef SOLAIRE_DISABLE_MULTITHREADING
-                if(IsDone()) return true;
-                std::this_thread::sleep_for(std::chrono::milliseconds(aMilliseconds));
-            #endif
-			return IsDone();
-		}
-
-		bool WaitUntil(const size_t aTimeMilliseconds) {
-			//! \TODO Implement Task.WaitUntil
-			throw std::runtime_error("Not implemented");
-			// Return WaitFor(aTimeMilliseconds - currentTimeMilliseconds);
-		}
+        //! \TODO Get exception
+        //! \TODO Return task
+        //! \TODO Wait
     };
 
-	template<typename PROGRESS>
-	class TypedProgressTask : public Task {
-	public:
-		static_assert(std::is_move_constructible<PROGRESS>::value, "TypedProgressTask::progress_t must have a move constructor");
-
-		typedef PROGRESS progress_t;
-	protected:
-		virtual void OnRecieveProgress(progress_t& aProgress) = 0;
-
-		void SendProgress(progress_t&& aProgress) {
-			progress_t* tmp = new progress_t(std::move(aProgress));
-			Task::SendProgress(tmp);
-		}
-
-		// Inherited from Task
-
-		void OnRecieveProgress(void* aProgress) override {
-			progress_t* ptr = static_cast<progress_t*>(aProgress);
-			OnRecieveProgress(*ptr);
-			delete ptr;
-		}
-	public:
-		virtual ~TypedProgressTask() {
-
-		}
-	};
-
-    template<typename RESULT, typename PROGRESS>
-    class ResultTask : public TypedProgressTask<PROGRESS>{
-    public:
-        static_assert(std::is_default_constructible<RESULT>::value, "ResultTask::result_t must have a default constructor");
-        static_assert(std::is_copy_assignable<RESULT>::value, "ResultTask::result_t must have a copy assignment");
-
-        typedef RESULT result_t;
+    class TaskManager{
     private:
-        result_t mResult;
+        TaskManager(const TaskManager&) = delete;
+        TaskManager(TaskManager&&) = delete;
+        TaskManager& operator=(const TaskManager&) = delete;
+        TaskManager& operator=(TaskManager&&) = delete;
+
+        #ifdef SOLAIRE_DISABLE_MULTITHREADING
+            typedef uint32_t ThreadID;
+            typedef DummyLock Mutex;
+        #else
+            typedef std::thread::thread_id ThreadID;
+            typedef std::mutex Mutex;
+        #endif
+
+        std::vector<Task*> mInitialiseTasks;
+        std::vector<Task*> mPreExecuteTasks;
+        std::vector<Task*> mPostExecuteTasks;
+        std::map<ThreadID, Task*> mExecutionTasks;
+        Mutex mLock;
+
+        ThreadID GetThreadID() const{
+            #ifdef SOLAIRE_DISABLE_MULTITHREADING
+                return 0;
+            #else
+                return std::this_thread::get_id();
+            #endif
+        }
     protected:
-		void SetResult(result_t aResult){
-			mResult = aResult;
-		}
-
-    public:
-        virtual ~ResultTask(){
-
+        void RegisterThread(const ThreadID aID){
+            solaire_synchronized(mLock,
+                mExecutionTasks.emplace(aID, nullptr);
+            )
         }
 
-		result_t Get(){
-			TypedProgressTask<PROGRESS>::Wait();
-			return mResult;
-		}
-    };
+        bool Execute(){
+            Task* task = nullptr;
 
+            solaire_synchronized(mLock,
+                if(! mPreExecuteTasks.empty()){
+                    task = mPreExecuteTasks.back();
+                    mPreExecuteTasks.pop_back();
+                    mExecutionTasks.emplace(GetThreadID(), task);
+                }
+            )
+
+            if(task != nullptr){
+                bool success = true;
+                if(task->State() == Task::STATE_PAUSED){
+                    success = success && task->Resume();
+                }
+
+                if(success){
+                    success = success && task->Execute();
+                }
+
+                solaire_synchronized(mLock,
+                    if(success){
+                        if(task->State() == Task::STATE_PAUSED){
+                            mPreExecuteTasks.push_back(task);
+                        }else{
+                            mPostExecuteTasks.push_back(task);
+                        }
+                    }
+                    mExecutionTasks.emplace(GetThreadID(), nullptr);
+                )
+            }
+        }
+    public:
+
+        virtual ~TaskManager(){
+            solaire_synchronized(mLock,
+                for(Task* task : mInitialiseTasks){
+                    task->Cancel();
+                }
+                mInitialiseTasks.clear();
+
+                for(Task* task : mPreExecuteTasks){
+                    task->Cancel();
+                }
+                mPreExecuteTasks.clear();
+
+                for(Task* task : mPostExecuteTasks){
+                    task->Cancel();
+                }
+                mPostExecuteTasks.clear();
+            )
+        }
+
+        virtual bool Schedule(Task& aTask){
+            if(aTask.State() != Task::STATE_INITIALISED) return false;
+            aTask.mState = Task::STATE_SCHEDULED;
+
+            solaire_synchronized(mLock,
+                mInitialiseTasks.push_back(&aTask);
+            )
+            return true;
+        }
+
+        virtual void Update(){
+            solaire_synchronized(mLock,
+                for(Task* task : mInitialiseTasks){
+                    if(task->PreExecute()){
+                        mPreExecuteTasks.push_back(task);
+                    }
+                }
+                mInitialiseTasks.clear();
+
+                for(Task* task : mPostExecuteTasks){
+                    if(task->PostExecuteCondition()) task->PostExecute();
+                }
+                mInitialiseTasks.clear();
+            )
+        }
+    };
 }}
 
 
