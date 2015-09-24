@@ -67,6 +67,7 @@ namespace Solaire{ namespace Utility{
 
         std::exception_ptr mException;
         mutable Mutex mLock;
+        uint16_t mPauseLocation;
         State mState;
 
         typedef bool(Task:: *StateCondition)() const;
@@ -138,10 +139,11 @@ namespace Solaire{ namespace Utility{
         }
 
         void OnResumeInternal(){
-            OnResume();
+            OnResume(mPauseLocation);
         }
 
         void OnResetInternal(){
+            mPauseLocation = 0;
             mException = nullptr;
             mLock.unlock();
             OnReset();
@@ -178,24 +180,6 @@ namespace Solaire{ namespace Utility{
             );
         }
 
-    protected:
-        virtual void OnPreExecute() = 0;
-        virtual void OnExecute() = 0;
-        virtual void OnPostExecute() = 0;
-        virtual void OnPause() = 0;
-        virtual void OnResume() = 0;
-        virtual void OnCanceled() = 0;
-        virtual void OnReset() = 0;
-
-        bool Pause(){
-            return StateTransition(
-                &Task::PauseCondition,
-                &Task::OnPauseInternal,
-                STATE_PAUSED,
-                "paused"
-            );
-        }
-
         bool Resume(){
             return StateTransition(
                 &Task::ResumeCondition,
@@ -204,7 +188,30 @@ namespace Solaire{ namespace Utility{
                 "resumed"
             );
         }
+
+    protected:
+        virtual void OnPreExecute() = 0;
+        virtual void OnExecute() = 0;
+        virtual void OnPostExecute() = 0;
+        virtual void OnPause() = 0;
+        virtual void OnResume(const uint16_t aLocation) = 0;
+        virtual void OnCanceled() = 0;
+        virtual void OnReset() = 0;
+
+        bool Pause(const uint16_t aLocation){
+            mPauseLocation = aLocation;
+            return StateTransition(
+                &Task::PauseCondition,
+                &Task::OnPauseInternal,
+                STATE_PAUSED,
+                "paused"
+            );
+        }
     public:
+        Task() :
+            mPauseLocation(0)
+        {}
+
         virtual ~Task(){
 
         }
@@ -440,6 +447,8 @@ namespace Solaire{ namespace Utility{
         virtual void OnPostExecute(T& aResult) = 0;
         virtual void OnCanceled(T& aResult) = 0;
         virtual void OnReset(T& aResult) = 0;
+        virtual void OnPause(T& aResult) = 0;
+        virtual void OnResume(const uint16_t aLocation, T& aResult) = 0;
 
         // Inherited from Task
 
@@ -461,6 +470,14 @@ namespace Solaire{ namespace Utility{
 
         void OnCanceled() override{
             OnCanceled(mResult);
+        }
+
+        void OnPause() override{
+            OnPause(mResult);
+        }
+
+        void OnResume(const uint16_t aLocation) override{
+            OnResume(aLocation, mResult);
         }
     public:
 
