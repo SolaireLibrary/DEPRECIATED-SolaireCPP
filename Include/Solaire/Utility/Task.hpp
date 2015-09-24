@@ -313,7 +313,7 @@ namespace Solaire{ namespace Utility{
             )
 
             // If a task could not be acquired
-            if(task == nullptr) return false;
+            if(task == nullptr) goto TASK_NULL;
 
             // Check if the task is canceled
             if(task->State() == Task::STATE_CANCELED) goto TASK_FAIL;
@@ -327,11 +327,14 @@ namespace Solaire{ namespace Utility{
             // Execute the task
             if(! task->Execute()) goto TASK_FAIL;
 
-            // Check if the task was paused
+            // Check if the task was paused during execution
             if(task->State() == Task::STATE_PAUSED) goto TASK_PAUSED;
 
             // Task was executed successfully
             goto TASK_SUCCESS;
+
+            TASK_NULL:
+            return false;
 
             TASK_PAUSED:
             solaire_synchronized(mLock,
