@@ -34,6 +34,7 @@
 #define SOLAIRE_COMPILER SOLAIRE_MSVC
 #define SOLAIRE_COMPILER_VERSION _MSC_VER
 
+#define SOLAIRE_WARNINGS 0
 #define SOLAIRE_INLINE __forceinline
 
 #endif

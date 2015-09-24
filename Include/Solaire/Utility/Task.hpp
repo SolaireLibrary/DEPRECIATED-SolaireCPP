@@ -198,7 +198,6 @@ namespace Solaire{ namespace Utility{
             std::rethrow_exception(mException);
         }
 
-        //! \TODO Get exception
         //! \TODO Return task
         //! \TODO Wait
     };
@@ -214,7 +213,7 @@ namespace Solaire{ namespace Utility{
             typedef uint32_t ThreadID;
             typedef DummyLock Mutex;
         #else
-            typedef std::thread::thread_id ThreadID;
+            typedef std::thread::id ThreadID;
             typedef std::mutex Mutex;
         #endif
 
@@ -222,7 +221,6 @@ namespace Solaire{ namespace Utility{
         std::vector<Task*> mPreExecuteTasks;
         std::vector<Task*> mPostExecuteTasks;
         std::map<ThreadID, Task*> mExecutionTasks;
-        Mutex mLock;
 
         ThreadID GetThreadID() const{
             #ifdef SOLAIRE_DISABLE_MULTITHREADING
@@ -232,6 +230,8 @@ namespace Solaire{ namespace Utility{
             #endif
         }
     protected:
+        Mutex mLock;
+
         bool Execute(){
             Task* task = nullptr;
 
