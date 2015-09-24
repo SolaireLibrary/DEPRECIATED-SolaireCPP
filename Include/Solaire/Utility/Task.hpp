@@ -65,6 +65,7 @@ namespace Solaire{ namespace Utility{
             typedef std::mutex Mutex;
         #endif
 
+        TaskManager* mManager;
         std::exception_ptr mException;
         mutable Mutex mLock;
         uint16_t mPauseLocation;
@@ -117,8 +118,9 @@ namespace Solaire{ namespace Utility{
             return mState == STATE_CANCELED || mState == STATE_COMPLETE;
         }
 
-        void Schedule(){
+        void Schedule(TaskManager& aManager){
             mLock.lock();
+            mManager = &aManager;
         }
 
         void OnPreExecuteInternal(){
@@ -132,6 +134,7 @@ namespace Solaire{ namespace Utility{
         void OnPostExecuteInternal(){
             OnPostExecute();
             mLock.unlock();
+            mManager = nullptr;
         }
 
         void OnPauseInternal(){
@@ -151,6 +154,7 @@ namespace Solaire{ namespace Utility{
 
         void OnCancelInternal(){
             OnCanceled();
+            mManager = nullptr;
         }
 
         bool PreExecute(){
@@ -209,6 +213,7 @@ namespace Solaire{ namespace Utility{
         }
     public:
         Task() :
+            mManager(nullptr),
             mPauseLocation(0)
         {}
 
@@ -244,6 +249,16 @@ namespace Solaire{ namespace Utility{
 
         void RethrowException(){
             std::rethrow_exception(mException);
+        }
+
+        TaskManager& GetManager(){
+            if(mManager == nullptr) throw std::runtime_error("This task is not currently registered with a TaskManager");
+            return *mManager;
+        }
+
+        const TaskManager& GetManager() const{
+            if(mManager == nullptr) throw std::runtime_error("This task is not currently registered with a TaskManager");
+            return *mManager;
         }
 
         void Wait() const{
@@ -398,7 +413,7 @@ namespace Solaire{ namespace Utility{
         virtual void Update(){
             solaire_synchronized(mLock,
                 for(Task* task : mInitialiseTasks){
-                    task->Schedule();
+                    task->Schedule(*this);
                     if(task->State() != Task::STATE_CANCELED && task->PreExecute()){
                         mPreExecuteTasks.push_back(task);
                     }
