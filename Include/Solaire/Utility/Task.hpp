@@ -58,6 +58,11 @@ namespace Solaire{ namespace Utility{
 			STATE_COMPLETE
 		};
         friend TaskManager;
+
+        void ResetInternal(){
+            mException = nullptr;
+            OnReset();
+        }
     private:
         std::exception_ptr mException;
         State mState;
@@ -71,11 +76,8 @@ namespace Solaire{ namespace Utility{
                     (this->*aAction)();
                     mState = aTransition;
                     return true;
-                }catch(std::exception& e){
-                    mException = std::make_exception_ptr(e);
-                    Cancel();
                 }catch(...){
-                    mException = std::make_exception_ptr(std::runtime_error("Utility::Task : A non-exception was thrown during " + aName));
+                    mException = std::current_exception();
                     Cancel();
                 }
             }else{
@@ -85,27 +87,27 @@ namespace Solaire{ namespace Utility{
         }
 
         bool PreExecuteCondition() const{
-            return mState == STATE_SCHEDULED;
+            return mState == STATE_SCHEDULED && ! CaughtException();
         }
 
         bool ExecuteCondition() const{
-            return mState == STATE_PRE_EXECUTION;
+            return mState == STATE_PRE_EXECUTION && ! CaughtException();
         }
 
         bool PostExecuteCondition() const{
-            return mState == STATE_EXECUTION;
+            return mState == STATE_EXECUTION && ! CaughtException();
         }
 
         bool PauseCondition() const{
-            return mState == STATE_EXECUTION;
+            return mState == STATE_EXECUTION && ! CaughtException();
         }
 
         bool ResumeCondition() const{
-            return mState == STATE_PAUSED;
+            return mState == STATE_PAUSED && ! CaughtException();
         }
 
         bool CancelCondition() const{
-            return mState != STATE_CANCELED;
+            return mState != STATE_COMPLETE && mState != STATE_CANCELED && ! CaughtException();
         }
 
         bool ResetCondition() const{
@@ -182,10 +184,18 @@ namespace Solaire{ namespace Utility{
         bool Reset(){
             return StateTransition(
                 &Task::ResetCondition,
-                &Task::OnReset,
+                &Task::ResetInternal,
                 STATE_INITIALISED,
                 "reset"
             );
+        }
+
+        bool CaughtException() const{
+            return mException != nullptr;
+        }
+
+        void RethrowException(){
+            std::rethrow_exception(mException);
         }
 
         //! \TODO Get exception
@@ -222,12 +232,6 @@ namespace Solaire{ namespace Utility{
             #endif
         }
     protected:
-        void RegisterThread(const ThreadID aID){
-            solaire_synchronized(mLock,
-                mExecutionTasks.emplace(aID, nullptr);
-            )
-        }
-
         bool Execute(){
             Task* task = nullptr;
 
