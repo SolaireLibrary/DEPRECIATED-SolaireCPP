@@ -33,6 +33,7 @@ Last Modified	: 21st September 2015
 
 #include <vector>
 #include <type_traits>
+#include "Allocator.hpp"
 
 namespace Solaire{ namespace Core {
 
@@ -172,7 +173,7 @@ namespace Solaire{ namespace Core {
     #define SolaireArenaAllocator(aType, aArenaPtr) Core::ArenaAllocator<aType, &aArenaPtr>
 
     template <class T, MemoryArena** ARENA>
-    class ArenaAllocator {
+    class STLArenaAllocator {
     public:
         typedef T        value_type;
         typedef T*       pointer;
@@ -184,7 +185,7 @@ namespace Solaire{ namespace Core {
 
         template <class U>
         struct rebind {
-            typedef ArenaAllocator<U, ARENA> other;
+            typedef STLArenaAllocator<U, ARENA> other;
         };
 
         pointer address (reference aValue) const {
@@ -195,20 +196,20 @@ namespace Solaire{ namespace Core {
             return &aValue;
         }
 
-        ArenaAllocator() throw(){
+        STLArenaAllocator() throw(){
 
         }
 
-        ArenaAllocator(const ArenaAllocator&) throw(){
+        STLArenaAllocator(const STLArenaAllocator&) throw(){
 
         }
 
         template <class U>
-        ArenaAllocator(const ArenaAllocator<U, ARENA>&) throw(){
+        STLArenaAllocator(const STLArenaAllocator<U, ARENA>&) throw(){
 
         }
 
-        ~ArenaAllocator() throw(){
+        ~STLArenaAllocator() throw(){
 
         }
 
@@ -237,14 +238,40 @@ namespace Solaire{ namespace Core {
     };
 
     template <class T1, class T2, const MemoryArena** ARENA>
-    bool operator==(const ArenaAllocator<T1, ARENA>&, const ArenaAllocator<T2, ARENA>&) throw(){
+    bool operator==(const STLArenaAllocator<T1, ARENA>&, const STLArenaAllocator<T2, ARENA>&) throw(){
         return true;
     }
 
     template <class T1, class T2, const MemoryArena** ARENA>
-    bool operator!=(const ArenaAllocator<T1, ARENA>&, const ArenaAllocator<T2, ARENA>&) throw(){
+    bool operator!=(const STLArenaAllocator<T1, ARENA>&, const STLArenaAllocator<T2, ARENA>&) throw(){
         return false;
     }
+
+    template<class T>
+    class ArenaAllocator : public TypedAllocator<T>{
+    private:
+        ArenaAllocator& mAllocator;
+    public:
+        ArenaAllocator(ArenaAllocator& aAllocator) :
+            mAllocator(aAllocator)
+        {}
+
+        void* AllocateSingle() override{
+            return mAllocator.Allocate(sizeof(T));
+        }
+
+        void* AllocateMany(const size_t aCount) override{
+            return mAllocator.Allocate(sizeof(T) * aCount);
+        }
+
+        void DeallocateSingle(void* const aAddress) override{
+
+        }
+
+        void DeallocateMany(void* const aAddress, const size_t aCount) override{
+
+        }
+    };
 }}
 
 #endif
