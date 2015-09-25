@@ -170,9 +170,9 @@ namespace Solaire{ namespace Core{
             Clear();
 
             if(mSize < aOther.mSize){
-                mAllocator.DeallocateMany(mData, mSize);
+                mAllocator->DeallocateMany(mData, mSize);
                 mSize= aOther.mSize;
-                mData = mAllocator.AllocateMany(mSize);
+                mData = mAllocator->AllocateMany(mSize);
             }
 
             for(ConstReference i : aOther) PushBack(i);

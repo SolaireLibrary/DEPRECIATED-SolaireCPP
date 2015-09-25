@@ -65,20 +65,38 @@ namespace Solaire{ namespace Core {
         MemoryArena& operator=(const MemoryArena& aOther) = delete;
         MemoryArena& operator=(MemoryArena&& aOther) = delete;
 
-        void Deallocate(const Region aRegion){
-            if(mFreeRegions.IsEmpty()){
-                mFreeRegions.PushBack(aRegion);
-            }else{
-                // Largest region at back
-                const auto end = mFreeRegions.end() - 1;
-                for(auto i = mFreeRegions.begin(); i != end; ++i){
-                    if(i->second >= aRegion.second){
-                        mFreeRegions.InsertBefore(i, aRegion);
-                        return;
+        void DefragmentFreeRegions(){
+            const size_t sizeBefore = mFreeRegions.Size();
+
+            auto begin = mFreeRegions.begin();
+            auto end = mFreeRegions.end();
+
+            for(auto i = begin; i != end; ++i){
+                Region& region = *i;
+                void* next = static_cast<uint8_t*>(region.first) + region.second;
+                for(auto j = begin; j != end; ++j){
+                    if(i == j) continue;
+                    if(j->first == next){
+                        region.second += j->second;
+                        mFreeRegions.Erase(j);
+                        begin = mFreeRegions.begin();
+                        end = mFreeRegions.end();
+                        i = begin;
+                        j = begin;
                     }
                 }
-                mFreeRegions.PushBack(aRegion);
             }
+
+            for(auto i = begin; i != end; ++i){
+                if(static_cast<uint8_t*>(i->first) + i->second == mArenaHead){
+                    mArenaHead -= i->second;
+                    mFreeRegions.Erase(i);
+                    begin = mFreeRegions.begin();
+                    end = mFreeRegions.end();
+                }
+            }
+
+            if(sizeBefore != mFreeRegions.Size()) DefragmentFreeRegions();
         }
 
     public:
@@ -121,6 +139,8 @@ namespace Solaire{ namespace Core {
         }
 
         void* Allocate(const size_t aSize){
+            bool defragmented = false;
+
             if(mArenaSize < aSize) goto ALLOCATE_FROM_NEXT;
             if(! mFreeRegions.IsEmpty()) goto ALLOCATE_FROM_FREE_REGIONS;
             goto ALLOCATE_FROM_ARENA;
@@ -133,7 +153,7 @@ namespace Solaire{ namespace Core {
 
                     // Mark any additional memory as a new free region
                     const size_t dif = mainRegion.second - aSize;
-                    if(dif != 0) Deallocate(mainRegion.first + dif, dif);
+                    if(dif != 0) Deallocate(static_cast<uint8_t*>(mainRegion.first) + dif, dif);
 
                     return mainRegion.first;
                 }
@@ -143,7 +163,15 @@ namespace Solaire{ namespace Core {
             ALLOCATE_FROM_ARENA:
             {
                 const size_t freeArena = mArenaEnd - mArenaHead;
-                if(freeArena < aSize) goto ALLOCATE_FROM_NEXT;
+                if(freeArena < aSize){
+                    if(defragmented){
+                        goto ALLOCATE_FROM_NEXT;
+                    }else{
+                        DefragmentFreeRegions();
+                        defragmented = true;
+                        goto ALLOCATE_FROM_ARENA;
+                    }
+                }
 
                 void* const ptr = mArenaHead;
                 mArenaHead += aSize;
@@ -159,10 +187,24 @@ namespace Solaire{ namespace Core {
                     return mNext->Allocate(aSize);
                 }
             }
+            return nullptr;
         }
 
         void Deallocate(void* const aAddress, const size_t aSize){
-            Deallocate(Region(aAddress, aSize));
+            const Region region(aAddress, aSize);
+            if(mFreeRegions.IsEmpty()){
+                mFreeRegions.PushBack(region);
+            }else{
+                // Largest region at back
+                const auto end = mFreeRegions.end() - 1;
+                for(auto i = mFreeRegions.begin(); i != end; ++i){
+                    if(i->second >= region.second){
+                        mFreeRegions.InsertBefore(i, region);
+                        return;
+                    }
+                }
+                mFreeRegions.PushBack(region);
+            }
         }
 
         void OnDestroyed(void* aObject, DestructorFn aCallback){
