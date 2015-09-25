@@ -49,10 +49,10 @@ namespace Solaire{ namespace Core {
         typedef std::pair<void*, DestructorFn> DestructorCall;
 
         std::vector<DestructorCall> mDestructorList;
-        uint8_t* const mArenaBegin;
-        uint8_t* const mArenaEnd;
+        uint8_t* mArenaBegin;
+        uint8_t* mArenaEnd;
         uint8_t* mArenaHead;
-        const size_t mArenaSize;
+        size_t mArenaSize;
         MemoryArena* mNext;
 
         MemoryArena(const MemoryArena& aOther) = delete;
@@ -167,6 +167,19 @@ namespace Solaire{ namespace Core {
 
         size_t MaxCapacity() const{
             return std::numeric_limits<size_t>::max();
+        }
+
+        void Defragment(){
+            if(mNext != nullptr){
+                Clear();
+                mArenaSize += mNext->CurrentCapacity();
+                operator delete(mArenaBegin);
+
+                mArenaBegin = static_cast<uint8_t*>(operator new(mArenaSize));
+                mArenaEnd = mArenaBegin + mArenaSize;
+                mArenaHead = mArenaBegin;
+                delete mNext;
+            }
         }
     };
 
