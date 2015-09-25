@@ -193,7 +193,7 @@ namespace Solaire{ namespace Core {
         }
 
         size_t CurrentCapacity() const{
-            return mArenaSize + mNext == nullptr ? 0 : mNext->CurrentCapacity();
+            return mArenaSize + (mNext == nullptr ? 0 : mNext->CurrentCapacity());
         }
 
         size_t MaxCapacity() const{
@@ -203,7 +203,7 @@ namespace Solaire{ namespace Core {
         void Defragment(){
             Clear();
             if(mNext != nullptr){
-                const size_t newSize = mArenaSize + mNext->CurrentCapacity();
+                const size_t newSize = CurrentCapacity();
 
                 mAllocator.Deallocate(mArenaBegin, mArenaSize);
                 mArenaBegin = static_cast<uint8_t*>(mAllocator.Allocate(newSize));
@@ -213,6 +213,7 @@ namespace Solaire{ namespace Core {
                 mArenaSize = newSize;
 
                 delete mNext;
+                mNext = nullptr;
             }
         }
     };
