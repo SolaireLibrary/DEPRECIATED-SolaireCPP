@@ -131,12 +131,9 @@ namespace Solaire{ namespace Core {
                 if(mainRegion.second >= aSize){
                     mFreeRegions.PopBack();
 
-                    Region subRegion;
-                    subRegion.second = mainRegion.second - aSize;
-                    subRegion.first = mainRegion.first + subRegion.second;
-
                     // Mark any additional memory as a new free region
-                    if(subRegion.second != 0) Deallocate(subRegion);
+                    const size_t dif = mainRegion.second - aSize;
+                    if(dif != 0) Deallocate(mainRegion.first + dif, dif);
 
                     return mainRegion.first;
                 }
