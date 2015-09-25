@@ -25,10 +25,10 @@
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
-\version 1.0
+\version 1.1
 \date
 Created			: 21st September 2015
-Last Modified	: 21st September 2015
+Last Modified	: 25th September 2015
 */
 
 #include <type_traits>
