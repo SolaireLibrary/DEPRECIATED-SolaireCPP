@@ -251,6 +251,10 @@ namespace Solaire{ namespace Core{
 		   return aPosition == end() - 1 ? PushBack(std::move(aValue)) : InsertBefore(aPosition + 1, aValue);
 		}
 
+		bool IsEmpty() const{
+		    return mHead == 0;
+		}
+
 		Index Size() const{
 		    return mHead;
 		}

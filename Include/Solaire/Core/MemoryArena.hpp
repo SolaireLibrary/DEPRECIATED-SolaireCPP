@@ -31,9 +31,9 @@ Created			: 21st September 2015
 Last Modified	: 21st September 2015
 */
 
-#include <vector>
 #include <type_traits>
 #include "Allocator.hpp"
+#include "DataStructures/DynamicArray.hpp"
 
 namespace Solaire{ namespace Core {
 
@@ -47,9 +47,13 @@ namespace Solaire{ namespace Core {
         typedef void(*DestructorFn)(void*);
     private:
         typedef std::pair<void*, DestructorFn> DestructorCall;
+        typedef std::pair<void*, size_t> Region;
 
         Allocator<void>& mAllocator;
-        std::vector<DestructorCall> mDestructorList;
+        WrapperAllocator<DestructorCall> mDestructorListAllocator;
+        WrapperAllocator<Region> mFreeRegionsAllocator;
+        DynamicArray<DestructorCall> mDestructorList;
+        DynamicArray<Region> mFreeRegions;
         uint8_t* mArenaBegin;
         uint8_t* mArenaEnd;
         uint8_t* mArenaHead;
@@ -64,6 +68,10 @@ namespace Solaire{ namespace Core {
     public:
         MemoryArena(const size_t aSize, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
             mAllocator(aAllocator),
+            mDestructorListAllocator(mAllocator),
+            mFreeRegionsAllocator(mAllocator),
+            mDestructorList(128, mDestructorListAllocator),
+            mFreeRegions(128, mFreeRegionsAllocator),
             mArenaBegin(static_cast<uint8_t*>(mAllocator.Allocate(aSize))),
             mArenaEnd(mArenaBegin + aSize),
             mArenaHead(mArenaBegin),
@@ -84,10 +92,11 @@ namespace Solaire{ namespace Core {
             for(const DestructorCall& i : mDestructorList){
                 i.second(i.first);
             }
-            mDestructorList.clear();
+            mDestructorList.Clear();
 
             // Reset allocation
             mArenaHead = mArenaBegin;
+            mFreeRegions.Clear();
 
             // Propagate the call to the next arena if it exists
             if(mNext != nullptr){
@@ -97,6 +106,15 @@ namespace Solaire{ namespace Core {
 
         void* Allocate(const size_t aSize){
             if((mArenaEnd - mArenaHead) < static_cast<ptrdiff_t>(aSize)){
+                if(! mFreeRegions.IsEmpty()){
+                    const Region& region = mFreeRegions.Back();
+                    if(region.second >= aSize){
+                        //! \bug If aSize < Region.first then the additional memory will be lost when the region is deallocated again
+                        void* const ptr = region.first;
+                        mFreeRegions.PopBack();
+                        return ptr;
+                    }
+                }
                 if(mNext == nullptr){
                     mNext = new MemoryArena(mArenaSize > aSize ? mArenaSize : aSize, mAllocator);
                 }
@@ -107,37 +125,25 @@ namespace Solaire{ namespace Core {
             return ptr;
         }
 
-        bool Deallocate(void* const aAddress, const size_t aSize){
-            #ifdef SOLAIRE_DISABLED_MEMORY_ARENA_DEALLOCATION
-            if(aAddress >= mArenaBegin && aAddress < mArenaEnd){
-                if(mArenaHead - aSize == aAddress){
-                    if(! mDestructorList.empty()){
-                        // Find destructor callbacks
-                        std::vector<DestructorCall> calls;
-                        for(const DestructorCall& call : mDestructorList){
-                            if(call.first >= aAddress) calls.push_back(call);
-                        }
-
-                        // Call destructor callbacks
-                        for(const DestructorCall& call : calls){
-                            call.second(call.first);
-                            mDestructorList.erase(std::find(mDestructorList.begin(), mDestructorList.end(), call));
-                        }
+        void Deallocate(void* const aAddress, const size_t aSize){
+            const Region region(aAddress, aSize);
+            if(mFreeRegions.IsEmpty()){
+                mFreeRegions.PushBack(Region(aAddress, aSize));
+            }else{
+                // Largest region at back
+                const auto end = mFreeRegions.begin() - 1;
+                for(auto i = mFreeRegions.end() - 1; i != end; --i){
+                    if(i->second <= aSize){
+                        mFreeRegions.InsertAfter(i, region);
+                        return;
                     }
-
-                    // Move the allocator head back
-                    mArenaHead -= aSize;
-                    return true;
                 }
-            }else if(mNext != nullptr){
-                return mNext->Deallocate(aAddress, aSize);
+                mFreeRegions.PushFront(region);
             }
-            #endif
-            return false;
         }
 
         void OnDestroyed(void* aObject, DestructorFn aCallback){
-             mDestructorList.push_back(DestructorCall(aObject, aCallback));
+             mDestructorList.PushBack(DestructorCall(aObject, aCallback));
         }
 
         template<class T>
@@ -283,11 +289,11 @@ namespace Solaire{ namespace Core {
         }
 
         void DeallocateSingle(T* const aAddress) override{
-
+            mArena.Deallocate(aAddress, sizeof(T));
         }
 
         void DeallocateMany(T* const aAddress, const size_t aCount) override{
-
+            mArena.Deallocate(aAddress, sizeof(T) * aCount);
         }
     };
 
@@ -305,7 +311,7 @@ namespace Solaire{ namespace Core {
         }
 
         void Deallocate(void* const aAddress, const size_t aBytes) override{
-
+            mArena.Deallocate(aAddress, aBytes);
         }
     };
 }}

@@ -92,6 +92,32 @@ namespace Solaire{ namespace Core{
     };
 
     template<class T>
+    class WrapperAllocator : public Allocator<T>{
+    private:
+        Allocator<void>* mAllocator;
+    public:
+        WrapperAllocator(Allocator<void>& aAllocator) :
+            mAllocator(&aAllocator)
+        {}
+
+        T* AllocateSingle() override{
+            return static_cast<T*>(mAllocator->Allocate(sizeof(T)));
+        }
+
+        T* AllocateMany(const size_t aCount) override{
+            return static_cast<T*>(mAllocator->Allocate(sizeof(T) * aCount));
+        }
+
+        void DeallocateSingle(T* const aAddress) override{
+            mAllocator->Deallocate(aAddress, sizeof(T));
+        }
+
+        void DeallocateMany(T* const aAddress, const size_t aCount) override{
+            mAllocator->Deallocate(aAddress, sizeof(T) * aCount);
+        }
+    };
+
+    template<class T>
     Allocator<T>& GetDefaultAllocator(){
         static DefaultAllocator<T> ALLOCATOR;
         return ALLOCATOR;
