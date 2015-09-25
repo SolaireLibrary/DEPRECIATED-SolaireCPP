@@ -1,0 +1,410 @@
+#ifndef SOLAIRE_CORE_DYNAMIC_ARRAY_HPP
+#define SOLAIRE_CORE_DYNAMIC_ARRAY_HPP
+
+//Copyright 2015 Adam Smith
+//
+//Licensed under the Apache License, Version 2.0 (the "License");
+//you may not use this file except in compliance with the License.
+//You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+//Unless required by applicable law or agreed to in writing, software
+//distributed under the License is distributed on an "AS IS" BASIS,
+//WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//See the License for the specific language governing permissions and
+//limitations under the License.
+
+// Contact :
+// Email             : solairelibrary@mail.com
+// GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
+
+/*!
+	\file DynamicArray.hpp
+	\brief
+	\author
+	Created			: Adam Smith
+	Last modified	: Adam Smith
+	\version 1.0
+	\date
+	Created			: 25th September 2015
+	Last Modified	: 25th September 2015
+*/
+
+#include <cstdint>
+#include <stdexcept>
+#include <functional>
+#include "..\Allocator.hpp"
+
+namespace Solaire{ namespace Core{
+
+    template<class TYPE, class CONST_TYPE = const TYPE, class INDEX = uint16_t>
+	class DynamicArray{
+	public:
+		typedef TYPE Type;
+		typedef CONST_TYPE ConstType;
+		typedef Type& Reference;
+		typedef ConstType& ConstReference;
+		typedef Type&& Move;
+		typedef Type* Pointer;
+		typedef ConstType* ConstPointer;
+		typedef Pointer Iterator;
+		typedef ConstPointer ConstIterator;
+		typedef INDEX Index;
+		typedef DynamicArray<TYPE, CONST_TYPE, INDEX> Self;
+	private:
+	    DynamicArray(const Self& aOther) = delete;
+	    DynamicArray(Self&& aOther) = delete;
+	    Self& operator=(const Self& aOther) = delete;
+	    Self& operator=(Self&& aOther) = delete;
+
+        Allocator<Type>& mAllocator;
+		Type* mData;
+		Index mSize;
+		Index mHead;
+    private:
+        void IncreaseSize(){
+            mSize *= 2;
+            Type* newData = mAllocator.AllocateMany(mSize);
+
+            for(Index i = 0; i < mHead; ++i){
+                Type* const address = mData + i;
+                new(newData + i) Type(std::move(*address));
+                mAllocator.CallDestructor(address);
+		    }
+
+            mAllocator.DeallocateMany(mData, mSize / 2);
+            mData = newData;
+        }
+
+        void ShiftDown(const ConstPointer aPosition){
+            if(aPosition < mData || aPosition >= mData + mHead) throw std::runtime_error("Core::DynamicArray : Position is out of bounds");
+            --mHead;
+            for(Index i = aPosition - mData; i < mHead; ++i){
+                mData[i] = std::move(mData[i + 1]);
+            }
+            mAllocator.CallDestructor(mData + mHead);
+        }
+
+        void ShiftUp(const ConstPointer aPosition){
+            if(aPosition < mData || aPosition >= mData + mHead) throw std::runtime_error("Core::DynamicArray : Position is out of bounds");
+            if(mHead >= mSize) IncreaseSize();
+            ++mHead;
+
+            const Index end = aPosition - mData;
+
+            new(mData + mHead - 1) Type(std::move(mData[mHead - 2]));
+            for(Index i = mHead - 2; i != end; --i){
+                mData[i] = std::move(mData[i - 1]);
+            }
+        }
+	public:
+		static Index MaxCapacity(){
+		    return std::numeric_limits<Index>::max();
+		}
+
+		DynamicArray(Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
+		    mAllocator(aAllocator),
+			mHead(0),
+			mSize(32)
+		{
+		    mData = static_cast<Type*>(mAllocator.AllocateMany(mSize));
+		}
+
+		DynamicArray(ConstReference aValue, const Index aCount, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
+		    mAllocator(aAllocator),
+			mHead(0),
+			mSize(aCount)
+		{
+		    mData = static_cast<Type*>(mAllocator.AllocateMany(mSize));
+			for(Index i = 0; i < aCount; ++i){
+				PushBack(aValue);
+			}
+		}
+
+		DynamicArray(const std::initializer_list<Type> aList, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
+		    mAllocator(aAllocator),
+			mHead(0),
+			mSize(aList.size())
+		{
+		    mData = static_cast<Type*>(mAllocator.AllocateMany(mSize));
+			for(ConstReference i : aList) PushBack(i);
+		}
+
+        template<class ExternalIterator>
+		DynamicArray(ExternalIterator aBegin, const ExternalIterator aEnd, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
+		    mAllocator(aAllocator),
+			mHead(0),
+			mSize(aEnd - aBegin)
+		{
+		    mData = static_cast<Type*>(mAllocator.AllocateMany(mSize));
+			while(aBegin != aEnd){
+                PushBack(*aBegin);
+                ++aBegin;
+			}
+		}
+
+		~DynamicArray(){
+		    Clear();
+		    mAllocator.DeallocateMany(mData, mSize);
+		}
+
+		void Clear(){
+		    for(Index i = 0; i < mHead; ++i){
+                mAllocator.CallDestructor(mData + i);
+		    }
+		    mHead = 0;
+		}
+
+		Reference PushBack(Move aValue){
+		    if(mHead == mSize) IncreaseSize();
+		    return *new(mData + mHead++) Type(std::move(aValue));
+		}
+
+		Reference PushBack(ConstReference aValue){
+		    if(mHead == mSize) IncreaseSize();
+		    return *new(mData + mHead++) Type(aValue);
+		}
+
+		Reference PushFront(Move aValue){
+		    return InsertBefore(begin(), std::move(aValue));
+		}
+
+		Reference PushFront(ConstReference aValue){
+		    return InsertBefore(begin(), aValue);
+		}
+
+		Type PopBack(){
+		    const Iterator pos = end() - 1;
+		    const Type value = *pos;
+		    Erase(pos);
+		    return value;
+		}
+
+		Type PopFront(){
+		    const Iterator pos = begin();
+		    const Type value = *pos;
+		    Erase(pos);
+		    return value;
+		}
+
+		void Erase(const ConstIterator aPosition){
+		    ShiftDown(aPosition);
+		}
+
+		Reference InsertBefore(const ConstIterator aPosition, Move aValue){
+		    ShiftUp(aPosition);
+		    const Iterator& pos = const_cast<Iterator&>(aPosition);
+		    *pos = std::move(aValue);
+		    return *pos;
+		}
+
+		Reference InsertBefore(const ConstIterator aPosition, ConstReference aValue){
+		    ShiftUp(aPosition);
+		    const Iterator& pos = const_cast<Iterator&>(aPosition);
+		    *pos = aValue;
+		    return *pos;
+		}
+
+		Reference InsertAfter(const ConstIterator aPosition, Move aValue){
+		    return aPosition == end() - 1 ? PushBack(std::move(aValue)) : InsertBefore(aPosition + 1, std::move(aValue));
+		}
+
+		Reference InsertAfter(const ConstIterator aPosition, ConstReference aValue){
+		   return aPosition == end() - 1 ? PushBack(std::move(aValue)) : InsertBefore(aPosition + 1, aValue);
+		}
+
+		Index Size() const{
+		    return mHead;
+		}
+
+		Index Capacity() const{
+		    return mSize;
+		}
+
+		Reference operator[](const Index aIndex){
+		    if(aIndex < 0 || aIndex >= mHead) throw std::runtime_error("Core::DynamicArray : Index is out of bounds");
+		    return mData[aIndex];
+		}
+
+		ConstReference operator[](const Index aIndex) const{
+		    if(aIndex < 0 || aIndex >= mHead) throw std::runtime_error("Core::DynamicArray : Index is out of bounds");
+		    return mData[aIndex];
+		}
+
+		Iterator Find(ConstReference aValue){
+		    for(Index i = 0; i < mHead; ++i){
+                if(mData[i] == aValue) return mData + i;
+		    }
+		    return end();
+		}
+
+		ConstIterator Find(ConstReference aValue) const{
+		    for(Index i = 0; i < mHead; ++i){
+                if(mData[i] == aValue) return mData + i;
+		    }
+		    return end();
+		}
+
+		Iterator FindIf(const std::function<bool(ConstReference)>& aCondition){
+		    for(Index i = 0; i < mHead; ++i){
+                if(aCondition(mData[i])) return mData + i;
+		    }
+		    return end();
+		}
+
+		ConstIterator FindIf(const std::function<bool(ConstReference)>& aCondition) const{
+		    for(Index i = 0; i < mHead; ++i){
+                if(aCondition(mData[i])) return mData + i;
+		    }
+		    return end();
+		}
+
+		Reference Back(){
+		    return *(end() - 1);
+		}
+
+		Reference Front(){
+		    return *begin();
+		}
+
+		Iterator begin(){
+		    return mData;
+		}
+
+		ConstIterator begin() const{
+		    return mData;
+		}
+
+		Iterator end(){
+		    return mData + mHead;
+		}
+
+		ConstIterator end() const{
+		    return mData + mHead;
+		}
+
+		/*DynamicArray(ConstReference aValue, const size_t aCopies) :
+			mHead(0)
+		{
+			for(size_t i = 0; i < aCopies; ++i){
+				Push(aValue);
+			}
+		}
+
+		DynamicArray(const std::initializer_list<Type> aList) :
+			mHead(0)
+		{
+			for(Type i : aList) Push(i);
+		}
+
+		template<class external_Iterator>
+		DynamicArray(external_Iterator aBegin, const external_Iterator aEnd) :
+			mHead(0)
+		{
+			while(aBegin != aEnd) {
+				Push(*aBegin);
+				++aBegin;
+			}
+		}
+
+		~DynamicArray(){
+
+		}
+
+		void Clear(){
+			const Iterator begin = this->begin();
+			const Iterator end = this->end();
+			Iterator i = begin;
+			while(i != end){
+				i->~Type();
+				++i;
+			}
+			mHead = 0;
+		}
+
+		bool IsEmpty() const{
+			return mHead == 0;
+		}
+
+		size_t Size() const{
+			return mHead;
+		}
+
+		size_t Capacity() const{
+			return SIZE;
+		}
+
+		Reference operator[](const size_t aIndex){
+			if(aIndex < mHead) throw std::runtime_error("Index out of bounds");
+			return reinterpret_cast<Pointer>(mData)[aIndex];
+		}
+
+		ConstReference operator[](const size_t aIndex) const{
+			if(aIndex < mHead) throw std::runtime_error("Index out of bounds");
+			return reinterpret_cast<ConstPointer>(mData)[aIndex];
+		}
+
+		Reference Push(Move aItem){
+			if(mHead == SIZE) throw std::runtime_error("DynamicArray is full");
+
+			const Pointer ptr = reinterpret_cast<Pointer>(mData) + mHead++;
+			new(ptr) Type(std::move(aItem));
+			return *ptr;
+		}
+
+		Reference Push(ConstReference aItem) {
+			if(mHead == SIZE) throw std::runtime_error("DynamicArray is full");
+
+			const Pointer ptr = reinterpret_cast<Pointer>(mData) + mHead++;
+			new(ptr) Type(aItem);
+			return *ptr;
+		}
+
+		Type Pop(){
+			if(mHead > 0) throw std::runtime_error("DynamicArray is empty");
+
+			const Pointer ptr = &Back();
+			--mHead;
+
+			Type tmp(*ptr);
+			ptr->~Type();
+
+			return tmp;
+		}
+
+		Reference Front(){
+			return reinterpret_cast<Pointer>(mData)[0];
+		}
+
+		ConstReference Front() const{
+			return reinterpret_cast<ConstPointer>(mData)[0];
+		}
+
+		Reference Back(){
+			return reinterpret_cast<Pointer>(mData)[mHead - 1];
+		}
+
+		ConstReference Back() const{
+			return reinterpret_cast<ConstPointer>(mData)[mHead - 1];
+		}
+
+		Iterator begin(){
+			return reinterpret_cast<Pointer>(mData);
+		}
+
+		ConstIterator begin() const{
+			return reinterpret_cast<ConstPointer>(mData);
+		}
+
+		Iterator end(){
+			return reinterpret_cast<Pointer>(mData) + mHead;
+		}
+
+		ConstIterator end() const{
+			return reinterpret_cast<ConstPointer>(mData) + mHead;
+		}*/
+	};
+}}
+
+#endif

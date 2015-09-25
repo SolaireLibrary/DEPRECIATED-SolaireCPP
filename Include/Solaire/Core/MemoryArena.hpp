@@ -248,27 +248,45 @@ namespace Solaire{ namespace Core {
     }
 
     template<class T>
-    class ArenaAllocator : public TypedAllocator<T>{
+    class ArenaAllocator : public Allocator<T>{
     private:
-        ArenaAllocator& mAllocator;
+        MemoryArena& mArena;
     public:
-        ArenaAllocator(ArenaAllocator& aAllocator) :
-            mAllocator(aAllocator)
+        ArenaAllocator(MemoryArena& aArena) :
+            mArena(aArena)
         {}
 
-        void* AllocateSingle() override{
-            return mAllocator.Allocate(sizeof(T));
+        T* AllocateSingle() override{
+            return static_cast<T*>(mArena.Allocate(sizeof(T)));
         }
 
-        void* AllocateMany(const size_t aCount) override{
-            return mAllocator.Allocate(sizeof(T) * aCount);
+        T* AllocateMany(const size_t aCount) override{
+            return static_cast<T*>(mArena.Allocate(sizeof(T) * aCount));
         }
 
-        void DeallocateSingle(void* const aAddress) override{
+        void DeallocateSingle(T* const aAddress) override{
 
         }
 
-        void DeallocateMany(void* const aAddress, const size_t aCount) override{
+        void DeallocateMany(T* const aAddress, const size_t aCount) override{
+
+        }
+    };
+
+    template<>
+    class ArenaAllocator<void> : public Allocator<void>{
+    private:
+        MemoryArena& mArena;
+    public:
+        ArenaAllocator(MemoryArena& aArena) :
+            mArena(aArena)
+        {}
+
+        void* Allocate(const size_t aBytes) override{
+            return mArena.Allocate(aBytes);
+        }
+
+        void Deallocate(void* const aAddress, const size_t aBytes) override{
 
         }
     };

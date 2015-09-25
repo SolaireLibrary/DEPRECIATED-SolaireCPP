@@ -35,49 +35,64 @@
 
 namespace Solaire{ namespace Core{
 
+    template<class T>
     class Allocator{
     public:
         virtual ~Allocator(){}
 
-        virtual void* AllocateSingle() = 0;
-        virtual void* AllocateMany(const size_t aCount) = 0;
-        virtual void DeallocateSingle(void* const aAddress) = 0;
-        virtual void DeallocateMany(void* const aAddress, const size_t aCount) = 0;
-        virtual void CallDestructor(void* const aAddress) = 0;
-    };
+        virtual T* AllocateSingle() = 0;
+        virtual T* AllocateMany(const size_t aCount) = 0;
+        virtual void DeallocateSingle(T* const aAddress) = 0;
+        virtual void DeallocateMany(T* const aAddress, const size_t aCount) = 0;
 
-    template<class T>
-    class TypedAllocator{
-    public:
-        virtual ~TypedAllocator(){}
-
-        void CallDestructor(void* const aAddress) override{
-            static_cast<T*>(aAddress)->~T();
+        void CallDestructor(T* const aAddress){
+            aAddress->~T();
         };
     };
 
-    template<class T>
-    class DefaultAllocator : public TypedAllocator<T>{
+    template<>
+    class Allocator<void>{
     public:
-        void* AllocateSingle() override{
-            return operator new(sizeof(T));
+        virtual ~Allocator(){}
+
+        virtual void* Allocate(const size_t aBytes) = 0;
+        virtual void Deallocate(void* const aAddress, const size_t aBytes) = 0;
+    };
+
+    template<class T>
+    class DefaultAllocator : public Allocator<T>{
+    public:
+        T* AllocateSingle() override{
+            return static_cast<T*>(operator new(sizeof(T)));
         }
 
-        void* AllocateMany(const size_t aCount) override{
-            return operator new(sizeof(T) * aCount);
+        T* AllocateMany(const size_t aCount) override{
+            return static_cast<T*>(operator new(sizeof(T) * aCount));
         }
 
-        void DeallocateSingle(void* const aAddress) override{
+        void DeallocateSingle(T* const aAddress) override{
             operator delete(aAddress);
         }
 
-        void DeallocateMany(void* const aAddress, const size_t aCount) override{
+        void DeallocateMany(T* const aAddress, const size_t aCount) override{
+            operator delete(aAddress);
+        }
+    };
+
+    template<>
+    class DefaultAllocator<void> : public Allocator<void>{
+    public:
+        void* Allocate(const size_t aBytes) override{
+            return operator new(aBytes);
+        }
+
+        void Deallocate(void* const aAddress, const size_t aBytes) override{
             operator delete(aAddress);
         }
     };
 
     template<class T>
-    Allocator& GetDefaultAllocator(){
+    Allocator<T>& GetDefaultAllocator(){
         static DefaultAllocator<T> ALLOCATOR;
         return ALLOCATOR;
     }
