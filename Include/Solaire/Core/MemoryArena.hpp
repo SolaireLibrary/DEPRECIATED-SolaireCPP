@@ -48,6 +48,7 @@ namespace Solaire{ namespace Core {
     private:
         typedef std::pair<void*, DestructorFn> DestructorCall;
 
+        Allocator<void>& mAllocator;
         std::vector<DestructorCall> mDestructorList;
         uint8_t* mArenaBegin;
         uint8_t* mArenaEnd;
@@ -61,8 +62,9 @@ namespace Solaire{ namespace Core {
         MemoryArena& operator=(MemoryArena&& aOther) = delete;
 
     public:
-        MemoryArena(const size_t aSize) :
-            mArenaBegin(static_cast<uint8_t*>(operator new(aSize))),
+        MemoryArena(const size_t aSize, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+            mAllocator(aAllocator),
+            mArenaBegin(static_cast<uint8_t*>(mAllocator.Allocate(aSize))),
             mArenaEnd(mArenaBegin + aSize),
             mArenaHead(mArenaBegin),
             mArenaSize(aSize),
@@ -71,7 +73,7 @@ namespace Solaire{ namespace Core {
 
         ~MemoryArena(){
             Clear();
-            operator delete(mArenaBegin);
+            mAllocator.Deallocate(mArenaBegin, mArenaSize);
             if(mNext != nullptr){
                 delete mNext;
             }
@@ -96,7 +98,7 @@ namespace Solaire{ namespace Core {
         void* Allocate(const size_t aSize){
             if((mArenaEnd - mArenaHead) < static_cast<ptrdiff_t>(aSize)){
                 if(mNext == nullptr){
-                    mNext = new MemoryArena(mArenaSize > aSize ? mArenaSize : aSize);
+                    mNext = new MemoryArena(mArenaSize > aSize ? mArenaSize : aSize, mAllocator);
                 }
                 return mNext->Allocate(aSize);
             }
@@ -172,12 +174,15 @@ namespace Solaire{ namespace Core {
         void Defragment(){
             if(mNext != nullptr){
                 Clear();
-                mArenaSize += mNext->CurrentCapacity();
-                operator delete(mArenaBegin);
+                const size_t newSize = mArenaSize + mNext->CurrentCapacity();
 
-                mArenaBegin = static_cast<uint8_t*>(operator new(mArenaSize));
-                mArenaEnd = mArenaBegin + mArenaSize;
+                mAllocator.Deallocate(mArenaBegin, mArenaSize);
+                mArenaBegin = static_cast<uint8_t*>(mAllocator.Allocate(newSize));
+
+                mArenaEnd = mArenaBegin + newSize;
                 mArenaHead = mArenaBegin;
+                mArenaSize = newSize;
+
                 delete mNext;
             }
         }
