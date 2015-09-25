@@ -59,8 +59,8 @@ namespace Solaire{ namespace Core{
 		Type* mData;
     private:
         void IncreaseSize(){
-            mSize *= 2;
-            Type* newData = mAllocator->AllocateMany(mSize);
+            const Index newSize = mSize * 2;
+            Type* newData = mAllocator->AllocateMany(newSize);
 
             for(Index i = 0; i < mHead; ++i){
                 Type* const address = mData + i;
@@ -68,7 +68,8 @@ namespace Solaire{ namespace Core{
                 mAllocator->CallDestructor(address);
 		    }
 
-            mAllocator->DeallocateMany(mData, mSize / 2);
+            mAllocator->DeallocateMany(mData, mSize);
+            mSize = newSize;
             mData = newData;
         }
 

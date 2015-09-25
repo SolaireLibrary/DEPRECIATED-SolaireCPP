@@ -65,6 +65,22 @@ namespace Solaire{ namespace Core {
         MemoryArena& operator=(const MemoryArena& aOther) = delete;
         MemoryArena& operator=(MemoryArena&& aOther) = delete;
 
+        void Deallocate(const Region aRegion){
+            if(mFreeRegions.IsEmpty()){
+                mFreeRegions.PushBack(aRegion);
+            }else{
+                // Largest region at back
+                const auto end = mFreeRegions.end() - 1;
+                for(auto i = mFreeRegions.begin(); i != end; ++i){
+                    if(i->second >= aRegion.second){
+                        mFreeRegions.InsertBefore(i, aRegion);
+                        return;
+                    }
+                }
+                mFreeRegions.PushBack(aRegion);
+            }
+        }
+
     public:
         MemoryArena(const size_t aSize, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
             mAllocator(aAllocator),
@@ -111,12 +127,18 @@ namespace Solaire{ namespace Core {
 
             ALLOCATE_FROM_FREE_REGIONS:
             {
-                const Region& region = mFreeRegions.Back();
-                if(region.second >= aSize){
-                    //! \bug If aSize < Region.first then the additional memory will be lost when the region is deallocated again
-                    void* const ptr = region.first;
+                const Region mainRegion = mFreeRegions.Back();
+                if(mainRegion.second >= aSize){
                     mFreeRegions.PopBack();
-                    return ptr;
+
+                    Region subRegion;
+                    subRegion.second = mainRegion.second - aSize;
+                    subRegion.first = mainRegion.first + subRegion.second;
+
+                    // Mark any additional memory as a new free region
+                    if(subRegion.second != 0) Deallocate(subRegion);
+
+                    return mainRegion.first;
                 }
             }
             goto ALLOCATE_FROM_ARENA;
@@ -143,20 +165,7 @@ namespace Solaire{ namespace Core {
         }
 
         void Deallocate(void* const aAddress, const size_t aSize){
-            const Region region(aAddress, aSize);
-            if(mFreeRegions.IsEmpty()){
-                mFreeRegions.PushBack(Region(aAddress, aSize));
-            }else{
-                // Largest region at back
-                const auto end = mFreeRegions.begin() - 1;
-                for(auto i = mFreeRegions.end() - 1; i != end; --i){
-                    if(i->second <= aSize){
-                        mFreeRegions.InsertAfter(i, region);
-                        return;
-                    }
-                }
-                mFreeRegions.PushFront(region);
-            }
+            Deallocate(Region(aAddress, aSize));
         }
 
         void OnDestroyed(void* aObject, DestructorFn aCallback){
@@ -195,8 +204,8 @@ namespace Solaire{ namespace Core {
         }
 
         void Defragment(){
+            Clear();
             if(mNext != nullptr){
-                Clear();
                 const size_t newSize = mArenaSize + mNext->CurrentCapacity();
 
                 mAllocator.Deallocate(mArenaBegin, mArenaSize);
