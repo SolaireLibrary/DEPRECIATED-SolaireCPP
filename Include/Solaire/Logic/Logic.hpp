@@ -28,9 +28,10 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 17th September 2015
-Last Modified	: 17th September 2015
+Last Modified	: 25th September 2015
 */
 
 #include "Fuzzy\Fuzzy.hpp"
+#include "StateMachine.hpp"
 
 #endif
