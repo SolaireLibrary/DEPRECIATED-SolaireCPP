@@ -43,7 +43,10 @@ namespace Solaire{ namespace Game{
         virtual ~Game(){}
 
         virtual uint64_t GetElapsedTime() const = 0;
-        virtual Core::MemoryArena& GetArena();
+
+        virtual Core::MemoryArena& GetGameArena();
+        virtual Core::MemoryArena& GetLevelArena();
+        virtual Core::MemoryArena& GetFrameArena();
 
         virtual void Pause() = 0;
         virtual uint64_t Resume() = 0;

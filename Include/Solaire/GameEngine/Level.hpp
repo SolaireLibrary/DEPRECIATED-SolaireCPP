@@ -31,9 +31,6 @@ Created			: 22nd September 2015
 Last Modified	: 22nd September 2015
 */
 
-#include "..\Core\Time.hpp"
-#include "..\Core\MemoryArena.hpp"
-
 namespace Solaire{ namespace Game{
 
     class Game;
@@ -47,7 +44,6 @@ namespace Solaire{ namespace Game{
     public:
         virtual ~Level(){}
         virtual uint64_t GetElapsedTime() const = 0;
-        virtual Core::MemoryArena& GetArena();
     };
 
 }}
