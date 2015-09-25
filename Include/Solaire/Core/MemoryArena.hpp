@@ -105,24 +105,41 @@ namespace Solaire{ namespace Core {
         }
 
         void* Allocate(const size_t aSize){
-            if((mArenaEnd - mArenaHead) < static_cast<ptrdiff_t>(aSize)){
-                if(! mFreeRegions.IsEmpty()){
-                    const Region& region = mFreeRegions.Back();
-                    if(region.second >= aSize){
-                        //! \bug If aSize < Region.first then the additional memory will be lost when the region is deallocated again
-                        void* const ptr = region.first;
-                        mFreeRegions.PopBack();
-                        return ptr;
-                    }
+            if(mArenaSize < aSize) goto ALLOCATE_FROM_NEXT;
+            if(! mFreeRegions.IsEmpty()) goto ALLOCATE_FROM_FREE_REGIONS;
+            goto ALLOCATE_FROM_ARENA;
+
+            ALLOCATE_FROM_FREE_REGIONS:
+            {
+                const Region& region = mFreeRegions.Back();
+                if(region.second >= aSize){
+                    //! \bug If aSize < Region.first then the additional memory will be lost when the region is deallocated again
+                    void* const ptr = region.first;
+                    mFreeRegions.PopBack();
+                    return ptr;
                 }
-                if(mNext == nullptr){
-                    mNext = new MemoryArena(mArenaSize > aSize ? mArenaSize : aSize, mAllocator);
-                }
-                return mNext->Allocate(aSize);
             }
-            void* const ptr = mArenaHead;
-            mArenaHead += aSize;
-            return ptr;
+            goto ALLOCATE_FROM_ARENA;
+
+            ALLOCATE_FROM_ARENA:
+            {
+                const size_t freeArena = mArenaEnd - mArenaHead;
+                if(freeArena < aSize) goto ALLOCATE_FROM_NEXT;
+
+                void* const ptr = mArenaHead;
+                mArenaHead += aSize;
+                return ptr;
+            }
+
+            ALLOCATE_FROM_NEXT:
+            {
+                if((mArenaEnd - mArenaHead) < static_cast<ptrdiff_t>(aSize)){
+                    if(mNext == nullptr){
+                        mNext = new MemoryArena(mArenaSize > aSize ? mArenaSize : aSize, mAllocator);
+                    }
+                    return mNext->Allocate(aSize);
+                }
+            }
         }
 
         void Deallocate(void* const aAddress, const size_t aSize){
