@@ -31,6 +31,7 @@ Created			: 21st September 2015
 Last Modified	: 25th September 2015
 */
 
+#include <algorithm>
 #include <type_traits>
 #include "Allocator.hpp"
 #include "DataStructures/DynamicArray.hpp"
@@ -96,7 +97,12 @@ namespace Solaire{ namespace Core {
                 }
             }
 
-            if(sizeBefore != mFreeRegions.Size()) DefragmentFreeRegions();
+            if(sizeBefore != mFreeRegions.Size()){
+                std::sort(mFreeRegions.begin(), mFreeRegions.end(), [](const Region& aFirst, const Region& aSecond)->bool{
+                    return aFirst.second < aSecond.second;
+                });
+                DefragmentFreeRegions();
+            }
         }
 
     public:
@@ -142,11 +148,10 @@ namespace Solaire{ namespace Core {
             bool defragmented = false;
 
             if(mArenaSize < aSize) goto ALLOCATE_FROM_NEXT;
-            if(! mFreeRegions.IsEmpty()) goto ALLOCATE_FROM_FREE_REGIONS;
-            goto ALLOCATE_FROM_ARENA;
+            goto ALLOCATE_FROM_FREE_REGIONS;
 
             ALLOCATE_FROM_FREE_REGIONS:
-            {
+            if(! mFreeRegions.IsEmpty()){
                 const Region mainRegion = mFreeRegions.Back();
                 if(mainRegion.second >= aSize){
                     mFreeRegions.PopBack();
@@ -169,7 +174,7 @@ namespace Solaire{ namespace Core {
                     }else{
                         DefragmentFreeRegions();
                         defragmented = true;
-                        goto ALLOCATE_FROM_ARENA;
+                        goto ALLOCATE_FROM_FREE_REGIONS;
                     }
                 }
 
