@@ -21,7 +21,7 @@
 
 /*!
 	\file Keyboard.hpp
-	\brief Contains code for N dimentional vector maths.
+	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
@@ -36,19 +36,42 @@
 namespace Solaire{ namespace Ui{
 
     enum Keycode : uint32_t{
+        KEY_1,  KEY_2,  KEY_3,  KEY_4,
+        KEY_5,  KEY_6,  KEY_7,  KEY_8,
+        KEY_9,  KEY_0,
 
+        KEY_A,  KEY_B,  KEY_C,  KEY_D,
+        KEY_E,  KEY_F,  KEY_G,  KEY_H,
+        KEY_I,  KEY_J,  KEY_K,  KEY_L,
+        KEY_M,  KEY_N,  KEY_O,  KEY_P,
+        KEY_Q,  KEY_R,  KEY_S,  KEY_T,
+        KEY_U,  KEY_V,  KEY_W,  KEY_X,
+        KEY_Y,  KEY_Z,
+
+        KEY_F1,     KEY_F2,     KEY_F3,     KEY_F4,
+        KEY_F5,     KEY_F6,     KEY_F7,     KEY_F8,
+        KEY_F9,     KEY_F10,    KEY_F11,    KEY_F12,
+
+        KEY_ESCAPE,         KEY_MINUS,                  KEY_EQUALS,                 KEY_BACKSPACE,
+        KEY_TAB,            KEY_LEFT_SQUARE_BRACKET,    KEY_RIGHT_SQUARE_BRACKET,   KEY_ENTER,
+        KEY_LEFT_CONTROL,   KEY_RIGHT_CONTROL,          KEY_SEMI_COLON,             KEY_QUOTE,
+        KEY_TILDE,          KEY_BACKLASH,               KEY_FORWARD_SLASH,          KEY_COMMA,
+        KEY_FULL_STOP,      KEY_RIGHT_SHIFT,            KEY_LEFT_SHIFT,             KEY_SPACE,
+        KEY_CAP_LOCK,       KEY_NUM_LOCK,               KEY_SCROLL_LOCK,            KEY_INSERT,
+        KEY_DELETE,         KEY_HOME,                   KEY_END,                    KEY_PAGE_UP,
+        KEY_PAGE_DOWN
     };
 
     enum{
-        KEY_COUNT = 128 //! \TODO Set value
+        KEY_COUNT = KEY_PAGE_DOWN + 1
     };
 
     class KeySource;
 
     class KeyListener : public Core::Listener<KeySource, KeyListener>{
     protected:
-        virtual void OnKeyPressed(const Keycode aKey, const uint64_t aTime) = 0;
-        virtual void OnKeyReleased(const Keycode aKey, const uint64_t aTime) = 0;
+        virtual void OnKeyPress(const Keycode aKey, const uint64_t aTime) = 0;
+        virtual void OnKeyRelease(const Keycode aKey, const uint64_t aTime) = 0;
     public:
         friend KeySource;
 
@@ -67,14 +90,14 @@ namespace Solaire{ namespace Ui{
         void PressKey(const Keycode aKey, const uint64_t aTime){
             const ListenerIterator end = ListenerEnd();
             for(ListenerIterator i = ListenerBegin(); i != end; ++i){
-                (**i).OnKeyPressed(aKey, aTime);
+                (**i).OnKeyPress(aKey, aTime);
             }
         }
 
         void ReleaseKey(const Keycode aKey, const uint64_t aTime){
             const ListenerIterator end = ListenerEnd();
             for(ListenerIterator i = ListenerBegin(); i != end; ++i){
-                (**i).OnKeyReleased(aKey, aTime);
+                (**i).OnKeyRelease(aKey, aTime);
             }
         }
     public:
@@ -142,12 +165,12 @@ namespace Solaire{ namespace Ui{
 
         }
 
-        void OnKeyPressed(const Keycode aKey, const uint64_t aTime) override{
+        void OnKeyPress(const Keycode aKey, const uint64_t aTime) override{
             PressKey(aKey, aTime);
             GetKeyInfo(aKey).Press(aTime);
         }
 
-        void OnKeyReleased(const Keycode aKey, const uint64_t aTime){
+        void OnKeyRelease(const Keycode aKey, const uint64_t aTime){
             ReleaseKey(aKey, aTime);
             GetKeyInfo(aKey).Release(aTime);
         }
