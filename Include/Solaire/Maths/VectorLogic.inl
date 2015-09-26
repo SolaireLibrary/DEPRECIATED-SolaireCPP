@@ -36,6 +36,7 @@
 #include <cstring>
 #include <stdexcept>
 #include "..\Core\Init.hpp"
+#include "..\Core\Maths.hpp"
 
 namespace Solaire{ namespace Maths{
 
@@ -53,16 +54,7 @@ namespace Solaire{ namespace Maths{
 
             HAS_MSVC_VECTORS = 0,
 
-            IS_POWER_OF_TWO =
-                LENGTH == 2 ||
-                LENGTH == 4 ||
-                LENGTH == 8 ||
-                LENGTH == 16 ||
-                LENGTH == 32 ||
-                LENGTH == 64 ||
-                LENGTH == 128 ||
-                LENGTH == 256 ||
-                LENGTH == 512,
+            IS_POWER_OF_TWO = Core::Maths::IsPow2(LENGTH),
 
             GCC_VECTORS = HAS_GCC_VECTORS && IS_POWER_OF_TWO,
             MSVC_VECTORS = HAS_MSVC_VECTORS,
