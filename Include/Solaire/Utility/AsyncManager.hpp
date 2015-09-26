@@ -52,7 +52,8 @@ namespace Solaire{ namespace Utility{
         std::condition_variable mConditionVariable;
         bool mExit;
     public:
-        AsyncManager(const size_t aThreads):
+        AsyncManager(const size_t aThreads, Core::Allocator<Task*> aAllocator = Core::GetDefaultAllocator<void*>()):
+            TaskManager(aAllocator),
             mExit(false)
         {
             for(size_t i = 0; i < aThreads; ++i){

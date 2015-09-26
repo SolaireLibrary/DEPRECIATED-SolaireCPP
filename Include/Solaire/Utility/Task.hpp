@@ -32,7 +32,6 @@
 */
 
 #include <map>
-#include <vector>
 #ifndef SOLAIRE_DISABLE_MULTITHREADING
     #include <thread>
     #include <mutex>
@@ -40,6 +39,7 @@
     #include "DummyLock.hpp"
 #endif
 #include "..\Core\Macros.hpp"
+#include "..\Core\DataStructures/DynamicArray.hpp"
 
 namespace Solaire{ namespace Utility{
 
@@ -65,6 +65,7 @@ namespace Solaire{ namespace Utility{
             typedef std::mutex Mutex;
         #endif
 
+        Core::DynamicArray<void*> mProgressList;
         TaskManager* mManager;
         std::exception_ptr mException;
         mutable Mutex mLock;
@@ -128,7 +129,8 @@ namespace Solaire{ namespace Utility{
         }
 
         void OnExecuteInternal(){
-            OnExecute();
+            OnExecute(mPauseLocation);
+            mPauseLocation = 0;
         }
 
         void OnPostExecuteInternal(){
@@ -158,6 +160,9 @@ namespace Solaire{ namespace Utility{
         void OnEndState(){
             mLock.unlock();
             mManager = nullptr;
+            for(void* i : mProgressList){
+                DestroyProgress(i);
+            }
         }
 
         bool PreExecute(){
@@ -196,14 +201,36 @@ namespace Solaire{ namespace Utility{
             );
         }
 
+        void HandleProgress(){
+            for(void* i : mProgressList){
+                OnProgress(i);
+                DestroyProgress(i);
+            }
+            mProgressList.Clear();
+        }
+
     protected:
         virtual void OnPreExecute() = 0;
-        virtual void OnExecute() = 0;
+        virtual void OnExecute(const uint16_t aLocation = 0) = 0;
         virtual void OnPostExecute() = 0;
         virtual void OnPause() = 0;
         virtual void OnResume(const uint16_t aLocation) = 0;
         virtual void OnCanceled() = 0;
         virtual void OnReset() = 0;
+
+        virtual void DestroyProgress(void* const aProgress) = 0;
+        virtual void OnProgress(void* const aProgress) = 0;
+
+        void SendProgress(void* const aProgress){
+            Task& lock = *this;
+            solaire_synchronized(lock,
+                mProgressList.PushBack(aProgress);
+            )
+        }
+
+        void lock();
+        void unlock();
+        bool try_lock();
 
         bool Pause(const uint16_t aLocation){
             mPauseLocation = aLocation;
@@ -221,7 +248,10 @@ namespace Solaire{ namespace Utility{
         {}
 
         virtual ~Task(){
-
+            for(void* i : mProgressList){
+                OnProgress(i);
+                DestroyProgress(i);
+            }
         }
 
         State State() const{
@@ -311,10 +341,10 @@ namespace Solaire{ namespace Utility{
             typedef std::mutex Mutex;
         #endif
 
-        std::vector<Task*> mInitialiseTasks;
-        std::vector<Task*> mPreExecuteTasks;
-        std::vector<Task*> mPostExecuteTasks;
-        std::vector<Task*> mCancelTasks;
+        Core::DynamicArray<Task*> mInitialiseTasks;
+        Core::DynamicArray<Task*> mPreExecuteTasks;
+        Core::DynamicArray<Task*> mPostExecuteTasks;
+        Core::DynamicArray<Task*> mCancelTasks;
         std::map<ThreadID, Task*> mExecutionTasks;
 
         ThreadID GetThreadID() const{
@@ -331,9 +361,8 @@ namespace Solaire{ namespace Utility{
             // Acquire task from manager
             Task* task = nullptr;
             solaire_synchronized(mLock,
-                if(! mPreExecuteTasks.empty()){
-                    task = mPreExecuteTasks.back();
-                    mPreExecuteTasks.pop_back();
+                if(! mPreExecuteTasks.IsEmpty()){
+                    task = mPreExecuteTasks.PopBack();
                     mExecutionTasks.emplace(GetThreadID(), task);
                 }
             )
@@ -369,20 +398,20 @@ namespace Solaire{ namespace Utility{
 
             TASK_CANCELED:
             solaire_synchronized(mLock,
-                mCancelTasks.push_back(task);
+                mCancelTasks.PushBack(task);
                 mExecutionTasks.emplace(GetThreadID(), nullptr);
             )
 
             TASK_PAUSED:
             solaire_synchronized(mLock,
-                mPreExecuteTasks.push_back(task);
+                mPreExecuteTasks.PushBack(task);
                 mExecutionTasks.emplace(GetThreadID(), nullptr);
             )
             return true;
 
             TASK_SUCCESS:
             solaire_synchronized(mLock,
-                mPostExecuteTasks.push_back(task);
+                mPostExecuteTasks.PushBack(task);
                 mExecutionTasks.emplace(GetThreadID(), nullptr);
             )
             return true;
@@ -395,31 +424,39 @@ namespace Solaire{ namespace Utility{
 
         }
     public:
+        friend Task;
+
+        TaskManager(Core::Allocator<Task*>& aAllocator) :
+            mInitialiseTasks(128, aAllocator),
+            mPreExecuteTasks(128, aAllocator),
+            mPostExecuteTasks(128, aAllocator),
+            mCancelTasks(128, aAllocator)
+        {}
 
         virtual ~TaskManager(){
             solaire_synchronized(mLock,
                 for(Task* task : mInitialiseTasks){
                     task->Cancel();
-                    mCancelTasks.push_back(task);
+                    mCancelTasks.PushBack(task);
                 }
-                mInitialiseTasks.clear();
+                mInitialiseTasks.Clear();
 
                 for(Task* task : mPreExecuteTasks){
                     task->Cancel();
-                    mCancelTasks.push_back(task);
+                    mCancelTasks.PushBack(task);
                 }
-                mPreExecuteTasks.clear();
+                mPreExecuteTasks.Clear();
 
                 for(Task* task : mPostExecuteTasks){
                     task->Cancel();
-                    mCancelTasks.push_back(task);
+                    mCancelTasks.PushBack(task);
                 }
-                mPostExecuteTasks.clear();
+                mPostExecuteTasks.Clear();
 
                 for(Task* task : mCancelTasks){
                     task->OnEndState();
                 }
-                mCancelTasks.clear();
+                mCancelTasks.Clear();
             )
         }
 
@@ -428,36 +465,44 @@ namespace Solaire{ namespace Utility{
             aTask.mState = Task::STATE_SCHEDULED;
 
             solaire_synchronized(mLock,
-                mInitialiseTasks.push_back(&aTask);
+                mInitialiseTasks.PushBack(&aTask);
             )
             return true;
         }
 
         virtual void Update(){
             solaire_synchronized(mLock,
+                // OnPreExecute
                 for(Task* task : mInitialiseTasks){
                     task->Schedule(*this);
                     if(task->State() == Task::STATE_CANCELED){
-                        mCancelTasks.push_back(task);
+                        mCancelTasks.PushBack(task);
                     }else if(task->PreExecute()){
-                        mPreExecuteTasks.push_back(task);
+                        mPreExecuteTasks.PushBack(task);
                     }
                 }
-                mInitialiseTasks.clear();
+                mInitialiseTasks.Clear();
 
+                // OnProgress
+                for(std::pair<ThreadID, Task*> task : mExecutionTasks){
+                    task.second->HandleProgress();
+                }
+
+                // OnPostExecute
                 for(Task* task : mPostExecuteTasks){
                     if(task->State() == Task::STATE_CANCELED){
-                        mCancelTasks.push_back(task);
+                        mCancelTasks.PushBack(task);
                     }else if(task->State() != Task::STATE_PAUSED){
                         task->PostExecute();
                     }
                 }
-                mPostExecuteTasks.clear();
+                mPostExecuteTasks.Clear();
 
+                // OnCancel
                 for(Task* task : mCancelTasks){
                     task->OnEndState();
                 }
-                mCancelTasks.clear();
+                mCancelTasks.Clear();
             )
         }
 
@@ -469,10 +514,10 @@ namespace Solaire{ namespace Utility{
                 for(const std::pair<ThreadID, Task*>& i : mExecutionTasks){
                     if(i.second != nullptr) ++count;
                 }
-                count += mInitialiseTasks.size();
-                count += mPreExecuteTasks.size();
-                count += mPostExecuteTasks.size();
-                count += mCancelTasks.size();
+                count += mInitialiseTasks.Size();
+                count += mPreExecuteTasks.Size();
+                count += mPostExecuteTasks.Size();
+                count += mCancelTasks.Size();
             )
             return count;
         }
@@ -486,6 +531,18 @@ namespace Solaire{ namespace Utility{
             }
         }
     };
+
+    void Task::lock(){
+        GetManager().mLock.lock();
+    }
+
+    void Task::unlock(){
+        GetManager().mLock.lock();
+    }
+
+    bool Task::try_lock(){
+        GetManager().mLock.lock();
+    }
 
     template<class T>
     class ResultTask : public Task{
