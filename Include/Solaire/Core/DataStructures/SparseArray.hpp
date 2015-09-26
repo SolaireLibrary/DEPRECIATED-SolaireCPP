@@ -33,6 +33,7 @@
 
 #include <type_traits>
 #include <array>
+#include "../Maths.hpp"
 #include "DynamicArray.hpp"
 
 namespace Solaire{ namespace Core{
@@ -64,18 +65,6 @@ namespace Solaire{ namespace Core{
 
         DynamicArray<RangedArray> mRanges;
 
-        Key AlignKey(const Key aKey){
-            // Round aKey to the nearest multiple of RANGE_LENGTH
-            Key rounded = aKey;
-            const Key remainder = aKey % RANGE_LENGTH;
-            if(remainder != 0){
-                rounded += RANGE_LENGTH - remainder;
-            }
-
-            // Round to the lowest multiple of RANGE_LENGTH
-            return rounded > aKey ? rounded - RANGE_LENGTH : rounded;
-        }
-
         RangedArray* GetArrayPtr(const Key aKey){
             for(RangedArray& range : mRanges){
                 if(aKey >= range.first && aKey < range.first + RANGE_LENGTH){
@@ -94,7 +83,7 @@ namespace Solaire{ namespace Core{
             RangedArray* const ptr = GetArrayPtr(aKey);
             if(ptr != nullptr) return *ptr;
 
-            const Key rangeBase = AlignKey(aKey);
+            const Key rangeBase = Maths::FloorToClosestMultiple<Key>(aKey, RANGE_LENGTH);
             return mRanges.PushBack(RangedArray(
                 rangeBase,
                 DynamicArray<Type>(

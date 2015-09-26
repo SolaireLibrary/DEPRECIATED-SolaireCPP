@@ -537,11 +537,11 @@ namespace Solaire{ namespace Utility{
     }
 
     void Task::unlock(){
-        GetManager().mLock.lock();
+        GetManager().mLock.unlock();
     }
 
     bool Task::try_lock(){
-        GetManager().mLock.lock();
+        return GetManager().mLock.try_lock();
     }
 
     template<class T>
