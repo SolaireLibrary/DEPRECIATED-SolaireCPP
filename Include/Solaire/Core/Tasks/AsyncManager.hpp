@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_ASYNC_MANAGER_HPP
-#define SOLAIRE_UTILITY_ASYNC_MANAGER_HPP
+#ifndef SOLAIRE_CORE_ASYNC_MANAGER_HPP
+#define SOLAIRE_CORE_ASYNC_MANAGER_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -28,14 +28,14 @@
 	\version 2.0
 	\date
 	Created			: 11th September 2015
-	Last Modified	: 24th September 2015
+	Last Modified	: 27th September 2015
 */
 
 #include "Task.hpp"
 
 #ifndef SOLAIRE_DISABLE_MULTITHREADING
 
-namespace Solaire{ namespace Utility{
+namespace Solaire{ namespace Core{
 
     Class AsyncManager : public TaskManager{
     private:
@@ -52,7 +52,7 @@ namespace Solaire{ namespace Utility{
         std::condition_variable mConditionVariable;
         bool mExit;
     public:
-        AsyncManager(const size_t aThreads, Core::Allocator<Task*> aAllocator = Core::GetDefaultAllocator<void*>()):
+        AsyncManager(const size_t aThreads, Allocator<Task*> aAllocator = GetDefaultAllocator<void*>()):
             TaskManager(aAllocator),
             mExit(false)
         {

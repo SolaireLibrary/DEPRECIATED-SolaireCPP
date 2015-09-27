@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_DUMMY_LOCK_HPP
-#define SOLAIRE_UTILITY_DUMMY_LOCK_HPP
+#ifndef SOLAIRE_CORE_DUMMY_LOCK_HPP
+#define SOLAIRE_CORE_DUMMY_LOCK_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -28,10 +28,10 @@
 	\version 1.0
 	\date
 	Created			: 24th September 2015
-	Last Modified	: 24th September 2015
+	Last Modified	: 27th September 2015
 */
 
-namespace Solaire{ namespace Utility{
+namespace Solaire{ namespace Core{
     class DummyLock{
     private:
         bool mLocked;

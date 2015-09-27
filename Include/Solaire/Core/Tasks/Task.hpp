@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_TASK_HPP
-#define SOLAIRE_UTILITY_TASK_HPP
+#ifndef SOLAIRE_CORE_TASK_HPP
+#define SOLAIRE_CORE_TASK_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -28,7 +28,7 @@
 	\version 2.0
 	\date
 	Created			: 11th September 2015
-	Last Modified	: 24th September 2015
+	Last Modified	: 27th September 2015
 */
 
 #include <map>
@@ -38,10 +38,10 @@
 #else
     #include "DummyLock.hpp"
 #endif
-#include "..\Core\Macros.hpp"
-#include "..\Core\DataStructures/DynamicArray.hpp"
+#include "../Macros.hpp"
+#include "../DataStructures/DynamicArray.hpp"
 
-namespace Solaire{ namespace Utility{
+namespace Solaire{ namespace Core{
 
     class TaskManager;
 
@@ -65,7 +65,7 @@ namespace Solaire{ namespace Utility{
             typedef std::mutex Mutex;
         #endif
 
-        Core::DynamicArray<void*> mProgressList;
+        DynamicArray<void*> mProgressList;
         TaskManager* mManager;
         std::exception_ptr mException;
         mutable Mutex mLock;
@@ -341,10 +341,10 @@ namespace Solaire{ namespace Utility{
             typedef std::mutex Mutex;
         #endif
 
-        Core::DynamicArray<Task*> mInitialiseTasks;
-        Core::DynamicArray<Task*> mPreExecuteTasks;
-        Core::DynamicArray<Task*> mPostExecuteTasks;
-        Core::DynamicArray<Task*> mCancelTasks;
+        DynamicArray<Task*> mInitialiseTasks;
+        DynamicArray<Task*> mPreExecuteTasks;
+        DynamicArray<Task*> mPostExecuteTasks;
+        DynamicArray<Task*> mCancelTasks;
         std::map<ThreadID, Task*> mExecutionTasks;
 
         ThreadID GetThreadID() const{
@@ -426,7 +426,7 @@ namespace Solaire{ namespace Utility{
     public:
         friend Task;
 
-        TaskManager(Core::Allocator<Task*>& aAllocator) :
+        TaskManager(Allocator<Task*>& aAllocator) :
             mInitialiseTasks(128, aAllocator),
             mPreExecuteTasks(128, aAllocator),
             mPostExecuteTasks(128, aAllocator),
