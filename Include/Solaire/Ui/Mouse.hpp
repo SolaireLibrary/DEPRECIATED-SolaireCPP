@@ -31,8 +31,10 @@
 	Last Modified	: 26th September 2015
 */
 
+#include "Input.inl"
 #include "..\Core\Listener.hpp"
 #include "..\Maths\Vector.hpp"
+#include "..\Core\DataStructures\CyclicalDeque.hpp"
 
 namespace Solaire{ namespace Ui{
 
@@ -120,24 +122,31 @@ namespace Solaire{ namespace Ui{
     class Mouse : public MouseSource, public MouseListener{
     private:
         struct ButtonInfo{
-            uint64_t timePressed;
-            uint64_t timeReleased;
+            typedef std::pair<uint64_t, uint64_t> TimePair;
+
+            Core::CyclicalDeque<TimePair> history;
             bool isPressed;
 
             ButtonInfo() :
-                timePressed(0),
-                timeReleased(0),
+                history(SOLAIRE_INPUT_HISTORY),
                 isPressed(false)
             {}
 
             void Press(const uint64_t aTime){
-                timePressed = aTime;
+                history.PushBack(TimePair(aTime, UINT64_MAX));
                 isPressed = true;
             }
 
             void Release(const uint64_t aTime){
-                timeReleased = aTime;
+                history.Back().second = aTime;
                 isPressed = false;
+            }
+
+            bool WasPressed(const uint64_t aTime) const{
+                for(const TimePair& i : history){
+                    if(aTime >= i.first && aTime < i.second) return true;
+                }
+                return false;
             }
         };
 
@@ -208,8 +217,7 @@ namespace Solaire{ namespace Ui{
         {}
 
         bool WasButtonPressed(const MouseButton aButton, const uint64_t aTime) const{
-            const ButtonInfo& info = GetButtonInfo(aButton);
-            return info.timePressed >= aTime && aTime < info.timeReleased;
+            return GetButtonInfo(aButton).WasPressed(aTime);
         }
 
         bool IsKeyPressed(const MouseButton aButton) const{
@@ -217,11 +225,11 @@ namespace Solaire{ namespace Ui{
         }
 
         uint64_t GetTimePressed(const MouseButton aButton) const{
-            return GetButtonInfo(aButton).timePressed;
+            GetButtonInfo(aButton).history.Back().first;
         }
 
         uint64_t GetTimeReleased(const MouseButton aButton) const{
-            return GetButtonInfo(aButton).timeReleased;
+            GetButtonInfo(aButton).history.Back().second;
         }
 
         float GetWheelPosition() const{

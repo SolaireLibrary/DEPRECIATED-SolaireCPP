@@ -100,22 +100,22 @@ namespace Solaire{ namespace Core{
 		}
 
 		Reference PushBack(Move aValue){
-		    if(mArray.Size() = mArray.Capacity()) mArray.PopFront();
+		    if(mArray.Size() == mArray.Capacity()) mArray.PopFront();
 		    return mArray.PushBack(std::move(aValue));
 		}
 
 		Reference PushBack(ConstReference aValue){
-		    if(mArray.Size() = mArray.Capacity()) mArray.PopFront();
+		    if(mArray.Size() == mArray.Capacity()) mArray.PopFront();
 		    return mArray.PushBack(aValue);
 		}
 
 		Reference PushFront(Move aValue){
-		    if(mArray.Size() = mArray.Capacity()) mArray.PopBack();
+		    if(mArray.Size() == mArray.Capacity()) mArray.PopBack();
 		    return mArray.PushFront(std::move(aValue));
 		}
 
 		Reference PushFront(ConstReference aValue){
-		    if(mArray.Size() = mArray.Capacity()) mArray.PopBack();
+		    if(mArray.Size() == mArray.Capacity()) mArray.PopBack();
 		    return mArray.PushFront(aValue);
 		}
 
@@ -172,6 +172,14 @@ namespace Solaire{ namespace Core{
 		}
 
 		Reference Front(){
+		    return mArray.Front();
+		}
+
+		ConstReference Back() const{
+		    return mArray.Back();
+		}
+
+		ConstReference Front() const{
 		    return mArray.Front();
 		}
 

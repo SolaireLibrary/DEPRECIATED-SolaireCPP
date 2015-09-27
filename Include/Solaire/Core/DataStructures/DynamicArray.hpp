@@ -314,6 +314,14 @@ namespace Solaire{ namespace Core{
 		    return mData;
 		}
 
+		ConstReference Back() const{
+		    return *(end() - 1);
+		}
+
+		ConstReference Front() const{
+		    return *begin();
+		}
+
 		ConstIterator begin() const{
 		    return mData;
 		}
