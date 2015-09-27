@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_RESOURCE_FACTORY_HPP
-#define SOLAIRE_UTILITY_RESOURCE_FACTORY_HPP
+#ifndef SOLAIRE_CORE_RESOURCE_FACTORY_HPP
+#define SOLAIRE_CORE_RESOURCE_FACTORY_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -28,14 +28,15 @@
 	\version 1.0
 	\date
 	Created			: 20th September 2015
-	Last Modified	: 20th September 2015
+	Last Modified	: 27th September 2015
 */
 
-//! \TODO Use atomic user count
-//#include <atomic>
+#ifndef SOLAIRE_DISABLE_MULTITHREADING
+    #include <atomic>
+#endif
 #include <cstdint>
 
-namespace Solaire{ namespace Utility{
+namespace Solaire{ namespace Core{
 
     class Resource{
     public:
@@ -48,7 +49,11 @@ namespace Solaire{ namespace Utility{
 
     class ResourceFactory{
     private:
-        //std::atomic_uint16_t mUsers;
+#ifdef SOLAIRE_DISABLE_MULTITHREADING
+        uint16_t mUsers;
+#else
+        std::atomic_uint16_t mUsers;
+#endif
         uint16_t mUsers;
 
         ResourceFactory& operator=(const ResourceFactory& aOther) = delete;
