@@ -36,9 +36,9 @@
 namespace Solaire{ namespace Ui{
 
     enum Keycode : uint32_t{
-        KEY_1,  KEY_2,  KEY_3,  KEY_4,
-        KEY_5,  KEY_6,  KEY_7,  KEY_8,
-        KEY_9,  KEY_0,
+        KEY_0,  KEY_1,  KEY_2,  KEY_3,
+        KEY_4,  KEY_5,  KEY_6,  KEY_7,
+        KEY_8,  KEY_9,
 
         KEY_A,  KEY_B,  KEY_C,  KEY_D,
         KEY_E,  KEY_F,  KEY_G,  KEY_H,
@@ -61,6 +61,43 @@ namespace Solaire{ namespace Ui{
         KEY_DELETE,         KEY_HOME,                   KEY_END,                    KEY_PAGE_UP,
         KEY_PAGE_DOWN
     };
+
+    static constexpr char INVALID_KEY_CONVERSION = '\0';
+
+    static constexpr char LayoutUK(const Keycode aKey, const bool aShift){
+        return
+            aKey >= Keycode::KEY_0 && aKey <= KEY_9 ? aShift ?
+                aKey == Keycode::KEY_0 ? ')' :
+                aKey == Keycode::KEY_1 ? '!' :
+                aKey == Keycode::KEY_2 ? '"' :
+                aKey == Keycode::KEY_3 ? '£' :
+                aKey == Keycode::KEY_4 ? '$' :
+                aKey == Keycode::KEY_5 ? '%' :
+                aKey == Keycode::KEY_6 ? '^' :
+                aKey == Keycode::KEY_7 ? '&' :
+                aKey == Keycode::KEY_8 ? '*' :
+                '(' :
+                '0' + (aKey - Keycode::KEY_0) :
+            aKey >= Keycode::KEY_A && aKey <= KEY_Z ? aShift ?
+                'a' + (aKey - Keycode::KEY_A) :
+                'A' + (aKey - Keycode::KEY_A) :
+            aKey == KEY_MINUS ? aShift ? '_' : '-' :
+            aKey == KEY_EQUALS ? aShift ? '+' : '=' :
+            aKey == KEY_EQUALS ? '\b' :
+            aKey == KEY_TAB ? '\t' :
+            aKey == KEY_RIGHT_SQUARE_BRACKET ? aShift ? '{' : '[' :
+            aKey == KEY_LEFT_SQUARE_BRACKET ? aShift ? '}' : ']' :
+            aKey == KEY_ENTER ? '\n' :
+            aKey == KEY_SEMI_COLON ? aShift ? ':' : ';' :
+            aKey == KEY_QUOTE ? aShift ? '\'' : '@' :
+            aKey == KEY_TILDE ? aShift ? '¬' : '`' :
+            aKey == KEY_BACKLASH ? aShift ? '|' : '\\' :
+            aKey == KEY_FORWARD_SLASH ? aShift ? '?' : '/' :
+            aKey == KEY_COMMA ? aShift ? '<' : ',' :
+            aKey == KEY_FULL_STOP ? aShift ? '>' : '.' :
+            aKey == KEY_SPACE ? ' ' :
+            INVALID_KEY_CONVERSION;
+    }
 
     enum{
         KEY_COUNT = KEY_PAGE_DOWN + 1
@@ -166,13 +203,19 @@ namespace Solaire{ namespace Ui{
         }
 
         void OnKeyPress(const Keycode aKey, const uint64_t aTime) override{
-            PressKey(aKey, aTime);
-            GetKeyInfo(aKey).Press(aTime);
+            KeyInfo& info = GetKeyInfo(aKey);
+            if(! info.isPressed){
+                info.Press(aTime);
+                PressKey(aKey, aTime);
+            }
         }
 
         void OnKeyRelease(const Keycode aKey, const uint64_t aTime){
-            ReleaseKey(aKey, aTime);
-            GetKeyInfo(aKey).Release(aTime);
+            KeyInfo& info = GetKeyInfo(aKey);
+            if(info.isPressed){
+                info.Release(aTime);
+                ReleaseKey(aKey, aTime);
+            }
         }
 
     public:

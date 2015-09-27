@@ -175,13 +175,19 @@ namespace Solaire{ namespace Ui{
         }
 
         void OnButtonPress(const MouseButton aButton, const uint64_t aTime) override{
-            PressButton(aButton, aTime);
-            GetButtonInfo(aButton).Press(aTime);
+            ButtonInfo& info = GetButtonInfo(aButton);
+            if(! info.isPressed){
+                info.Press(aTime);
+                PressButton(aButton, aTime);
+            }
         }
 
         void OnButtonRelease(const MouseButton aButton, const uint64_t aTime) override{
-            ReleaseButton(aButton, aTime);
-            GetButtonInfo(aButton).Release(aTime);
+            ButtonInfo& info = GetButtonInfo(aButton);
+            if(info.isPressed){
+                info.Release(aTime);
+                ReleaseButton(aButton, aTime);
+            }
         }
 
         void OnWheelScroll(const float aMovement, const uint64_t aTime) override{
