@@ -32,9 +32,10 @@
 */
 
 #include <type_traits>
-#include <array>
-#include "../Maths.hpp"
-#include "DynamicArray.hpp"
+#include <map>
+#include "..\Iterators\PairIterator.hpp"
+#include "..\Iterators\ConstIterator.hpp"
+#include "..\Iterators\ReverseIterator.hpp"
 
 namespace Solaire{ namespace Core{
 
@@ -50,107 +51,87 @@ namespace Solaire{ namespace Core{
         typedef Type&& Move;
         typedef Type& Reference;
         typedef const Type& ConstReference;
-        typedef void* Iterator;
-        typedef const void* ConstIterator;
+
+        typedef Core::PairSecondIterator<Type, typename std::map<Key,Type>::iterator> Iterator;
+        typedef Core::ConstIterator<Type, Iterator> ConstIterator;
+        typedef Core::PairSecondIterator<Type, typename std::map<Key,Type>::reverse_iterator> ReverseIterator;
+        typedef Core::ConstIterator<Type, ReverseIterator> ConstReverseIterator;
     private:
-        enum : Key{
-            RANGE_LENGTH = 16
-        };
-
-        typedef std::pair<Key, DynamicArray<Type>> RangedArray;
-
-        Allocator<void>& mAllocator;
-        WrapperAllocator<Type> mTypeAllocator;
-        WrapperAllocator<RangedArray> mRangedArrayAllocator;
-
-        DynamicArray<RangedArray> mRanges;
-
-        RangedArray* GetArrayPtr(const Key aKey){
-            for(RangedArray& range : mRanges){
-                if(aKey >= range.first && aKey < range.first + RANGE_LENGTH){
-                    return &range;
-                }
-            }
-
-            return nullptr;
-        }
-
-        const RangedArray* GetArrayPtr(const Key aKey) const{
-            return const_cast<SparseArray<Key, Type>*>(this)->GetArrayPtr();
-        }
-
-        RangedArray& GetArrayRef(const Key aKey){
-            RangedArray* const ptr = GetArrayPtr(aKey);
-            if(ptr != nullptr) return *ptr;
-
-            const Key rangeBase = Maths::FloorToClosestMultiple<Key>(aKey, RANGE_LENGTH);
-            return mRanges.PushBack(RangedArray(
-                rangeBase,
-                DynamicArray<Type>(
-                    RANGE_LENGTH,
-                    static_cast<Type>(0),
-                    mTypeAllocator
-                )
-            ));
-        }
+        std::map<Key,Type> mMap;
     public:
-        SparseArray(Allocator<void>& = GetDefaultAllocator<void>()) :
-            mTypeAllocator(mAllocator),
-            mRangedArrayAllocator(mAllocator),
-            mRanges(32, mRangedArrayAllocator)
-        {}
+        SparseArray(){
 
-        Iterator Insert(const Key aKey, Move aValue){
-            RangedArray& array_ = GetArrayRef(aKey);
-            const Key aIndex = array_.first / RANGE_LENGTH;
-
-            ConstReference ref = array_.second[aIndex] = std::move(aValue);
-
-            //! \TODO Implement Iterator
-            return nullptr;
         }
 
-        Iterator Insert(const Key aKey, ConstReference aValue){
-            RangedArray& array_ = GetArrayRef(aKey);
-            const Key aIndex = array_.first / RANGE_LENGTH;
-
-            ConstReference ref = array_.second[aIndex] = aValue;
-
-            //! \TODO Implement Iterator
-            return nullptr;
+        SparseArray(const std::initializer_list<Type> aList){
+            const auto begin = aList.begin();
+            const auto end = aList.end();
+            for(auto i = begin; i != end; ++i){
+                mMap.emplace(i - begin, *i);
+            }
         }
 
-        Iterator Find(const Key aKey){
-            RangedArray* const array_ = GetArrayPtr(aKey);
-            if(array_ == nullptr) return end();
-            const Key aIndex = array_->first / RANGE_LENGTH;
-
-            //! \TODO Implement Iterator
-            return &array_->second[aIndex];
+        SparseArray(const std::initializer_list<std::pair<Key, Type>> aList){
+            const auto end = aList.end();
+            for(auto i = aList.begin(); i != end; ++i){
+                mMap.emplace(i->first, i->second);
+            }
         }
 
-        ConstIterator Find(const Key aKey) const{
-            return const_cast<SparseArray<Key, Type>*>(this)->Find(aKey);
+        ~SparseArray(){
+
+        }
+
+        bool HasEntryAtIndex(const Key aKey) const{
+            mMap.find(aKey) != mMap.end();
+        }
+
+        Reference operator[](const Key aKey){
+            auto it = mMap.find(aKey);
+            if(it == mMap.end()){
+                it = mMap.emplace(aKey, Type()).first;
+            }
+            return it->second;
+        }
+
+        ConstReference operator[](const Key aKey) const{
+            auto it = mMap.find(aKey);
+            if(it == mMap.end()){
+                throw std::runtime_error("Core::SparseArray does not contain key");
+            }
+            return it->second;
         }
 
         Iterator begin(){
-            //! \TODO Implement Iterator
-            return nullptr;
+            return Iterator(mMap.begin());
         }
 
         ConstIterator begin() const{
-            //! \TODO Implement ConstIterator
-            return nullptr;
+            return ConstIterator(mMap.begin());
         }
 
         Iterator end(){
-            //! \TODO Implement Iterator
-            return nullptr;
+            return Iterator(mMap.end());
         }
 
         ConstIterator end() const{
-            //! \TODO Implement ConstIterator
-            return nullptr;
+            return ConstIterator(mMap.end());
+        }
+
+        ReverseIterator rbegin(){
+            return ReverseIterator(mMap.rbegin());
+        }
+
+        ConstReverseIterator rbegin() const{
+            return ConstReverseIterator(mMap.rbegin());
+        }
+
+        ReverseIterator rend(){
+            return ReverseIterator(mMap.rend());
+        }
+
+        ConstReverseIterator rend() const{
+            return ConstReverseIterator(mMap.rend());
         }
     };
 

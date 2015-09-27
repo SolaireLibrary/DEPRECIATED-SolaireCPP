@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_GENERIC_ITERATOR_HPP
-#define SOLAIRE_UTILITY_GENERIC_ITERATOR_HPP
+#ifndef SOLAIRE_CORE_DEREFERENCE_ITERATOR_HPP
+#define SOLAIRE_CORE_DEREFERENCE_ITERATOR_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file GenericIterator.hpp
+	\file DereferenceIterator.hpp
 	\brief
 	\author
 	Created			: Adam Smith
@@ -28,99 +28,98 @@
 	\version 1.0
 	\date
 	Created			: 17th September 2015
-	Last Modified	: 17th September 2015
+	Last Modified	: 27th September 2015
 */
 
-namespace Solaire{ namespace Utility{
+namespace Solaire{ namespace Core{
 
 	template<class T, class ITERATOR>
-	class ConstGenericIterator{
+	class DereferenceIterator{
 	private:
 		ITERATOR mIterator;
 	public:
-		typedef ConstGenericIterator<T, ITERATOR> this_t;
+		typedef T Type;
+		typedef Type& Reference;
+		typedef Type* Pointer;
+		typedef DereferenceIterator<Type, ITERATOR> Self;
 
-		ConstGenericIterator() :
+		DereferenceIterator() :
 			mIterator()
 		{}
 
-		ConstGenericIterator(const ITERATOR aOther) :
+		DereferenceIterator(const ITERATOR aOther) :
 			mIterator(aOther)
 		{}
 
-		size_t operator-(const this_t aOther) const{
+		inline size_t operator-(const Self aOther) const{
 			return mIterator - aOther.mIterator;
 		}
 
-		this_t& operator++(){
+		inline Self& operator++(){
 			++mIterator;
 			return *this;
 		}
 
-		this_t operator++(int){
-			this_t tmp(*this);
-			++*this;
-			return tmp;
+		inline Self operator++(int){
+			return Self(mIterator++);
 		}
 
-		this_t& operator--(){
+		inline Self& operator--(){
 			--mIterator;
 			return *this;
 		}
 
-		this_t operator--(int){
-			this_t tmp(*this);
-			--*this;
-			return tmp;
+		inline Self operator--(int){
+			return Self(mIterator--);
 		}
 
-		this_t& operator+=(const size_t aNumber){
+		inline Self& operator+=(const size_t aNumber){
 			mIterator += aNumber;
 			return *this;
 		}
 
-		this_t operator+(const size_t aNumber) const{
-			return mIterator + aNumber;
+		Self operator+(const size_t aNumber) const{
+			return Self(mIterator + aNumber);
 		}
 
-		this_t& operator-=(const size_t aNumber){
+		inline Self& operator-=(const size_t aNumber){
 			mIterator -= aNumber;
 			return *this;
 		}
 
-		this_t operator-(const size_t aNumber) const{
-			return mIterator - aNumber;
+		inline Self operator-(const size_t aNumber) const{
+			return Self(mIterator - aNumber);
 		}
 
-		T operator*() const{
-			return *mIterator;
+		inline Reference operator*() const{
+			return **mIterator;
 		}
 
-		T operator->() const{
-			return *mIterator;
+		inline Pointer operator->(){
+			return &operator*();
 		}
 
-		bool operator==(const this_t aOther) const{
+		inline bool operator==(const Self aOther) const{
 			return mIterator == aOther.mIterator;
 		}
 
-		bool operator!=(const this_t aOther) const{
-			return mIterator == aOther.mIterator;
+		inline bool operator!=(const Self aOther) const{
+			return mIterator != aOther.mIterator;
 		}
 
-		bool operator<(const this_t aOther) const{
+		inline bool operator<(const Self aOther) const{
 			return mIterator < aOther.mIterator;
 		}
 
-		bool operator>(const this_t aOther) const{
+		inline bool operator>(const Self aOther) const{
 			return mIterator > aOther.mIterator;
 		}
 
-		bool operator<=(const this_t aOther) const{
+		inline bool operator<=(const Self aOther) const{
 			return mIterator <= aOther.mIterator;
 		}
 
-		bool operator>=(const this_t aOther) const{
+		inline bool operator>=(const Self aOther) const{
 			return mIterator >= aOther.mIterator;
 		}
 	};

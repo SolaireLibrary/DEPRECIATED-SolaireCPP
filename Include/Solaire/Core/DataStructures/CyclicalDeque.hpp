@@ -49,6 +49,8 @@ namespace Solaire{ namespace Core{
 		typedef typename Array::ConstPointer ConstPointer;
 		typedef typename Array::Iterator Iterator;
 		typedef typename Array::ConstIterator ConstIterator;
+		typedef typename Array::ReverseIterator ReverseIterator;
+		typedef typename Array::ConstReverseIterator ConstReverseIterator;
 		typedef typename Array::Index Index;
 
 		typedef CyclicalDeque<TYPE, CONST_TYPE, INDEX> Self;
@@ -62,7 +64,6 @@ namespace Solaire{ namespace Core{
 	    CyclicalDeque(const Self& aOther) :
 	        mArray(aOther.mArray)
         {}
-
 
 	    CyclicalDeque(Self&& aOther) :
 	        mArray(std::move(aOther.mArray))
@@ -197,6 +198,22 @@ namespace Solaire{ namespace Core{
 
 		ConstIterator end() const{
 		    return mArray.end();
+		}
+
+		ReverseIterator rbegin(){
+		    return mArray.rbegin();
+		}
+
+		ConstReverseIterator rbegin() const{
+		    return mArray.rbegin();
+		}
+
+		ReverseIterator rend(){
+		    return mArray.rend();
+		}
+
+		ConstReverseIterator rend() const{
+		    return mArray.rend();
 		}
 	};
 }}

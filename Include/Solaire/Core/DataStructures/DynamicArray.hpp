@@ -35,6 +35,8 @@
 #include <stdexcept>
 #include <functional>
 #include "..\Allocator.hpp"
+#include "..\Iterators\ReverseIterator.hpp"
+#include "..\Iterators\ConstIterator.hpp"
 
 namespace Solaire{ namespace Core{
 
@@ -50,6 +52,8 @@ namespace Solaire{ namespace Core{
 		typedef ConstType* ConstPointer;
 		typedef Pointer Iterator;
 		typedef ConstPointer ConstIterator;
+		typedef Core::ReverseIterator<Type, Iterator> ReverseIterator;
+		typedef Core::ConstIterator<Type, ReverseIterator> ConstReverseIterator;
 		typedef INDEX Index;
 		typedef DynamicArray<TYPE, CONST_TYPE, INDEX> Self;
 	private:
@@ -123,7 +127,7 @@ namespace Solaire{ namespace Core{
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aCount),
-			mData(static_cast<Type*>(mAllocator->AllocateMany(mSize)))
+			mData(aAllocator.AllocateMany(mSize))
 		{}
 
 		DynamicArray(ConstReference aValue, const Index aCount, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
@@ -310,10 +314,6 @@ namespace Solaire{ namespace Core{
 		    return *begin();
 		}
 
-		Iterator begin(){
-		    return mData;
-		}
-
 		ConstReference Back() const{
 		    return *(end() - 1);
 		}
@@ -322,6 +322,10 @@ namespace Solaire{ namespace Core{
 		    return *begin();
 		}
 
+		Iterator begin(){
+		    return mData;
+		}
+
 		ConstIterator begin() const{
 		    return mData;
 		}
@@ -334,126 +338,21 @@ namespace Solaire{ namespace Core{
 		    return mData + mHead;
 		}
 
-		/*DynamicArray(ConstReference aValue, const size_t aCopies) :
-			mHead(0)
-		{
-			for(size_t i = 0; i < aCopies; ++i){
-				Push(aValue);
-			}
+		ReverseIterator rbegin(){
+		    return ReverseIterator(end() - 1);
 		}
 
-		DynamicArray(const std::initializer_list<Type> aList) :
-			mHead(0)
-		{
-			for(Type i : aList) Push(i);
+		ConstReverseIterator rbegin() const{
+		    return ConstReverseIterator(end() - 1);
 		}
 
-		template<class external_Iterator>
-		DynamicArray(external_Iterator aBegin, const external_Iterator aEnd) :
-			mHead(0)
-		{
-			while(aBegin != aEnd) {
-				Push(*aBegin);
-				++aBegin;
-			}
+		ReverseIterator rend(){
+		    return ReverseIterator(begin() - 1);
 		}
 
-		~DynamicArray(){
-
+		ConstReverseIterator rend() const{
+		    return ConstReverseIterator(begin() - 1);
 		}
-
-		void Clear(){
-			const Iterator begin = this->begin();
-			const Iterator end = this->end();
-			Iterator i = begin;
-			while(i != end){
-				i->~Type();
-				++i;
-			}
-			mHead = 0;
-		}
-
-		bool IsEmpty() const{
-			return mHead == 0;
-		}
-
-		size_t Size() const{
-			return mHead;
-		}
-
-		size_t Capacity() const{
-			return SIZE;
-		}
-
-		Reference operator[](const size_t aIndex){
-			if(aIndex < mHead) throw std::runtime_error("Index out of bounds");
-			return reinterpret_cast<Pointer>(mData)[aIndex];
-		}
-
-		ConstReference operator[](const size_t aIndex) const{
-			if(aIndex < mHead) throw std::runtime_error("Index out of bounds");
-			return reinterpret_cast<ConstPointer>(mData)[aIndex];
-		}
-
-		Reference Push(Move aItem){
-			if(mHead == SIZE) throw std::runtime_error("DynamicArray is full");
-
-			const Pointer ptr = reinterpret_cast<Pointer>(mData) + mHead++;
-			new(ptr) Type(std::move(aItem));
-			return *ptr;
-		}
-
-		Reference Push(ConstReference aItem) {
-			if(mHead == SIZE) throw std::runtime_error("DynamicArray is full");
-
-			const Pointer ptr = reinterpret_cast<Pointer>(mData) + mHead++;
-			new(ptr) Type(aItem);
-			return *ptr;
-		}
-
-		Type Pop(){
-			if(mHead > 0) throw std::runtime_error("DynamicArray is empty");
-
-			const Pointer ptr = &Back();
-			--mHead;
-
-			Type tmp(*ptr);
-			ptr->~Type();
-
-			return tmp;
-		}
-
-		Reference Front(){
-			return reinterpret_cast<Pointer>(mData)[0];
-		}
-
-		ConstReference Front() const{
-			return reinterpret_cast<ConstPointer>(mData)[0];
-		}
-
-		Reference Back(){
-			return reinterpret_cast<Pointer>(mData)[mHead - 1];
-		}
-
-		ConstReference Back() const{
-			return reinterpret_cast<ConstPointer>(mData)[mHead - 1];
-		}
-
-		Iterator begin(){
-			return reinterpret_cast<Pointer>(mData);
-		}
-
-		ConstIterator begin() const{
-			return reinterpret_cast<ConstPointer>(mData);
-		}
-
-		Iterator end(){
-			return reinterpret_cast<Pointer>(mData) + mHead;
-		}
-
-		ConstIterator end() const{
-			return reinterpret_cast<ConstPointer>(mData) + mHead;
-		}*/
 	};
 }}
 
