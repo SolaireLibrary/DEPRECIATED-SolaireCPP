@@ -115,6 +115,10 @@ namespace Solaire{ namespace Core{
         void DeallocateMany(T* const aAddress, const size_t aCount) override{
             mAllocator->Deallocate(aAddress, sizeof(T) * aCount);
         }
+
+        Allocator<void>& GetAllocator() const{
+            return *mAllocator;
+        }
     };
 
     template<class T>
