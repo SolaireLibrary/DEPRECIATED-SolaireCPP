@@ -54,8 +54,6 @@ namespace Solaire{ namespace Core{
 #else
         std::atomic_uint16_t mUsers;
 #endif
-        uint16_t mUsers;
-
         ResourceFactory& operator=(const ResourceFactory& aOther) = delete;
         ResourceFactory& operator=(ResourceFactory&& aOther) = delete;
     protected:

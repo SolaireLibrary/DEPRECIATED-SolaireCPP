@@ -83,7 +83,7 @@ namespace Solaire{ namespace Core{
         }
 
         bool HasEntryAtIndex(const Key aKey) const{
-            mMap.find(aKey) != mMap.end();
+            return mMap.find(aKey) != mMap.end();
         }
 
         Reference operator[](const Key aKey){
