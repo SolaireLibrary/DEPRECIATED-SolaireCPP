@@ -25,7 +25,7 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 1.0
+	\version 2.0
 	\date
 	Created			: 17th September 2015
 	Last Modified	: 27th September 2015

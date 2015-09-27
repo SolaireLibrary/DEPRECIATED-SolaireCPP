@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_REVERSE_ITERATOR_HPP
-#define SOLAIRE_CORE_REVERSE_ITERATOR_HPP
+#ifndef SOLAIRE_CORE_CONDITIONAL_ITERATOR_HPP
+#define SOLAIRE_CORE_CONDITIONAL_ITERATOR_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,75 +20,107 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file DereferenceIterator.hpp
+	\file ConditionalIterator.hpp
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 2.0
+	\version 1.0
 	\date
-	Created			: 27th September 2015
+	Created			: 17th September 2015
 	Last Modified	: 27th September 2015
 */
 
 namespace Solaire{ namespace Core{
 
-	template<class T, class ITERATOR>
-	class ReverseIterator{
+	template<class T, class ITERATOR, class FUNCTION>
+	class ConditionalIterator{
 	private:
 		ITERATOR mIterator;
+		ITERATOR mBegin;
+		ITERATOR mEnd;
+		FUNCTION* mCondition;
 	public:
 		typedef T Type;
 		typedef Type& Reference;
 		typedef Type* Pointer;
-		typedef ReverseIterator<Type, ITERATOR> Self;
+		typedef DereferenceIterator<Type, ITERATOR> Self;
 
-		ReverseIterator() :
-			mIterator()
+		ConditionalIterator() :
+			mIterator(),
+			mBegin(),
+			mEnd(),
+			mCondition(nullptr)
 		{}
 
-		ReverseIterator(const ITERATOR aOther) :
-			mIterator(aOther)
-		{}
+		ConditionalIterator(const ITERATOR aIterator, const ITERATOR aBegin, const ITERATOR aEnd, FUNCTION& aCondition) :
+			mIterator(aIterator),
+			mBegin(aBegin),
+			mEnd(aEnd),
+			mCondition(&aCondition)
+		{
+		    --mBegin;
+		    if(! mCondition(*mIterator)) operator++();
+        }
 
-		inline size_t operator-(const Self aOther) const{
-			return mIterator - aOther.mIterator;
-		}
+		//inline size_t operator-(const Self aOther) const{
+		//	return mIterator - aOther.mIterator;
+		//}
 
-		inline Self& operator++(){
-			--mIterator;
+		Self& operator++(){
+		    if(mIterator != mEnd){
+                ++mIterator;
+                while(mIterator != mEnd && ! mCondition(*mIterator)){
+                    ++mIterator;
+                }
+		    }
 			return *this;
 		}
 
 		inline Self operator++(int){
-			return Self(mIterator--);
+			return Self(operator++());
 		}
 
-		inline Self& operator--(){
-			++mIterator;
+		Self& operator--(){
+		    if(mIterator != mBegin){
+                --mIterator;
+                while(mIterator != mBegin && ! mCondition(*mIterator)){
+                    --mIterator;
+                }
+			}
 			return *this;
 		}
 
 		inline Self operator--(int){
-			return Self(mIterator++);
+			return Self(operator--());
 		}
 
-		inline Self& operator+=(const size_t aNumber){
-			mIterator -= aNumber;
+		Self& operator+=(const size_t aNumber){
+			while(aNumber > 0){
+                operator++();
+                --aNumber;
+			}
 			return *this;
 		}
 
 		Self operator+(const size_t aNumber) const{
-			return Self(mIterator - aNumber); //! \TODO Check if this is correct
+			Self tmp(*this);
+		    tmp += aNumber;
+		    return tmp;
 		}
 
-		inline Self& operator-=(const size_t aNumber){
-			mIterator += aNumber;
+		Self& operator-=(size_t aNumber){
+			while(aNumber > 0){
+                operator--();
+                --aNumber;
+			}
 			return *this;
 		}
 
 		inline Self operator-(const size_t aNumber) const{
-			return Self(mIterator + aNumber);
+		    Self tmp(*this);
+		    tmp -= aNumber;
+		    return tmp;
 		}
 
 		inline Reference operator*() const{
