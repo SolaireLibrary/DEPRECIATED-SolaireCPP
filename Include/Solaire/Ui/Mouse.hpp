@@ -123,7 +123,6 @@ namespace Solaire{ namespace Ui{
     private:
         struct ButtonInfo{
             typedef std::pair<uint64_t, uint64_t> TimePair;
-
             Core::CyclicalDeque<TimePair> history;
             bool isPressed;
 
@@ -152,8 +151,10 @@ namespace Solaire{ namespace Ui{
 
         //Core::WrapperAllocator<void*> mAllocator;
         ButtonInfo mButtons[BUTTON_COUNT];
-        MouseCoord mPosition;
-        float mWheelPosition;
+        typedef std::pair<uint64_t, MouseCoord> PositionHistory;
+        Core::CyclicalDeque<PositionHistory> mPositionHistory;
+        typedef std::pair<uint64_t, float> WheelHistory;
+        Core::CyclicalDeque<WheelHistory> mWheelHistory;
 
         ButtonInfo& GetButtonInfo(const MouseButton aButton){
             return mButtons[aButton];
@@ -201,19 +202,21 @@ namespace Solaire{ namespace Ui{
 
         void OnWheelScroll(const float aMovement, const uint64_t aTime) override{
             ScrollWheel(aMovement, aTime);
-            mWheelPosition += aMovement;
+            mWheelHistory.PushBack(WheelHistory(aTime, mWheelHistory.Back().second));
         }
 
         void OnMove(const MouseCoord aMovement, const uint64_t aTime) override{
             Move(aMovement, aTime);
-            mPosition += aMovement;
+            mPositionHistory.PushBack(PositionHistory(aTime, mPositionHistory.Back().second));
         }
 
     public:
-        Mouse()//Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>() :
+        Mouse()://Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>() :
             //KeySource(reinterpret_cast<Core::WrapperAllocator<ListenerBase*>&>(mAllocator)),
            // KeyAllocator(reinterpret_cast<Core::WrapperAllocator<SourceBase*>&>(mAllocator)),
             //mAllocator(aAllocator)
+            mWheelHistory(SOLAIRE_INPUT_HISTORY),
+            mPositionHistory(SOLAIRE_INPUT_HISTORY)
         {}
 
         bool WasButtonPressed(const MouseButton aButton, const uint64_t aTime) const{
@@ -233,11 +236,57 @@ namespace Solaire{ namespace Ui{
         }
 
         float GetWheelPosition() const{
-            return mWheelPosition;
+            return mWheelHistory.Back().second;
         }
 
         MouseCoord GetPosition() const{
-            return mPosition;
+            return mPositionHistory.Back().second;
+        }
+
+        float GetWheelPosition(const uint64_t aTime) const{
+            const auto end = mWheelHistory.end();
+            auto i = mWheelHistory.begin();
+            auto j = i + 1;
+
+            if(i == end) return 0.f;
+            if(aTime < i->first || j == end) return i->second;
+
+            while(j != end){
+                if(aTime >= i->first && aTime < j->first){
+                    const double t0 = i->first;
+                    const double t1 = j->first;
+                    const double p0 = i->second;
+                    const double p1 = j->second;
+                    const double w = t0 / t1;
+                    return static_cast<float>(Core::Maths::Lerp(p0, p1, w));
+                }
+                ++i;
+                ++j;
+            }
+
+            return i->second;
+        }
+
+        MouseCoord GetPosition(const uint64_t aTime) const{
+            const auto end = mPositionHistory.end();
+            auto i = mPositionHistory.begin();
+            auto j = i + 1;
+
+            if(i == end) return 0.f;
+            if(aTime < i->first || j == end) return i->second;
+
+            while(j != end){
+                if(aTime >= i->first && aTime < j->first){
+                    const double t0 = i->first;
+                    const double t1 = j->first;
+                    const double w = t0 / t1;
+                    return i->second.Lerp(j->second, w);
+                }
+                ++i;
+                ++j;
+            }
+
+            return i->second;
         }
     };
 

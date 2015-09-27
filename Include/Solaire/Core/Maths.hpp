@@ -206,6 +206,12 @@ namespace Solaire{ namespace Core{ namespace Maths{
         return CeilToClosestMultiple<T>(aValue, aMultiple) - (((aValue & (aMultiple - 1)) < 5) && ((aValue & (aMultiple - 1)) != 0) ? 5 : 0);
     }
 
+    // Misc
+
+    static constexpr double Lerp(const double aFirst, const double aSecond, const double aWeight){
+        return (1.0 - aWeight) * aFirst + aWeight * aSecond;
+    }
+
 }}}
 
 

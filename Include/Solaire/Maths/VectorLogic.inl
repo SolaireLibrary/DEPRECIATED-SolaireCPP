@@ -201,23 +201,34 @@ namespace Solaire{ namespace Maths{
             return aVector;
         }
 
-        static inline T* VectorAdd(T* const aOutput, const T* const aVector, const T aScalar){
+        static inline T* Add(T* const aOutput, const T* const aVector, const T aScalar){
             return AddEq(Copy(aOutput, aVector), aScalar);
         }
 
-        static inline T* VectorSub(T* const aOutput, const T* const aVector, const T aScalar){
+        static inline T* Sub(T* const aOutput, const T* const aVector, const T aScalar){
             return SubEq(Copy(aOutput, aVector), aScalar);
         }
 
-        static inline T* VectorMul(T* const aOutput, const T* const aVector, const T aScalar){
+        static inline T* Mul(T* const aOutput, const T* const aVector, const T aScalar){
             return MulEq(Copy(aOutput, aVector), aScalar);
         }
 
-        static inline T* VectorDiv(T* const aOutput, const T* const aVector, const T aScalar){
+        static inline T* Div(T* const aOutput, const T* const aVector, const T aScalar){
             return DivEq(Copy(aOutput, aVector), aScalar);
         }
 
         // Vector Misc
+
+        static inline T* LerpEq(T* const aOutput, const T* const aVector, const double aWeight){
+            for(uint32_t i = 0; i < LENGTH; ++i){
+                aOutput[i] = static_cast<T>(Core::Maths::Lerp(static_cast<double>(aOutput[i]), static_cast<double>(aVector[i]), aWeight));
+            }
+            return aOutput;
+        }
+
+        static inline T* Lerp(T* const aOutput, const T* const aFirst, const T* const aSecond, const double aWeight){
+            return LerpEq(Copy(aOutput, aFirst), aSecond, aWeight);
+        }
 
         static inline T Sum(const T* const aVector){
             T sum = static_cast<T>(0);

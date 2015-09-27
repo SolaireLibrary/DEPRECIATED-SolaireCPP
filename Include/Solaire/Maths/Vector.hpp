@@ -274,6 +274,18 @@ namespace Solaire{ namespace Maths{
 		}
 
 		/*!
+			\brief Linear interpolation between two vectors.
+			\param aOther The vector to interpolation.
+			\param aWeight The ratio of this vector to \a aOther.
+			\return The result of the interpolation.
+		*/
+		inline Vector<Element, LENGTH> Lerp(const Vector<Element, LENGTH>& aOther, const double aWeight) const{
+			Vector<Element, LENGTH> tmp(*this);
+			Logic::LerpEq(tmp.mElements, aOther.mElements, aWeight);
+			return tmp;
+		}
+
+		/*!
 			\brief Access a vector component by index.
 			\detail Will throw std::runtime_error if \a aIndex is out of bounds.
 			\param aIndex The index to access.
