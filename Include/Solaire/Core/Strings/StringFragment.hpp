@@ -31,6 +31,7 @@ Created			: 17th September 2015
 Last Modified	: 28th September 2015
 */
 
+#include <iostream>
 #include "..\Iterators\ReverseIterator.hpp"
 #include "..\Iterators\ConstIterator.hpp"
 
@@ -77,6 +78,16 @@ namespace Solaire { namespace Core {
 		bool operator>(const StringFragment aOther) const;
 		bool operator<=(const StringFragment aOther) const;
 		bool operator>=(const StringFragment aOther) const;
+
+        friend std::ostream& operator<<(std::ostream& aStream, const StringFragment& aFragment){
+            aStream.write(aFragment.mBegin, aFragment.Size());
+            return aStream;
+        }
+
+        friend std::istream& operator>>(std::istream& aStream, StringFragment& aFragment){
+            aStream.read(aFragment.mBegin, aFragment.Size());
+            return aStream;
+        }
 	};
 
 	class ConstStringFragment{
@@ -108,6 +119,14 @@ namespace Solaire { namespace Core {
 		bool operator>(const ConstStringFragment aOther) const;
 		bool operator<=(const ConstStringFragment aOther) const;
 		bool operator>=(const ConstStringFragment aOther) const;
+
+        friend std::ostream& operator<<(std::ostream& aStream, const ConstStringFragment& aFragment){
+            return aStream << aFragment.mFragment;
+        }
+
+        friend std::istream& operator>>(std::istream& aStream, ConstStringFragment& aFragment){
+            return aStream >> aFragment.mFragment;
+        }
 	};
 }}
 

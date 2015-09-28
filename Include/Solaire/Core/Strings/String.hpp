@@ -34,6 +34,7 @@
 #include <type_traits>
 #include <sstream>
 #include "../DataStructures/DynamicArray.hpp"
+#include "StringFragment.hpp"
 
 namespace Solaire{ namespace Core{
 
@@ -91,11 +92,11 @@ namespace Solaire{ namespace Core{
         }
 
         size_t Size() const{
-            return mContainer.Size();
+            return mContainer.Size() - 1;
         }
 
         size_t Capacity() const{
-            return mContainer.Capacity();
+            return mContainer.Capacity() - 1;
         }
 
         Reference operator[](const size_t aIndex){
@@ -141,6 +142,14 @@ namespace Solaire{ namespace Core{
 
         ConstPointer CString() const{
             return &mContainer[0];
+        }
+
+        operator StringFragment(){
+            return StringFragment(begin(), end());
+        }
+
+        operator ConstStringFragment() const{
+            return ConstStringFragment(begin(), end());
         }
 
         bool operator==(const Self& aOther) const{
@@ -217,7 +226,7 @@ namespace Solaire{ namespace Core{
             return mContainer.rend();
         }
 
-        friend std::ostream& operator<<(std::ostream& aStream, const Self& aString) {
+        friend std::ostream& operator<<(std::ostream& aStream, const Self& aString){
             aStream.write(aString.CString(), aString.Size());
         }
 

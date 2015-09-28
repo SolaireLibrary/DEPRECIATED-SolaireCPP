@@ -228,11 +228,11 @@ namespace Solaire{ namespace Ui{
         }
 
         uint64_t GetTimePressed(const MouseButton aButton) const{
-            GetButtonInfo(aButton).history.Back().first;
+            return GetButtonInfo(aButton).history.Back().first;
         }
 
         uint64_t GetTimeReleased(const MouseButton aButton) const{
-            GetButtonInfo(aButton).history.Back().second;
+            return GetButtonInfo(aButton).history.Back().second;
         }
 
         float GetWheelPosition() const{
