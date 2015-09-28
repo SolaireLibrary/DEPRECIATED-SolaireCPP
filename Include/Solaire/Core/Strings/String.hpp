@@ -53,8 +53,6 @@ namespace Solaire{ namespace Core{
         typedef typename Container::ConstIterator ConstIterator;
         typedef typename Container::ReverseIterator ReverseIterator;
         typedef typename Container::ConstReverseIterator ConstReverseIterator;
-
-        typedef String Self;
     private:
         Container mContainer;
     public:
@@ -103,16 +101,16 @@ namespace Solaire{ namespace Core{
             return mContainer[aIndex];
         }
 
-        ConstReference operator[](const size_t aIndex) const{
+        Type operator[](const size_t aIndex) const{
             return mContainer[aIndex];
         }
 
-        Self& operator+=(const char aValue){
+        String& operator+=(const char aValue){
             PushBack(aValue);
             return *this;
         }
 
-        Self& operator+=(const char* aValue){
+        String& operator+=(const char* aValue){
             while(*aValue != '\0'){
                 PushBack(*aValue);
                 ++aValue;
@@ -121,14 +119,18 @@ namespace Solaire{ namespace Core{
         }
 
         template<class T>
-        Self& operator+=(const std::basic_string<T>& aValue){
+        String& operator+=(const std::basic_string<T>& aValue){
             for(const T c : aValue) PushBack(static_cast<char>(c));
             return *this;
         }
 
-        template<class T>
-        Self& operator+=(const Self& aValue){
-            for(const T c : aValue) PushBack(c);
+        String& operator+=(const String& aValue){
+            for(const Type c : aValue) PushBack(c);
+            return *this;
+        }
+
+        String& operator+=(const StringFragment aValue){
+            for(const Type c : aValue) PushBack(c);
             return *this;
         }
 
@@ -152,29 +154,29 @@ namespace Solaire{ namespace Core{
             return ConstStringFragment(begin(), end());
         }
 
-        bool operator==(const Self& aOther) const{
+        bool operator==(const String& aOther) const{
             if(Size() != aOther.Size()) return false;
             return std::memcmp(CString(), aOther.CString(), sizeof(Type) * Size()) == 0;
         }
 
-        bool operator!=(const Self& aOther) const{
+        bool operator!=(const String& aOther) const{
             if(Size() != aOther.Size()) return false;
             return std::memcmp(CString(), aOther.CString(), sizeof(Type) * Size()) != 0;
         }
 
-        bool operator<(const Self& aOther) const{
+        bool operator<(const String& aOther) const{
             return std::memcmp(CString(), aOther.CString(), sizeof(Type) * std::min(Size(), aOther.Size())) == -1;
         }
 
-        bool operator>(const Self& aOther) const{
+        bool operator>(const String& aOther) const{
             return std::memcmp(CString(), aOther.CString(), sizeof(Type) * std::min(Size(), aOther.Size())) == 1;
         }
 
-        bool operator<=(const Self& aOther) const{
+        bool operator<=(const String& aOther) const{
             return std::memcmp(CString(), aOther.CString(), sizeof(Type) * std::min(Size(), aOther.Size())) <= 0;
         }
 
-        bool operator>=(const Self& aOther) const{
+        bool operator>=(const String& aOther) const{
             return std::memcmp(CString(), aOther.CString(), sizeof(Type) * std::min(Size(), aOther.Size())) >= 0;
         }
 
@@ -226,12 +228,60 @@ namespace Solaire{ namespace Core{
             return mContainer.rend();
         }
 
-        friend std::ostream& operator<<(std::ostream& aStream, const Self& aString){
+        Iterator FindFirst(const Type aChar){
+            return StringFragment(begin(), end()).FindFirst(aChar);
+        }
+
+        Iterator FindNext(const Iterator aPos, const Type aChar){
+            return StringFragment(begin(), end()).FindNext(aPos, aChar);
+        }
+
+        Iterator FindLast(const Type aChar){
+            return StringFragment(begin(), end()).FindLast(aChar);
+        }
+
+        ConstIterator FindFirst(const Type aChar) const{
+            return ConstStringFragment(begin(), end()).FindFirst(aChar);
+        }
+
+        ConstIterator FindNext(const Iterator aPos, const Type aChar) const{
+            return ConstStringFragment(begin(), end()).FindNext(aPos, aChar);
+        }
+
+        ConstIterator FindLast(const Type aChar) const{
+            return ConstStringFragment(begin(), end()).FindLast(aChar);
+        }
+
+        Iterator FindFirst(const ConstStringFragment aFragment){
+            return StringFragment(begin(), end()).FindFirst(aFragment);
+        }
+
+        Iterator FindNext(const Iterator aPos, const ConstStringFragment aFragment){
+            return StringFragment(begin(), end()).FindNext(aPos, aFragment);
+        }
+
+        Iterator FindLast(const ConstStringFragment aFragment){
+            return StringFragment(begin(), end()).FindLast(aFragment);
+        }
+
+        ConstIterator FindFirst(const ConstStringFragment aFragment) const{
+            return ConstStringFragment(begin(), end()).FindFirst(aFragment);
+        }
+
+        ConstIterator FindNext(const Iterator aPos, ConstStringFragment aFragment) const{
+            return ConstStringFragment(begin(), end()).FindNext(aPos, aFragment);
+        }
+
+        ConstIterator FindLast(const ConstStringFragment aFragment) const{
+            return ConstStringFragment(begin(), end()).FindLast(aFragment);
+        }
+
+        friend std::ostream& operator<<(std::ostream& aStream, const String& aString){
             aStream.write(aString.CString(), aString.Size());
             return aStream;
         }
 
-        friend std::istream& operator>>(std::istream& aStream, Self& aString){
+        friend std::istream& operator>>(std::istream& aStream, String& aString){
             char c;
             while(! aStream.eof()){
                 aStream >> c;

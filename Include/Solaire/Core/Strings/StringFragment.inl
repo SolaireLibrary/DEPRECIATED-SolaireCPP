@@ -45,6 +45,11 @@ namespace Solaire { namespace Core {
 		mEnd(aBegin + aLength)
 	{}
 
+	StringFragment::StringFragment(const Pointer aBegin) :
+		mBegin(aBegin),
+		mEnd(aBegin + std::strlen(aBegin))
+	{}
+
 	constexpr size_t StringFragment::Size() const{
 		return mEnd - mBegin;
 	}
@@ -117,6 +122,90 @@ namespace Solaire { namespace Core {
 		return std::memcmp(mBegin, aOther.mBegin, std::min(Size(), aOther.Size())) >= 0;
 	}
 
+    StringFragment::Iterator StringFragment::FindFirst(const Type aChar){
+        return const_cast<Iterator>(const_cast<const StringFragment*>(this)->FindFirst(aChar));
+    }
+
+    StringFragment::Iterator StringFragment::FindNext(const Iterator aPos, const Type aChar){
+        return const_cast<Iterator>(const_cast<const StringFragment*>(this)->FindNext(const_cast<Iterator>(aPos), aChar));
+    }
+
+    StringFragment::Iterator StringFragment::FindLast(const Type aChar){
+        return const_cast<Iterator>(const_cast<const StringFragment*>(this)->FindLast(aChar));
+    }
+
+    StringFragment::Iterator StringFragment::FindFirst(const ConstStringFragment aFragment){
+        return const_cast<Iterator>(const_cast<const StringFragment*>(this)->FindFirst(aFragment));
+    }
+
+    StringFragment::Iterator StringFragment::FindNext(const Iterator aPos, const ConstStringFragment aFragment){
+        return const_cast<Iterator>(const_cast<const StringFragment*>(this)->FindNext(const_cast<Iterator>(aPos), aFragment));
+    }
+
+    StringFragment::Iterator StringFragment::FindLast(const ConstStringFragment aFragment){
+        return const_cast<Iterator>(const_cast<const StringFragment*>(this)->FindLast(aFragment));
+    }
+
+    StringFragment::ConstIterator StringFragment::FindFirst(const Type aChar) const{
+        return FindNext(begin(), aChar);
+    }
+
+    StringFragment::ConstIterator StringFragment::FindNext(const ConstIterator aPos, const Type aChar) const{
+        const ConstIterator end = this->end();
+        for(ConstIterator i = begin(); i != end; ++i){
+            if(*i == aChar) return i;
+        }
+        return end;
+    }
+
+    StringFragment::ConstIterator StringFragment::FindLast(const Type aChar) const{
+        const ConstIterator end = this->end();
+        ConstIterator it = FindFirst(aChar);
+        ConstIterator prev;
+        while(it != end){
+            prev = it;
+            it = FindNext(it + 1, aChar);
+        }
+        return prev;
+    }
+
+    StringFragment::ConstIterator StringFragment::FindFirst(const ConstStringFragment aFragment) const{
+        return FindNext(begin(), aFragment);
+    }
+
+    StringFragment::ConstIterator StringFragment::FindNext(const ConstIterator aPos, const ConstStringFragment aFragment) const{
+        ConstStringFragment thisFrag(aPos, end());
+
+
+        const size_t fragSize = aFragment.Size();
+        const size_t thisSize = thisFrag.Size();
+
+        if(fragSize > thisSize){
+            return thisFrag.end();
+        }else if(fragSize == thisSize){
+            return thisFrag == aFragment ? thisFrag.begin() : thisFrag.end();
+        }else{
+            const size_t dif = thisSize - fragSize;
+            const ConstIterator end = thisFrag.begin() + dif;
+            for(ConstIterator i = thisFrag.begin(); i != end; ++i){
+                if(ConstStringFragment(i, i + dif) == aFragment) return i;
+            }
+            return thisFrag.end();
+        }
+    }
+
+    StringFragment::ConstIterator StringFragment::FindLast(const ConstStringFragment aFragment) const{
+        const ConstIterator end = this->end();
+        ConstIterator it = FindFirst(aFragment);
+        ConstIterator prev;
+        while(it != end){
+            prev = it;
+            it = FindNext(it + 1, aFragment);
+        }
+        return prev;
+    }
+
+
 	// ConstStringFragment
 
 	constexpr ConstStringFragment::ConstStringFragment(const ConstPointer aBegin, const ConstPointer aEnd) :
@@ -126,6 +215,11 @@ namespace Solaire { namespace Core {
 	constexpr ConstStringFragment::ConstStringFragment(const ConstPointer aBegin, const size_t aLength) :
 		mFragment(const_cast<StringFragment::Pointer>(aBegin), aLength)
 	{}
+
+	ConstStringFragment::ConstStringFragment(const ConstPointer aBegin) :
+		mFragment(const_cast<StringFragment::Pointer>(aBegin))
+	{}
+
 
     constexpr ConstStringFragment::ConstStringFragment(const StringFragment aOther) :
 		mFragment(aOther)
@@ -178,6 +272,31 @@ namespace Solaire { namespace Core {
 	bool ConstStringFragment::operator>=(const ConstStringFragment aOther) const{
 		return mFragment >= aOther.mFragment;
 	}
+
+    ConstStringFragment::ConstIterator ConstStringFragment::FindFirst(const Type aChar) const{
+        return mFragment.FindFirst(aChar);
+    }
+
+    ConstStringFragment::ConstIterator ConstStringFragment::FindNext(const ConstIterator aPos, const Type aChar) const{
+        return mFragment.FindNext(aPos, aChar);
+    }
+
+    ConstStringFragment::ConstIterator ConstStringFragment::FindLast(const Type aChar) const{
+        return mFragment.FindLast(aChar);
+    }
+
+    ConstStringFragment::ConstIterator ConstStringFragment::FindFirst(const ConstStringFragment aFragment) const{
+        return mFragment.FindFirst(aFragment);
+    }
+
+    ConstStringFragment::ConstIterator ConstStringFragment::FindNext(const ConstIterator aPos, const ConstStringFragment aFragment) const{
+        return mFragment.FindNext(aPos, aFragment);
+    }
+
+    ConstStringFragment::ConstIterator ConstStringFragment::FindLast(const ConstStringFragment aFragment) const{
+        return mFragment.FindLast(aFragment);
+    }
+
 }}
 
 

@@ -58,6 +58,7 @@ namespace Solaire { namespace Core {
 
 		constexpr StringFragment(const Pointer aBegin, const Pointer aEnd);
 		constexpr StringFragment(const Pointer aBegin, const size_t aLength);
+		StringFragment(const Pointer aBegin);
 
 		Iterator begin();
 		constexpr ConstIterator begin() const;
@@ -78,6 +79,20 @@ namespace Solaire { namespace Core {
 		bool operator>(const StringFragment aOther) const;
 		bool operator<=(const StringFragment aOther) const;
 		bool operator>=(const StringFragment aOther) const;
+
+		Iterator FindFirst(const Type aChar);
+		Iterator FindNext(const Iterator aPos, const Type aChar);
+		Iterator FindLast(const Type aChar);
+		Iterator FindFirst(const ConstStringFragment aFragment);
+		Iterator FindNext(const Iterator aPos, const ConstStringFragment aFragment);
+		Iterator FindLast(const ConstStringFragment aFragment);
+
+		ConstIterator FindFirst(const Type aChar) const;
+		ConstIterator FindNext(const ConstIterator aPos, const Type aChar) const;
+		ConstIterator FindLast(const Type aChar) const;
+		ConstIterator FindFirst(const ConstStringFragment aFragment) const;
+		ConstIterator FindNext(const ConstIterator aPos, const ConstStringFragment aFragment) const;
+		ConstIterator FindLast(const ConstStringFragment aFragment) const;
 
         friend std::ostream& operator<<(std::ostream& aStream, const StringFragment& aFragment){
             aStream.write(aFragment.mBegin, aFragment.Size());
@@ -103,6 +118,7 @@ namespace Solaire { namespace Core {
 	public:
 		constexpr ConstStringFragment(const ConstPointer aBegin, const ConstPointer aEnd);
 		constexpr ConstStringFragment(const ConstPointer aBegin, const size_t aLength);
+		ConstStringFragment(const ConstPointer aBegin);
 		constexpr ConstStringFragment(const StringFragment aOther);
 
 		constexpr ConstIterator begin() const;
@@ -119,6 +135,13 @@ namespace Solaire { namespace Core {
 		bool operator>(const ConstStringFragment aOther) const;
 		bool operator<=(const ConstStringFragment aOther) const;
 		bool operator>=(const ConstStringFragment aOther) const;
+
+		ConstIterator FindFirst(const Type aChar) const;
+		ConstIterator FindNext(const ConstIterator aPos, const Type aChar) const;
+		ConstIterator FindLast(const Type aChar) const;
+		ConstIterator FindFirst(const ConstStringFragment aFragment) const;
+		ConstIterator FindNext(const ConstIterator aPos, const ConstStringFragment aFragment) const;
+		ConstIterator FindLast(const ConstStringFragment aFragment) const;
 
         friend std::ostream& operator<<(std::ostream& aStream, const ConstStringFragment& aFragment){
             return aStream << aFragment.mFragment;
