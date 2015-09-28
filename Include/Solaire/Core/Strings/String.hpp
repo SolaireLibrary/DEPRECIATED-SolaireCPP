@@ -398,6 +398,24 @@ namespace Solaire{ namespace Core{
             return *this;
         }
 
+        String& EraseAll(const Type aChar){
+            Iterator it = FindFirst(aChar);
+            while(it != end()){
+                Erase(it);
+                it = FindNext(it, aChar);
+            }
+            return *this;
+        }
+
+        String& EraseAll(const ConstStringFragment aFragment){
+            Iterator it = FindFirst(aFragment).begin();
+            while(it != end()){
+                Erase(it, aFragment.Size());
+                it = FindNext(it, aFragment).begin();
+            }
+            return *this;
+        }
+
         friend std::ostream& operator<<(std::ostream& aStream, const String& aString){
             aStream.write(aString.CString(), aString.Size());
             return aStream;
