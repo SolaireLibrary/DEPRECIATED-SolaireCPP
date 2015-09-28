@@ -33,7 +33,7 @@
 
 #include <type_traits>
 #include <sstream>
-#include "DataStructures/DynamicArray.hpp"
+#include "../DataStructures/DynamicArray.hpp"
 
 namespace Solaire{ namespace Core{
 

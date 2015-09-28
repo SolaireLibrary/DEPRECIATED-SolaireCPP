@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_STRING_FRAGMENT_HPP
-#define SOLAIRE_UTILITY_STRING_FRAGMENT_HPP
+#ifndef SOLAIRE_CORE_STRING_FRAGMENT_HPP
+#define SOLAIRE_CORE_STRING_FRAGMENT_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -28,12 +28,12 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 17th September 2015
-Last Modified	: 18th September 2015
+Last Modified	: 28th September 2015
 */
 
 #include <string>
 
-namespace Solaire { namespace Utility {
+namespace Solaire { namespace Core {
 	class StringFragment{
 	private:
 		char* mBegin;

@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_STRING_FRAGMENT_INL
-#define SOLAIRE_UTILITY_STRING_FRAGMENT_INL
+#ifndef SOLAIRE_CORE_STRING_FRAGMENT_INL
+#define SOLAIRE_CORE_STRING_FRAGMENT_INL
 
 //Copyright 2015 Adam Smith
 //
@@ -28,12 +28,10 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 18th September 2015
-Last Modified	: 18th September 2015
+Last Modified	: 28th September 2015
 */
 
-#include "..\Hash.hpp"
-
-namespace Solaire { namespace Utility {
+namespace Solaire { namespace Core {
 
 	// StringFragment
 
@@ -132,13 +130,6 @@ namespace Solaire { namespace Utility {
 
 	ConstStringFragment::operator std::string() const{
 		return mFragment;
-	}
-
-	// Other
-
-	template<>
-	uint32_t Hash<StringFragment>(const StringFragment& aData, HashFunction aFunction) {
-		return aFunction(aData.begin(), aData.Size());
 	}
 }}
 
