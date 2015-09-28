@@ -35,35 +35,49 @@
 
 namespace Solaire{ namespace Core{
 
-    class NumberParser{
-    private:
-        class UnsignedValue{
+    namespace NumberParserInternal{
+
+        class Value{
+        public:
+            virtual ~Value(){
+
+            }
+
+            virtual bool Append(const char aChar) = 0;
+            virtual void Reset() = 0;
+            virtual double Get() const = 0;
+        };
+
+
+        class UnsignedValue : public Value{
         private:
             char mChars[16];
-            uint8_t mCharCount;
+            uint8_t mCount;
         public:
             UnsignedValue():
-                mCharCount(0)
+                mCount(0)
             {}
 
-            bool AppendChar(const char aChar){
+            // Inherited from value
+
+            void Reset() override{
+                mCount = 0;
+            }
+
+            bool Append(const char aChar) override{
                 if(aChar < '0' || aChar > '9') return false;
-                mChars[mCharCout++] = aChar;
+                mChars[mCount++] = aChar;
                 return true;
             }
 
-            void Reset(){
-                mCharCount = 0;
-            }
-
-            uint32_t Parse() const{
-                uint32_t val = 0;
+            double Get() const override{
+                double val = 0;
 
                 uint32_t index = 0;
-                const char* i = mChars + mCharCount - 1;
+                const char* i = mChars + mCount - 1;
                 const char* const end = mChars - 1;
                 while(i != end){
-                    val += static_cast<uint32_t>(std::pow(10, index)) * (*i - '0');
+                    val += std::pow(10, index) * static_cast<double>(*i - '0');
                     ++index;
                     --i;
                 }
@@ -72,7 +86,7 @@ namespace Solaire{ namespace Core{
             }
         };
 
-        class SignedValue{
+        class SignedValue : public Value{
         private:
             UnsignedValue mValue;
             struct{
@@ -81,54 +95,137 @@ namespace Solaire{ namespace Core{
             };
         public:
             SignedValue():
-                mValue(0),
+                mValue(),
                 mSignSet(0),
                 mSign(1)
             {}
 
-            bool AppendChar(const char aChar){
-                if(aChar == '-'){
-                    if(mSignSet){
-                        return false;
-                    }else{
-                        mSignSet = 1;
-                        mSign = 0;
-                        return true;
-                    }
-                }else if(aChar == '+'){
-                    if(mSignSet){
-                        return false;
-                    }else{
-                        mSignSet = 1;
-                        mSign = 1;
-                        return true;
-                    }
-                }else{
-                    if(mValue.AppendChar(aChar)){
-                        if(! mSignSet){
-                            mSignSet = 1;
-                            mSign = 1;
-                            return true;
-                        }else{
-                            return true;
-                        }
-                    }else{
-                        return false;
-                    }
-                }
-            }
+            // Inherited from Value
 
-            void Reset(){
+            void Reset() override{
                 mValue.Reset();
                 mSignSet = 0;
             }
 
-            int32_t Parse() const{
-                return mSign ? mValue.Parse() : mValue.Parse() * -1;
+            bool Append(const char aChar) override{
+                if(aChar == '-'){
+                    if(! mSignSet){
+                        mSignSet = 1;
+                        mSign = 0;
+                        return true;
+                    }
+                }
+                if(mValue.Append(aChar)){
+                    if(! mSignSet){
+                        mSignSet = 1;
+                        mSign = 1;
+                        return true;
+                    }else{
+                        return true;
+                    }
+                    return false;
+                }
+            }
+
+            double Get() const override{
+                return mValue.Get() * mSign ? 1.0 : -1.0;
             }
         };
 
+        template<class Body, class Decimal>
+        class DecimalValue : public Value{
+        private:
+            Body mBody;
+            Decimal mDecimal;
+            struct{
+                uint8_t mDecimalFlag : 1;
+            };
+        public:
+            DecimalValue():
+                mBody(),
+                mDecimal(),
+                mDecimalFlag(0)
+            {}
 
+            // Inherited from Value
+
+            void Reset() override{
+                mBody.Reset();
+                mDecimal.Reset();
+                mDecimalFlag = 0;
+            }
+
+            bool Append(const char aChar) override{
+                if(aChar == '.'){
+                    if(! mDecimalFlag){
+                        mDecimalFlag = 1;
+                        return true;
+                    }
+                }
+
+                return (mDecimalFlag ? mDecimal : mBody).AppendChar(aChar);
+            }
+
+            double Get() const override{
+                double decimal = mDecimal.Get();
+                while(decimal < 1) decimal /= 10.0;
+                return mBody.Get() + decimal;
+            }
+        };
+
+        template<class Body, class Exponent>
+        class ExponentValue : public Value{
+        private:
+            Body mBody;
+            Exponent mExponent;
+            struct{
+                uint8_t mExponentFlag : 1;
+                uint8_t mExponentLastFlag : 1;
+            };
+        public:
+            ExponentValue():
+                mBody(),
+                mExponent(),
+                mExponentFlag(0),
+                mExponentLastFlag(0)
+            {}
+
+            // Inherited from Value
+
+            void Reset() override{
+                mBody.Reset();
+                mExponent.Reset();
+                mExponentFlag = 0;
+                mExponentLastFlag = 0;
+            }
+
+            bool Append(const char aChar) override{
+                if(aChar == 'e' || aChar == 'E'){
+                    if(! mExponentFlag){
+                        mExponentFlag = 1;
+                        mExponentLastFlag = 0;
+                        return true;
+                    }
+                }else if(aChar == '+'){
+                    if(mExponentLastFlag){
+                        mExponentLastFlag = 0;
+                        return true;
+                    }
+                }
+                mExponentLastFlag = 0;
+                return (mExponentFlag ? mExponentFlag : mBody).AppendChar(aChar);
+            }
+
+            double Get() const override{
+                return mBody.Get() * std::pow(10.0, mExponent.Get());
+            }
+        };
+
+        typedef ExponentValue<DecimalValue<SignedValue, UnsignedValue>, DecimalValue<SignedValue, UnsignedValue>> RealValue;
+    }
+
+    class NumberParser{
+    private:
     public:
 
     };
