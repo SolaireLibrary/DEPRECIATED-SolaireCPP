@@ -38,6 +38,19 @@ Last Modified	: 28th September 2015
 namespace Solaire { namespace Core {
     class ConstStringFragment;
 
+    struct StringComparison{
+        enum : uint16_t{
+            FULL_LENGTH
+        };
+
+        bool ignoreCase;
+        uint16_t length;
+
+        constexpr StringComparison(bool aIgnoreCase = true, uint16_t aLength = FULL_LENGTH);
+
+        int8_t operator()(const ConstStringFragment aFirst, const ConstStringFragment aSecond) const;
+    };
+
 	class StringFragment{
     public:
         typedef char Type;

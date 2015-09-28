@@ -33,6 +33,51 @@ Last Modified	: 28th September 2015
 
 namespace Solaire { namespace Core {
 
+    // StringComparison
+
+    constexpr StringComparison::StringComparison(bool aIgnoreCase, uint16_t aLength) :
+        ignoreCase(aIgnoreCase),
+        length(aLength)
+    {}
+
+    int8_t StringComparison::operator()(const ConstStringFragment aFirst, const ConstStringFragment aSecond) const{
+        typedef typename ConstStringFragment::ConstIterator Iterator;
+
+        const Iterator b1 = aFirst.begin();
+        const Iterator b2 = aSecond.begin();
+        const Iterator e1 = aFirst.end();
+        const Iterator e2 = aSecond.end();
+
+        const uint16_t s1 = e1 - b1;
+        const uint16_t s2 = e2 - b2;
+
+        if(length == FULL_LENGTH){
+            const uint16_t s3 = std::min(s1, s2);
+            if(ignoreCase){
+                Iterator i = b1;
+                Iterator j = b2;
+                const Iterator e = i + s3;
+                while(i != e){
+                    char c1 = *i++;
+                    char c2 = *j++;
+                    if(c1 >= 'A' && c1 <= 'Z') c1 -= 'A' - 'a';
+                    if(c2 >= 'A' && c2 <= 'Z') c2 -= 'A' - 'a';
+                    if(c1 < c2){
+                        return -1;
+                    }else if(c1 > c2){
+                        return 1;
+                    }
+                }
+                return 0;
+            }else{
+                return std::memcmp(b1, b2, sizeof(ConstStringFragment::Type) * s3);
+            }
+        }else{
+            if(s1 < length || s2 < length) throw std::runtime_error("Core::StringComparison::operator() : Fragment length is less than comparison length");
+            return std::memcmp(b1, b2, sizeof(ConstStringFragment::Type) * length);
+        }
+    }
+
 	// StringFragment
 
 	constexpr StringFragment::StringFragment(const Pointer aBegin, const Pointer aEnd) :
