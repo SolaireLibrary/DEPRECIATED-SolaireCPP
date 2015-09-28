@@ -370,13 +370,13 @@ namespace Solaire{ namespace Core{
 
         String& ReplaceNext(const ConstIterator aPos, const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
             const size_t targetSize = aTarget.Size();
-            const size_t replacementSize = aTarget.Size();
+            const size_t replacementSize = aReplacement.Size();
 
             const Iterator pos = FindNext(const_cast<Iterator>(aPos), aTarget);
             const ConstIterator end = this->end();
             if(pos != end){
                 if(targetSize == replacementSize){
-                    std::memcpy(pos, aTarget.begin(), sizeof(Type) * targetSize);
+                    std::memcpy(pos, aReplacement.begin(), sizeof(Type) * replacementSize);
                 }else{
                     Erase(pos, targetSize);
                     InsertBefore(pos, aReplacement);

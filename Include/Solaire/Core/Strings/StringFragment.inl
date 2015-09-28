@@ -220,9 +220,9 @@ namespace Solaire { namespace Core {
             return thisFrag == aFragment ? thisFrag.begin() : thisFrag.end();
         }else{
             const size_t dif = thisSize - fragSize;
-            const ConstIterator end = thisFrag.begin() + dif;
+            const ConstIterator end = thisFrag.begin() + dif + 1;
             for(ConstIterator i = thisFrag.begin(); i != end; ++i){
-                if(ConstStringFragment(i, i + dif) == aFragment) return i;
+                if(ConstStringFragment(i, i + fragSize) == aFragment) return i;
             }
             return thisFrag.end();
         }
