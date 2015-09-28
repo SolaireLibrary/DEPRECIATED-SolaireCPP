@@ -285,27 +285,27 @@ namespace Solaire{ namespace Core{
             return ConstStringFragment(begin(), end()).FindLast(aChar);
         }
 
-        Iterator FindFirst(const ConstStringFragment aFragment){
+        StringFragment FindFirst(const ConstStringFragment aFragment){
             return StringFragment(begin(), end()).FindFirst(aFragment);
         }
 
-        Iterator FindNext(const Iterator aPos, const ConstStringFragment aFragment){
+        StringFragment FindNext(const Iterator aPos, const ConstStringFragment aFragment){
             return StringFragment(begin(), end()).FindNext(aPos, aFragment);
         }
 
-        Iterator FindLast(const ConstStringFragment aFragment){
+        StringFragment FindLast(const ConstStringFragment aFragment){
             return StringFragment(begin(), end()).FindLast(aFragment);
         }
 
-        ConstIterator FindFirst(const ConstStringFragment aFragment) const{
+        ConstStringFragment FindFirst(const ConstStringFragment aFragment) const{
             return ConstStringFragment(begin(), end()).FindFirst(aFragment);
         }
 
-        ConstIterator FindNext(const Iterator aPos, ConstStringFragment aFragment) const{
+        ConstStringFragment FindNext(const Iterator aPos, ConstStringFragment aFragment) const{
             return ConstStringFragment(begin(), end()).FindNext(aPos, aFragment);
         }
 
-        ConstIterator FindLast(const ConstStringFragment aFragment) const{
+        ConstStringFragment FindLast(const ConstStringFragment aFragment) const{
             return ConstStringFragment(begin(), end()).FindLast(aFragment);
         }
 
@@ -372,7 +372,7 @@ namespace Solaire{ namespace Core{
             const size_t targetSize = aTarget.Size();
             const size_t replacementSize = aReplacement.Size();
 
-            const Iterator pos = FindNext(const_cast<Iterator>(aPos), aTarget);
+            const Iterator pos = FindNext(const_cast<Iterator>(aPos), aTarget).begin();
             const ConstIterator end = this->end();
             if(pos != end){
                 if(targetSize == replacementSize){
@@ -386,15 +386,14 @@ namespace Solaire{ namespace Core{
         }
 
         String& ReplaceLast(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
-            return ReplaceNext(FindLast(aTarget), aTarget, aReplacement);
+            return ReplaceNext(FindLast(aTarget).begin(), aTarget, aReplacement);
         }
 
         String& ReplaceAll(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
-            const ConstIterator end = this->end();
-            Iterator it = FindFirst(aTarget);
-            while(it != end){
+            Iterator it = FindFirst(aTarget).begin();
+            while(it != end()){
                 ReplaceNext(it, aTarget, aReplacement);
-                it = FindNext(it + 1, aTarget);
+                it = FindNext(it + 1, aTarget).begin();
             }
             return *this;
         }

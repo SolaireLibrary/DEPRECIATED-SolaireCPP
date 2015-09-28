@@ -87,16 +87,16 @@ namespace Solaire { namespace Core {
 		Iterator FindFirst(const Type aChar);
 		Iterator FindNext(const Iterator aPos, const Type aChar);
 		Iterator FindLast(const Type aChar);
-		Iterator FindFirst(const ConstStringFragment aFragment);
-		Iterator FindNext(const Iterator aPos, const ConstStringFragment aFragment);
-		Iterator FindLast(const ConstStringFragment aFragment);
+		StringFragment FindFirst(const ConstStringFragment aFragment);
+		StringFragment FindNext(const Iterator aPos, const ConstStringFragment aFragment);
+		StringFragment FindLast(const ConstStringFragment aFragment);
 
 		ConstIterator FindFirst(const Type aChar) const;
 		ConstIterator FindNext(const ConstIterator aPos, const Type aChar) const;
 		ConstIterator FindLast(const Type aChar) const;
-		ConstIterator FindFirst(const ConstStringFragment aFragment) const;
-		ConstIterator FindNext(const ConstIterator aPos, const ConstStringFragment aFragment) const;
-		ConstIterator FindLast(const ConstStringFragment aFragment) const;
+		ConstStringFragment FindFirst(const ConstStringFragment aFragment) const;
+		ConstStringFragment FindNext(const ConstIterator aPos, const ConstStringFragment aFragment) const;
+		ConstStringFragment FindLast(const ConstStringFragment aFragment) const;
 
 		StringFragment& ReplaceFirst(const Type aTarget, const Type aReplacement);
 		StringFragment& ReplaceNext(const ConstIterator aPos, const Type aTarget, const Type aReplacement);
@@ -129,6 +129,8 @@ namespace Solaire { namespace Core {
 
 	class ConstStringFragment{
     public:
+        friend StringFragment;
+
         typedef char Type;
         typedef const char ConstType;
         typedef ConstType& ConstReference;
@@ -161,9 +163,9 @@ namespace Solaire { namespace Core {
 		ConstIterator FindFirst(const Type aChar) const;
 		ConstIterator FindNext(const ConstIterator aPos, const Type aChar) const;
 		ConstIterator FindLast(const Type aChar) const;
-		ConstIterator FindFirst(const ConstStringFragment aFragment) const;
-		ConstIterator FindNext(const ConstIterator aPos, const ConstStringFragment aFragment) const;
-		ConstIterator FindLast(const ConstStringFragment aFragment) const;
+		ConstStringFragment FindFirst(const ConstStringFragment aFragment) const;
+		ConstStringFragment FindNext(const ConstIterator aPos, const ConstStringFragment aFragment) const;
+		ConstStringFragment FindLast(const ConstStringFragment aFragment) const;
 
         friend std::ostream& operator<<(std::ostream& aStream, const ConstStringFragment& aFragment){
             return aStream << aFragment.mFragment;
