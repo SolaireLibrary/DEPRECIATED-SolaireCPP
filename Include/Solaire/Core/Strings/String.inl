@@ -41,6 +41,12 @@ namespace Solaire{ namespace Core{
         mContainer.PushBack('\0');
     }
 
+    String::String(const ConstPointer aPointer, Allocator<Type>& aAllocator) :
+        mContainer(aPointer, aPointer + std::strlen(aPointer), aAllocator)
+    {
+        mContainer.PushBack('\0');
+    }
+
     String::String(const ConstPointer aPointer, const size_t aSize, Allocator<Type>& aAllocator) :
         mContainer(aPointer, aPointer + aSize, aAllocator)
     {

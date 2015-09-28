@@ -119,16 +119,14 @@ namespace Solaire{ namespace Core{
                     if(! mSignSet){
                         mSignSet = 1;
                         mSign = 1;
-                        return true;
-                    }else{
-                        return true;
                     }
-                    return false;
+                    return true;
                 }
+                return false;
             }
 
             double Get() const override{
-                return mValue.Get() * mSign ? 1.0 : -1.0;
+                return mValue.Get() * (mSign ? 1.0 : -1.0);
             }
         };
 
@@ -156,19 +154,17 @@ namespace Solaire{ namespace Core{
             }
 
             bool Append(const char aChar) override{
-                if(aChar == '.'){
-                    if(! mDecimalFlag){
-                        mDecimalFlag = 1;
-                        return true;
-                    }
+                if(aChar == '.' && ! mDecimalFlag){
+                    mDecimalFlag = 1;
+                    return true;
                 }
 
-                return (mDecimalFlag ? mDecimal : mBody).AppendChar(aChar);
+                return mDecimalFlag ? mDecimal.Append(aChar) : mBody.Append(aChar);
             }
 
             double Get() const override{
                 double decimal = mDecimal.Get();
-                while(decimal < 1) decimal /= 10.0;
+                while(decimal > 1.0 && decimal != 0.0) decimal /= 10.0;
                 return mBody.Get() + decimal;
             }
         };
@@ -200,20 +196,16 @@ namespace Solaire{ namespace Core{
             }
 
             bool Append(const char aChar) override{
-                if(aChar == 'e' || aChar == 'E'){
-                    if(! mExponentFlag){
-                        mExponentFlag = 1;
-                        mExponentLastFlag = 0;
-                        return true;
-                    }
-                }else if(aChar == '+'){
-                    if(mExponentLastFlag){
-                        mExponentLastFlag = 0;
-                        return true;
-                    }
+                if((aChar == 'e' || aChar == 'E') && ! mExponentFlag){
+                    mExponentFlag = 1;
+                    mExponentLastFlag = 1;
+                    return true;
+                }else if(aChar == '+' && mExponentLastFlag){
+                    mExponentLastFlag = 0;
+                    return true;
                 }
                 mExponentLastFlag = 0;
-                return (mExponentFlag ? mExponentFlag : mBody).AppendChar(aChar);
+                return mExponentFlag ? mExponent.Append(aChar) : mBody.Append(aChar);
             }
 
             double Get() const override{
@@ -221,7 +213,8 @@ namespace Solaire{ namespace Core{
             }
         };
 
-        typedef ExponentValue<DecimalValue<SignedValue, UnsignedValue>, DecimalValue<SignedValue, UnsignedValue>> RealValue;
+        typedef DecimalValue<SignedValue, UnsignedValue> StandardDecimalValue;
+        typedef ExponentValue<StandardDecimalValue, StandardDecimalValue> RealValue;
     }
 
     class NumberParser{
