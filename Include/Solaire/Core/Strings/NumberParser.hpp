@@ -31,11 +31,12 @@
 	Last Modified	: 28th September 2015
 */
 
+#include "..\Strings\StringFragment.hpp"
 #include "..\DataStructures\DynamicArray.hpp"
 
 namespace Solaire{ namespace Core{
 
-    namespace NumberParserInternal{
+    namespace NumericParse{
 
         class Value{
         public:
@@ -46,7 +47,24 @@ namespace Solaire{ namespace Core{
             virtual bool Append(const char aChar) = 0;
             virtual void Reset() = 0;
             virtual double Get() const = 0;
+
+            template<class T>
+            std::pair<T, ConstStringFragment> Parse(const ConstStringFragment aFragment){
+                std::pair<double, ConstStringFragment> tmp = Parse<double>(aFragment);
+                return std::pair<T, ConstStringFragment>(static_cast<T>(tmp.first), tmp.second);
+            }
         };
+
+        template<>
+        std::pair<double, ConstStringFragment> Value::Parse<double>(const ConstStringFragment aFragment){
+            Reset();
+            ConstStringFragment::ConstIterator i = aFragment.begin();
+            const ConstStringFragment::ConstIterator end = aFragment.end();
+            for(i; i != end; ++i){
+                if(! Append(*i)) break;
+            }
+            return std::pair<double, ConstStringFragment>(Get(), ConstStringFragment(aFragment.begin(), i));
+        }
 
 
         class UnsignedValue : public Value{
@@ -213,15 +231,59 @@ namespace Solaire{ namespace Core{
             }
         };
 
-        typedef DecimalValue<SignedValue, UnsignedValue> StandardDecimalValue;
-        typedef ExponentValue<StandardDecimalValue, StandardDecimalValue> RealValue;
+        template<class T>
+        static std::pair<T, ConstStringFragment> Parse(const ConstStringFragment aFragment) = delete;
+
+        template<>
+        std::pair<uint8_t, ConstStringFragment> Parse<uint8_t>(const ConstStringFragment aFragment){
+            return ExponentValue<UnsignedValue, UnsignedValue>().Parse<uint8_t>(aFragment);
+        }
+
+        template<>
+        std::pair<uint16_t, ConstStringFragment> Parse<uint16_t>(const ConstStringFragment aFragment){
+            return ExponentValue<UnsignedValue, UnsignedValue>().Parse<uint16_t>(aFragment);
+        }
+
+        template<>
+        std::pair<uint32_t, ConstStringFragment> Parse<uint32_t>(const ConstStringFragment aFragment){
+            return ExponentValue<UnsignedValue, UnsignedValue>().Parse<uint32_t>(aFragment);
+        }
+
+        template<>
+        std::pair<uint64_t, ConstStringFragment> Parse<uint64_t>(const ConstStringFragment aFragment){
+            return ExponentValue<UnsignedValue, UnsignedValue>().Parse<uint64_t>(aFragment);
+        }
+
+        template<>
+        std::pair<int8_t, ConstStringFragment> Parse<int8_t>(const ConstStringFragment aFragment){
+            return ExponentValue<SignedValue, SignedValue>().Parse<int8_t>(aFragment);
+        }
+
+        template<>
+        std::pair<int16_t, ConstStringFragment> Parse<int16_t>(const ConstStringFragment aFragment){
+            return ExponentValue<SignedValue, SignedValue>().Parse<int16_t>(aFragment);
+        }
+
+        template<>
+        std::pair<int32_t, ConstStringFragment> Parse<int32_t>(const ConstStringFragment aFragment){
+            return ExponentValue<SignedValue, SignedValue>().Parse<int32_t>(aFragment);
+        }
+
+        template<>
+        std::pair<int64_t, ConstStringFragment> Parse<int64_t>(const ConstStringFragment aFragment){
+            return ExponentValue<SignedValue, SignedValue>().Parse<int64_t>(aFragment);
+        }
+
+        template<>
+        std::pair<float, ConstStringFragment> Parse<float>(const ConstStringFragment aFragment){
+            return ExponentValue<DecimalValue<SignedValue, UnsignedValue>, DecimalValue<SignedValue, UnsignedValue>>().Parse<float>(aFragment);
+        }
+
+        template<>
+        std::pair<double, ConstStringFragment> Parse<double>(const ConstStringFragment aFragment){
+            return ExponentValue<DecimalValue<SignedValue, UnsignedValue>, DecimalValue<SignedValue, UnsignedValue>>().Parse<double>(aFragment);
+        }
     }
-
-    class NumberParser{
-    private:
-    public:
-
-    };
 
 }}
 
