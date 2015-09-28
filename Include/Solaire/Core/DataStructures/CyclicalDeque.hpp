@@ -96,6 +96,10 @@ namespace Solaire{ namespace Core{
 	        return *this;
 	    }
 
+        Allocator<Type>& GetAllocator() const{
+            return mArray.GetAllocator();
+        }
+
 		void Clear(){
 		    mArray.Clear();
 		}

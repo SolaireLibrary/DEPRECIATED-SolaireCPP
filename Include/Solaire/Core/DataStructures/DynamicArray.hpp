@@ -191,6 +191,10 @@ namespace Solaire{ namespace Core{
 	        return *this;
 	    }
 
+        Allocator<Type>& GetAllocator() const{
+            return mAllocator;
+        }
+
 		void Clear(){
 		    for(Index i = 0; i < mHead; ++i){
                 mAllocator->CallDestructor(mData + i);
@@ -343,7 +347,7 @@ namespace Solaire{ namespace Core{
 		}
 
 		ConstReverseIterator rbegin() const{
-		    return ConstReverseIterator(end() - 1);
+		    return ConstReverseIterator(ReverseIterator(Iterator(end() - 1)));
 		}
 
 		ReverseIterator rend(){
@@ -351,7 +355,7 @@ namespace Solaire{ namespace Core{
 		}
 
 		ConstReverseIterator rend() const{
-		    return ConstReverseIterator(begin() - 1);
+		    return ConstReverseIterator(ReverseIterator(Iterator(begin() - 1)));
 		}
 	};
 }}
