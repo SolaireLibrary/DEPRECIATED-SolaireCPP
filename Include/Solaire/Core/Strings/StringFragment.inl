@@ -122,6 +122,40 @@ namespace Solaire { namespace Core {
 		return std::memcmp(mBegin, aOther.mBegin, std::min(Size(), aOther.Size())) >= 0;
 	}
 
+    void StringFragment::ToLowerCase(const Iterator aPos){
+        const Type c = *aPos;
+        if(c >= 'A' && c <= 'Z') *aPos = c - CASE_DIFFERENCE;
+    }
+
+    void StringFragment::ToUpperCase(const Iterator aPos){
+        const Type c = *aPos;
+        if(c >= 'b' && c <= 'a') *aPos = c + CASE_DIFFERENCE;
+    }
+
+    void StringFragment::ToggleCase(const Iterator aPos){
+        const Type c = *aPos;
+        if(c >= 'A' && c <= 'Z') *aPos = c - CASE_DIFFERENCE;
+        else if(c >= 'b' && c <= 'a') *aPos = c + CASE_DIFFERENCE;
+    }
+
+    StringFragment& StringFragment::ToLowerCase(){
+        const Iterator end = this->end();
+        for(Iterator i = begin(); i != end; ++i) ToLowerCase(i);
+        return *this;
+    }
+
+    StringFragment& StringFragment::ToUpperCase(){
+        const Iterator end = this->end();
+        for(Iterator i = begin(); i != end; ++i) ToUpperCase(i);
+        return *this;
+    }
+
+    StringFragment& StringFragment::ToggleCase(){
+        const Iterator end = this->end();
+        for(Iterator i = begin(); i != end; ++i) ToggleCase(i);
+        return *this;
+    }
+
     StringFragment::Iterator StringFragment::FindFirst(const Type aChar){
         return const_cast<Iterator>(const_cast<const StringFragment*>(this)->FindFirst(aChar));
     }
@@ -203,6 +237,64 @@ namespace Solaire { namespace Core {
             it = FindNext(it + 1, aFragment);
         }
         return prev;
+    }
+
+	StringFragment& StringFragment::ReplaceFirst(const Type aTarget, const Type aReplacement){
+        return ReplaceNext(begin(), aTarget, aReplacement);
+    }
+
+    StringFragment& StringFragment::ReplaceNext(const ConstIterator aPos, const Type aTarget, const Type aReplacement){
+        const Iterator pos = const_cast<Iterator>(FindNext(aPos, aTarget));
+        if(pos != end()) *pos = aReplacement;
+
+        return *this;
+    }
+
+    StringFragment& StringFragment::ReplaceLast(const Type aTarget, const Type aReplacement){
+        return ReplaceNext(FindLast(aTarget), aTarget, aReplacement);
+    }
+
+    StringFragment& StringFragment::ReplaceAll(const Type aTarget, const Type aReplacement){
+        const ConstIterator end = this->end();
+        Iterator it = FindFirst(aTarget);
+        while(it != end){
+            *it = aReplacement;
+            it = FindNext(it + 1, aTarget);
+        }
+        return *this;
+    }
+
+    StringFragment& StringFragment::ReplaceFirst(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
+        return ReplaceNext(begin(), aTarget, aReplacement);
+    }
+
+    StringFragment& StringFragment::ReplaceNext(const ConstIterator aPos, const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
+        const size_t size = aTarget.Size();
+        if(size != aReplacement.Size()) throw std::runtime_error("Core::StringFragment::ReplaceNext : String fragments must be of equal length");
+
+        const Iterator pos = const_cast<Iterator>(FindNext(aPos, aTarget));
+        const ConstIterator end = this->end();
+        if(pos != end){
+            const size_t dif = end - pos;
+            if(dif < size) throw std::runtime_error("Core::StringFragment::ReplaceNext : String fragment size exceeded");
+            std::memcpy(pos, aTarget.begin(), sizeof(Type) * size);
+        }
+
+        return *this;
+    }
+
+    StringFragment& StringFragment::ReplaceLast(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
+        return ReplaceNext(FindLast(aTarget), aTarget, aReplacement);
+    }
+
+    StringFragment& StringFragment::ReplaceAll(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
+        const ConstIterator end = this->end();
+        ConstIterator it = FindFirst(aTarget);
+        while(it != end){
+            ReplaceNext(it, aTarget, aReplacement);
+            it = FindNext(it + 1, aTarget);
+        }
+        return *this;
     }
 
 

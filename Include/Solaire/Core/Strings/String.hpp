@@ -81,6 +81,39 @@ namespace Solaire{ namespace Core{
             if(mContainer.Back() != '\0') mContainer.PushBack('\0');
         }
 
+        void Erase(const ConstIterator aPos){
+            mContainer.Erase(aPos);
+        }
+
+        void Erase(const ConstIterator aPos, size_t aCount){
+            while(aCount != 0){
+                if(aPos == mContainer.end()) throw std::runtime_error("Core::String::Erase : Cannot erase past end of string");
+                mContainer.Erase(aPos);
+                --aCount;
+            }
+        }
+
+        Reference InsertBefore(const ConstIterator aPos, const Type aChar){
+            return mContainer.InsertBefore(aPos, aChar);
+        }
+
+        Reference InsertAfter(const ConstIterator aPos, const Type aChar){
+            return mContainer.InsertAfter(aPos, aChar);
+        }
+
+        StringFragment InsertBefore(const ConstIterator aPos, const ConstStringFragment aFragment){
+            const size_t pos = aPos - begin();
+            const ConstReverseIterator end = aFragment.rend();
+            for(ConstReverseIterator i = aFragment.rbegin(); i != end; ++i){
+                InsertBefore(begin() + pos, *i);
+            }
+            return StringFragment(begin() + pos, aFragment.Size());
+        }
+
+        StringFragment InsertAfter(const ConstIterator aPos, const ConstStringFragment aFragment){
+            return InsertBefore(aPos + 1, aFragment);
+        }
+
         Reference PushBack(Type aChar){
             return mContainer.InsertBefore(mContainer.end() - 1, aChar);
         }
@@ -274,6 +307,96 @@ namespace Solaire{ namespace Core{
 
         ConstIterator FindLast(const ConstStringFragment aFragment) const{
             return ConstStringFragment(begin(), end()).FindLast(aFragment);
+        }
+
+		static void ToLowerCase(const Iterator aPos){
+		    StringFragment::ToLowerCase(aPos);
+		}
+
+		static void ToUpperCase(const Iterator aPos){
+		     StringFragment::ToUpperCase(aPos);
+		}
+
+		static void ToggleCase(const Iterator aPos){
+		    StringFragment::ToggleCase(aPos);
+		}
+
+		String& ToLowerCase(){
+		    const Iterator end = this->end();
+		    for(Iterator i = begin(); i != end; ++i) ToLowerCase(i);
+		    return *this;
+		}
+
+		String& ToUpperCase(){
+		    const Iterator end = this->end();
+		    for(Iterator i = begin(); i != end; ++i) ToUpperCase(i);
+		    return *this;
+		}
+
+		String& ToggleCase(){
+		    const Iterator end = this->end();
+		    for(Iterator i = begin(); i != end; ++i) ToggleCase(i);
+		    return *this;
+		}
+
+		String& ReplaceFirst(const Type aTarget, const Type aReplacement){
+            return ReplaceNext(begin(), aTarget, aReplacement);
+        }
+
+        String& ReplaceNext(const ConstIterator aPos, const Type aTarget, const Type aReplacement){
+            const Iterator pos = FindNext(const_cast<Iterator>(aPos), aTarget);
+            if(pos != end()) *pos = aReplacement;
+
+            return *this;
+        }
+
+        String& ReplaceLast(const Type aTarget, const Type aReplacement){
+            return ReplaceNext(FindLast(aTarget), aTarget, aReplacement);
+        }
+
+        String& ReplaceAll(const Type aTarget, const Type aReplacement){
+            const ConstIterator end = this->end();
+            Iterator it = FindFirst(aTarget);
+            while(it != end){
+                *it = aReplacement;
+                it = FindNext(it + 1, aTarget);
+            }
+            return *this;
+        }
+
+        String& ReplaceFirst(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
+            return ReplaceNext(begin(), aTarget, aReplacement);
+        }
+
+        String& ReplaceNext(const ConstIterator aPos, const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
+            const size_t targetSize = aTarget.Size();
+            const size_t replacementSize = aTarget.Size();
+
+            const Iterator pos = FindNext(const_cast<Iterator>(aPos), aTarget);
+            const ConstIterator end = this->end();
+            if(pos != end){
+                if(targetSize == replacementSize){
+                    std::memcpy(pos, aTarget.begin(), sizeof(Type) * targetSize);
+                }else{
+                    Erase(pos, targetSize);
+                    InsertBefore(pos, aReplacement);
+                }
+            }
+            return *this;
+        }
+
+        String& ReplaceLast(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
+            return ReplaceNext(FindLast(aTarget), aTarget, aReplacement);
+        }
+
+        String& ReplaceAll(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
+            const ConstIterator end = this->end();
+            Iterator it = FindFirst(aTarget);
+            while(it != end){
+                ReplaceNext(it, aTarget, aReplacement);
+                it = FindNext(it + 1, aTarget);
+            }
+            return *this;
         }
 
         friend std::ostream& operator<<(std::ostream& aStream, const String& aString){

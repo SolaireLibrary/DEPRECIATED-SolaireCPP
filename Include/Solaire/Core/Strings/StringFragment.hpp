@@ -53,6 +53,10 @@ namespace Solaire { namespace Core {
 	private:
 		Pointer mBegin;
 		Pointer mEnd;
+
+		enum : char{
+		    CASE_DIFFERENCE = 'A' - 'a'
+		};
 	public:
 	    friend ConstStringFragment;
 
@@ -93,6 +97,24 @@ namespace Solaire { namespace Core {
 		ConstIterator FindFirst(const ConstStringFragment aFragment) const;
 		ConstIterator FindNext(const ConstIterator aPos, const ConstStringFragment aFragment) const;
 		ConstIterator FindLast(const ConstStringFragment aFragment) const;
+
+		StringFragment& ReplaceFirst(const Type aTarget, const Type aReplacement);
+		StringFragment& ReplaceNext(const ConstIterator aPos, const Type aTarget, const Type aReplacement);
+		StringFragment& ReplaceLast(const Type aTarget, const Type aReplacement);
+		StringFragment& ReplaceAll(const Type aTarget, const Type aReplacement);
+
+		StringFragment& ReplaceFirst(const ConstStringFragment aTarget, const ConstStringFragment aReplacement);
+		StringFragment& ReplaceNext(const ConstIterator aPos, const ConstStringFragment aTarget, const ConstStringFragment aReplacement);
+		StringFragment& ReplaceLast(const ConstStringFragment aTarget, const ConstStringFragment aReplacement);
+		StringFragment& ReplaceAll(const ConstStringFragment aTarget, const ConstStringFragment aReplacement);
+
+		static void ToLowerCase(const Iterator aPos);
+		static void ToUpperCase(const Iterator aPos);
+		static void ToggleCase(const Iterator aPos);
+
+		StringFragment& ToLowerCase();
+		StringFragment& ToUpperCase();
+		StringFragment& ToggleCase();
 
         friend std::ostream& operator<<(std::ostream& aStream, const StringFragment& aFragment){
             aStream.write(aFragment.mBegin, aFragment.Size());
