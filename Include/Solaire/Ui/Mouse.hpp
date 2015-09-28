@@ -151,10 +151,10 @@ namespace Solaire{ namespace Ui{
 
         //Core::WrapperAllocator<void*> mAllocator;
         ButtonInfo mButtons[BUTTON_COUNT];
-        typedef std::pair<uint64_t, MouseCoord> PositionHistory;
-        Core::CyclicalDeque<PositionHistory> mPositionHistory;
         typedef std::pair<uint64_t, float> WheelHistory;
         Core::CyclicalDeque<WheelHistory> mWheelHistory;
+        typedef std::pair<uint64_t, MouseCoord> PositionHistory;
+        Core::CyclicalDeque<PositionHistory> mPositionHistory;
 
         ButtonInfo& GetButtonInfo(const MouseButton aButton){
             return mButtons[aButton];

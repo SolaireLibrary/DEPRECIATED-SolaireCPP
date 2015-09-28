@@ -360,7 +360,7 @@ namespace Solaire{ namespace Graphics{
                 aStream << "#solaire_face vtn " << aDoc.faces.Size() << std::endl;
                 for(const Face& face : aDoc.faces){
                     aStream << "f " << std::endl;
-                    for(uint32_t i = 0; i < face.elementCount; ++i){
+                    for(int32_t i = 0; i < face.elementCount; ++i){
                         const FaceElement& element = face.elements[i];
                         aStream << element.v << '/' << element.t << '/' << element.n;
                         if(i != face.elementCount - 1) aStream << ' ';

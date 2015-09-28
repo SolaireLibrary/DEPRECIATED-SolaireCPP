@@ -228,6 +228,7 @@ namespace Solaire{ namespace Core{
 
         friend std::ostream& operator<<(std::ostream& aStream, const Self& aString){
             aStream.write(aString.CString(), aString.Size());
+            return aStream;
         }
 
         friend std::istream& operator>>(std::istream& aStream, Self& aString){
@@ -236,6 +237,7 @@ namespace Solaire{ namespace Core{
                 aStream >> c;
                 aString += c;
             }
+            return aStream;
         }
     };
 }}

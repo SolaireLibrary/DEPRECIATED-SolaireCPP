@@ -243,11 +243,11 @@ namespace Solaire{ namespace Ui{
         }
 
         uint64_t GetTimePressed(const Keycode aKey) const{
-            GetKeyInfo(aKey).history.Back().first;
+            return GetKeyInfo(aKey).history.Back().first;
         }
 
         uint64_t GetTimeReleased(const Keycode aKey) const{
-            GetKeyInfo(aKey).history.Back().second;
+            return GetKeyInfo(aKey).history.Back().second;
         }
 
     };
