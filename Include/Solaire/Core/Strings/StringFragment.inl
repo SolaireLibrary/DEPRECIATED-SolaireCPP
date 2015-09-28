@@ -35,42 +35,57 @@ namespace Solaire { namespace Core {
 
 	// StringFragment
 
-	constexpr StringFragment::StringFragment(char* const aBegin, const char* const aEnd) :
+	constexpr StringFragment::StringFragment(const Pointer aBegin, const Pointer aEnd) :
 		mBegin(aBegin),
 		mEnd(aEnd)
 	{}
 
-	constexpr StringFragment::StringFragment(char* const aBegin, const size_t aLength) :
+	constexpr StringFragment::StringFragment(const Pointer aBegin, const size_t aLength) :
 		mBegin(aBegin),
 		mEnd(aBegin + aLength)
-	{}
-
-	StringFragment::StringFragment(std::string& aString) :
-		mBegin(&aString[0]),
-		mEnd(&aString[0] + aString.size())
 	{}
 
 	constexpr size_t StringFragment::Size() const{
 		return mEnd - mBegin;
 	}
 
-	char* StringFragment::begin(){
+	StringFragment::Iterator StringFragment::begin(){
 		return mBegin;
 	}
 
-	constexpr const char* StringFragment::begin() const{
+	constexpr StringFragment::ConstIterator StringFragment::begin() const{
 		return mBegin;
 	}
 
-	constexpr const char* StringFragment::end() const{
+	StringFragment::Iterator StringFragment::end(){
 		return mEnd;
 	}
 
-	char& StringFragment::operator[](const size_t aIndex){
+	constexpr StringFragment::ConstIterator StringFragment::end() const{
+		return mEnd;
+	}
+
+	StringFragment::ReverseIterator StringFragment::rbegin(){
+		return ReverseIterator(mEnd - 1);
+	}
+
+    StringFragment::ConstReverseIterator StringFragment::rbegin() const{
+		return ConstReverseIterator(mEnd - 1);
+	}
+
+	StringFragment::ReverseIterator StringFragment::rend(){
+		return ReverseIterator(mBegin - 1);
+	}
+
+	StringFragment::ConstReverseIterator StringFragment::rend() const{
+		return ConstReverseIterator(mBegin - 1);
+	}
+
+	StringFragment::Reference StringFragment::operator[](const size_t aIndex){
 		return mBegin[aIndex];
 	}
 
-	constexpr char StringFragment::operator[](const size_t aIndex) const{
+	constexpr StringFragment::Type StringFragment::operator[](const size_t aIndex) const{
 		return mBegin[aIndex];
 	}
 
@@ -86,37 +101,57 @@ namespace Solaire { namespace Core {
 		return std::memcmp(mBegin, aOther.mBegin, size) != 0;
 	}
 
-	StringFragment::operator std::string() const{
-		return std::string(mBegin, Size());
+    bool StringFragment::operator<(const StringFragment aOther) const{
+		return std::memcmp(mBegin, aOther.mBegin, std::min(Size(), aOther.Size())) < 0;
+	}
+
+    bool StringFragment::operator>(const StringFragment aOther) const{
+		return std::memcmp(mBegin, aOther.mBegin, std::min(Size(), aOther.Size())) > 0;
+	}
+
+    bool StringFragment::operator<=(const StringFragment aOther) const{
+		return std::memcmp(mBegin, aOther.mBegin, std::min(Size(), aOther.Size())) <= 0;
+	}
+
+    bool StringFragment::operator>=(const StringFragment aOther) const{
+		return std::memcmp(mBegin, aOther.mBegin, std::min(Size(), aOther.Size())) >= 0;
 	}
 
 	// ConstStringFragment
 
-	constexpr ConstStringFragment::ConstStringFragment(const char* const aBegin, const char* const aEnd) :
-		mFragment(const_cast<char*>(aBegin), aEnd)
+	constexpr ConstStringFragment::ConstStringFragment(const ConstPointer aBegin, const ConstPointer aEnd) :
+		mFragment(const_cast<StringFragment::Pointer>(aBegin), const_cast<StringFragment::Pointer>(aEnd))
 	{}
 
-	constexpr ConstStringFragment::ConstStringFragment(const char* const aBegin, const size_t aLength) :
-		mFragment(const_cast<char*>(aBegin), aLength)
+	constexpr ConstStringFragment::ConstStringFragment(const ConstPointer aBegin, const size_t aLength) :
+		mFragment(const_cast<StringFragment::Pointer>(aBegin), aLength)
 	{}
 
-	ConstStringFragment::ConstStringFragment(const std::string& aString) :
-		mFragment(const_cast<std::string&>(aString))
-	{}
+    constexpr ConstStringFragment::ConstStringFragment(const StringFragment aOther) :
+		mFragment(aOther)
+    {}
 
 	constexpr size_t ConstStringFragment::Size() const{
 		return mFragment.Size();
 	}
 
-	constexpr const char* ConstStringFragment::begin() const{
+	constexpr ConstStringFragment::ConstIterator ConstStringFragment::begin() const{
 		return mFragment.begin();
 	}
 
-	constexpr const char* ConstStringFragment::end() const{
+	constexpr ConstStringFragment::ConstIterator ConstStringFragment::end() const{
 		return mFragment.end();
 	}
 
-	constexpr char ConstStringFragment::operator[](const size_t aIndex) const{
+    ConstStringFragment::ConstReverseIterator ConstStringFragment::rbegin() const{
+		return mFragment.rbegin();
+	}
+
+	ConstStringFragment::ConstReverseIterator ConstStringFragment::rend() const{
+		return mFragment.rend();
+	}
+
+	constexpr ConstStringFragment::Type ConstStringFragment::operator[](const size_t aIndex) const{
 		return mFragment[aIndex];
 	}
 
@@ -128,8 +163,20 @@ namespace Solaire { namespace Core {
 		return mFragment == aOther.mFragment;
 	}
 
-	ConstStringFragment::operator std::string() const{
-		return mFragment;
+	bool ConstStringFragment::operator<(const ConstStringFragment aOther) const{
+		return mFragment < aOther.mFragment;
+	}
+
+	bool ConstStringFragment::operator>(const ConstStringFragment aOther) const{
+		return mFragment > aOther.mFragment;
+	}
+
+	bool ConstStringFragment::operator<=(const ConstStringFragment aOther) const{
+		return mFragment <= aOther.mFragment;
+	}
+
+	bool ConstStringFragment::operator>=(const ConstStringFragment aOther) const{
+		return mFragment >= aOther.mFragment;
 	}
 }}
 

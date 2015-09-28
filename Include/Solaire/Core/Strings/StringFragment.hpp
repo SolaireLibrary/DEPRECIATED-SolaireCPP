@@ -31,50 +31,83 @@ Created			: 17th September 2015
 Last Modified	: 28th September 2015
 */
 
-#include <string>
+#include "..\Iterators\ReverseIterator.hpp"
+#include "..\Iterators\ConstIterator.hpp"
 
 namespace Solaire { namespace Core {
+    class ConstStringFragment;
+
 	class StringFragment{
+    public:
+        typedef char Type;
+        typedef const char ConstType;
+        typedef Type& Reference;
+        typedef ConstType& ConstReference;
+        typedef Type* Pointer;
+        typedef ConstType* ConstPointer;
+        typedef Pointer Iterator;
+        typedef ConstPointer ConstIterator;
+        typedef Core::ReverseIterator<Type, Iterator> ReverseIterator;
+        typedef Core::ConstIterator<Type, ReverseIterator> ConstReverseIterator;
 	private:
-		char* mBegin;
-		const char* mEnd;
+		Pointer mBegin;
+		Pointer mEnd;
 	public:
-		constexpr StringFragment(char* const aBegin, const char* const aEnd);
-		constexpr StringFragment(char* const aBegin, const size_t aLength);
-		StringFragment(std::string& aString);
+	    friend ConstStringFragment;
 
-		char* begin();
-		constexpr const char* begin() const;
-		constexpr const char* end() const;
+		constexpr StringFragment(const Pointer aBegin, const Pointer aEnd);
+		constexpr StringFragment(const Pointer aBegin, const size_t aLength);
 
-		constexpr char operator[](const size_t aIndex) const;
-		char& operator[](const size_t aIndex);
+		Iterator begin();
+		constexpr ConstIterator begin() const;
+		Iterator end();
+		constexpr ConstIterator end() const;
+        ReverseIterator rbegin();
+		ConstReverseIterator rbegin() const;
+		ReverseIterator rend();
+		ConstReverseIterator rend() const;
+
+		constexpr Type operator[](const size_t aIndex) const;
+		Reference operator[](const size_t aIndex);
 		constexpr size_t Size() const;
 
 		bool operator==(const StringFragment aOther) const;
 		bool operator!=(const StringFragment aOther) const;
-
-		operator std::string() const;
+		bool operator<(const StringFragment aOther) const;
+		bool operator>(const StringFragment aOther) const;
+		bool operator<=(const StringFragment aOther) const;
+		bool operator>=(const StringFragment aOther) const;
 	};
 
 	class ConstStringFragment{
+    public:
+        typedef char Type;
+        typedef const char ConstType;
+        typedef ConstType& ConstReference;
+        typedef ConstType* ConstPointer;
+        typedef ConstPointer ConstIterator;
+        typedef Core::ConstIterator<Type, StringFragment::ReverseIterator> ConstReverseIterator;
 	private:
 		StringFragment mFragment;
 	public:
-		constexpr ConstStringFragment(const char* const aBegin, const char* const aEnd);
-		constexpr ConstStringFragment(const char* const aBegin, const size_t aLength);
-		ConstStringFragment(const std::string& aString);
+		constexpr ConstStringFragment(const ConstPointer aBegin, const ConstPointer aEnd);
+		constexpr ConstStringFragment(const ConstPointer aBegin, const size_t aLength);
+		constexpr ConstStringFragment(const StringFragment aOther);
 
-		constexpr const char* begin() const;
-		constexpr const char* end() const;
+		constexpr ConstIterator begin() const;
+		constexpr ConstIterator end() const;
+		ConstReverseIterator rbegin() const;
+		ConstReverseIterator rend() const;
 
-		constexpr char operator[](const size_t aIndex) const;
+		constexpr Type operator[](const size_t aIndex) const;
 		constexpr size_t Size() const;
 
 		bool operator==(const ConstStringFragment aOther) const;
 		bool operator!=(const ConstStringFragment aOther) const;
-
-		operator std::string() const;
+		bool operator<(const ConstStringFragment aOther) const;
+		bool operator>(const ConstStringFragment aOther) const;
+		bool operator<=(const ConstStringFragment aOther) const;
+		bool operator>=(const ConstStringFragment aOther) const;
 	};
 }}
 
