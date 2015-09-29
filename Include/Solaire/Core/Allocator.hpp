@@ -32,6 +32,7 @@
 */
 
 #include <type_traits>
+#include <memory>
 
 namespace Solaire{ namespace Core{
 
@@ -126,6 +127,15 @@ namespace Solaire{ namespace Core{
         static DefaultAllocator<T> ALLOCATOR;
         return ALLOCATOR;
     }
+
+    #define SolaireSmartAllocate(aAllocator, aType, aParams)\
+        std::shared_ptr<aType>(\
+            new(aAllocator.Allocate(sizeof(aType))) aType(aParams),\
+            [&](aType* const aObject){\
+                aObject->~aType();\
+                aAllocator.Deallocate(aObject, sizeof(aType));\
+            }\
+        )
 }}
 
 #endif

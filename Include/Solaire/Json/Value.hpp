@@ -70,7 +70,7 @@ namespace Solaire{ namespace Json{
     template<>
     constexpr TypeID GetTypeID<Object>(){return static_cast<TypeID>(5);}
 
-    class Value{
+    class Value : public std::enable_shared_from_this<Value>{
     private:
         Value(const Value&) = delete;
         Value(Value&&) = delete;
@@ -240,8 +240,8 @@ namespace Solaire{ namespace Json{
 		typedef Type& Reference;
 		typedef ConstType& ConstReference;
         typedef Type&& Move;
-		typedef Type* Pointer;
-		typedef ConstType* ConstPointer;
+		typedef std::shared_ptr<Type> Pointer;
+		typedef std::shared_ptr<const Type> ConstPointer;
 		typedef typename Core::DynamicArray<Pointer>::Iterator Iterator;
 		typedef typename Core::DynamicArray<Pointer>::ConstIterator ConstIterator;
 		typedef typename Core::DynamicArray<Pointer>::ReverseIterator ReverseIterator;
@@ -264,18 +264,20 @@ namespace Solaire{ namespace Json{
             return tmp;
         }
     public:
-
+        Array(Core::Allocator<void>& aAllocator) :
+            mValues(32, aAllocator)
+        {}
         // Delegated to mValues
 
-        Reference InsertBefore(const ConstIterator aPos, Value& aValue){return *mValues.InsertBefore(aPos, &aValue);}
-        Reference InsertAfter(const ConstIterator aPos, Value& aValue){return *mValues.InsertAfter(aPos, &aValue);}
+        Pointer InsertBefore(const ConstIterator aPos, Pointer aValue){return mValues.InsertBefore(aPos, aValue);}
+        Pointer InsertAfter(const ConstIterator aPos, Pointer aValue){return mValues.InsertAfter(aPos, aValue);}
         void Erase(const ConstIterator aPos){mValues.Erase(aPos);}
 
         //Iterator Find(const Value& aValue){return mValues.Find(&aValue);}
         //ConstIterator Find(const Value& aValue) const{return mValues.Find(&aValue);}
 
-        Reference PushBack(Value& aValue){return *mValues.PushBack(&aValue);}
-        Reference PushFront(Value& aValue){return *mValues.PushFront(&aValue);}
+        Reference PushBack(Pointer aValue){return *mValues.PushBack(aValue);}
+        Reference PushFront(Pointer aValue){return *mValues.PushFront(aValue);}
 
         Reference Front(){return *mValues.Front();}
         ConstReference Front() const{return *mValues.Front();}
@@ -304,19 +306,19 @@ namespace Solaire{ namespace Json{
 
     class Object : public Value{
     public:
-		typedef std::pair<Core::String, Value*> Type;
+		typedef std::pair<Core::String, std::shared_ptr<Value>> Type;
 		typedef const Type ConstType;
 		typedef Type& Reference;
 		typedef ConstType& ConstReference;
         typedef Type&& Move;
 		typedef Type* Pointer;
 		typedef ConstType* ConstPointer;
-		typedef typename std::map<Core::String, Value*>::iterator Iterator;
-		typedef typename std::map<Core::String, Value*>::const_iterator ConstIterator;
-		typedef typename std::map<Core::String, Value*>::reverse_iterator ReverseIterator;
-		typedef typename std::map<Core::String, Value*>::const_reverse_iterator ConstReverseIterator;
+		typedef typename std::map<Core::String, std::shared_ptr<Value>>::iterator Iterator;
+		typedef typename std::map<Core::String, std::shared_ptr<Value>>::const_iterator ConstIterator;
+		typedef typename std::map<Core::String, std::shared_ptr<Value>>::reverse_iterator ReverseIterator;
+		typedef typename std::map<Core::String, std::shared_ptr<Value>>::const_reverse_iterator ConstReverseIterator;
     private:
-        std::map<Core::String, Value*> mValues;
+        std::map<Core::String, std::shared_ptr<Value>> mValues;
     protected:
 
         // Inherited from Value
@@ -337,8 +339,8 @@ namespace Solaire{ namespace Json{
         }
     public:
 
-        Value& Add(const Core::ConstStringFragment aName, Value& aValue){
-            return *(mValues.emplace(aName, &aValue).first->second);
+        Value& Add(const Core::ConstStringFragment aName, std::shared_ptr<Value> aValue){
+            return *(mValues.emplace(aName, aValue).first->second);
         }
 
         void Erase(const Core::ConstStringFragment aName){
