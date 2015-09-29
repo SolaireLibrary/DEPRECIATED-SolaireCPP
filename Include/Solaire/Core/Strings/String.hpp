@@ -58,9 +58,10 @@ namespace Solaire{ namespace Core{
     public:
         // Constructors
         String(Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
+        String(const Core::ConstStringFragment aOther, Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
+        String(const std::basic_string<Type>& aOther, Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
         String(const ConstPointer aPointer, Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
         String(const ConstPointer aPointer, const size_t aSize, Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
-        String(const std::basic_string<Type>& aOther, Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
 
         template<class ExternalIterator>
         String(const ExternalIterator aBegin, const ExternalIterator aEnd, Allocator<Type>& aAllocator = GetDefaultAllocator<char>()) :

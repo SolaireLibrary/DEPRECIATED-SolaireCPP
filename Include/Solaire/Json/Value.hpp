@@ -32,6 +32,8 @@ Last Modified	: 29th September 2015
 */
 
 #include <Type_traits>
+#include <map>
+#include <list>
 #include "..\Core\Strings\String.hpp"
 #include "..\Core\Strings\NumberParser.hpp"
 #include "..\Core\Iterators\DereferenceIterator.hpp"
@@ -46,7 +48,6 @@ namespace Solaire{ namespace Json{
     class Null;
     class Object;
     class Array;
-    class Document;
 
     template<class T>
     static constexpr TypeID GetTypeID() = delete;
@@ -70,65 +71,20 @@ namespace Solaire{ namespace Json{
     constexpr TypeID GetTypeID<Object>(){return static_cast<TypeID>(5);}
 
     class Value{
-    protected:
-        typedef Core::DynamicArray<Value*> ValueArray;
     private:
-        Core::String* mDocumentString;
-        ValueArray* mValueArray;
-        uint32_t mFragmentBegin;
-        uint32_t mFragmentEnd;
+        Value(const Value&) = delete;
+        Value(Value&&) = delete;
+        Value& operator=(const Value&) = delete;
+        Value& operator=(Value&&) = delete;
     protected:
-        Value(ValueArray& aValueArray, Core::String& aString, const uint32_t aBegin, uint32_t aEnd):
-            mDocumentString(&aString),
-            mValueArray(&aValueArray),
-            mFragmentBegin(aBegin),
-            mFragmentEnd(aEnd)
-        {}
-
-        virtual void OnErase(const uint32_t aOffset, const uint32_t aCount){
-            if(mFragmentBegin > aOffset) mFragmentBegin -= aCount;
-            if(mFragmentEnd > aOffset) mFragmentEnd -= aCount;
-        }
-
-        virtual void OnInsert(const uint32_t aOffset, const uint32_t aCount){
-            if(mFragmentBegin > aOffset) mFragmentBegin += aCount;
-            if(mFragmentEnd > aOffset) mFragmentEnd += aCount;
-        }
-
-        void EraseFromDocumentString(const Core::String::ConstIterator aPos, const uint32_t aCount){
-            mDocumentString->Erase(aPos, aCount);
-
-            const uint32_t offset = aPos - mDocumentString->begin();
-            for(Value* value : *mValueArray){
-                value->OnErase(offset, aCount);
-            }
-        }
-
-        void InsertIntoDocumentString(const Core::String::ConstIterator aPos, const Core::ConstStringFragment aFragment){
-            mDocumentString->InsertBefore(aPos, aFragment);
-
-            const Core::String::ConstIterator begin = aFragment.begin();
-            const uint32_t offset = begin - mDocumentString->begin();
-            const uint32_t size = aFragment.Size();
-            for(Value* value : *mValueArray){
-                value->OnInsert(offset, size);
-            }
-        }
-
-        void OverwriteDocumentString(const Core::String::ConstIterator aPos, const uint32_t aEraseCount, const Core::ConstStringFragment aFragment){
-            EraseFromDocumentString(aPos, aEraseCount);
-            InsertIntoDocumentString(aPos, aFragment);
-        }
-
-        Core::String::ConstIterator GetStringBegin() const{
-            return mDocumentString->begin();
-        }
-
-        Core::ConstStringFragment GetThisFragment() const{
-            const Core::String::Iterator begin = mDocumentString->begin();
-            return Core::ConstStringFragment(begin + mFragmentBegin, begin + mFragmentEnd);
-        }
+        virtual Core::String Parse(Core::Allocator<Core::String::Type>& aAllocator) const = 0;
     public:
+        friend Array;
+        friend Object;
+
+        Value(){
+        }
+
         virtual ~Value(){
 
         }
@@ -153,181 +109,30 @@ namespace Solaire{ namespace Json{
         virtual TypeID GetTypeID() const = 0;
     };
 
-    class PrimativeValue : public Value{
+    class Bool : public Value{
     private:
-        uint32_t mValueBegin;
-        uint32_t mValueEnd;
+        bool mValue;
     protected:
-        PrimativeValue(
-            ValueArray& aValueArray,
-            Core::String& aString,
-            const uint32_t aThisBegin,
-            const uint32_t aThisEnd,
-            const uint32_t aValueBegin,
-            const uint32_t aValueEnd
-        ):
-            Value(aValueArray, aString, aThisBegin, aThisEnd),
-            mValueBegin(aValueBegin),
-            mValueEnd(aValueEnd)
-        {}
-
-        Core::ConstStringFragment GetValueFragment() const{
-            const Core::String::ConstIterator begin = GetStringBegin();
-            return Core::ConstStringFragment(begin + mValueBegin, begin + mValueEnd);
-        }
-
-        void OverwriteValue(const Core::ConstStringFragment aFragment){
-            OverwriteDocumentString(GetStringBegin() + mValueBegin, mValueEnd - mValueBegin, aFragment);
-        }
-
-        // Inherited from value
-
-        virtual void OnErase(const uint32_t aOffset, const uint32_t aCount){
-            Value::OnErase(aOffset, aCount);
-            if(mValueBegin > aOffset) mValueBegin -= aCount;
-            if(mValueEnd > aOffset) mValueEnd -= aCount;
-        }
-
-        virtual void OnInsert(const uint32_t aOffset, const uint32_t aCount){
-            Value::OnInsert(aOffset, aCount);
-            if(mValueBegin > aOffset) mValueBegin += aCount;
-            if(mValueEnd > aOffset) mValueEnd += aCount;
-        }
-    public:
-        virtual ~PrimativeValue(){
-
-        }
-    };
-
-    /*class GenericValue{
-    private:
-        Core::String* mDocumentString;
-        Value* mValue;
-
-        GenericValue(Core::String& aString, const Core::String::Iterator aBegin, Core::String::Iterator aEnd):
-            mDocumentString(&aString),
-            mValue(nullptr)
-        {}
-
-        void Clear(){
-            if(mValue != nullptr){
-                mDocumentString->Erase(mThisFragment.begin(), mThisFragment.Size());
-            }
-        }
-    public:
-        friend Document;
-        friend Array;
-        friend Object;
-
-        GenericValue& operator=(const Value& aValue){
-            Clear();
-            mDocumentString->Erase(mThisFragment.begin(), mThisFragment.Size());
-            return *this;
-        }
-
         // Inherited from Value
 
-        TypeID GetTypeID() const override{
-            return mValue->GetValueType();
+        Core::String Parse(Core::Allocator<Core::String::Type>& aAllocator) const override{
+            return Core::String(mValue ? "true" : "false", aAllocator);
         }
-    };*/
-
-    class String : public PrimativeValue{
-    private:
-        String(
-            ValueArray& aValueArray,
-            Core::String& aString,
-            const uint32_t aThisBegin,
-            const uint32_t aThisEnd,
-            const uint32_t aValueBegin,
-            const uint32_t aValueEnd
-        ):
-            PrimativeValue(aValueArray, aString, aThisBegin, aThisEnd, aValueBegin, aValueEnd)
-        {}
     public:
-        friend Document;
-
-        operator Core::ConstStringFragment() const{
-            const Core::ConstStringFragment frag = GetValueFragment();
-            return Core::ConstStringFragment(frag.begin() + 1, frag.end() - 1);
-        }
-
-        operator Core::String::Type() const{
-            return GetValueFragment()[1];
-        }
-
-        String& operator=(const Core::String::Type aChar){
-            Core::String::Type buf[2] = {aChar, '\0'};
-            OverwriteValue(Core::StringFragment(buf, buf + 1));
-            return *this;
-        }
-
-        String& operator=(const Core::ConstStringFragment aFragment){
-            OverwriteValue(aFragment);
-            return *this;
-        }
-
-        // Inherited from Value
-
-        TypeID GetTypeID() const override{
-            return Json::GetTypeID<String>();
-        }
-    };
-
-    class Number : public PrimativeValue{
-    private:
-        Number(
-            ValueArray& aValueArray,
-            Core::String& aString,
-            const uint32_t aThisBegin,
-            const uint32_t aThisEnd,
-            const uint32_t aValueBegin,
-            const uint32_t aValueEnd
-        ):
-            PrimativeValue(aValueArray, aString, aThisBegin, aThisEnd, aValueBegin, aValueEnd)
+        Bool():
+            mValue(false)
         {}
-    public:
-        friend Document;
 
-        operator double() const{
-            return Core::NumericParse::Parse<double>(GetValueFragment()).first;
-        }
-
-        Number& operator=(const double aValue){
-            Core::String::Type buf[32];
-            Core::String::Pointer end = Core::NumericParse::Parse(buf, aValue);
-            OverwriteValue(Core::StringFragment(buf, end));
-            return *this;
-        }
-
-        // Inherited from Value
-
-        TypeID GetTypeID() const override{
-            return Json::GetTypeID<Number>();
-        }
-    };
-
-    class Bool : public PrimativeValue{
-    private:
-        Bool(
-            ValueArray& aValueArray,
-            Core::String& aString,
-            const uint32_t aThisBegin,
-            const uint32_t aThisEnd,
-            const uint32_t aValueBegin,
-            const uint32_t aValueEnd
-        ):
-            PrimativeValue(aValueArray, aString, aThisBegin, aThisEnd, aValueBegin, aValueEnd)
+        Bool(const bool aValue):
+            mValue(aValue)
         {}
-    public:
-        friend Document;
 
         operator bool() const{
-            return GetValueFragment() == "true";
+            return mValue;
         }
 
         Bool& operator=(const bool aValue){
-            OverwriteValue(aValue ? "true" : "false");
+            mValue = aValue;
             return *this;
         }
 
@@ -338,21 +143,89 @@ namespace Solaire{ namespace Json{
         }
     };
 
-    class Null : public PrimativeValue{
+    class Number : public Value{
     private:
-        Null(
-            ValueArray& aValueArray,
-            Core::String& aString,
-            const uint32_t aThisBegin,
-            const uint32_t aThisEnd,
-            const uint32_t aValueBegin,
-            const uint32_t aValueEnd
-        ):
-            PrimativeValue(aValueArray, aString, aThisBegin, aThisEnd, aValueBegin, aValueEnd)
-        {}
-    public:
-        friend Document;
+        double mValue;
+    protected:
+        // Inherited from Value
 
+        Core::String Parse(Core::Allocator<Core::String::Type>& aAllocator) const override{
+            Core::String::Type buf[32];
+            Core::String::Pointer end = Core::NumericParse::ToString(buf, mValue);
+
+            return Core::String(buf, end, aAllocator);
+        }
+    public:
+        Number():
+            mValue(0.0)
+        {}
+
+        Number(const double aValue):
+            mValue(aValue)
+        {}
+
+        operator double() const{
+            return mValue;
+        }
+
+        Number& operator=(const double aValue){
+            mValue = aValue;
+            return *this;
+        }
+
+        // Inherited from Value
+
+        TypeID GetTypeID() const override{
+            return Json::GetTypeID<Number>();
+        }
+    };
+
+    class String : public Value{
+    private:
+        Core::String mValue;
+    protected:
+        // Inherited from Value
+
+        Core::String Parse(Core::Allocator<Core::String::Type>& aAllocator) const override{
+            return Core::String(mValue.begin(), mValue.end(), aAllocator);
+        }
+    public:
+        String(Core::Allocator<Core::String::Type>& aAllocator = Core::GetDefaultAllocator<Core::String::Type>()):
+            mValue(aAllocator)
+        {}
+
+        String(const Core::ConstStringFragment aValue, Core::Allocator<Core::String::Type>& aAllocator = Core::GetDefaultAllocator<Core::String::Type>()):
+            mValue(aValue, aAllocator)
+        {}
+
+        operator Core::String&(){
+            return mValue;
+        }
+
+        operator const Core::String&() const{
+            return mValue;
+        }
+
+        String& operator=(const Core::ConstStringFragment aValue){
+            mValue = aValue;
+            return *this;
+        }
+
+        // Inherited from Value
+
+        TypeID GetTypeID() const override{
+            return Json::GetTypeID<String>();
+        }
+    };
+
+    class Null : public Value{
+    protected:
+        // Inherited from Value
+
+        Core::String Parse(Core::Allocator<Core::String::Type>& aAllocator) const override{
+            return Core::String("null", aAllocator);
+        }
+    public:
         // Inherited from Value
 
         TypeID GetTypeID() const override{
@@ -363,29 +236,64 @@ namespace Solaire{ namespace Json{
     class Array : public Value{
     public:
 		typedef Value Type;
-		typedef const Value ConstType;
+		typedef const Type ConstType;
 		typedef Type& Reference;
 		typedef ConstType& ConstReference;
         typedef Type&& Move;
 		typedef Type* Pointer;
 		typedef ConstType* ConstPointer;
-		//typedef Core::DereferenceIterator<Value, Pointer> Iterator;
-		//typedef Core::ConstIterator<Value, Iterator> ConstIterator;
-		//typedef Core::ReverseIterator<Value, Iterator> ReverseIterator;
-		//typedef Core::ConstIterator<Value, ReverseIterator> ConstReverseIterator;
+		typedef typename Core::DynamicArray<Pointer>::Iterator Iterator;
+		typedef typename Core::DynamicArray<Pointer>::ConstIterator ConstIterator;
+		typedef typename Core::DynamicArray<Pointer>::ReverseIterator ReverseIterator;
+		typedef typename Core::DynamicArray<Pointer>::ConstReverseIterator ConstReverseIterator;
     private:
         Core::DynamicArray<Pointer> mValues;
+    protected:
 
-        Array(
-            ValueArray& aValueArray,
-            Core::String& aString,
-            const uint32_t aThisBegin,
-            const uint32_t aThisEnd
-        ):
-            Value(aValueArray, aString, aThisBegin, aThisEnd)
-        {}
+        // Inherited from Value
+
+        Core::String Parse(Core::Allocator<Core::String::Type>& aAllocator) const override{
+            Core::String tmp(aAllocator);
+            tmp += '[';
+            const ConstIterator end = mValues.end();
+            for(ConstIterator i = mValues.begin(); i != end; ++i){
+                tmp += (**i).Parse(aAllocator);
+                if(i + 1 != end) tmp += ',';
+            }
+            tmp += ']';
+            return tmp;
+        }
     public:
-        friend Document;
+
+        // Delegated to mValues
+
+        Reference InsertBefore(const ConstIterator aPos, Value& aValue){return *mValues.InsertBefore(aPos, &aValue);}
+        Reference InsertAfter(const ConstIterator aPos, Value& aValue){return *mValues.InsertAfter(aPos, &aValue);}
+        void Erase(const ConstIterator aPos){mValues.Erase(aPos);}
+
+        //Iterator Find(const Value& aValue){return mValues.Find(&aValue);}
+        //ConstIterator Find(const Value& aValue) const{return mValues.Find(&aValue);}
+
+        Reference PushBack(Value& aValue){return *mValues.PushBack(&aValue);}
+        Reference PushFront(Value& aValue){return *mValues.PushFront(&aValue);}
+
+        Reference Front(){return *mValues.Front();}
+        ConstReference Front() const{return *mValues.Front();}
+        Reference Back(){return *mValues.Front();}
+        ConstReference Back() const{return *mValues.Front();}
+
+        Reference operator[](const size_t aIndex){return *mValues[aIndex];}
+        ConstReference operator[](const size_t aIndex) const{return *mValues[aIndex];}
+
+        Iterator begin(){return mValues.begin();}
+        ConstIterator begin() const{return mValues.begin();}
+        Iterator end(){return mValues.end();}
+        ConstIterator end() const{return mValues.end();}
+        ReverseIterator rbegin(){return mValues.rbegin();}
+        ConstReverseIterator rbegin() const{return mValues.rbegin();}
+        ReverseIterator rend(){return mValues.rend();}
+        ConstReverseIterator rend() const{return mValues.rend();}
+
 
         // Inherited from Value
 
@@ -395,17 +303,78 @@ namespace Solaire{ namespace Json{
     };
 
     class Object : public Value{
-    private:
-        Object(
-            ValueArray& aValueArray,
-            Core::String& aString,
-            const uint32_t aThisBegin,
-            const uint32_t aThisEnd
-        ):
-            Value(aValueArray, aString, aThisBegin, aThisEnd)
-        {}
     public:
-        friend Document;
+		typedef std::pair<Core::String, Value*> Type;
+		typedef const Type ConstType;
+		typedef Type& Reference;
+		typedef ConstType& ConstReference;
+        typedef Type&& Move;
+		typedef Type* Pointer;
+		typedef ConstType* ConstPointer;
+		typedef typename std::map<Core::ConstStringFragment, Value*>::iterator Iterator;
+		typedef typename std::map<Core::ConstStringFragment, Value*>::const_iterator ConstIterator;
+		typedef typename std::map<Core::ConstStringFragment, Value*>::reverse_iterator ReverseIterator;
+		typedef typename std::map<Core::ConstStringFragment, Value*>::const_reverse_iterator ConstReverseIterator;
+    private:
+        std::list<Core::String> mNames;
+        std::map<Core::ConstStringFragment, Value*> mValues;
+    protected:
+
+        // Inherited from Value
+
+        Core::String Parse(Core::Allocator<Core::String::Type>& aAllocator) const override{
+            Core::String tmp(aAllocator);
+            tmp += '{';
+            for(const Type& i : mValues){
+                tmp += '"';
+                tmp += i.first;
+                tmp += '"';
+                tmp += ':';
+                tmp += i.second->Parse(aAllocator);
+                if(++mValues.find(i.first) != mValues.end()) tmp += ',';
+            }
+            tmp += '}';
+            return tmp;
+        }
+    public:
+
+        Value& Insert(const Core::ConstStringFragment aName, Value& aValue){
+            auto nameIt = std::find(mNames.begin(), mNames.end(), aName);
+            if(nameIt == mNames.end()){
+                mNames.push_back(aName);
+                nameIt = --mNames.end();
+            }
+
+            return *(mValues.emplace(Core::ConstStringFragment(nameIt->begin(), nameIt->end()), &aValue).first->second);
+        }
+
+        void Erase(const Core::ConstStringFragment aName){
+            auto nameIt = std::find(mNames.begin(), mNames.end(), aName);
+            if(nameIt == mNames.end()) return;
+
+            auto valueIt = mValues.find(aName);
+            if(valueIt == mValues.end()) return;
+
+            mNames.erase(nameIt);
+            mValues.erase(valueIt);
+        }
+
+        // Delegated to mValues
+
+        Iterator Find(const Core::ConstStringFragment aName){return mValues.find(aName);}
+        ConstIterator Find(const Core::ConstStringFragment aName) const{return mValues.find(aName);}
+
+        Value& operator[](const Core::ConstStringFragment aName){return *(mValues.find(aName)->second);}
+        const Value& operator[](const Core::ConstStringFragment aName) const{return *(mValues.find(aName)->second);}
+
+        Iterator begin(){return mValues.begin();}
+        ConstIterator begin() const{return mValues.begin();}
+        Iterator end(){return mValues.end();}
+        ConstIterator end() const{return mValues.end();}
+        ReverseIterator rbegin(){return mValues.rbegin();}
+        ConstReverseIterator rbegin() const{return mValues.rbegin();}
+        ReverseIterator rend(){return mValues.rend();}
+        ConstReverseIterator rend() const{return mValues.rend();}
 
         // Inherited from Value
 

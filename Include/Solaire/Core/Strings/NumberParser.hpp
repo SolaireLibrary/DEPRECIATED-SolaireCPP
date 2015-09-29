@@ -284,7 +284,7 @@ namespace Solaire{ namespace Core{
             return ExponentValue<DecimalValue<SignedValue, UnsignedValue>, DecimalValue<SignedValue, UnsignedValue>>().Parse<double>(aFragment);
         }
 
-        StringFragment::Pointer Parse(StringFragment::Pointer aBegin, double aValue){
+        StringFragment::Pointer ToString(StringFragment::Pointer aBegin, double aValue){
             // Separate aValue into components
             double body = std::floor(aValue);
             const bool negative = body < 0.0;

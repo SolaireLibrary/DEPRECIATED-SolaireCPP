@@ -59,6 +59,12 @@ namespace Solaire{ namespace Core{
         mContainer.PushBack('\0');
     }
 
+    String::String(const Core::ConstStringFragment aOther, Allocator<Type>& aAllocator) :
+        mContainer(aOther.begin(), aOther.end(), aAllocator)
+    {
+        mContainer.PushBack('\0');
+    }
+
     void String::Erase(const ConstIterator aPos){
         mContainer.Erase(aPos);
     }
