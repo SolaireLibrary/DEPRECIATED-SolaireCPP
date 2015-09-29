@@ -283,6 +283,50 @@ namespace Solaire{ namespace Core{
         std::pair<double, ConstStringFragment> Parse<double>(const ConstStringFragment aFragment){
             return ExponentValue<DecimalValue<SignedValue, UnsignedValue>, DecimalValue<SignedValue, UnsignedValue>>().Parse<double>(aFragment);
         }
+
+        StringFragment::Pointer Parse(StringFragment::Pointer aBegin, double aValue){
+            // Separate aValue into components
+            double body = std::floor(aValue);
+            const bool negative = body < 0.0;
+            double decimal = aValue - body;
+            if(negative) body *= -1.0;
+
+            // Shift the body down
+            while(body < 0.0 && body != 0.0) body /= 10.0;
+
+            if(negative){
+                *aBegin = '-';
+                ++aBegin;
+            }
+
+            if(body == 0.0){
+                *aBegin = '0';
+                ++aBegin;
+            }
+
+            while(body != 0.0){
+                body *= 10;
+                const double digit = std::floor(body);
+                body -= digit;
+                *aBegin = '0' + digit;
+                ++aBegin;
+            }
+
+            if(decimal != 0.0){
+                *aBegin = '.';
+                ++aBegin;
+            }
+
+            while(decimal != 0.0){
+                decimal *= 10;
+                const double digit = std::floor(decimal);
+                decimal -= digit;
+                *aBegin = '0' + digit;
+                ++aBegin;
+            }
+
+            return aBegin;
+        }
     }
 
 }}
