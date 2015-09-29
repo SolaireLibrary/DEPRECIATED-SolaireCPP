@@ -114,7 +114,7 @@ namespace Solaire{ namespace Ui{
     public:
         friend KeySource;
 
-        KeyListener(Core::Allocator<Core::SourceBase*>& aAllocator = Core::GetDefaultAllocator<Core::SourceBase*>()) :
+        KeyListener(Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()) :
             Listener(aAllocator)
         {}
 
@@ -140,7 +140,7 @@ namespace Solaire{ namespace Ui{
             }
         }
     public:
-        KeySource(Core::Allocator<Core::ListenerBase*>& aAllocator = Core::GetDefaultAllocator<Core::ListenerBase*>()) :
+        KeySource(Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()) :
             Source(aAllocator)
         {}
 

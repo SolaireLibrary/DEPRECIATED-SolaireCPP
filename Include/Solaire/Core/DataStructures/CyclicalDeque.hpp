@@ -69,20 +69,20 @@ namespace Solaire{ namespace Core{
 	        mArray(std::move(aOther.mArray))
         {}
 
-		CyclicalDeque(const Index aCount, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
+		CyclicalDeque(const Index aCount, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
 		    mArray(aCount, aAllocator)
 		{}
 
-		CyclicalDeque(ConstReference aValue, const Index aCount, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
+		CyclicalDeque(ConstReference aValue, const Index aCount, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
 		    mArray(aValue, aCount, aAllocator)
 		{}
 
-		CyclicalDeque(const std::initializer_list<Type> aList, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
+		CyclicalDeque(const std::initializer_list<Type> aList, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
 		    mArray(aList.begin(), aList.end(), aAllocator)
 		{}
 
         template<class ExternalIterator>
-		CyclicalDeque(ExternalIterator aBegin, const ExternalIterator aEnd, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
+		CyclicalDeque(ExternalIterator aBegin, const ExternalIterator aEnd, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
 		    mArray(aBegin, aEnd, aAllocator)
 		{}
 

@@ -426,7 +426,7 @@ namespace Solaire{ namespace Core{
     public:
         friend Task;
 
-        TaskManager(Allocator<Task*>& aAllocator) :
+        TaskManager(Allocator<void>& aAllocator) :
             mInitialiseTasks(128, aAllocator),
             mPreExecuteTasks(128, aAllocator),
             mPostExecuteTasks(128, aAllocator),

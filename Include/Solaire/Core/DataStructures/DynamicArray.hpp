@@ -57,22 +57,22 @@ namespace Solaire{ namespace Core{
 		typedef INDEX Index;
 		typedef DynamicArray<TYPE, CONST_TYPE, INDEX> Self;
 	private:
-        Allocator<Type>* mAllocator;
+        WrapperAllocator<Type> mAllocator;
 		Index mHead;
 		Index mSize;
 		Type* mData;
     private:
         void IncreaseSize(){
             const Index newSize = mSize * 2;
-            Type* newData = mAllocator->AllocateMany(newSize);
+            Type* newData = mAllocator.AllocateMany(newSize);
 
             for(Index i = 0; i < mHead; ++i){
                 Type* const address = mData + i;
                 new(newData + i) Type(std::move(*address));
-                mAllocator->CallDestructor(address);
+                mAllocator.CallDestructor(address);
 		    }
 
-            mAllocator->DeallocateMany(mData, mSize);
+            mAllocator.DeallocateMany(mData, mSize);
             mSize = newSize;
             mData = newData;
         }
@@ -83,7 +83,7 @@ namespace Solaire{ namespace Core{
             for(Index i = aPosition - mData; i < mHead; ++i){
                 mData[i] = std::move(mData[i + 1]);
             }
-            mAllocator->CallDestructor(mData + mHead);
+            mAllocator.CallDestructor(mData + mHead);
         }
 
         void ShiftUp(const ConstPointer aPosition){
@@ -107,7 +107,7 @@ namespace Solaire{ namespace Core{
 		    mAllocator(aOther.mAllocator),
 			mHead(0),
 			mSize(aOther.mSize),
-			mData(static_cast<Type*>(mAllocator->AllocateMany(mSize)))
+			mData(static_cast<Type*>(mAllocator.AllocateMany(mSize)))
         {
             for(ConstReference i : aOther) PushBack(i);
         }
@@ -123,39 +123,39 @@ namespace Solaire{ namespace Core{
             aOther.mData = nullptr;
         }
 
-		DynamicArray(const Index aCount = 32, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
-		    mAllocator(&aAllocator),
+		DynamicArray(const Index aCount = 32, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+		    mAllocator(aAllocator),
 			mHead(0),
 			mSize(aCount),
-			mData(aAllocator.AllocateMany(mSize))
+			mData(mAllocator.AllocateMany(mSize))
 		{}
 
-		DynamicArray(ConstReference aValue, const Index aCount, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
-		    mAllocator(&aAllocator),
+		DynamicArray(ConstReference aValue, const Index aCount, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+		    mAllocator(aAllocator),
 			mHead(0),
 			mSize(aCount),
-			mData(static_cast<Type*>(mAllocator->AllocateMany(mSize)))
+			mData(mAllocator.AllocateMany(mSize))
 		{
 			for(Index i = 0; i < aCount; ++i){
 				PushBack(aValue);
 			}
 		}
 
-		DynamicArray(const std::initializer_list<Type> aList, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
-		    mAllocator(&aAllocator),
+		DynamicArray(const std::initializer_list<Type> aList, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+		    mAllocator(aAllocator),
 			mHead(0),
 			mSize(aList.size()),
-			mData(static_cast<Type*>(mAllocator->AllocateMany(mSize)))
+			mData(mAllocator.AllocateMany(mSize))
 		{
 			for(ConstReference i : aList) PushBack(i);
 		}
 
         template<class ExternalIterator>
-		DynamicArray(ExternalIterator aBegin, const ExternalIterator aEnd, Allocator<Type>& aAllocator = GetDefaultAllocator<Type>()) :
-		    mAllocator(&aAllocator),
+		DynamicArray(ExternalIterator aBegin, const ExternalIterator aEnd, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+		    mAllocator(aAllocator),
 			mHead(0),
 			mSize(aEnd - aBegin),
-			mData(static_cast<Type*>(mAllocator->AllocateMany(mSize)))
+			mData(mAllocator.AllocateMany(mSize))
 		{
 			while(aBegin != aEnd){
                 PushBack(*aBegin);
@@ -166,7 +166,7 @@ namespace Solaire{ namespace Core{
 		~DynamicArray(){
 		    if(mData != nullptr){
                 Clear();
-                mAllocator->DeallocateMany(mData, mSize);
+                mAllocator.DeallocateMany(mData, mSize);
 		    }
 		}
 
@@ -197,7 +197,7 @@ namespace Solaire{ namespace Core{
 
 		void Clear(){
 		    for(Index i = 0; i < mHead; ++i){
-                mAllocator->CallDestructor(mData + i);
+                mAllocator.CallDestructor(mData + i);
 		    }
 		    mHead = 0;
 		}

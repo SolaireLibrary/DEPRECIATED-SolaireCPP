@@ -51,8 +51,6 @@ namespace Solaire{ namespace Core {
         typedef std::pair<void*, size_t> Region;
 
         Allocator<void>& mAllocator;
-        WrapperAllocator<DestructorCall> mDestructorListAllocator;
-        WrapperAllocator<Region> mFreeRegionsAllocator;
         DynamicArray<DestructorCall> mDestructorList;
         DynamicArray<Region> mFreeRegions;
         uint8_t* mArenaBegin;
@@ -108,10 +106,8 @@ namespace Solaire{ namespace Core {
     public:
         MemoryArena(const size_t aSize, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
             mAllocator(aAllocator),
-            mDestructorListAllocator(mAllocator),
-            mFreeRegionsAllocator(mAllocator),
-            mDestructorList(128, mDestructorListAllocator),
-            mFreeRegions(128, mFreeRegionsAllocator),
+            mDestructorList(128, aAllocator),
+            mFreeRegions(128, aAllocator),
             mArenaBegin(static_cast<uint8_t*>(mAllocator.Allocate(aSize))),
             mArenaEnd(mArenaBegin + aSize),
             mArenaHead(mArenaBegin),

@@ -57,14 +57,14 @@ namespace Solaire{ namespace Core{
         Container mContainer;
     public:
         // Constructors
-        String(Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
-        String(const Core::ConstStringFragment aOther, Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
-        String(const std::basic_string<Type>& aOther, Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
-        String(const ConstPointer aPointer, Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
-        String(const ConstPointer aPointer, const size_t aSize, Allocator<Type>& aAllocator = GetDefaultAllocator<char>());
+        String(Allocator<void>& aAllocator = GetDefaultAllocator<void>());
+        String(const Core::ConstStringFragment aOther, Allocator<void>& aAllocator = GetDefaultAllocator<void>());
+        String(const std::basic_string<Type>& aOther, Allocator<void>& aAllocator = GetDefaultAllocator<void>());
+        String(const ConstPointer aPointer, Allocator<void>& aAllocator = GetDefaultAllocator<void>());
+        String(const ConstPointer aPointer, const size_t aSize, Allocator<void>& aAllocator = GetDefaultAllocator<void>());
 
         template<class ExternalIterator>
-        String(const ExternalIterator aBegin, const ExternalIterator aEnd, Allocator<Type>& aAllocator = GetDefaultAllocator<char>()) :
+        String(const ExternalIterator aBegin, const ExternalIterator aEnd, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
             mContainer(aBegin, aEnd, aAllocator)
         {
             if(mContainer.Back() != '\0') mContainer.PushBack('\0');
@@ -85,6 +85,7 @@ namespace Solaire{ namespace Core{
         void Erase(const ConstIterator aPos, size_t aCount);
         String& EraseAll(const Type aChar);
         String& EraseAll(const ConstStringFragment aFragment);
+        void Clear();
 
         // Insertion
         Reference InsertBefore(const ConstIterator aPos, const Type aChar);

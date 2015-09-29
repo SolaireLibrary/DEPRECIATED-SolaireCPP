@@ -56,13 +56,6 @@ namespace Solaire{ namespace Graphics{
         };
 
         class Doc{
-        private:
-            union{
-                Core::WrapperAllocator<Vertex> mVertexAllocator;
-                Core::WrapperAllocator<Normal> mNormalAllocator;
-                Core::WrapperAllocator<Texture> mTextureAllocator;
-                Core::WrapperAllocator<Face> mFaceAllocator;
-            };
         public:
             Core::Allocator<void>& allocator;
             Core::DynamicArray<Face, const Face, uint32_t> faces;
@@ -71,12 +64,11 @@ namespace Solaire{ namespace Graphics{
             Core::DynamicArray<Texture, const Texture, uint32_t> textures;
 
             Doc(Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
-                mVertexAllocator(aAllocator),
                 allocator(aAllocator),
-                faces(1024, mFaceAllocator),
-                vertices(1024, mVertexAllocator),
-                normals(1024, mNormalAllocator),
-                textures(1024, mTextureAllocator)
+                faces(1024, aAllocator),
+                vertices(1024, aAllocator),
+                normals(1024, aAllocator),
+                textures(1024, aAllocator)
             {}
         };
 

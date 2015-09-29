@@ -35,31 +35,31 @@ namespace Solaire{ namespace Core{
 
     // String
 
-    String::String(Allocator<Type>& aAllocator) :
+    String::String(Allocator<void>& aAllocator) :
         mContainer(256, aAllocator)
     {
         mContainer.PushBack('\0');
     }
 
-    String::String(const ConstPointer aPointer, Allocator<Type>& aAllocator) :
+    String::String(const ConstPointer aPointer, Allocator<void>& aAllocator) :
         mContainer(aPointer, aPointer + std::strlen(aPointer), aAllocator)
     {
         mContainer.PushBack('\0');
     }
 
-    String::String(const ConstPointer aPointer, const size_t aSize, Allocator<Type>& aAllocator) :
+    String::String(const ConstPointer aPointer, const size_t aSize, Allocator<void>& aAllocator) :
         mContainer(aPointer, aPointer + aSize, aAllocator)
     {
         mContainer.PushBack('\0');
     }
 
-    String::String(const std::basic_string<Type>& aOther, Allocator<Type>& aAllocator) :
+    String::String(const std::basic_string<Type>& aOther, Allocator<void>& aAllocator) :
         mContainer(aOther.begin(), aOther.end(), aAllocator)
     {
         mContainer.PushBack('\0');
     }
 
-    String::String(const Core::ConstStringFragment aOther, Allocator<Type>& aAllocator) :
+    String::String(const Core::ConstStringFragment aOther, Allocator<void>& aAllocator) :
         mContainer(aOther.begin(), aOther.end(), aAllocator)
     {
         mContainer.PushBack('\0');
@@ -75,6 +75,10 @@ namespace Solaire{ namespace Core{
             mContainer.Erase(aPos);
             --aCount;
         }
+    }
+
+    void String::Clear(){
+        mContainer.Clear();
     }
 
     String::Reference String::InsertBefore(const ConstIterator aPos, const Type aChar){
