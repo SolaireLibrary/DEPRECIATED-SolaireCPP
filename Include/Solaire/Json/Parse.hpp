@@ -267,18 +267,19 @@ namespace Solaire{ namespace Json{
     private:
         Core::DynamicArray<Parser*> mParsers;
         Core::Allocator<void>& mAllocator;
-        struct{
-            uint8_t openFound : 1;
-            uint8_t closeFound : 1;
-            uint8_t parseChild : 1;
+        enum{
+            STATE_OPEN_ARRAY,
+            STATE_CLOSE_ARRAY,
+            STATE_IDENTIFY_CHILD,
+            STATE_PARSE_CHILD,
+            STATE_CHILD_SEPARATOR
         };
+        uint8_t mState;
     public:
         ArrayParser(Core::Allocator<void>& aAllocator):
             mParsers(32, aAllocator),
             mAllocator(aAllocator),
-            openFound(0),
-            closeFound(0),
-            parseChild(0)
+            mState(STATE_OPEN_ARRAY)
         {}
 
         ~ArrayParser(){
@@ -291,47 +292,74 @@ namespace Solaire{ namespace Json{
         // Inherited from aAllocator
 
         bool Append(const Core::String::Type aChar) override{
-            if(! openFound) goto ARRAY_OPEN;
-            if(closeFound) goto ARRAY_CLOSED;
-            if(parseChild) goto ARRAY_CHILD;
-            goto ARRAY_IDENTIFY;
+            LABEL_START:
+            switch(mState){
+            case STATE_OPEN_ARRAY :
+                goto LABEL_OPEN_ARRAY;
+            case STATE_CLOSE_ARRAY :
+                goto LABEL_CLOSE_ARRAY;
+            case STATE_IDENTIFY_CHILD :
+                goto LABEL_IDENTIFY_CHILD;
+            case STATE_PARSE_CHILD :
+                goto LABEL_PARSE_CHILD;
+            case STATE_CHILD_SEPARATOR :
+                goto LABEL_CHILD_SEPARATOR;
+            default:
+                throw std::runtime_error("Json::ArrayParser : Invalid State");
+            }
 
 
-            ARRAY_OPEN:
+            LABEL_OPEN_ARRAY:
             switch(aChar){
             case ' ':
             case '\t':
             case '\n':
                 return true;
             case '[':
-                openFound = 1;
+                mState = STATE_IDENTIFY_CHILD;
                 return true;
             default:
                 return false;
             }
 
-            ARRAY_CLOSED:
+            LABEL_CLOSE_ARRAY:
             return false;
 
-            ARRAY_CHILD:
+            LABEL_PARSE_CHILD:
             if(mParsers.Back()->Append(aChar)){
                 return true;
             }else if(aChar == ']'){
-                closeFound = 1;
+                mState = STATE_CLOSE_ARRAY;
                 return true;
             }else{
-                parseChild = 0;
-                goto ARRAY_IDENTIFY;
+                mState = STATE_CHILD_SEPARATOR;
+                goto LABEL_START;
             }
 
-            ARRAY_IDENTIFY:
+            LABEL_CHILD_SEPARATOR:
+            switch(aChar){
+            case ' ':
+            case '\t':
+            case '\n':
+                return true;
+            case ',':
+                mState = STATE_IDENTIFY_CHILD;
+                return true;
+            case ']':
+                mState = STATE_CLOSE_ARRAY;
+                return true;
+            default:
+                return false;
+            }
+
+            LABEL_IDENTIFY_CHILD:
             switch(aChar){
             case ' ':
             case '\t':
             case '\n':
                 return true;
             case ']':
-                closeFound = 1;
+                mState = STATE_CLOSE_ARRAY;
                 return true;
             default:
                 TypeID id;
@@ -340,16 +368,21 @@ namespace Solaire{ namespace Json{
                 }catch(...){
                     return false;
                 }
+                mParsers.PushBack(AllocateParser(mAllocator, id));
 
-                parseChild = 1;
-                Parser* parser = AllocateParser(mAllocator, id);
-                mParsers.PushBack(parser);
-                goto ARRAY_CHILD;
+                mState = STATE_PARSE_CHILD;
+                goto LABEL_START;
             }
         }
 
         Value* Get(Core::Allocator<void>& aAllocator) const override{
-            return nullptr;
+            if(mState != STATE_CLOSE_ARRAY) return nullptr;
+            //Array* ptr = new(Core::WrapperAllocator<Array>(aAllocator).AllocateSingle()) Array();
+            Array* ptr = new Array();
+            for(Parser* i : mParsers){
+                ptr->PushBack(*(i->Get(aAllocator)));
+            }
+            return ptr;
         }
     };
 
@@ -366,17 +399,23 @@ namespace Solaire{ namespace Json{
             uint8_t nameClose : 1;
             uint8_t parseChild : 1;
         };
+        enum{
+            STATE_OPEN_OBJECT,
+            STATE_CLOSE_OBJECT,
+            STATE_OPEN_NAME,
+            STATE_PARSE_NAME,
+            STATE_NAME_SEPERATOR,
+            STATE_IDENTIFY_CHILD,
+            STATE_PARSE_CHILD,
+            STATE_CHILD_SEPARATOR
+        };
+        uint8_t mState;
     public:
         ObjectParser(Core::Allocator<void>& aAllocator):
             mParsers(32, aAllocator),
             mAllocator(aAllocator),
             mName(aAllocator),
-            openFound(0),
-            closeFound(0),
-            nameParsed(0),
-            nameOpen(0),
-            nameClose(0),
-            parseChild(0)
+            mState(STATE_OPEN_OBJECT)
         {}
 
         ~ObjectParser(){
@@ -389,75 +428,114 @@ namespace Solaire{ namespace Json{
         // Inherited from aAllocator
 
         bool Append(const Core::String::Type aChar) override{
-            if(! openFound) goto OBJECT_OPEN;
-            if(closeFound) goto OBJECT_CLOSED;
-            if(! nameParsed) goto OBJECT_NAME;
-            if(parseChild) goto OBJECT_CHILD;
-            goto OBJECT_IDENTIFY;
+            LABEL_START:
+            switch(mState){
+            case STATE_OPEN_OBJECT :
+                goto LABEL_OPEN_OBJECT;
+            case STATE_CLOSE_OBJECT :
+                goto LABEL_CLOSE_OBJECT;
+            case STATE_OPEN_NAME :
+                goto LABEL_OPEN_NAME;
+            case STATE_PARSE_NAME :
+                goto LABEL_PARSE_NAME;
+            case STATE_NAME_SEPERATOR :
+                goto LABEL_NAME_SEPERATOR;
+            case STATE_IDENTIFY_CHILD :
+                goto LABEL_IDENTIFY_CHILD;
+            case STATE_PARSE_CHILD :
+                goto LABEL_PARSE_CHILD;
+            case STATE_CHILD_SEPARATOR :
+                goto LABEL_CHILD_SEPARATOR;
+            default:
+                throw std::runtime_error("Json::ObjectParser : Invalid state");
+            }
 
 
-            OBJECT_OPEN:
+            LABEL_OPEN_OBJECT:
             switch(aChar){
             case ' ':
             case '\t':
             case '\n':
                 return true;
             case '{':
-                openFound = 1;
+                mState = STATE_OPEN_NAME;
                 return true;
             default:
                 return false;
             }
 
-            OBJECT_CLOSED:
+            LABEL_CLOSE_OBJECT:
             return false;
 
-            OBJECT_NAME:
-            if(! nameOpen){
-                switch(aChar){
-                case ' ':
-                case '\t':
-                case '\n':
-                    return true;
-                case '"':
-                    nameOpen = 1;
-                    return true;
-                default:
-                    return false;
-                }
-            }else if(! nameClose){
-                if(aChar == '"'){
-                    nameClose = 1;
-                }else{
-                    mName += aChar;
-                }
-            }else{
-               return false;
-            }
-
-            OBJECT_CHILD:
-            if(mParsers.Back().second->Append(aChar)){
-                return true;
-            }else if(aChar == '}'){
-                closeFound = 1;
-                return true;
-            }else{
-                nameParsed = 0;
-                nameOpen = 0;
-                nameClose = 0;
-                parseChild = 0;
-                mName.Clear();
-                goto OBJECT_IDENTIFY;
-            }
-
-            OBJECT_IDENTIFY:
+            LABEL_OPEN_NAME:
             switch(aChar){
             case ' ':
             case '\t':
             case '\n':
                 return true;
-            case ']':
-                closeFound = 1;
+            case '"':
+                mState = STATE_PARSE_NAME;
+                return true;
+            default:
+                return false;
+            }
+
+            LABEL_PARSE_NAME:
+            if(aChar == '"'){
+                //! \TODO Handle escaped character
+                mState = STATE_NAME_SEPERATOR;
+                return true;
+            }
+            mName += aChar;
+            return true;
+
+            LABEL_NAME_SEPERATOR:
+            switch(aChar){
+            case ' ':
+            case '\t':
+            case '\n':
+            case ':':
+                return true;
+            default:
+                mState = STATE_IDENTIFY_CHILD;
+                goto LABEL_START;
+            }
+
+            LABEL_PARSE_CHILD:
+            if(mParsers.Back().second->Append(aChar)){
+                return true;
+            }else if(aChar == '}'){
+                mState = STATE_CLOSE_OBJECT;
+                return true;
+            }else{
+                mState = STATE_CHILD_SEPARATOR;
+                goto LABEL_START;
+            }
+
+            LABEL_CHILD_SEPARATOR:
+            switch(aChar){
+            case ' ':
+            case '\t':
+            case '\n':
+                return true;
+            case ',':
+                mState = STATE_OPEN_NAME;
+                return true;
+            case '}':
+                mState = STATE_CLOSE_OBJECT;
+                return true;
+            default:
+                return false;
+            }
+
+            LABEL_IDENTIFY_CHILD:
+            switch(aChar){
+            case ' ':
+            case '\t':
+            case '\n':
+                return true;
+            case '}':
+                mState = STATE_CLOSE_OBJECT;
                 return true;
             default:
                 TypeID id;
@@ -467,15 +545,23 @@ namespace Solaire{ namespace Json{
                     return false;
                 }
 
-                parseChild = 1;
-                Parser* parser = AllocateParser(mAllocator, id);
-                mParsers.PushBack(std::pair<Core::String, Parser*>(mName, parser));
-                goto OBJECT_CHILD;
+                mParsers.PushBack(std::pair<Core::String, Parser*>(mName,  AllocateParser(mAllocator, id)));
+                mName.Clear();
+
+                mState = STATE_PARSE_CHILD;
+                goto LABEL_START;
             }
         }
 
         Value* Get(Core::Allocator<void>& aAllocator) const override{
-            return nullptr;
+            if(mState != STATE_CLOSE_OBJECT) return nullptr;
+
+            //Object* ptr = new(Core::WrapperAllocator<Object>(aAllocator).AllocateSingle()) Object();
+            Object* ptr = new Object();
+            for(std::pair<Core::String, Parser*> i : mParsers){
+                ptr->Add(i.first, *(i.second->Get(aAllocator)));
+            }
+            return ptr;
         }
     };
 
@@ -513,17 +599,23 @@ namespace Solaire{ namespace Json{
     static Parser* AllocateParser(Core::Allocator<void>& aAllocator, const TypeID aID){
         switch(aID){
         case GetTypeID<Null>():
-            return new(Core::WrapperAllocator<NullParser>(aAllocator).AllocateSingle()) NullParser();
+            return new NullParser();
+            //return new(Core::WrapperAllocator<NullParser>(aAllocator).AllocateSingle()) NullParser();
         case GetTypeID<Bool>():
-            return new(Core::WrapperAllocator<BoolParser>(aAllocator).AllocateSingle()) BoolParser();
+            return new BoolParser();
+            //return new(Core::WrapperAllocator<BoolParser>(aAllocator).AllocateSingle()) BoolParser();
         case GetTypeID<Number>():
-            return new(Core::WrapperAllocator<NullParser>(aAllocator).AllocateSingle()) NumberParser();
+            return new NumberParser();
+            //return new(Core::WrapperAllocator<NullParser>(aAllocator).AllocateSingle()) NumberParser();
         case GetTypeID<String>():
-            return new(Core::WrapperAllocator<StringParser>(aAllocator).AllocateSingle()) StringParser(aAllocator);
+            return new StringParser(aAllocator);
+            //return new(Core::WrapperAllocator<StringParser>(aAllocator).AllocateSingle()) StringParser(aAllocator);
         case GetTypeID<Array>():
-            return new(Core::WrapperAllocator<ArrayParser>(aAllocator).AllocateSingle()) ArrayParser(aAllocator);
+            return new ArrayParser(aAllocator);
+            //return new(Core::WrapperAllocator<ArrayParser>(aAllocator).AllocateSingle()) ArrayParser(aAllocator);
         case GetTypeID<Object>():
-            return new(Core::WrapperAllocator<ObjectParser>(aAllocator).AllocateSingle()) ObjectParser(aAllocator);
+            return new ObjectParser(aAllocator);
+            //return new(Core::WrapperAllocator<ObjectParser>(aAllocator).AllocateSingle()) ObjectParser(aAllocator);
         default:
             return nullptr;
         }

@@ -79,6 +79,7 @@ namespace Solaire{ namespace Core{
 
     void String::Clear(){
         mContainer.Clear();
+        mContainer.PushBack('\0');
     }
 
     String::Reference String::InsertBefore(const ConstIterator aPos, const Type aChar){

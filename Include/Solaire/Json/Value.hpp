@@ -311,13 +311,12 @@ namespace Solaire{ namespace Json{
         typedef Type&& Move;
 		typedef Type* Pointer;
 		typedef ConstType* ConstPointer;
-		typedef typename std::map<Core::ConstStringFragment, Value*>::iterator Iterator;
-		typedef typename std::map<Core::ConstStringFragment, Value*>::const_iterator ConstIterator;
-		typedef typename std::map<Core::ConstStringFragment, Value*>::reverse_iterator ReverseIterator;
-		typedef typename std::map<Core::ConstStringFragment, Value*>::const_reverse_iterator ConstReverseIterator;
+		typedef typename std::map<Core::String, Value*>::iterator Iterator;
+		typedef typename std::map<Core::String, Value*>::const_iterator ConstIterator;
+		typedef typename std::map<Core::String, Value*>::reverse_iterator ReverseIterator;
+		typedef typename std::map<Core::String, Value*>::const_reverse_iterator ConstReverseIterator;
     private:
-        std::list<Core::String> mNames;
-        std::map<Core::ConstStringFragment, Value*> mValues;
+        std::map<Core::String, Value*> mValues;
     protected:
 
         // Inherited from Value
@@ -338,24 +337,12 @@ namespace Solaire{ namespace Json{
         }
     public:
 
-        Value& Insert(const Core::ConstStringFragment aName, Value& aValue){
-            auto nameIt = std::find(mNames.begin(), mNames.end(), aName);
-            if(nameIt == mNames.end()){
-                mNames.push_back(aName);
-                nameIt = --mNames.end();
-            }
-
-            return *(mValues.emplace(Core::ConstStringFragment(nameIt->begin(), nameIt->end()), &aValue).first->second);
+        Value& Add(const Core::ConstStringFragment aName, Value& aValue){
+            return *(mValues.emplace(aName, &aValue).first->second);
         }
 
         void Erase(const Core::ConstStringFragment aName){
-            auto nameIt = std::find(mNames.begin(), mNames.end(), aName);
-            if(nameIt == mNames.end()) return;
-
             auto valueIt = mValues.find(aName);
-            if(valueIt == mValues.end()) return;
-
-            mNames.erase(nameIt);
             mValues.erase(valueIt);
         }
 
