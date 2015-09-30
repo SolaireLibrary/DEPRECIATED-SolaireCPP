@@ -33,6 +33,7 @@ Last Modified	: 22nd September 2015
 
 #include "Frame.hpp"
 #include "Level.hpp"
+#include "..\Core\Allocator.hpp"
 
 namespace Solaire{ namespace Game{
 
@@ -44,9 +45,9 @@ namespace Solaire{ namespace Game{
 
         virtual uint64_t GetElapsedTime() const = 0;
 
-        virtual Core::MemoryArena& GetGameArena();
-        virtual Core::MemoryArena& GetLevelArena();
-        virtual Core::MemoryArena& GetFrameArena();
+        virtual Core::Allocator<void>& GetGameAllocator() const = 0;
+        virtual Core::Allocator<void>& GetLevelAllocator() const = 0;
+        virtual Core::Allocator<void>& GetFrameAllocator() const = 0;
 
         virtual void Pause() = 0;
         virtual uint64_t Resume() = 0;

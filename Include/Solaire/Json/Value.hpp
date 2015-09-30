@@ -197,6 +197,10 @@ namespace Solaire{ namespace Json{
             Clear();
         }
 
+        Core::Allocator<void>& Allocator() const{
+            return *mAllocator;
+        }
+
         template<class T>
         bool Is() const{
             return mID == GetTypeID<T>();
