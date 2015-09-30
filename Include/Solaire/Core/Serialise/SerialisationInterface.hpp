@@ -43,10 +43,10 @@ namespace Solaire{ namespace Core{
     class SerialArray;
     class SerialObject;
 
-    typedef Core::SmartPointer<SerialArray> SerialArrayPtr;
-    typedef Core::SmartPointer<SerialObject> SerialObjectPtr;
-    typedef Core::SmartPointer<const SerialArray> ConstSerialArrayPtr;
-    typedef Core::SmartPointer<const SerialObject> ConstSerialObjectPtr;
+    typedef Core::SharedPointer<SerialArray> SerialArrayPtr;
+    typedef Core::SharedPointer<SerialObject> SerialObjectPtr;
+    typedef Core::SharedPointer<const SerialArray> ConstSerialArrayPtr;
+    typedef Core::SharedPointer<const SerialObject> ConstSerialObjectPtr;
 
     enum SerialType{
         SERIAL_TYPE_U8,
