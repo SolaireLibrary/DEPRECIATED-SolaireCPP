@@ -515,15 +515,13 @@ namespace Solaire{ namespace Json{
         // Inherited from SerialSystem
 
         Core::SerialArrayPtr CreateA() const override{
-            Value* value = new(mParseAllocator.Allocate<Value>()) Value(TYPE_ARRAY, mParseAllocator);
-            mParseAllocator.RegisterDestructor<Value>(value);
+            Value* value = new(mParseAllocator.AllocateAndRegister<Value>()) Value(TYPE_ARRAY, mParseAllocator);
             mValueList.push_back(value);
             return SolaireSharedAllocate(mParseAllocator, SerialArray, (*value));
         }
 
         Core::SerialObjectPtr CreateO() const override{
-            Value* value = new(mParseAllocator.Allocate<Value>()) Value(TYPE_ARRAY, mParseAllocator);
-            mParseAllocator.RegisterDestructor<Value>(value);
+            Value* value = new(mParseAllocator.AllocateAndRegister<Value>()) Value(TYPE_ARRAY, mParseAllocator);
             mValueList.push_back(value);
             return SolaireSharedAllocate(mParseAllocator, SerialObject, (*value));
         }

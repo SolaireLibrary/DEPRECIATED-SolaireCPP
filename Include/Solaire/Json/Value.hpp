@@ -133,16 +133,13 @@ namespace Solaire{ namespace Json{
                 mNumber = 0.0;
                 break;
             case TYPE_STRING:
-                mString = new(mAllocator->Allocate<String>()) String();
-                mAllocator->RegisterDestructor<String>(mString);
+                mString = new(mAllocator->AllocateAndRegister<String>()) String();
                 break;
             case TYPE_ARRAY:
-                mArray = new(mAllocator->Allocate<Array>()) Array(32, *mAllocator);
-                mAllocator->RegisterDestructor<Array>(mArray);
+                mArray = new(mAllocator->AllocateAndRegister<Array>()) Array(32, *mAllocator);
                 break;
             case TYPE_OBJECT:
-                mObject = new(mAllocator->Allocate<Object>()) Object();
-                mAllocator->RegisterDestructor<Object>(mObject);
+                mObject = new(mAllocator->AllocateAndRegister<Object>()) Object();
                 break;
             default:
                 break;
@@ -177,19 +174,19 @@ namespace Solaire{ namespace Json{
 
         Value(const Core::ConstStringFragment aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(GetTypeID<String>()),
-            mString(new(aAllocator.Allocate(sizeof(String))) String(aValue)),
+            mString(new(aAllocator.AllocateAndRegister<String>()) String(aValue)),
             mAllocator(&aAllocator)
         {}
 
         Value(Array&& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(GetTypeID<Array>()),
-            mArray(new(aAllocator.Allocate(sizeof(Array))) Array(std::move(aValue))),
+            mArray(new(aAllocator.AllocateAndRegister<Array>()) Array(std::move(aValue))),
             mAllocator(&aAllocator)
         {}
 
         Value(Object&& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(GetTypeID<Object>()),
-            mObject(new(aAllocator.Allocate(sizeof(Object))) Object(std::move(aValue))),
+            mObject(new(aAllocator.AllocateAndRegister<Object>()) Object(std::move(aValue))),
             mAllocator(&aAllocator)
         {}
 
@@ -337,8 +334,7 @@ namespace Solaire{ namespace Json{
             if(mID != GetTypeID<String>()){
                 Clear();
                 mID = GetTypeID<String>();
-                mString = new(mAllocator->Allocate<String>()) String(aValue);
-                mAllocator->RegisterDestructor<String>(mString);
+                mString = new(mAllocator->AllocateAndRegister<String>()) String(aValue);
             }else{
                 *mString = aValue;
             }
@@ -349,8 +345,7 @@ namespace Solaire{ namespace Json{
             if(mID != GetTypeID<Array>()){
                 Clear();
                 mID = GetTypeID<Array>();
-                mArray = new(mAllocator->Allocate<Array>()) Array(std::move(aValue));
-                mAllocator->RegisterDestructor<Array>(mArray);
+                mArray = new(mAllocator->AllocateAndRegister<Array>()) Array(std::move(aValue));
             }else{
                 *mArray = std::move(aValue);
             }
@@ -361,8 +356,7 @@ namespace Solaire{ namespace Json{
             if(mID != GetTypeID<Object>()){
                 Clear();
                 mID = GetTypeID<Object>();
-                mObject = new(mAllocator->Allocate<Object>()) Object(std::move(aValue));
-                mAllocator->RegisterDestructor<Object>(mObject);
+                mObject = new(mAllocator->AllocateAndRegister<Object>()) Object(std::move(aValue));
             }else{
                 *mObject = std::move(aValue);
             }
