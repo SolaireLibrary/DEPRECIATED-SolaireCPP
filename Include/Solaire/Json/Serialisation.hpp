@@ -53,7 +53,7 @@ namespace Solaire{ namespace Json{
                 aAssignFn();
             }else{
                 for(Core::SerialIndex i = size; i <= aIndex; ++i){
-                    Core::SharedPointer<Value> val = SolaireSharedAllocate(mValue.GetArray().GetAllocator(), Value, (TYPE_NULL, mValue.GetArray().GetAllocator()));
+                    std::shared_ptr<Value> val = SolaireSharedAllocate(mValue.GetArray().GetAllocator(), Value, (TYPE_NULL, mValue.GetArray().GetAllocator()));
                     mValue.GetArray().PushBack(val);
                 }
                 aAssignFn();
@@ -546,7 +546,9 @@ namespace Solaire{ namespace Json{
                 }
             }
 
-            Value* value = parser.Get(mParseAllocator, mParseAllocator).Release();
+            std::shared_ptr<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
+            Value* value = valuePtr.get();
+            valuePtr.reset();
             mParseAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
 
@@ -564,7 +566,10 @@ namespace Solaire{ namespace Json{
                 }
             }
 
-            Value* value = parser.Get(mParseAllocator, mParseAllocator).Release();
+            std::shared_ptr<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
+            Value* value = valuePtr.get();
+            valuePtr.reset();
+
             mParseAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
 

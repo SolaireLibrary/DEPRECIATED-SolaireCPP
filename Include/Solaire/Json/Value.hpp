@@ -55,8 +55,8 @@ namespace Solaire{ namespace Json{
     typedef bool Bool;
     typedef double Number;
     typedef Core::String String;
-    typedef Core::DynamicArray<Core::SharedPointer<Value>> Array;
-    typedef std::map<Core::String, Core::SharedPointer<Value>> Object;
+    typedef Core::DynamicArray<std::shared_ptr<Value>> Array;
+    typedef std::map<Core::String, std::shared_ptr<Value>> Object;
 
     template<class T>
     static constexpr TypeID GetTypeID() = delete;

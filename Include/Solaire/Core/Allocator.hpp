@@ -140,22 +140,22 @@ namespace Solaire{ namespace Core{
         return ALLOCATOR;
     }
 
+    #define SolaireDestructorAllocator(aAllocator, aType)\
+        [&](aType* const aObject){\
+            aObject->~aType();\
+            aAllocator.Deallocate(aObject, sizeof(aType));\
+        }
+
     #define SolaireUniqueAllocate(aAllocator, aType, aParams)\
-        Core::SmartPointer<aType>(\
+        std::unique_ptr<aType>(\
             new(aAllocator.Allocate(sizeof(aType))) aType aParams,\
-            [&](aType* const aObject){\
-                aObject->~aType();\
-                aAllocator.Deallocate(aObject, sizeof(aType));\
-            }\
+            SolaireDestructorAllocator(aAllocator, aType)\
         )
 
     #define SolaireSharedAllocate(aAllocator, aType, aParams)\
-        Core::SharedPointer<aType>(\
+        std::shared_ptr<aType>(\
             new(aAllocator.Allocate(sizeof(aType))) aType aParams,\
-            [&](aType* const aObject){\
-                aObject->~aType();\
-                aAllocator.Deallocate(aObject, sizeof(aType));\
-            }\
+            SolaireDestructorAllocator(aAllocator, aType)\
         )
 }}
 

@@ -34,10 +34,12 @@
 #include <type_traits>
 #include <functional>
 #include <map>
+#include <memory>
 
 
 namespace Solaire{ namespace Core{
 
+#if 0
     template<class T>
     class SmartPointer{
     private:
@@ -195,7 +197,7 @@ namespace Solaire{ namespace Core{
             if(aAddress == nullptr) return;
             auto it = SHARED_DATA.find(const_cast<void*>(aAddress));
             if(it == SHARED_DATA.end()){
-                throw std::runtime_error("Core::SharedPointer : Pointer does not exist");
+                throw std::runtime_error("std::shared_ptr : Pointer does not exist");
             }else{
                 ++(it->second.second);
             }
@@ -207,7 +209,7 @@ namespace Solaire{ namespace Core{
             if(it == SHARED_DATA.end()){
                 SHARED_DATA.emplace(aAddress, SharedData(aDestructor, 1));
             }else{
-                throw std::runtime_error("Core::SharedPointer : Pointer already exists");
+                throw std::runtime_error("std::shared_ptr : Pointer already exists");
             }
         }
 
@@ -221,7 +223,7 @@ namespace Solaire{ namespace Core{
         void DestroyInstance(void* const aAddress){
             if(aAddress == nullptr) return;
             auto it = SHARED_DATA.find(const_cast<void*>(aAddress));
-            if(it == SHARED_DATA.end()) throw std::runtime_error("Core::SharedPointer : Cannot destroy unknown pointer");
+            if(it == SHARED_DATA.end()) throw std::runtime_error("std::shared_ptr : Cannot destroy unknown pointer");
             if(--(it->second.second) == 0){
                 it->second.first(aAddress);
                 SHARED_DATA.erase(it);
@@ -285,22 +287,6 @@ namespace Solaire{ namespace Core{
         {
             SharedPointerInternal::CreateInstance(mObject);
         }
-
-        /*template<class T2>
-        SharedPointer(SharedPointer<T2>&& aOther, typename std::enable_if<std::is_same<T,  typename std::add_const<T2>::type>::value>::type* = 0):
-            mObject(aOther.operator->())
-
-        {
-            SharedPointerInternal::CreateInstance(mObject);
-        }
-
-        template<class T2>
-        SharedPointer(SharedPointer<T2>&& aOther, typename std::enable_if<std::is_base_of<T, T2>::value>::type* = 0):
-            mObject(aOther.operator->())
-
-        {
-            SharedPointerInternal::CreateInstance(mObject);
-        }*/
 
         template<class T2>
         SharedPointer(const SharedPointer<T2>& aOther, typename std::enable_if<std::is_base_of<T, T2>::value || std::is_same<T,  typename std::add_const<T2>::type>::value>::type* = 0):
@@ -406,6 +392,8 @@ namespace Solaire{ namespace Core{
             return static_cast<T*>(mObject);
         }
     };
+
+#endif
 
 }}
 
