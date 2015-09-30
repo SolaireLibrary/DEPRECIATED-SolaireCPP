@@ -77,6 +77,22 @@ namespace Solaire{ namespace Core{
             void(Allocator::*RawDeallocate)(void* const, const size_t) = &Allocator::Deallocate;
             (this->*RawDeallocate)(aObject, sizeof(T) * aCount);
         }
+
+        template<class T>
+        T* AllocateAndRegister(){
+            T* const tmp = Allocate<T>();
+            RegisterDestructor<T>(tmp);
+            return tmp;
+        }
+
+        template<class T>
+        T* AllocateAndRegister(const size_t aCount){
+            T* const tmp = Allocate<T>(aCount);
+            for(size_t i = 0; i < aCount; ++i){
+                RegisterDestructor<T>(tmp + i);
+            }
+            return tmp;
+        }
     };
 
     class DestructorMapAllocator : public Allocator{
