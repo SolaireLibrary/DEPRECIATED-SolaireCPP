@@ -43,19 +43,18 @@ namespace Solaire{ namespace Json{
     class SerialArray : public Core::SerialArray{
     private:
         Value& mValue;
-        Array& mArray;
 
         template<class F1, class F2>
         void WriteFn(const Core::SerialIndex aIndex, F1 aNewFn, F2 aAssignFn){
-            const Core::SerialIndex size = mArray.Size();
+            const Core::SerialIndex size = mValue.GetArray().Size();
             if(aIndex == size){
-                mArray.PushBack(aNewFn());
+                mValue.GetArray().PushBack(aNewFn());
             }else if(aIndex < size){
                 aAssignFn();
             }else{
                 for(Core::SerialIndex i = size; i <= aIndex; ++i){
-                    Core::SharedPointer<Value> val = SolaireSharedAllocate(mArray.GetAllocator(), Value, (TYPE_NULL, mArray.GetAllocator()));
-                    mArray.PushBack(val);
+                    Core::SharedPointer<Value> val = SolaireSharedAllocate(mValue.GetArray().GetAllocator(), Value, (TYPE_NULL, mValue.GetArray().GetAllocator()));
+                    mValue.GetArray().PushBack(val);
                 }
                 aAssignFn();
             }
@@ -66,10 +65,10 @@ namespace Solaire{ namespace Json{
             WriteFn(
                 aIndex,
                 [&](){
-                    return SolaireSharedAllocate(mArray.GetAllocator(), Value, (aValue, mArray.GetAllocator()));
+                    return SolaireSharedAllocate(mValue.GetArray().GetAllocator(), Value, (aValue, mValue.GetArray().GetAllocator()));
                 },
                 [&](){
-                    Value* ptr = mArray[aIndex].operator->();
+                    Value* ptr = mValue.GetArray()[aIndex].operator->();
                     (ptr->*SetFn)(aValue);
                 }
             );
@@ -80,10 +79,10 @@ namespace Solaire{ namespace Json{
             WriteFn(
                 aIndex,
                 [&](){
-                    return SolaireSharedAllocate(mArray.GetAllocator(), Value, (std::move(aValue), mArray.GetAllocator()));
+                    return SolaireSharedAllocate(mValue.GetArray().GetAllocator(), Value, (std::move(aValue), mValue.GetArray().GetAllocator()));
                 },
                 [&](){
-                    Value* ptr = mArray[aIndex].operator->();
+                    Value* ptr = mValue.GetArray()[aIndex].operator->();
                     (ptr->*SetFn)(std::move(aValue));
                 }
             );
@@ -94,9 +93,8 @@ namespace Solaire{ namespace Json{
         friend SerialObject;
         friend SerialSystem;
 
-        SerialArray(Value& aValue, Array& aArray) :
-            mValue(aValue),
-            mArray(aArray)
+        SerialArray(Value& aValue) :
+            mValue(aValue)
         {}
 
         ~SerialArray(){
@@ -106,11 +104,11 @@ namespace Solaire{ namespace Json{
         // Inherited from SerialArray
 
         Core::SerialIndex Size() const override{
-            return mArray.Size();
+            return mValue.GetArray().Size();
         }
 
         Core::SerialType TypeOf(const Core::SerialIndex aIndex) const override{
-            switch(mArray[aIndex]->GetType()){
+            switch(mValue.GetArray()[aIndex]->GetType()){
             case TYPE_NULL:
                 return Core::SERIAL_TYPE_N;
             case TYPE_BOOL:
@@ -129,65 +127,65 @@ namespace Solaire{ namespace Json{
         }
 
         bool ReadB(const Core::SerialIndex aIndex) const override{
-            return mArray[aIndex]->GetBool();
+            return mValue.GetArray()[aIndex]->GetBool();
         }
 
         char ReadC(const Core::SerialIndex aIndex) const override{
-            return mArray[aIndex]->GetString()[0];
+            return mValue.GetArray()[aIndex]->GetString()[0];
         }
 
         uint8_t ReadU8(const Core::SerialIndex aIndex) const override{
-            return static_cast<uint8_t>(mArray[aIndex]->GetNumber());
+            return static_cast<uint8_t>(mValue.GetArray()[aIndex]->GetNumber());
         }
 
         uint16_t ReadU16(const Core::SerialIndex aIndex) const override{
-            return static_cast<uint16_t>(mArray[aIndex]->GetNumber());
+            return static_cast<uint16_t>(mValue.GetArray()[aIndex]->GetNumber());
         }
 
         uint32_t ReadU32(const Core::SerialIndex aIndex) const override{
-            return static_cast<uint32_t>(mArray[aIndex]->GetNumber());
+            return static_cast<uint32_t>(mValue.GetArray()[aIndex]->GetNumber());
         }
 
         uint64_t ReadU64(const Core::SerialIndex aIndex) const override{
-            return static_cast<uint64_t>(mArray[aIndex]->GetNumber());
+            return static_cast<uint64_t>(mValue.GetArray()[aIndex]->GetNumber());
         }
 
         int8_t ReadI8(const Core::SerialIndex aIndex) const override{
-            return static_cast<int8_t>(mArray[aIndex]->GetNumber());
+            return static_cast<int8_t>(mValue.GetArray()[aIndex]->GetNumber());
         }
 
         int16_t ReadI16(const Core::SerialIndex aIndex) const override{
-            return static_cast<int16_t>(mArray[aIndex]->GetNumber());
+            return static_cast<int16_t>(mValue.GetArray()[aIndex]->GetNumber());
         }
 
         int32_t ReadI32(const Core::SerialIndex aIndex) const override{
-            return static_cast<int32_t>(mArray[aIndex]->GetNumber());
+            return static_cast<int32_t>(mValue.GetArray()[aIndex]->GetNumber());
         }
 
         int64_t ReadI64(const Core::SerialIndex aIndex) const override{
-            return static_cast<int64_t>(mArray[aIndex]->GetNumber());
+            return static_cast<int64_t>(mValue.GetArray()[aIndex]->GetNumber());
         }
 
         float ReadF(const Core::SerialIndex aIndex) const override{
-            return static_cast<float>(mArray[aIndex]->GetNumber());
+            return static_cast<float>(mValue.GetArray()[aIndex]->GetNumber());
         }
 
         double ReadD(const Core::SerialIndex aIndex) const override{
-            return static_cast<double>(mArray[aIndex]->GetNumber());
+            return static_cast<double>(mValue.GetArray()[aIndex]->GetNumber());
         }
 
         Core::SerialString ReadS(const Core::SerialIndex aIndex) const override{
-            return mArray[aIndex]->GetString();
+            return mValue.GetArray()[aIndex]->GetString();
         }
 
         Core::SerialArrayPtr ReadA(const Core::SerialIndex aIndex) override{
-            return SolaireSharedAllocate(mArray.GetAllocator(), SerialArray, (*mArray[aIndex], mArray[aIndex]->GetArray()));
+            return SolaireSharedAllocate(mValue.GetArray().GetAllocator(), SerialArray, (*mValue.GetArray()[aIndex]));
         }
 
         Core::SerialObjectPtr ReadO(const Core::SerialIndex aIndex) override;
 
         Core::ConstSerialArrayPtr ReadA(const Core::SerialIndex aIndex) const override{
-            return SolaireSharedAllocate(mArray.GetAllocator(), SerialArray, (*mArray[aIndex], mArray[aIndex]->GetArray()));
+            return SolaireSharedAllocate(mValue.GetArray().GetAllocator(), SerialArray, (*mValue.GetArray()[aIndex]));
         }
 
         Core::ConstSerialObjectPtr ReadO(const Core::SerialIndex aIndex) const override;
@@ -196,10 +194,10 @@ namespace Solaire{ namespace Json{
             WriteFn(
                 aIndex,
                 [&](){
-                    return SolaireSharedAllocate(mArray.GetAllocator(), Value, (TYPE_NULL, mArray.GetAllocator()));
+                    return SolaireSharedAllocate(mValue.GetArray().GetAllocator(), Value, (TYPE_NULL, mValue.GetArray().GetAllocator()));
                 },
                 [&](){
-                    mArray[aIndex]->SetNull();
+                    mValue.GetArray()[aIndex]->SetNull();
                 }
             );
         }
@@ -258,7 +256,7 @@ namespace Solaire{ namespace Json{
 
         void WriteA(const Core::SerialIndex aIndex, Core::SerialArrayPtr aArray) override{
             SerialArray& ref = static_cast<SerialArray&>(*aArray);
-            WriteMove<Array&&>(aIndex, std::move(ref.mArray), &Value::SetArray);
+            WriteMove<Array&&>(aIndex, std::move(ref.mValue.GetArray()), &Value::SetArray);
         }
 
         void WriteO(const Core::SerialIndex aIndex, Core::SerialObjectPtr aObject) override;
@@ -266,16 +264,15 @@ namespace Solaire{ namespace Json{
 
     class SerialObject : public Core::SerialObject{
     private:
-        Object& mObject;
         Value& mValue;
 
         template<class F1, class F2>
         void WriteFn(const Core::SerialTag aTag, F1 aNewFn, F2 aAssignFn){
-            auto it = mObject.find(aTag);
-            if(it == mObject.end()){
+            auto it = mValue.GetObject().find(aTag);
+            if(it == mValue.GetObject().end()){
                 aAssignFn(*it->second);
             }else{
-                mObject.emplace(aTag, aNewFn());
+                mValue.GetObject().emplace(aTag, aNewFn());
             }
         }
 
@@ -310,9 +307,8 @@ namespace Solaire{ namespace Json{
         friend SerialArray;
         friend SerialSystem;
 
-        SerialObject(Value& aValue, Object& aObject) :
-            mValue(aValue),
-            mObject(aObject)
+        SerialObject(Value& aValue) :
+            mValue(aValue)
         {}
 
         ~SerialObject(){
@@ -322,7 +318,7 @@ namespace Solaire{ namespace Json{
         // Inherited from SerialObject
 
         Core::SerialType TypeOf(const Core::SerialTag aTag) const override{
-            switch(mObject[aTag]->GetType()){
+            switch(mValue.GetObject()[aTag]->GetType()){
             case TYPE_NULL:
                 return Core::SERIAL_TYPE_N;
             case TYPE_BOOL:
@@ -341,75 +337,75 @@ namespace Solaire{ namespace Json{
         }
 
         bool ReadB(const Core::SerialTag aTag) const override{
-            return mObject[aTag]->GetBool();
+            return mValue.GetObject()[aTag]->GetBool();
         }
 
         char ReadC(const Core::SerialTag aTag) const override{
-            return mObject[aTag]->GetString()[0];
+            return mValue.GetObject()[aTag]->GetString()[0];
         }
 
         uint8_t ReadU8(const Core::SerialTag aTag) const override{
-            return static_cast<uint8_t>(mObject[aTag]->GetNumber());
+            return static_cast<uint8_t>(mValue.GetObject()[aTag]->GetNumber());
         }
 
         uint16_t ReadU16(const Core::SerialTag aTag) const override{
-            return static_cast<uint16_t>(mObject[aTag]->GetNumber());
+            return static_cast<uint16_t>(mValue.GetObject()[aTag]->GetNumber());
         }
 
         uint32_t ReadU32(const Core::SerialTag aTag) const override{
-            return static_cast<uint32_t>(mObject[aTag]->GetNumber());
+            return static_cast<uint32_t>(mValue.GetObject()[aTag]->GetNumber());
         }
 
         uint64_t ReadU64(const Core::SerialTag aTag) const override{
-            return static_cast<uint64_t>(mObject[aTag]->GetNumber());
+            return static_cast<uint64_t>(mValue.GetObject()[aTag]->GetNumber());
         }
 
         int8_t ReadI8(const Core::SerialTag aTag) const override{
-            return static_cast<int8_t>(mObject[aTag]->GetNumber());
+            return static_cast<int8_t>(mValue.GetObject()[aTag]->GetNumber());
         }
 
         int16_t ReadI16(const Core::SerialTag aTag) const override{
-            return static_cast<int16_t>(mObject[aTag]->GetNumber());
+            return static_cast<int16_t>(mValue.GetObject()[aTag]->GetNumber());
         }
 
         int32_t ReadI32(const Core::SerialTag aTag) const override{
-            return static_cast<int32_t>(mObject[aTag]->GetNumber());
+            return static_cast<int32_t>(mValue.GetObject()[aTag]->GetNumber());
         }
 
         int64_t ReadI64(const Core::SerialTag aTag) const override{
-            return static_cast<int64_t>(mObject[aTag]->GetNumber());
+            return static_cast<int64_t>(mValue.GetObject()[aTag]->GetNumber());
         }
 
         float ReadF(const Core::SerialTag aTag) const override{
-            return static_cast<float>(mObject[aTag]->GetNumber());
+            return static_cast<float>(mValue.GetObject()[aTag]->GetNumber());
         }
 
         double ReadD(const Core::SerialTag aTag) const override{
-            return static_cast<double>(mObject[aTag]->GetNumber());
+            return static_cast<double>(mValue.GetObject()[aTag]->GetNumber());
         }
 
         Core::SerialString ReadS(const Core::SerialTag aTag) const override{
-            return mObject[aTag]->GetString();
+            return mValue.GetObject()[aTag]->GetString();
         }
 
         Core::SerialArrayPtr ReadA(const Core::SerialTag aTag) override{
-            Value& val = *mObject[aTag];
-            return SolaireSharedAllocate(mValue.GetAllocator(), SerialArray, (val, val.GetArray()));
+            Value& val = *mValue.GetObject()[aTag];
+            return SolaireSharedAllocate(mValue.GetAllocator(), SerialArray, (val));
         }
 
         Core::SerialObjectPtr ReadO(const Core::SerialTag aTag) override{
-            Value& val = *mObject[aTag];
-            return SolaireSharedAllocate(mValue.GetAllocator(), SerialObject, (val, val.GetObject()));
+            Value& val = *mValue.GetObject()[aTag];
+            return SolaireSharedAllocate(mValue.GetAllocator(), SerialObject, (val));
         }
 
         Core::ConstSerialArrayPtr ReadA(const Core::SerialTag aTag) const override{
-            Value& val = *mObject[aTag];
-            return SolaireSharedAllocate(mValue.GetAllocator(), SerialArray, (val, val.GetArray()));
+            Value& val = *mValue.GetObject()[aTag];
+            return SolaireSharedAllocate(mValue.GetAllocator(), SerialArray, (val));
         }
 
         Core::ConstSerialObjectPtr ReadO(const Core::SerialTag aTag) const override{
-            Value& val = *mObject[aTag];
-            return SolaireSharedAllocate(mValue.GetAllocator(), SerialObject, (val, val.GetObject()));
+            Value& val = *mValue.GetObject()[aTag];
+            return SolaireSharedAllocate(mValue.GetAllocator(), SerialObject, (val));
         }
 
         void WriteN(const Core::SerialTag aTag) override{
@@ -478,26 +474,26 @@ namespace Solaire{ namespace Json{
 
         void WriteA(const Core::SerialTag aTag, Core::SerialArrayPtr aArray) override{
             SerialArray& ref = static_cast<SerialArray&>(*aArray);
-            WriteMove<Array&&>(aTag, std::move(ref.mArray), &Value::SetArray);
+            WriteMove<Array&&>(aTag, std::move(ref.mValue.GetArray()), &Value::SetArray);
         }
 
         void WriteO(const Core::SerialTag aTag, Core::SerialObjectPtr aObject) override{
             SerialObject& ref = static_cast<SerialObject&>(*aObject);
-            WriteMove<Object&&>(aTag, std::move(ref.mObject), &Value::SetObject);
+            WriteMove<Object&&>(aTag, std::move(ref.mValue.GetObject()), &Value::SetObject);
         }
     };
 
     Core::SerialObjectPtr SerialArray::ReadO(const Core::SerialIndex aIndex){
-        return SolaireSharedAllocate(mArray.GetAllocator(), SerialObject, (*mArray[aIndex], mArray[aIndex]->GetObject()));
+        return SolaireSharedAllocate(mValue.GetAllocator(), SerialObject, (*mValue.GetArray()[aIndex]));
     }
 
     Core::ConstSerialObjectPtr SerialArray::ReadO(const Core::SerialIndex aIndex) const{
-        return SolaireSharedAllocate(mArray.GetAllocator(), SerialObject, (*mArray[aIndex], mArray[aIndex]->GetObject()));
+        return SolaireSharedAllocate(mValue.GetAllocator(), SerialObject, (*mValue.GetArray()[aIndex]));
     }
 
     void SerialArray::WriteO(const Core::SerialIndex aIndex, Core::SerialObjectPtr aObject){
         SerialObject& ref = static_cast<SerialObject&>(*aObject);
-        WriteMove<Object&&>(aIndex, std::move(ref.mObject), &Value::SetObject);
+        WriteMove<Object&&>(aIndex, std::move(ref.mValue.GetObject()), &Value::SetObject);
     }
 
     class SerialSystem : public Core::SerialSystem{
@@ -520,14 +516,14 @@ namespace Solaire{ namespace Json{
             Value* value = new(mAllocator.Allocate<Value>()) Value(TYPE_ARRAY, mAllocator);
             mAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
-            return SolaireSharedAllocate(mAllocator, SerialArray, (*value, value->GetArray()));
+            return SolaireSharedAllocate(mAllocator, SerialArray, (*value));
         }
 
         Core::SerialObjectPtr CreateO() const override{
             Value* value = new(mAllocator.Allocate<Value>()) Value(TYPE_ARRAY, mAllocator);
             mAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
-            return SolaireSharedAllocate(mAllocator, SerialObject, (*value, value->GetObject()));
+            return SolaireSharedAllocate(mAllocator, SerialObject, (*value));
         }
 
         void WriteA(std::ostream& aStream, const Core::ConstSerialArrayPtr& aArray) const override{
@@ -554,7 +550,7 @@ namespace Solaire{ namespace Json{
             mAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
 
-            return SolaireSharedAllocate(mAllocator, SerialArray, (*value, value->GetArray()));
+            return SolaireSharedAllocate(mAllocator, SerialArray, (*value));
 
         }
 
@@ -572,7 +568,7 @@ namespace Solaire{ namespace Json{
             mAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
 
-            return SolaireSharedAllocate(mAllocator, SerialObject, (*value, value->GetObject()));
+            return SolaireSharedAllocate(mAllocator, SerialObject, (*value));
         }
 
     };
