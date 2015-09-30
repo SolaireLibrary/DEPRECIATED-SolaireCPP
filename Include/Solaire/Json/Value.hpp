@@ -197,7 +197,7 @@ namespace Solaire{ namespace Json{
             Clear();
         }
 
-        Core::Allocator& Allocator() const{
+        Core::Allocator& GetAllocator() const{
             return *mAllocator;
         }
 
@@ -384,6 +384,46 @@ namespace Solaire{ namespace Json{
                 std::swap(mNumber, mNumber);
             }
             return *this;
+        }
+
+        Core::String Parse(Core::Allocator& aAllocator) const{
+            Core::String tmp(aAllocator);
+            switch(mID){
+            case TYPE_NULL:
+                tmp += "null";
+                break;
+            case TYPE_BOOL:
+                tmp += mBool ? "true" : "false";
+                break;
+            case TYPE_NUMBER:
+                tmp += mNumber;
+                break;
+            case TYPE_STRING:
+                tmp += '"';
+                tmp += *mString;
+                tmp += '"';
+                break;
+            case TYPE_ARRAY:{
+                const auto end = mArray->end();
+                for(auto i = mArray->begin(); i != end; ++i){
+                    tmp += (**i).Parse(aAllocator);
+                    if(i + 1 != end) tmp += ',';
+                }
+                break;
+            }case TYPE_OBJECT:{
+                const auto end = mObject->end();
+                for(auto i = mObject->begin(); i != end; ++i){
+                    tmp += '"';
+                    tmp += i->first;
+                    tmp += '"';
+                    tmp += ':';
+                    tmp += i->second->Parse(aAllocator);
+                    if(i != --mObject->end()) tmp += ',';
+                }
+            }default:
+                break;
+            }
+            return tmp;
         }
     };
 

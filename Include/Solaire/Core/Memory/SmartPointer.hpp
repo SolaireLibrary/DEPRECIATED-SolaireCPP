@@ -227,6 +227,14 @@ namespace Solaire{ namespace Core{
                 SHARED_DATA.erase(it);
             }
         }
+
+        static void* Release(void* const aAddress){
+            if(aAddress == nullptr) return 0;
+            auto it = SHARED_DATA.find(const_cast<void*>(aAddress));
+            if(it == SHARED_DATA.end()) return aAddress;
+            SHARED_DATA.erase(it);
+            return aAddress;
+        }
     }
 
     template<class T>
@@ -375,8 +383,11 @@ namespace Solaire{ namespace Core{
             }
         }
 
-       void Release(){
-            Clear();
+       T* Release(){
+            T* tmp = static_cast<T*>(mObject);
+            SharedPointerInternal::Release(mObject);
+            mObject = nullptr;
+            return tmp;
         }
 
         void Release(T* const aObject, std::function<void(T*)> aDestructor = DefaultDestructor){
