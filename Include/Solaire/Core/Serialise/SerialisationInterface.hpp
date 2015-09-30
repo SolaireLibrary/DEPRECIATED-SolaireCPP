@@ -74,11 +74,14 @@ namespace Solaire{ namespace Core{
         virtual SerialArrayPtr CreateA() const = 0;
         virtual SerialObjectPtr CreateO() const = 0;
 
-        virtual void WriteA(std::ostream& aStream, const ConstSerialArrayPtr& aArray) const = 0;
-        virtual void WriteO(std::ostream& aStream, const ConstSerialObjectPtr& aArray) const = 0;
+        virtual void WriteA(std::ostream& aStream, const ConstSerialArrayPtr aArray) const = 0;
+        virtual void WriteO(std::ostream& aStream, const ConstSerialObjectPtr aArray) const = 0;
 
         virtual SerialArrayPtr ReadA(std::istream& aStream) const = 0;
         virtual SerialObjectPtr ReadO(std::istream& aStream) const = 0;
+
+        virtual Allocator& GetParseAllocator() const = 0;
+        virtual Allocator& GetDataAllocator() const = 0;
     };
 
     class SerialArray{

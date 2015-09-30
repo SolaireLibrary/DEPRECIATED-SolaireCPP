@@ -286,7 +286,7 @@ namespace Solaire{ namespace Core{
             SharedPointerInternal::CreateInstance(mObject);
         }
 
-        template<class T2>
+        /*template<class T2>
         SharedPointer(SharedPointer<T2>&& aOther, typename std::enable_if<std::is_same<T,  typename std::add_const<T2>::type>::value>::type* = 0):
             mObject(aOther.operator->())
 
@@ -300,18 +300,10 @@ namespace Solaire{ namespace Core{
 
         {
             SharedPointerInternal::CreateInstance(mObject);
-        }
+        }*/
 
         template<class T2>
-        SharedPointer(const SharedPointer<T2>& aOther, typename std::enable_if<std::is_same<T,  typename std::add_const<T2>::type>::value>::type* = 0):
-            mObject(aOther.operator->())
-
-        {
-            SharedPointerInternal::CreateInstance(mObject);
-        }
-
-        template<class T2>
-        SharedPointer(const SharedPointer<T2>& aOther, typename std::enable_if<std::is_base_of<T, T2>::value>::type* = 0):
+        SharedPointer(const SharedPointer<T2>& aOther, typename std::enable_if<std::is_base_of<T, T2>::value || std::is_same<T,  typename std::add_const<T2>::type>::value>::type* = 0):
             mObject(const_cast<T2*>(aOther.operator->()))
 
         {

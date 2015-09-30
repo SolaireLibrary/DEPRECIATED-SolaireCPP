@@ -498,46 +498,48 @@ namespace Solaire{ namespace Json{
 
     class SerialSystem : public Core::SerialSystem{
     private:
-        Core::Allocator& mAllocator;
+        Core::Allocator& mParseAllocator;
+        Core::Allocator& mDataAllocator;
         mutable std::list<Value*> mValueList;
     public:
-        SerialSystem(Core::Allocator& aAllocator) :
-            mAllocator(aAllocator),
+        SerialSystem(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) :
+            mParseAllocator(aParseAllocator),
+            mDataAllocator(aDataAllocator),
             mValueList()
         {}
 
         ~SerialSystem(){
-            for(Value* i : mValueList) mAllocator.Deallocate<Value>(i);
+            for(Value* i : mValueList) mParseAllocator.Deallocate<Value>(i);
         }
 
         // Inherited from SerialSystem
 
         Core::SerialArrayPtr CreateA() const override{
-            Value* value = new(mAllocator.Allocate<Value>()) Value(TYPE_ARRAY, mAllocator);
-            mAllocator.RegisterDestructor<Value>(value);
+            Value* value = new(mParseAllocator.Allocate<Value>()) Value(TYPE_ARRAY, mParseAllocator);
+            mParseAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
-            return SolaireSharedAllocate(mAllocator, SerialArray, (*value));
+            return SolaireSharedAllocate(mParseAllocator, SerialArray, (*value));
         }
 
         Core::SerialObjectPtr CreateO() const override{
-            Value* value = new(mAllocator.Allocate<Value>()) Value(TYPE_ARRAY, mAllocator);
-            mAllocator.RegisterDestructor<Value>(value);
+            Value* value = new(mParseAllocator.Allocate<Value>()) Value(TYPE_ARRAY, mParseAllocator);
+            mParseAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
-            return SolaireSharedAllocate(mAllocator, SerialObject, (*value));
+            return SolaireSharedAllocate(mParseAllocator, SerialObject, (*value));
         }
 
-        void WriteA(std::ostream& aStream, const Core::ConstSerialArrayPtr& aArray) const override{
+        void WriteA(std::ostream& aStream, const Core::ConstSerialArrayPtr aArray) const override{
             Value& val = reinterpret_cast<const SerialArray*>(aArray.operator->())->mValue;
-            aStream << val.Parse(mAllocator);
+            aStream << val.Parse(mParseAllocator);
         }
 
-        void WriteO(std::ostream& aStream, const Core::ConstSerialObjectPtr& aObject) const override{
+        void WriteO(std::ostream& aStream, const Core::ConstSerialObjectPtr aObject) const override{
             Value& val = reinterpret_cast<const SerialObject*>(aObject.operator->())->mValue;
-            aStream << val.Parse(mAllocator);
+            aStream << val.Parse(mParseAllocator);
         }
 
         Core::SerialArrayPtr ReadA(std::istream& aStream) const override{
-            ArrayParser parser(mAllocator);
+            ArrayParser parser(mParseAllocator);
             char c;
             while(! aStream.eof()){
                 aStream >> c;
@@ -546,16 +548,16 @@ namespace Solaire{ namespace Json{
                 }
             }
 
-            Value* value = parser.Get(mAllocator, mAllocator).Release();
-            mAllocator.RegisterDestructor<Value>(value);
+            Value* value = parser.Get(mParseAllocator, mParseAllocator).Release();
+            mParseAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
 
-            return SolaireSharedAllocate(mAllocator, SerialArray, (*value));
+            return SolaireSharedAllocate(mParseAllocator, SerialArray, (*value));
 
         }
 
         Core::SerialObjectPtr ReadO(std::istream& aStream) const override{
-            ObjectParser parser(mAllocator);
+            ObjectParser parser(mParseAllocator);
             char c;
             while(! aStream.eof()){
                 aStream >> c;
@@ -564,12 +566,20 @@ namespace Solaire{ namespace Json{
                 }
             }
 
-            Value* value = parser.Get(mAllocator, mAllocator).Release();
-            mAllocator.RegisterDestructor<Value>(value);
+            Value* value = parser.Get(mParseAllocator, mParseAllocator).Release();
+            mParseAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
 
-            return SolaireSharedAllocate(mAllocator, SerialObject, (*value));
+            return SolaireSharedAllocate(mParseAllocator, SerialObject, (*value));
         }
+
+        Core::Allocator& GetParseAllocator() const override{
+            mParseAllocator;
+        };
+
+        Core::Allocator& GetDataAllocator() const override{
+            mDataAllocator;
+        };
 
     };
 }}
