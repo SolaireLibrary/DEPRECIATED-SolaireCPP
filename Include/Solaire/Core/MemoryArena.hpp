@@ -50,7 +50,7 @@ namespace Solaire{ namespace Core {
         typedef std::pair<void*, DestructorFn> DestructorCall;
         typedef std::pair<void*, size_t> Region;
 
-        Allocator<void>& mAllocator;
+        Allocator& mAllocator;
         DynamicArray<DestructorCall> mDestructorList;
         DynamicArray<Region> mFreeRegions;
         uint8_t* mArenaBegin;
@@ -104,7 +104,7 @@ namespace Solaire{ namespace Core {
         }
 
     public:
-        MemoryArena(const size_t aSize, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+        MemoryArena(const size_t aSize, Allocator& aAllocator = GetDefaultAllocator()) :
             mAllocator(aAllocator),
             mDestructorList(128, aAllocator),
             mFreeRegions(128, aAllocator),
@@ -338,40 +338,20 @@ namespace Solaire{ namespace Core {
         return false;
     }
 
-    template<class T>
-    class ArenaAllocator : public Allocator<T>{
+    class ArenaAllocator : public Allocator{
     private:
+        //! \bug ArenaAllocator is not type safe
         MemoryArena& mArena;
     public:
         ArenaAllocator(MemoryArena& aArena) :
             mArena(aArena)
         {}
 
-        T* AllocateSingle() override{
-            return static_cast<T*>(mArena.Allocate(sizeof(T)));
+        MemoryArena& GetArena() const{
+            return mArena;
         }
 
-        T* AllocateMany(const size_t aCount) override{
-            return static_cast<T*>(mArena.Allocate(sizeof(T) * aCount));
-        }
-
-        void DeallocateSingle(T* const aAddress) override{
-            mArena.Deallocate(aAddress, sizeof(T));
-        }
-
-        void DeallocateMany(T* const aAddress, const size_t aCount) override{
-            mArena.Deallocate(aAddress, sizeof(T) * aCount);
-        }
-    };
-
-    template<>
-    class ArenaAllocator<void> : public Allocator<void>{
-    private:
-        MemoryArena& mArena;
-    public:
-        ArenaAllocator(MemoryArena& aArena) :
-            mArena(aArena)
-        {}
+        // Inherited from Allocator
 
         void* Allocate(const size_t aBytes) override{
             return mArena.Allocate(aBytes);
@@ -379,6 +359,10 @@ namespace Solaire{ namespace Core {
 
         void Deallocate(void* const aAddress, const size_t aBytes) override{
             mArena.Deallocate(aAddress, aBytes);
+        }
+
+        void OnDestroyed(void* const aObject, const DestructorFn aFn) override{
+            mArena.OnDestroyed(aObject, aFn);
         }
     };
 }}

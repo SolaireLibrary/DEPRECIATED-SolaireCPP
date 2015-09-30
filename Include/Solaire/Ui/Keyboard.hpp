@@ -114,7 +114,7 @@ namespace Solaire{ namespace Ui{
     public:
         friend KeySource;
 
-        KeyListener(Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()) :
+        KeyListener(Core::Allocator& aAllocator = Core::GetDefaultAllocator()) :
             Listener(aAllocator)
         {}
 
@@ -140,7 +140,7 @@ namespace Solaire{ namespace Ui{
             }
         }
     public:
-        KeySource(Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()) :
+        KeySource(Core::Allocator& aAllocator = Core::GetDefaultAllocator()) :
             Source(aAllocator)
         {}
 
@@ -228,7 +228,7 @@ namespace Solaire{ namespace Ui{
         }
 
     public:
-        Keyboard()//Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>() :
+        Keyboard()//Core::Allocator& aAllocator = Core::GetDefaultAllocator() :
             //KeySource(reinterpret_cast<Core::WrapperAllocator<ListenerBase*>&>(mAllocator)),
            // KeyAllocator(reinterpret_cast<Core::WrapperAllocator<SourceBase*>&>(mAllocator)),
             //mAllocator(aAllocator)

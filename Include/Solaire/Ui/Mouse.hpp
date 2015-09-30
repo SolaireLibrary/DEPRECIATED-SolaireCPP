@@ -70,7 +70,7 @@ namespace Solaire{ namespace Ui{
     public:
         friend MouseSource;
 
-        MouseListener(Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()) :
+        MouseListener(Core::Allocator& aAllocator = Core::GetDefaultAllocator()) :
             Listener(aAllocator)
         {}
 
@@ -110,7 +110,7 @@ namespace Solaire{ namespace Ui{
             }
         }
     public:
-        MouseSource(Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()) :
+        MouseSource(Core::Allocator& aAllocator = Core::GetDefaultAllocator()) :
             Source(aAllocator)
         {}
 
@@ -211,7 +211,7 @@ namespace Solaire{ namespace Ui{
         }
 
     public:
-        Mouse()://Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>() :
+        Mouse()://Core::Allocator& aAllocator = Core::GetDefaultAllocator() :
             //KeySource(reinterpret_cast<Core::WrapperAllocator<ListenerBase*>&>(mAllocator)),
            // KeyAllocator(reinterpret_cast<Core::WrapperAllocator<SourceBase*>&>(mAllocator)),
             //mAllocator(aAllocator)

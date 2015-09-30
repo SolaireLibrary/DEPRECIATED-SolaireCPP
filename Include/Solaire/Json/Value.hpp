@@ -93,7 +93,7 @@ namespace Solaire{ namespace Json{
             Object* mObject;
         };
         TypeID mID;
-        Core::Allocator<void>* mAllocator;
+        Core::Allocator* mAllocator;
 
         void Clear(){
             switch(mID){
@@ -124,7 +124,7 @@ namespace Solaire{ namespace Json{
             mID = TYPE_NULL;
         }
     public:
-        Value(const TypeID aType = TYPE_NULL, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
+        Value(const TypeID aType = TYPE_NULL, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(aType),
             mAllocator(&aAllocator)
         {
@@ -163,31 +163,31 @@ namespace Solaire{ namespace Json{
             aOther.mID = TYPE_NULL;
         }
 
-        Value(const Bool aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
+        Value(const Bool aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(GetTypeID<Bool>()),
             mBool(aValue),
             mAllocator(&aAllocator)
         {}
 
-        Value(const Number aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
+        Value(const Number aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(GetTypeID<Number>()),
             mNumber(aValue),
             mAllocator(&aAllocator)
         {}
 
-        Value(const Core::ConstStringFragment aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
+        Value(const Core::ConstStringFragment aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(GetTypeID<String>()),
             mString(new(aAllocator.Allocate(sizeof(String))) String(aValue)),
             mAllocator(&aAllocator)
         {}
 
-        Value(Array&& aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
+        Value(Array&& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(GetTypeID<Array>()),
             mArray(new(aAllocator.Allocate(sizeof(Array))) Array(std::move(aValue))),
             mAllocator(&aAllocator)
         {}
 
-        Value(Object&& aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
+        Value(Object&& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(GetTypeID<Object>()),
             mObject(new(aAllocator.Allocate(sizeof(Object))) Object(std::move(aValue))),
             mAllocator(&aAllocator)
@@ -197,7 +197,7 @@ namespace Solaire{ namespace Json{
             Clear();
         }
 
-        Core::Allocator<void>& Allocator() const{
+        Core::Allocator& Allocator() const{
             return *mAllocator;
         }
 
@@ -387,7 +387,7 @@ namespace Solaire{ namespace Json{
         Value& operator=(const Value&) = delete;
         Value& operator=(Value&&) = delete;
     protected:
-        virtual Core::String Parse(Core::Allocator<void>& aAllocator) const = 0;
+        virtual Core::String Parse(Core::Allocator& aAllocator) const = 0;
     public:
         friend Array;
         friend Object;
@@ -425,7 +425,7 @@ namespace Solaire{ namespace Json{
     protected:
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator<void>& aAllocator) const override{
+        Core::String Parse(Core::Allocator& aAllocator) const override{
             return Core::String(mValue ? "true" : "false", aAllocator);
         }
     public:
@@ -459,7 +459,7 @@ namespace Solaire{ namespace Json{
     protected:
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator<void>& aAllocator) const override{
+        Core::String Parse(Core::Allocator& aAllocator) const override{
             Core::String::Type buf[32];
             Core::String::Pointer end = Core::NumericParse::ToString(buf, mValue);
 
@@ -496,15 +496,15 @@ namespace Solaire{ namespace Json{
     protected:
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator<void>& aAllocator) const override{
+        Core::String Parse(Core::Allocator& aAllocator) const override{
             return Core::String(mValue.begin(), mValue.end(), aAllocator);
         }
     public:
-        String(Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
+        String(Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mValue(aAllocator)
         {}
 
-        String(const Core::ConstStringFragment aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
+        String(const Core::ConstStringFragment aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mValue(aValue, aAllocator)
         {}
 
@@ -532,7 +532,7 @@ namespace Solaire{ namespace Json{
     protected:
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator<void>& aAllocator) const override{
+        Core::String Parse(Core::Allocator& aAllocator) const override{
             return Core::String("null", aAllocator);
         }
     public:
@@ -562,7 +562,7 @@ namespace Solaire{ namespace Json{
 
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator<void>& aAllocator) const override{
+        Core::String Parse(Core::Allocator& aAllocator) const override{
             Core::String tmp(aAllocator);
             tmp += '[';
             const ConstIterator end = mValues.end();
@@ -574,7 +574,7 @@ namespace Solaire{ namespace Json{
             return tmp;
         }
     public:
-        Array(Core::Allocator<void>& aAllocator) :
+        Array(Core::Allocator& aAllocator) :
             mValues(32, aAllocator)
         {}
         // Delegated to mValues
@@ -633,7 +633,7 @@ namespace Solaire{ namespace Json{
 
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator<void>& aAllocator) const override{
+        Core::String Parse(Core::Allocator& aAllocator) const override{
             Core::String tmp(aAllocator);
             tmp += '{';
             for(const Type& i : mValues){

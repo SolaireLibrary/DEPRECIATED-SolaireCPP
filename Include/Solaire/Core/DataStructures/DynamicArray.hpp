@@ -57,22 +57,22 @@ namespace Solaire{ namespace Core{
 		typedef INDEX Index;
 		typedef DynamicArray<TYPE, CONST_TYPE, INDEX> Self;
 	private:
-        WrapperAllocator<Type> mAllocator;
+        Allocator* mAllocator;
 		Index mHead;
 		Index mSize;
 		Type* mData;
     private:
         void IncreaseSize(){
             const Index newSize = mSize * 2;
-            Type* newData = mAllocator.AllocateMany(newSize);
+            Type* newData = mAllocator->Allocate<Type>(newSize);
 
             for(Index i = 0; i < mHead; ++i){
                 Type* const address = mData + i;
                 new(newData + i) Type(std::move(*address));
-                mAllocator.CallDestructor(address);
+                address->~Type();
 		    }
 
-            mAllocator.DeallocateMany(mData, mSize);
+            mAllocator->Deallocate<Type>(mData, mSize);
             mSize = newSize;
             mData = newData;
         }
@@ -83,7 +83,7 @@ namespace Solaire{ namespace Core{
             for(Index i = aPosition - mData; i < mHead; ++i){
                 mData[i] = std::move(mData[i + 1]);
             }
-            mAllocator.CallDestructor(mData + mHead);
+            (mData + mHead)->~Type();
         }
 
         void ShiftUp(const ConstPointer aPosition){
@@ -107,7 +107,7 @@ namespace Solaire{ namespace Core{
 		    mAllocator(aOther.mAllocator),
 			mHead(0),
 			mSize(aOther.mSize),
-			mData(static_cast<Type*>(mAllocator.AllocateMany(mSize)))
+			mData(mAllocator->Allocate<Type>(mSize))
         {
             for(ConstReference i : aOther) PushBack(i);
         }
@@ -123,39 +123,39 @@ namespace Solaire{ namespace Core{
             aOther.mData = nullptr;
         }
 
-		DynamicArray(const Index aCount = 32, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
-		    mAllocator(aAllocator),
+		DynamicArray(const Index aCount = 32, Allocator& aAllocator = GetDefaultAllocator()) :
+		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aCount),
-			mData(mAllocator.AllocateMany(mSize))
+			mData(mAllocator->Allocate<Type>(mSize))
 		{}
 
-		DynamicArray(ConstReference aValue, const Index aCount, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
-		    mAllocator(aAllocator),
+		DynamicArray(ConstReference aValue, const Index aCount, Allocator& aAllocator = GetDefaultAllocator()) :
+		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aCount),
-			mData(mAllocator.AllocateMany(mSize))
+			mData(mAllocator->Allocate<Type>(mSize))
 		{
 			for(Index i = 0; i < aCount; ++i){
 				PushBack(aValue);
 			}
 		}
 
-		DynamicArray(const std::initializer_list<Type> aList, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
-		    mAllocator(aAllocator),
+		DynamicArray(const std::initializer_list<Type> aList, Allocator& aAllocator = GetDefaultAllocator()) :
+		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aList.size()),
-			mData(mAllocator.AllocateMany(mSize))
+			mData(mAllocator->Allocate<Type>(mSize))
 		{
 			for(ConstReference i : aList) PushBack(i);
 		}
 
         template<class ExternalIterator>
-		DynamicArray(ExternalIterator aBegin, const ExternalIterator aEnd, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
-		    mAllocator(aAllocator),
+		DynamicArray(ExternalIterator aBegin, const ExternalIterator aEnd, Allocator& aAllocator = GetDefaultAllocator()) :
+		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aEnd - aBegin),
-			mData(mAllocator.AllocateMany(mSize))
+			mData(mAllocator->Allocate<Type>(mSize))
 		{
 			while(aBegin != aEnd){
                 PushBack(*aBegin);
@@ -166,7 +166,7 @@ namespace Solaire{ namespace Core{
 		~DynamicArray(){
 		    if(mData != nullptr){
                 Clear();
-                mAllocator.DeallocateMany(mData, mSize);
+                mAllocator->Deallocate<Type>(mData, mSize);
 		    }
 		}
 
@@ -174,9 +174,9 @@ namespace Solaire{ namespace Core{
             Clear();
 
             if(mSize < aOther.mSize){
-                mAllocator.DeallocateMany(mData, mSize);
+                mAllocator->Deallocate<Type>(mData, mSize);
                 mSize= aOther.mSize;
-                mData = mAllocator.AllocateMany(mSize);
+                mData = mAllocator->Allocate<Type>(mSize);
             }
 
             for(ConstReference i : aOther) PushBack(i);
@@ -191,13 +191,13 @@ namespace Solaire{ namespace Core{
 	        return *this;
 	    }
 
-        Allocator<Type>& GetAllocator() const{
+        Allocator& GetAllocator() const{
             return mAllocator;
         }
 
 		void Clear(){
 		    for(Index i = 0; i < mHead; ++i){
-                mAllocator.CallDestructor(mData + i);
+                (mData + i)->~Type();
 		    }
 		    mHead = 0;
 		}

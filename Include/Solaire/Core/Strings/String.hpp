@@ -66,14 +66,14 @@ namespace Solaire{ namespace Core{
         // Constructors
         String(const String& aOther);
         String(String&& aOther);
-        String(Allocator<void>& aAllocator = GetDefaultAllocator<void>());
-        String(const Core::ConstStringFragment aOther, Allocator<void>& aAllocator = GetDefaultAllocator<void>());
-        String(const std::basic_string<Type>& aOther, Allocator<void>& aAllocator = GetDefaultAllocator<void>());
-        String(const ConstPointer aPointer, Allocator<void>& aAllocator = GetDefaultAllocator<void>());
-        String(const ConstPointer aPointer, const size_t aSize, Allocator<void>& aAllocator = GetDefaultAllocator<void>());
+        String(Allocator& aAllocator = GetDefaultAllocator());
+        String(const Core::ConstStringFragment aOther, Allocator& aAllocator = GetDefaultAllocator());
+        String(const std::basic_string<Type>& aOther, Allocator& aAllocator = GetDefaultAllocator());
+        String(const ConstPointer aPointer, Allocator& aAllocator = GetDefaultAllocator());
+        String(const ConstPointer aPointer, const size_t aSize, Allocator& aAllocator = GetDefaultAllocator());
 
         template<class ExternalIterator>
-        String(const ExternalIterator aBegin, const ExternalIterator aEnd, Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+        String(const ExternalIterator aBegin, const ExternalIterator aEnd, Allocator& aAllocator = GetDefaultAllocator()) :
             mContainer(aBegin, aEnd, aAllocator)
         {
             if(mContainer.Back() != '\0') mContainer.PushBack('\0');

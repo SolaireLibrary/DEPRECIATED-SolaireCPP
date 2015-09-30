@@ -68,7 +68,7 @@ namespace Solaire{ namespace Core{
     public:
         friend ListenerBase;
 
-        SourceBase(Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+        SourceBase(Allocator& aAllocator = GetDefaultAllocator()) :
             mListeners(32, aAllocator)
         {}
 
@@ -111,7 +111,7 @@ namespace Solaire{ namespace Core{
     public:
         friend SourceBase;
 
-        ListenerBase(Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+        ListenerBase(Allocator& aAllocator = GetDefaultAllocator()) :
             mSources(32, aAllocator)
         {}
 
@@ -194,7 +194,7 @@ namespace Solaire{ namespace Core{
     public:
         friend ListenerType;
 
-        Source(Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+        Source(Allocator& aAllocator = GetDefaultAllocator()) :
             SourceBase(aAllocator)
         {
             static_assert(std::is_base_of<SourceBase, SourceType>::value, "Ui::Source : SourceType must inherit SourceBase");
@@ -252,7 +252,7 @@ namespace Solaire{ namespace Core{
     public:
         friend SourceType;
 
-        Listener(Allocator<void>& aAllocator = GetDefaultAllocator<void>()) :
+        Listener(Allocator& aAllocator = GetDefaultAllocator()) :
             ListenerBase(aAllocator)
         {
             static_assert(std::is_base_of<SourceBase, SourceType>::value, "Ui::Source : SourceType must inherit SourceBase");

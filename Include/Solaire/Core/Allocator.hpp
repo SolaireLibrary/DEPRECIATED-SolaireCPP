@@ -32,99 +32,94 @@
 */
 
 #include <type_traits>
+#include <map>
+#include <vector>
 #include "Memory/SmartPointer.hpp"
 
 namespace Solaire{ namespace Core{
 
-    template<class T>
     class Allocator{
     public:
-        virtual ~Allocator(){}
+        typedef void(*DestructorFn)(void*);
 
-        virtual T* AllocateSingle() = 0;
-        virtual T* AllocateMany(const size_t aCount) = 0;
-        virtual void DeallocateSingle(T* const aAddress) = 0;
-        virtual void DeallocateMany(T* const aAddress, const size_t aCount) = 0;
-
-        void CallDestructor(T* const aAddress){
-            aAddress->~T();
-        };
-    };
-
-    template<>
-    class Allocator<void>{
-    public:
         virtual ~Allocator(){}
 
         virtual void* Allocate(const size_t aBytes) = 0;
-        virtual void Deallocate(void* const aAddress, const size_t aBytes) = 0;
-    };
+        virtual void Deallocate(void* const aObject, const size_t aBytes) = 0;
+        virtual void OnDestroyed(void* const aObject, const DestructorFn aFn) = 0;
 
-    template<class T>
-    class DefaultAllocator : public Allocator<T>{
-    public:
-        T* AllocateSingle() override{
-            return static_cast<T*>(operator new(sizeof(T)));
+        template<class T>
+        void RegisterDestructor(T* const aObject){
+            OnDestroyed(aObject, [](void* const aObject){static_cast<T*>(aObject)->~T();});
         }
 
-        T* AllocateMany(const size_t aCount) override{
-            return static_cast<T*>(operator new(sizeof(T) * aCount));
+        template<class T>
+        T* Allocate(){
+            void*(Allocator::*RawAllocate)(const size_t) = &Allocator::Allocate;
+            return static_cast<T*>((this->*RawAllocate)(sizeof(T)));
         }
 
-        void DeallocateSingle(T* const aAddress) override{
-            operator delete(aAddress);
+        template<class T>
+        T* Allocate(const size_t aCount){
+            void*(Allocator::*RawAllocate)(const size_t) = &Allocator::Allocate;
+            return static_cast<T*>((this->*RawAllocate)(sizeof(T) * aCount));
         }
 
-        void DeallocateMany(T* const aAddress, const size_t aCount) override{
-            operator delete(aAddress);
-        }
-    };
-
-    template<>
-    class DefaultAllocator<void> : public Allocator<void>{
-    public:
-        void* Allocate(const size_t aBytes) override{
-            return operator new(aBytes);
+        template<class T>
+        void Deallocate(T* const aObject){
+            void(Allocator::*RawDeallocate)(void* const, const size_t) = &Allocator::Deallocate;
+            (this->*RawDeallocate)(aObject, sizeof(T));
         }
 
-        void Deallocate(void* const aAddress, const size_t aBytes) override{
-            operator delete(aAddress);
+        template<class T>
+        void Deallocate(T* const aObject, const size_t aCount){
+            void(Allocator::*RawDeallocate)(void* const, const size_t) = &Allocator::Deallocate;
+            (this->*RawDeallocate)(aObject, sizeof(T) * aCount);
         }
     };
 
-    template<class T>
-    class WrapperAllocator : public Allocator<T>{
+    class DestructorMapAllocator : public Allocator{
     private:
-        Allocator<void>* mAllocator;
+        //! \bug DestructorMapAllocator is not type safe
+        std::map<void*, std::vector<DestructorFn>> mDestructorList;
+    protected:
+        void OnAllocate(void* const aObject){
+            mDestructorList.emplace(aObject, std::vector<DestructorFn>());
+        }
+
+        void OnDeallocate(void* const aObject){
+            auto it = mDestructorList.find(aObject);
+            if(it == mDestructorList.end()) throw std::runtime_error("Core::DestructorMapAllocator : Could not find allocated object");
+            const std::vector<DestructorFn>& list = it->second;
+            for(DestructorFn i : list){
+                i(aObject);
+            }
+            mDestructorList.erase(it);
+        }
     public:
-        WrapperAllocator(Allocator<void>& aAllocator) :
-            mAllocator(&aAllocator)
-        {}
-
-        T* AllocateSingle() override{
-            return static_cast<T*>(mAllocator->Allocate(sizeof(T)));
-        }
-
-        T* AllocateMany(const size_t aCount) override{
-            return static_cast<T*>(mAllocator->Allocate(sizeof(T) * aCount));
-        }
-
-        void DeallocateSingle(T* const aAddress) override{
-            mAllocator->Deallocate(aAddress, sizeof(T));
-        }
-
-        void DeallocateMany(T* const aAddress, const size_t aCount) override{
-            mAllocator->Deallocate(aAddress, sizeof(T) * aCount);
-        }
-
-        Allocator<void>& GetAllocator() const{
-            return *mAllocator;
+        virtual void OnDestroyed(void* const aObject, const DestructorFn aFn) override{
+            auto it = mDestructorList.find(aObject);
+            if(it == mDestructorList.end()) throw std::runtime_error("Core::DestructorMapAllocator : Could not find allocated object");
+            it->second.push_back(aFn);
         }
     };
 
-    template<class T>
-    Allocator<T>& GetDefaultAllocator(){
-        static DefaultAllocator<T> ALLOCATOR;
+    Allocator& GetDefaultAllocator(){
+        class DefaultAllocator : public DestructorMapAllocator{
+        public:
+            void* Allocate(const size_t aBytes) override{
+                void* const tmp = operator new(aBytes);
+                OnAllocate(tmp);
+                return tmp;
+            }
+
+            void Deallocate(void* const aObject, const size_t aBytes) override{
+                OnDeallocate(aObject);
+                operator delete(aObject);
+            }
+        };
+
+        static DefaultAllocator ALLOCATOR;
         return ALLOCATOR;
     }
 
