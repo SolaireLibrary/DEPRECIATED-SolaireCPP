@@ -32,8 +32,9 @@
 */
 
 #include <type_traits>
-#include <memory>
 #include <functional>
+#include <map>
+
 
 namespace Solaire{ namespace Core{
 
@@ -121,6 +122,8 @@ namespace Solaire{ namespace Core{
 
             std::function<void(T2*)> tmp = aOther.GetDestructor();
             mDestructor = [=](T* const aObject){tmp(const_cast<T2*>(aObject));};
+
+            return *this;
         }
 
         template<class T2>
@@ -133,6 +136,8 @@ namespace Solaire{ namespace Core{
 
             std::function<void(T2*)> tmp = aOther.GetDestructor();
             mDestructor = [=](T* const aObject){tmp(reinterpret_cast<T2*>(aObject));};
+
+            return *this;
         }
 
         void Clear(){
@@ -145,6 +150,13 @@ namespace Solaire{ namespace Core{
         T* Release(){
             T* tmp = nullptr;
             std::swap(tmp, mObject);
+            return tmp;
+        }
+
+        T* Release(T* const aObject, std::function<void(T*)> aDestructor = DefaultDestructor){
+            T* tmp = aObject;
+            std::swap(tmp, mObject);
+            mDestructor = aDestructor;
             return tmp;
         }
 
@@ -167,6 +179,228 @@ namespace Solaire{ namespace Core{
 
         const T* operator->() const{
             return mObject;
+        }
+    };
+
+    namespace SharedPointerInternal{
+        typedef std::pair<std::function<void(void*)>, uint32_t> SharedData;
+        static std::map<void*, SharedData> SHARED_DATA;
+
+        static bool InstanceExists(const void* const aAddress){
+            if(aAddress == nullptr) false;
+            return SHARED_DATA.find(const_cast<void*>(aAddress)) != SHARED_DATA.end();
+        }
+
+        static void CreateInstance(void* const aAddress){
+            if(aAddress == nullptr) return;
+            auto it = SHARED_DATA.find(const_cast<void*>(aAddress));
+            if(it == SHARED_DATA.end()){
+                throw std::runtime_error("Core::SharedPointer : Pointer does not exist");
+            }else{
+                ++(it->second.second);
+            }
+        }
+
+        static void CreateInstance(void* const aAddress, std::function<void(void*)> aDestructor){
+            if(aAddress == nullptr) return;
+            auto it = SHARED_DATA.find(const_cast<void*>(aAddress));
+            if(it == SHARED_DATA.end()){
+                SHARED_DATA.emplace(aAddress, SharedData(aDestructor, 1));
+            }else{
+                throw std::runtime_error("Core::SharedPointer : Pointer already exists");
+            }
+        }
+
+        static uint32_t UserCount(void* const aAddress){
+            if(aAddress == nullptr) return 0;
+            auto it = SHARED_DATA.find(const_cast<void*>(aAddress));
+            if(it == SHARED_DATA.end()) return 0;
+            return it->second.second;
+        }
+
+        void DestroyInstance(void* const aAddress){
+            if(aAddress == nullptr) return;
+            auto it = SHARED_DATA.find(const_cast<void*>(aAddress));
+            if(it == SHARED_DATA.end()) throw std::runtime_error("Core::SharedPointer : Cannot destroy unknown pointer");
+            if(--(it->second.second) == 0){
+                it->second.first(aAddress);
+                SHARED_DATA.erase(it);
+            }
+        }
+    }
+
+    template<class T>
+    class SharedPointer{
+    private:
+        void* mObject;
+
+        static void DefaultDestructor(void* const aObject){
+            delete static_cast<T*>(aObject);
+        }
+    public:
+        SharedPointer():
+            mObject(nullptr)
+        {}
+
+        SharedPointer(T* const aObject):
+            mObject(aObject)
+
+        {
+            using namespace SharedPointerInternal;
+            if(InstanceExists(aObject)){
+                CreateInstance(aObject);
+            }else{
+                CreateInstance(aObject, DefaultDestructor);
+            }
+        }
+
+        SharedPointer(T* const aObject, std::function<void(T*)> aDestructor):
+            mObject(aObject)
+
+        {
+            using namespace SharedPointerInternal;
+            if(InstanceExists(aObject)){
+                CreateInstance(aObject);
+            }else{
+                CreateInstance(aObject, DefaultDestructor);
+            }
+        }
+
+        SharedPointer(SharedPointer<T>&& aOther):
+            mObject(aOther.mObject)
+        {
+            SharedPointerInternal::CreateInstance(mObject);
+        }
+
+        SharedPointer(const SharedPointer<T>& aOther):
+            mObject(aOther.mObject)
+        {
+            SharedPointerInternal::CreateInstance(mObject);
+        }
+
+        template<class T2>
+        SharedPointer(SharedPointer<T2>&& aOther, typename std::enable_if<std::is_same<T,  typename std::add_const<T2>::type>::value>::type* = 0):
+            mObject(aOther.operator->())
+
+        {
+            SharedPointerInternal::CreateInstance(mObject);
+        }
+
+        template<class T2>
+        SharedPointer(SharedPointer<T2>&& aOther, typename std::enable_if<std::is_base_of<T, T2>::value>::type* = 0):
+            mObject(aOther.operator->())
+
+        {
+            SharedPointerInternal::CreateInstance(mObject);
+        }
+
+        template<class T2>
+        SharedPointer(const SharedPointer<T2>& aOther, typename std::enable_if<std::is_same<T,  typename std::add_const<T2>::type>::value>::type* = 0):
+            mObject(aOther.operator->())
+
+        {
+            SharedPointerInternal::CreateInstance(mObject);
+        }
+
+        template<class T2>
+        SharedPointer(const SharedPointer<T2>& aOther, typename std::enable_if<std::is_base_of<T, T2>::value>::type* = 0):
+            mObject(const_cast<T2*>(aOther.operator->()))
+
+        {
+            SharedPointerInternal::CreateInstance(mObject);
+        }
+
+        ~SharedPointer(){
+            Clear();
+        }
+
+        uint32_t UserCount() const{
+            return  SharedPointerInternal::UserCount(mObject);
+        }
+
+        SharedPointer<T>& operator=(const SharedPointer<T>& aOther){
+            Clear();
+            mObject = const_cast<void*>(aOther.operator->());
+            SharedPointerInternal::CreateInstance(mObject);
+            return *this;
+        }
+
+        SharedPointer<T>& operator=(SharedPointer<T>&& aOther){
+            Clear();
+            mObject = aOther.operator->();
+            SharedPointerInternal::CreateInstance(mObject);
+            return *this;
+        }
+
+        template<class T2>
+        typename std::enable_if<std::is_same<T,  typename std::add_const<T2>::type>::value, SharedPointer<T>&>::type
+        operator=(const SharedPointer<T2>& aOther){
+            Clear();
+            mObject = const_cast<T2*>(aOther.operator->());
+            SharedPointerInternal::CreateInstance(mObject);
+            return *this;
+        }
+
+        template<class T2>
+        typename std::enable_if<std::is_base_of<T, T2>::value, SharedPointer<T>&>::type
+        operator=(const SharedPointer<T2>& aOther){
+            Clear();
+            mObject = const_cast<T2*>(aOther.operator->());
+            SharedPointerInternal::CreateInstance(mObject);
+            return *this;
+        }
+
+        template<class T2>
+        typename std::enable_if<std::is_same<T,  typename std::add_const<T2>::type>::value, SharedPointer<T>&>::type
+        operator=(SharedPointer<T2>&& aOther){
+            Clear();
+            mObject = aOther.operator->();
+            SharedPointerInternal::CreateInstance(mObject);
+            return *this;
+        }
+
+        template<class T2>
+        typename std::enable_if<std::is_base_of<T, T2>::value, SharedPointer<T>&>::type
+        operator=(SharedPointer<T2>&& aOther){
+            Clear();
+            mObject = aOther.operator->();
+            SharedPointerInternal::CreateInstance(mObject);
+            return *this;
+        }
+
+        void Clear(){
+            if(mObject != nullptr){
+                SharedPointerInternal::DestroyInstance(mObject);
+                mObject = nullptr;
+            }
+        }
+
+       void Release(){
+            Clear();
+        }
+
+        void Release(T* const aObject, std::function<void(T*)> aDestructor = DefaultDestructor){
+            operator=(SmartPointer<T>(aObject, aDestructor));
+        }
+
+        void swap(SmartPointer<T>& aOther){
+            std::swap(mObject, aOther.mObject);
+        }
+
+        T& operator*(){
+            return *static_cast<T*>(mObject);
+        }
+
+        const T& operator*() const{
+            return *static_cast<T*>(mObject);
+        }
+
+        T* operator->(){
+            return static_cast<T*>(mObject);
+        }
+
+        const T* operator->() const{
+            return static_cast<T*>(mObject);
         }
     };
 
