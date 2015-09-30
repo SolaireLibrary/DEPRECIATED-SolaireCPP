@@ -99,22 +99,19 @@ namespace Solaire{ namespace Json{
             switch(mID){
             case TYPE_STRING:
                 if(mString != nullptr){
-                    mString->~String();
-                    mAllocator->Deallocate(mString, sizeof(String));
+                    mAllocator->Deallocate<String>(mString);
                     mString = nullptr;
                 }
                 break;
             case TYPE_ARRAY:
                 if(mArray != nullptr){
-                    mArray->~Array();
-                    mAllocator->Deallocate(mArray, sizeof(Array));
+                    mAllocator->Deallocate<Array>(mArray);
                     mArray = nullptr;
                 }
                 break;
             case TYPE_OBJECT:
                 if(mObject != nullptr){
-                    mObject->~Object();
-                    mAllocator->Deallocate(mObject, sizeof(Object));
+                    mAllocator->Deallocate<Object>(mObject);
                     mObject = nullptr;
                 }
                 break;
@@ -136,13 +133,16 @@ namespace Solaire{ namespace Json{
                 mNumber = 0.0;
                 break;
             case TYPE_STRING:
-                mString = new(mAllocator->Allocate(sizeof(String))) String();
+                mString = new(mAllocator->Allocate<String>()) String();
+                mAllocator->RegisterDestructor<String>(mString);
                 break;
             case TYPE_ARRAY:
-                mArray = new(mAllocator->Allocate(sizeof(Array))) Array();
+                mArray = new(mAllocator->Allocate<Array>()) Array(32, *mAllocator);
+                mAllocator->RegisterDestructor<Array>(mArray);
                 break;
             case TYPE_OBJECT:
-                mObject = new(mAllocator->Allocate(sizeof(Object))) Object();
+                mObject = new(mAllocator->Allocate<Object>()) Object();
+                mAllocator->RegisterDestructor<Object>(mObject);
                 break;
             default:
                 break;
@@ -328,7 +328,8 @@ namespace Solaire{ namespace Json{
             if(mID != GetTypeID<String>()){
                 Clear();
                 mID = GetTypeID<String>();
-                mString = new(mAllocator->Allocate(sizeof(String))) String(aValue);
+                mString = new(mAllocator->Allocate<String>()) String(aValue);
+                mAllocator->RegisterDestructor<String>(mString);
             }else{
                 *mString = aValue;
             }
@@ -339,7 +340,8 @@ namespace Solaire{ namespace Json{
             if(mID != GetTypeID<Array>()){
                 Clear();
                 mID = GetTypeID<Array>();
-                mArray = new(mAllocator->Allocate(sizeof(Array))) Array(std::move(aValue));
+                mArray = new(mAllocator->Allocate<Array>()) Array(std::move(aValue));
+                mAllocator->RegisterDestructor<Array>(mArray);
             }else{
                 *mArray = std::move(aValue);
             }
@@ -350,7 +352,8 @@ namespace Solaire{ namespace Json{
             if(mID != GetTypeID<Object>()){
                 Clear();
                 mID = GetTypeID<Object>();
-                mObject = new(mAllocator->Allocate(sizeof(Object))) Object(std::move(aValue));
+                mObject = new(mAllocator->Allocate<Object>()) Object(std::move(aValue));
+                mAllocator->RegisterDestructor<Object>(mObject);
             }else{
                 *mObject = std::move(aValue);
             }

@@ -80,6 +80,7 @@ namespace Solaire{ namespace Core{
 
     class DestructorMapAllocator : public Allocator{
     private:
+        //! \bug DestructorMapAllocator does not check mDestructorList in own constructor
         //! \bug DestructorMapAllocator is not type safe
         std::map<void*, std::vector<DestructorFn>> mDestructorList;
     protected:
@@ -97,6 +98,10 @@ namespace Solaire{ namespace Core{
             mDestructorList.erase(it);
         }
     public:
+        virtual ~DestructorMapAllocator(){
+
+        }
+
         virtual void OnDestroyed(void* const aObject, const DestructorFn aFn) override{
             auto it = mDestructorList.find(aObject);
             if(it == mDestructorList.end()) throw std::runtime_error("Core::DestructorMapAllocator : Could not find allocated object");
