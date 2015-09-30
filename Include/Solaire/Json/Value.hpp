@@ -93,24 +93,28 @@ namespace Solaire{ namespace Json{
             Object* mObject;
         };
         TypeID mID;
+        Core::Allocator<void>* mAllocator;
 
         void Clear(){
             switch(mID){
             case TYPE_STRING:
                 if(mString != nullptr){
-                    delete mString;
+                    mString->~String();
+                    mAllocator->Deallocate(mString, sizeof(String));
                     mString = nullptr;
                 }
                 break;
             case TYPE_ARRAY:
                 if(mArray != nullptr){
-                    delete mArray;
+                    mArray->~Array();
+                    mAllocator->Deallocate(mArray, sizeof(Array));
                     mArray = nullptr;
                 }
                 break;
             case TYPE_OBJECT:
                 if(mObject != nullptr){
-                    delete mObject;
+                    mObject->~Object();
+                    mAllocator->Deallocate(mObject, sizeof(Object));
                     mObject = nullptr;
                 }
                 break;
@@ -120,8 +124,9 @@ namespace Solaire{ namespace Json{
             mID = TYPE_NULL;
         }
     public:
-        Value(const TypeID aType = TYPE_NULL):
-            mID(aType)
+        Value(const TypeID aType = TYPE_NULL, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
+            mID(aType),
+            mAllocator(&aAllocator)
         {
             switch(aType){
             case TYPE_BOOL:
@@ -131,13 +136,13 @@ namespace Solaire{ namespace Json{
                 mNumber = 0.0;
                 break;
             case TYPE_STRING:
-                mString = new String();
+                mString = new(mAllocator->Allocate(sizeof(String))) String();
                 break;
             case TYPE_ARRAY:
-                mArray = new Array();
+                mArray = new(mAllocator->Allocate(sizeof(Array))) Array();
                 break;
             case TYPE_OBJECT:
-                mObject = new Object();
+                mObject = new(mAllocator->Allocate(sizeof(Object))) Object();
                 break;
             default:
                 break;
@@ -146,39 +151,46 @@ namespace Solaire{ namespace Json{
 
         Value(Value&& aOther):
             mID(aOther.mID),
-            mString(aOther.mString)
+            mAllocator(aOther.mAllocator)
         {
             if(sizeof(String*) >= sizeof(Number)){
+                mString = aOther.mString;
                 aOther.mString = nullptr;
             }else{
+                mNumber = aOther.mNumber;
                 aOther.mNumber = 0;
             }
             aOther.mID = TYPE_NULL;
         }
 
-        Value(const Bool aValue):
+        Value(const Bool aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
             mID(GetTypeID<Bool>()),
-            mBool(aValue)
+            mBool(aValue),
+            mAllocator(&aAllocator)
         {}
 
-        Value(const Number aValue):
+        Value(const Number aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
             mID(GetTypeID<Number>()),
-            mNumber(aValue)
+            mNumber(aValue),
+            mAllocator(&aAllocator)
         {}
 
-        Value(const Core::ConstStringFragment aValue):
+        Value(const Core::ConstStringFragment aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
             mID(GetTypeID<String>()),
-            mString(new String(aValue))
+            mString(new(aAllocator.Allocate(sizeof(String))) String(aValue)),
+            mAllocator(&aAllocator)
         {}
 
-        Value(Array&& aValue):
+        Value(Array&& aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
             mID(GetTypeID<Array>()),
-            mArray(new Array(std::move(aValue)))
+            mArray(new(aAllocator.Allocate(sizeof(Array))) Array(std::move(aValue))),
+            mAllocator(&aAllocator)
         {}
 
-        Value(Object&& aValue):
+        Value(Object&& aValue, Core::Allocator<void>& aAllocator = Core::GetDefaultAllocator<void>()):
             mID(GetTypeID<Object>()),
-            mObject(new Object(std::move(aValue)))
+            mObject(new(aAllocator.Allocate(sizeof(Object))) Object(std::move(aValue))),
+            mAllocator(&aAllocator)
         {}
 
         ~Value(){
@@ -312,9 +324,10 @@ namespace Solaire{ namespace Json{
             if(mID != GetTypeID<String>()){
                 Clear();
                 mID = GetTypeID<String>();
-                mString = new String();
+                mString = new(mAllocator->Allocate(sizeof(String))) String(aValue);
+            }else{
+                *mString = aValue;
             }
-            *mString = aValue;
             return *this;
         }
 
@@ -322,9 +335,10 @@ namespace Solaire{ namespace Json{
             if(mID != GetTypeID<Array>()){
                 Clear();
                 mID = GetTypeID<Array>();
-                mArray = new Array();
+                mArray = new(mAllocator->Allocate(sizeof(Array))) Array(std::move(aValue));
+            }else{
+                *mArray = std::move(aValue);
             }
-            *mArray = std::move(aValue);
             return *this;
         }
 
@@ -332,9 +346,10 @@ namespace Solaire{ namespace Json{
             if(mID != GetTypeID<Object>()){
                 Clear();
                 mID = GetTypeID<Object>();
-                mObject = new Object();
+                mObject = new(mAllocator->Allocate(sizeof(Object))) Object(std::move(aValue));
+            }else{
+                *mObject = std::move(aValue);
             }
-            *mObject = std::move(aValue);
             return *this;
         }
 
@@ -345,6 +360,7 @@ namespace Solaire{ namespace Json{
         Value& operator=(Object&& aValue){return SetObject(std::move(aValue));}
 
         Value& operator=(Value&& aValue){
+            std::swap(mAllocator, aValue.mAllocator);
             std::swap(mID, aValue.mID);
             if(sizeof(String*) >= sizeof(Number)){
                 std::swap(mString, mString);
