@@ -217,8 +217,7 @@ namespace Solaire{ namespace Core {
             static_assert(! std::is_abstract<T>::value, "Cannot allocate abstract class on MemoryArena");
 
             void* const ptr = Allocate(sizeof(T) * aCount);
-
-            if(! std::is_trivially_destructible<T>::value){
+            if(! std::is_fundamental<T>::value){
                 const DestructorFn destructor = [](void* aObject){
                     static_cast<T*>(aObject)->~T();
                 };

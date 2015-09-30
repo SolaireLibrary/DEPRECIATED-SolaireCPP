@@ -49,7 +49,8 @@ namespace Solaire{ namespace Core{
         virtual void OnDestroyed(void* const aObject, const DestructorFn aFn) = 0;
 
         template<class T>
-        void RegisterDestructor(T* const aObject){
+        typename std::enable_if<! std::is_fundamental<T>::value, void>::type
+        RegisterDestructor(T* const aObject){
             OnDestroyed(aObject, [](void* const aObject){static_cast<T*>(aObject)->~T();});
         }
 
@@ -84,13 +85,9 @@ namespace Solaire{ namespace Core{
         //! \bug DestructorMapAllocator is not type safe
         std::map<void*, std::vector<DestructorFn>> mDestructorList;
     protected:
-        void OnAllocate(void* const aObject){
-            mDestructorList.emplace(aObject, std::vector<DestructorFn>());
-        }
-
         void OnDeallocate(void* const aObject){
             auto it = mDestructorList.find(aObject);
-            if(it == mDestructorList.end()) throw std::runtime_error("Core::DestructorMapAllocator : Could not find allocated object");
+            if(it == mDestructorList.end()) return;
             const std::vector<DestructorFn>& list = it->second;
             for(DestructorFn i : list){
                 i(aObject);
@@ -104,7 +101,7 @@ namespace Solaire{ namespace Core{
 
         virtual void OnDestroyed(void* const aObject, const DestructorFn aFn) override{
             auto it = mDestructorList.find(aObject);
-            if(it == mDestructorList.end()) throw std::runtime_error("Core::DestructorMapAllocator : Could not find allocated object");
+            if(it == mDestructorList.end()) it = mDestructorList.emplace(aObject, std::vector<DestructorFn>()).first;
             it->second.push_back(aFn);
         }
     };
@@ -114,7 +111,6 @@ namespace Solaire{ namespace Core{
         public:
             void* Allocate(const size_t aBytes) override{
                 void* const tmp = operator new(aBytes);
-                OnAllocate(tmp);
                 return tmp;
             }
 
@@ -128,7 +124,16 @@ namespace Solaire{ namespace Core{
         return ALLOCATOR;
     }
 
-    #define SolaireSmartAllocate(aAllocator, aType, aParams)\
+    #define SolaireUniqueAllocate(aAllocator, aType, aParams)\
+        Core::SmartPointer<aType>(\
+            new(aAllocator.Allocate(sizeof(aType))) aType aParams,\
+            [&](aType* const aObject){\
+                aObject->~aType();\
+                aAllocator.Deallocate(aObject, sizeof(aType));\
+            }\
+        )
+
+    #define SolaireSharedAllocate(aAllocator, aType, aParams)\
         Core::SharedPointer<aType>(\
             new(aAllocator.Allocate(sizeof(aType))) aType aParams,\
             [&](aType* const aObject){\
