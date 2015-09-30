@@ -43,10 +43,11 @@ namespace Solaire{ namespace Core {
         \detail
         Use different MemoryArenas for different object lifetimes (eg. objects that are destroyed at the end of a frame)
     */
-    class MemoryArena{
+    class MemoryArena : public Allocator{
     public:
         typedef void(*DestructorFn)(void*);
     private:
+        //! \bug MemoryArena is not type safe
         typedef std::pair<void*, DestructorFn> DestructorCall;
         typedef std::pair<void*, size_t> Region;
 
@@ -140,96 +141,6 @@ namespace Solaire{ namespace Core {
             }
         }
 
-        void* Allocate(const size_t aSize){
-            bool defragmented = false;
-
-            if(mArenaSize < aSize) goto ALLOCATE_FROM_NEXT;
-            goto ALLOCATE_FROM_FREE_REGIONS;
-
-            ALLOCATE_FROM_FREE_REGIONS:
-            if(! mFreeRegions.IsEmpty()){
-                const Region mainRegion = mFreeRegions.Back();
-                if(mainRegion.second >= aSize){
-                    mFreeRegions.PopBack();
-
-                    // Mark any additional memory as a new free region
-                    const size_t dif = mainRegion.second - aSize;
-                    if(dif != 0) Deallocate(static_cast<uint8_t*>(mainRegion.first) + dif, dif);
-
-                    return mainRegion.first;
-                }
-            }
-            goto ALLOCATE_FROM_ARENA;
-
-            ALLOCATE_FROM_ARENA:
-            {
-                const size_t freeArena = mArenaEnd - mArenaHead;
-                if(freeArena < aSize){
-                    if(defragmented){
-                        goto ALLOCATE_FROM_NEXT;
-                    }else{
-                        DefragmentFreeRegions();
-                        defragmented = true;
-                        goto ALLOCATE_FROM_FREE_REGIONS;
-                    }
-                }
-
-                void* const ptr = mArenaHead;
-                mArenaHead += aSize;
-                return ptr;
-            }
-
-            ALLOCATE_FROM_NEXT:
-            {
-                if((mArenaEnd - mArenaHead) < static_cast<ptrdiff_t>(aSize)){
-                    if(mNext == nullptr){
-                        mNext = new MemoryArena(mArenaSize > aSize ? mArenaSize : aSize, mAllocator);
-                    }
-                    return mNext->Allocate(aSize);
-                }
-            }
-            return nullptr;
-        }
-
-        void Deallocate(void* const aAddress, const size_t aSize){
-            const Region region(aAddress, aSize);
-            if(mFreeRegions.IsEmpty()){
-                mFreeRegions.PushBack(region);
-            }else{
-                // Largest region at back
-                const auto end = mFreeRegions.end() - 1;
-                for(auto i = mFreeRegions.begin(); i != end; ++i){
-                    if(i->second >= region.second){
-                        mFreeRegions.InsertBefore(i, region);
-                        return;
-                    }
-                }
-                mFreeRegions.PushBack(region);
-            }
-        }
-
-        void OnDestroyed(void* aObject, DestructorFn aCallback){
-             mDestructorList.PushBack(DestructorCall(aObject, aCallback));
-        }
-
-        template<class T>
-        void* Allocate(const size_t aCount = 1){
-            static_assert(! std::is_abstract<T>::value, "Cannot allocate abstract class on MemoryArena");
-
-            void* const ptr = Allocate(sizeof(T) * aCount);
-            if(! std::is_fundamental<T>::value){
-                const DestructorFn destructor = [](void* aObject){
-                    static_cast<T*>(aObject)->~T();
-                };
-
-                for(size_t i = 0; i < aCount; ++i){
-                    OnDestroyed(static_cast<T*>(ptr) + i, destructor);
-                }
-            }
-
-            return ptr;
-        }
-
         size_t AllocatedBytes() const{
             return (mArenaHead - mArenaBegin) + mNext == nullptr ? 0 : mNext->AllocatedBytes();
         }
@@ -257,6 +168,80 @@ namespace Solaire{ namespace Core {
                 delete mNext;
                 mNext = nullptr;
             }
+        }
+
+        // Inherited from Allocator
+
+        void* Allocate(const size_t aBytes) override{
+            bool defragmented = false;
+
+            if(mArenaSize < aBytes) goto ALLOCATE_FROM_NEXT;
+            goto ALLOCATE_FROM_FREE_REGIONS;
+
+            ALLOCATE_FROM_FREE_REGIONS:
+            if(! mFreeRegions.IsEmpty()){
+                const Region mainRegion = mFreeRegions.Back();
+                if(mainRegion.second >= aBytes){
+                    mFreeRegions.PopBack();
+
+                    // Mark any additional memory as a new free region
+                    const size_t dif = mainRegion.second - aBytes;
+                    if(dif != 0) Deallocate(static_cast<uint8_t*>(mainRegion.first) + dif, dif);
+
+                    return mainRegion.first;
+                }
+            }
+            goto ALLOCATE_FROM_ARENA;
+
+            ALLOCATE_FROM_ARENA:
+            {
+                const size_t freeArena = mArenaEnd - mArenaHead;
+                if(freeArena < aBytes){
+                    if(defragmented){
+                        goto ALLOCATE_FROM_NEXT;
+                    }else{
+                        DefragmentFreeRegions();
+                        defragmented = true;
+                        goto ALLOCATE_FROM_FREE_REGIONS;
+                    }
+                }
+
+                void* const ptr = mArenaHead;
+                mArenaHead += aBytes;
+                return ptr;
+            }
+
+            ALLOCATE_FROM_NEXT:
+            {
+                if((mArenaEnd - mArenaHead) < static_cast<ptrdiff_t>(aBytes)){
+                    if(mNext == nullptr){
+                        mNext = new MemoryArena(mArenaSize > aBytes ? mArenaSize : aBytes, mAllocator);
+                    }
+                    return mNext->Allocate(aBytes);
+                }
+            }
+            return nullptr;
+        }
+
+        void Deallocate(void* const aObject, const size_t aBytes) override{
+            const Region region(aObject, aBytes);
+            if(mFreeRegions.IsEmpty()){
+                mFreeRegions.PushBack(region);
+            }else{
+                // Largest region at back
+                const auto end = mFreeRegions.end() - 1;
+                for(auto i = mFreeRegions.begin(); i != end; ++i){
+                    if(i->second >= region.second){
+                        mFreeRegions.InsertBefore(i, region);
+                        return;
+                    }
+                }
+                mFreeRegions.PushBack(region);
+            }
+        }
+
+        void OnDestroyed(void* const aObject, DestructorFn aCallback) override{
+             mDestructorList.PushBack(DestructorCall(aObject, aCallback));
         }
     };
 
@@ -336,34 +321,6 @@ namespace Solaire{ namespace Core {
     bool operator!=(const STLArenaAllocator<T1, ARENA>&, const STLArenaAllocator<T2, ARENA>&) throw(){
         return false;
     }
-
-    class ArenaAllocator : public Allocator{
-    private:
-        //! \bug ArenaAllocator is not type safe
-        MemoryArena& mArena;
-    public:
-        ArenaAllocator(MemoryArena& aArena) :
-            mArena(aArena)
-        {}
-
-        MemoryArena& GetArena() const{
-            return mArena;
-        }
-
-        // Inherited from Allocator
-
-        void* Allocate(const size_t aBytes) override{
-            return mArena.Allocate(aBytes);
-        }
-
-        void Deallocate(void* const aAddress, const size_t aBytes) override{
-            mArena.Deallocate(aAddress, aBytes);
-        }
-
-        void OnDestroyed(void* const aObject, const DestructorFn aFn) override{
-            mArena.OnDestroyed(aObject, aFn);
-        }
-    };
 }}
 
 #endif
