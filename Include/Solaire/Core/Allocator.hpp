@@ -130,7 +130,7 @@ namespace Solaire{ namespace Core{
 
     #define SolaireSmartAllocate(aAllocator, aType, aParams)\
         Core::SharedPointer<aType>(\
-            new(aAllocator.Allocate(sizeof(aType))) aType(aParams),\
+            new(aAllocator.Allocate(sizeof(aType))) aType aParams,\
             [&](aType* const aObject){\
                 aObject->~aType();\
                 aAllocator.Deallocate(aObject, sizeof(aType));\
