@@ -121,7 +121,7 @@ namespace Solaire{ namespace Core{
             aOther.Release();
 
             std::function<void(T2*)> tmp = aOther.GetDestructor();
-            mDestructor = [=](T* const aObject){tmp(const_cast<T2*>(aObject));};
+            mDestructor = [=](T* const aPtr){tmp(const_cast<T2*>(aPtr));};
 
             return *this;
         }
@@ -135,7 +135,7 @@ namespace Solaire{ namespace Core{
             aOther.Release();
 
             std::function<void(T2*)> tmp = aOther.GetDestructor();
-            mDestructor = [=](T* const aObject){tmp(reinterpret_cast<T2*>(aObject));};
+            mDestructor = [=](T* const aPtr){tmp((T2*)(aPtr));};
 
             return *this;
         }

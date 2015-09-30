@@ -201,6 +201,10 @@ namespace Solaire{ namespace Json{
             return *mAllocator;
         }
 
+        TypeID GetType() const{
+            return mID;
+        }
+
         template<class T>
         bool Is() const{
             return mID == GetTypeID<T>();
@@ -305,6 +309,11 @@ namespace Solaire{ namespace Json{
         operator const Array&() const{return GetArray();}
         operator Object&(){return GetObject();}
         operator const Object&() const{return GetObject();}
+
+        Value& SetNull(){
+            Clear();
+            return *this;
+        }
 
         Value& SetBool(const Bool aValue){
             if(mID != GetTypeID<Bool>()){

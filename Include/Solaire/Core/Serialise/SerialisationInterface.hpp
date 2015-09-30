@@ -57,11 +57,14 @@ namespace Solaire{ namespace Core{
         SERIAL_TYPE_I16,
         SERIAL_TYPE_I32,
         SERIAL_TYPE_I64,
+        SERIAL_TYPE_B,
+        SERIAL_TYPE_C,
         SERIAL_TYPE_F,
         SERIAL_TYPE_D,
         SERIAL_TYPE_S,
         SERIAL_TYPE_A,
         SERIAL_TYPE_O,
+        SERIAL_TYPE_N
     };
 
     class SerialSystem{
@@ -85,6 +88,8 @@ namespace Solaire{ namespace Core{
         virtual SerialIndex Size() const = 0;
         virtual SerialType TypeOf(const SerialIndex aIndex) const = 0;
 
+        virtual bool ReadB(const SerialIndex aIndex) const = 0;
+        virtual char ReadC(const SerialIndex aIndex) const = 0;
         virtual uint8_t ReadU8(const SerialIndex aIndex) const = 0;
         virtual uint16_t ReadU16(const SerialIndex aIndex) const = 0;
         virtual uint32_t ReadU32(const SerialIndex aIndex) const = 0;
@@ -102,6 +107,9 @@ namespace Solaire{ namespace Core{
         virtual ConstSerialArrayPtr ReadA(const SerialIndex aIndex) const = 0;
         virtual ConstSerialObjectPtr ReadO(const SerialIndex aIndex) const = 0;
 
+        virtual void WriteN(const SerialIndex aIndex) = 0;
+        virtual void WriteB(const SerialIndex aIndex, const bool aValue) = 0;
+        virtual void WriteC(const SerialIndex aIndex, const char aValue) = 0;
         virtual void WriteU8(const SerialIndex aIndex, const uint8_t aValue) = 0;
         virtual void WriteU16(const SerialIndex aIndex, const uint16_t aValue) = 0;
         virtual void WriteU32(const SerialIndex aIndex, const uint32_t aValue) = 0;
@@ -124,6 +132,8 @@ namespace Solaire{ namespace Core{
 
         virtual SerialType TypeOf(const SerialTag aTag) const = 0;
 
+        virtual bool ReadB(const SerialTag aTag) const = 0;
+        virtual char ReadC(const SerialTag aTag) const = 0;
         virtual uint8_t ReadU8(const SerialTag aTag) const = 0;
         virtual uint16_t ReadU16(const SerialTag aTag) const = 0;
         virtual uint32_t ReadU32(const SerialTag aTag) const = 0;
@@ -141,6 +151,9 @@ namespace Solaire{ namespace Core{
         virtual ConstSerialArrayPtr ReadA(const SerialTag aTag) const = 0;
         virtual ConstSerialObjectPtr ReadO(const SerialTag aTag) const = 0;
 
+        virtual void WriteN(const SerialTag aTag) = 0;
+        virtual void WriteB(const SerialTag aTag, const bool aValue) = 0;
+        virtual void WriteC(const SerialTag aTag, const char aValue) = 0;
         virtual void WriteU8(const SerialTag aTag, const uint8_t aValue) = 0;
         virtual void WriteU16(const SerialTag aTag, const uint16_t aValue) = 0;
         virtual void WriteU32(const SerialTag aTag, const uint32_t aValue) = 0;

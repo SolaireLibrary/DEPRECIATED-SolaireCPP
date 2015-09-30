@@ -192,7 +192,7 @@ namespace Solaire{ namespace Core{
 	    }
 
         Allocator& GetAllocator() const{
-            return mAllocator;
+            return *mAllocator;
         }
 
 		void Clear(){
