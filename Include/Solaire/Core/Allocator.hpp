@@ -32,7 +32,7 @@
 */
 
 #include <type_traits>
-#include <memory>
+#include "Memory/SmartPointer.hpp"
 
 namespace Solaire{ namespace Core{
 
@@ -129,7 +129,7 @@ namespace Solaire{ namespace Core{
     }
 
     #define SolaireSmartAllocate(aAllocator, aType, aParams)\
-        std::shared_ptr<aType>(\
+        Core::SharedPointer<aType>(\
             new(aAllocator.Allocate(sizeof(aType))) aType(aParams),\
             [&](aType* const aObject){\
                 aObject->~aType();\

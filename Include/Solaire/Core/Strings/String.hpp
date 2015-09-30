@@ -64,6 +64,8 @@ namespace Solaire{ namespace Core{
         String& operator=(String&& aOther);
 
         // Constructors
+        String(const String& aOther);
+        String(String&& aOther);
         String(Allocator<void>& aAllocator = GetDefaultAllocator<void>());
         String(const Core::ConstStringFragment aOther, Allocator<void>& aAllocator = GetDefaultAllocator<void>());
         String(const std::basic_string<Type>& aOther, Allocator<void>& aAllocator = GetDefaultAllocator<void>());

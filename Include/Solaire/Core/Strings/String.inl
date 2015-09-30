@@ -63,6 +63,14 @@ namespace Solaire{ namespace Core{
         return *this;
     }
 
+    String::String(const String& aOther) :
+        mContainer(aOther.mContainer)
+    {}
+
+    String::String(String&& aOther) :
+        mContainer(std::move(aOther.mContainer))
+    {}
+
     String::String(Allocator<void>& aAllocator) :
         mContainer(256, aAllocator)
     {

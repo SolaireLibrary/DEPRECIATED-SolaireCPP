@@ -35,15 +35,15 @@ Last Modified	: 29th September 2015
 
 namespace Solaire{ namespace Json{
 
-    class Parser : public std::enable_shared_from_this<Parser>{
+    class Parser{
     public:
         virtual ~Parser(){}
 
         virtual bool Append(const Core::String::Type aChar) = 0;
-        virtual std::shared_ptr<Value> Get(Core::Allocator<void>& aAllocator) const = 0;
+        virtual Core::SharedPointer<Value> Get(Core::Allocator<void>& aAllocator) const = 0;
     };
 
-    static std::shared_ptr<Parser> AllocateParser(Core::Allocator<void>&, const TypeID);
+    static Core::SharedPointer<Parser> AllocateParser(Core::Allocator<void>&, const TypeID);
     static TypeID IdentifyTypeID(const Core::String::Type);
 
     class StringParser : public Parser{
@@ -85,9 +85,9 @@ namespace Solaire{ namespace Json{
             return false;
         }
 
-        std::shared_ptr<Value> Get(Core::Allocator<void>& aAllocator) const override{
+        Core::SharedPointer<Value> Get(Core::Allocator<void>& aAllocator) const override{
             if(! (mFirstQuote && mSecondQuote)) return nullptr;
-            return SolaireSmartAllocate(aAllocator, String, mString);
+            return SolaireSmartAllocate(aAllocator, Value, mString);
         }
     };
 
@@ -170,11 +170,11 @@ namespace Solaire{ namespace Json{
             }
         }
 
-        std::shared_ptr<Value> Get(Core::Allocator<void>& aAllocator) const override{
+        Core::SharedPointer<Value> Get(Core::Allocator<void>& aAllocator) const override{
             if(mCount == 4 && std::memcmp(mString, "true", 4) == 0){
-                return SolaireSmartAllocate(aAllocator, Bool, true);
+                return SolaireSmartAllocate(aAllocator, Value, true);
             }else if(mCount == 5 && std::memcmp(mString, "false", 5) == 0){
-                return SolaireSmartAllocate(aAllocator, Bool, false);
+                return SolaireSmartAllocate(aAllocator, Value, false);
             }else{
                 return nullptr;
             }
@@ -197,8 +197,8 @@ namespace Solaire{ namespace Json{
             return mValue.Append(aChar);
         }
 
-       std::shared_ptr<Value> Get(Core::Allocator<void>& aAllocator) const override{
-            return SolaireSmartAllocate(aAllocator, Number, mValue.Get());
+       Core::SharedPointer<Value> Get(Core::Allocator<void>& aAllocator) const override{
+            return SolaireSmartAllocate(aAllocator, Value, mValue.Get());
         }
     };
 
@@ -248,9 +248,9 @@ namespace Solaire{ namespace Json{
             }
         }
 
-        std::shared_ptr<Value> Get(Core::Allocator<void>& aAllocator) const override{
+        Core::SharedPointer<Value> Get(Core::Allocator<void>& aAllocator) const override{
             if(mCount == 4 && std::memcmp(mString, "null", 4) == 0){
-                return SolaireSmartAllocate(aAllocator, Null,);
+                return SolaireSmartAllocate(aAllocator, Value, TYPE_NULL);
             }else{
                 return nullptr;
             }
@@ -260,7 +260,7 @@ namespace Solaire{ namespace Json{
 
     class ArrayParser : public Parser{
     private:
-        Core::DynamicArray<std::shared_ptr<Parser>> mParsers;
+        Core::DynamicArray<Core::SharedPointer<Parser>> mParsers;
         Core::Allocator<void>& mAllocator;
         enum{
             STATE_OPEN_ARRAY,
@@ -363,11 +363,12 @@ namespace Solaire{ namespace Json{
             }
         }
 
-        std::shared_ptr<Value> Get(Core::Allocator<void>& aAllocator) const override{
+        Core::SharedPointer<Value> Get(Core::Allocator<void>& aAllocator) const override{
             if(mState != STATE_CLOSE_ARRAY) return nullptr;
-            std::shared_ptr<Array> ptr = SolaireSmartAllocate(aAllocator, Array, aAllocator);
-            for(std::shared_ptr<Parser> i : mParsers){
-                ptr->PushBack(i->Get(aAllocator));
+            Core::SharedPointer<Value> ptr = SolaireSmartAllocate(aAllocator, Value, TYPE_ARRAY);
+            Array& array_ = *ptr;
+            for(Core::SharedPointer<Parser> i : mParsers){
+                array_.PushBack(i->Get(aAllocator));
             }
             return ptr;
         }
@@ -375,7 +376,7 @@ namespace Solaire{ namespace Json{
 
     class ObjectParser : public Parser{
     private:
-        Core::DynamicArray<std::pair<Core::String, std::shared_ptr<Parser>>> mParsers;
+        Core::DynamicArray<std::pair<Core::String, Core::SharedPointer<Parser>>> mParsers;
         Core::Allocator<void>& mAllocator;
         Core::String mName;
         struct{
@@ -525,7 +526,7 @@ namespace Solaire{ namespace Json{
                     return false;
                 }
 
-                mParsers.PushBack(std::pair<Core::String, std::shared_ptr<Parser>>(mName,  AllocateParser(mAllocator, id)));
+                mParsers.PushBack(std::pair<Core::String, Core::SharedPointer<Parser>>(mName,  AllocateParser(mAllocator, id)));
                 mName.Clear();
 
                 mState = STATE_PARSE_CHILD;
@@ -533,12 +534,13 @@ namespace Solaire{ namespace Json{
             }
         }
 
-        std::shared_ptr<Value> Get(Core::Allocator<void>& aAllocator) const override{
+        Core::SharedPointer<Value> Get(Core::Allocator<void>& aAllocator) const override{
             if(mState != STATE_CLOSE_OBJECT) return nullptr;
 
-            std::shared_ptr<Object> ptr = SolaireSmartAllocate(aAllocator, Object, );
-            for(std::pair<Core::String, std::shared_ptr<Parser>> i : mParsers){
-                ptr->Add(i.first, i.second->Get(aAllocator));
+            Core::SharedPointer<Value> ptr = SolaireSmartAllocate(aAllocator, Value, TYPE_OBJECT);
+            Object& object = *ptr;
+            for(auto& i : mParsers){
+                object.emplace(i.first, i.second->Get(aAllocator));
             }
             return ptr;
         }
@@ -575,7 +577,7 @@ namespace Solaire{ namespace Json{
         throw std::runtime_error("Json::IdentifyTypeID : Could not identify TypeID");
     }
 
-    static std::shared_ptr<Parser> AllocateParser(Core::Allocator<void>& aAllocator, const TypeID aID){
+    static Core::SharedPointer<Parser> AllocateParser(Core::Allocator<void>& aAllocator, const TypeID aID){
         switch(aID){
         case GetTypeID<Null>():
             return SolaireSmartAllocate(aAllocator, NullParser,);

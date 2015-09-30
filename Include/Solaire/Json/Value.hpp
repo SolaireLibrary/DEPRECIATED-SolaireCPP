@@ -156,6 +156,31 @@ namespace Solaire{ namespace Json{
             aOther.mID = TYPE_NULL;
         }
 
+        Value(const Bool aValue):
+            mID(GetTypeID<Bool>()),
+            mBool(aValue)
+        {}
+
+        Value(const Number aValue):
+            mID(GetTypeID<Number>()),
+            mNumber(aValue)
+        {}
+
+        Value(const Core::ConstStringFragment aValue):
+            mID(GetTypeID<String>()),
+            mString(new String(aValue))
+        {}
+
+        Value(Array&& aValue):
+            mID(GetTypeID<Array>()),
+            mArray(new Array(std::move(aValue)))
+        {}
+
+        Value(Object&& aValue):
+            mID(GetTypeID<Object>()),
+            mObject(new Object(std::move(aValue)))
+        {}
+
         ~Value(){
             Clear();
         }
