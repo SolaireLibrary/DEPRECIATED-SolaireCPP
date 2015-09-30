@@ -37,40 +37,305 @@ Last Modified	: 29th September 2015
 #include "..\Core\Strings\String.hpp"
 #include "..\Core\Strings\NumberParser.hpp"
 #include "..\Core\Iterators\DereferenceIterator.hpp"
+#include "..\Core\Memory\SmartPointer.hpp"
 
 namespace Solaire{ namespace Json{
 
-    enum TypeID : uint8_t{};
+    enum TypeID : uint8_t{
+        TYPE_NULL,
+        TYPE_BOOL,
+        TYPE_NUMBER,
+        TYPE_STRING,
+        TYPE_ARRAY,
+        TYPE_OBJECT
+    };
 
-    class String;
-    class Number;
-    class Bool;
-    class Null;
-    class Object;
-    class Array;
+    class Value;
+    typedef void Null;
+    typedef bool Bool;
+    typedef double Number;
+    typedef Core::String String;
+    typedef Core::DynamicArray<Core::SharedPointer<Value>> Array;
+    typedef std::map<Core::String, Core::SharedPointer<Value>> Object;
 
     template<class T>
     static constexpr TypeID GetTypeID() = delete;
 
     template<>
-    constexpr TypeID GetTypeID<Null>(){return static_cast<TypeID>(0);}
+    constexpr TypeID GetTypeID<Null>(){return TYPE_NULL;}
 
     template<>
-    constexpr TypeID GetTypeID<Bool>(){return static_cast<TypeID>(1);}
+    constexpr TypeID GetTypeID<Bool>(){return TYPE_BOOL;}
 
     template<>
-    constexpr TypeID GetTypeID<Number>(){return static_cast<TypeID>(2);}
+    constexpr TypeID GetTypeID<Number>(){return TYPE_NUMBER;}
 
     template<>
-    constexpr TypeID GetTypeID<String>(){return static_cast<TypeID>(3);}
+    constexpr TypeID GetTypeID<String>(){return TYPE_STRING;}
 
     template<>
-    constexpr TypeID GetTypeID<Array>(){return static_cast<TypeID>(4);}
+    constexpr TypeID GetTypeID<Array>(){return TYPE_ARRAY;}
 
     template<>
-    constexpr TypeID GetTypeID<Object>(){return static_cast<TypeID>(5);}
+    constexpr TypeID GetTypeID<Object>(){return TYPE_OBJECT;}
 
-    class Value : public std::enable_shared_from_this<Value>{
+    class Value{
+    public:
+    private:
+        Value(const Value&) = delete;
+        Value& operator=(const Value&) = delete;
+
+        union{
+            Bool mBool;
+            Number mNumber;
+            String* mString;
+            Array* mArray;
+            Object* mObject;
+        };
+        TypeID mID;
+
+        void Clear(){
+            switch(mID){
+            case TYPE_STRING:
+                if(mString != nullptr){
+                    delete mString;
+                    mString = nullptr;
+                }
+                break;
+            case TYPE_ARRAY:
+                if(mArray != nullptr){
+                    delete mArray;
+                    mArray = nullptr;
+                }
+                break;
+            case TYPE_OBJECT:
+                if(mObject != nullptr){
+                    delete mObject;
+                    mObject = nullptr;
+                }
+                break;
+            default:
+                break;
+            }
+            mID = TYPE_NULL;
+        }
+    public:
+        Value(const TypeID aType = TYPE_NULL):
+            mID(aType)
+        {
+            switch(aType){
+            case TYPE_BOOL:
+                mBool = false;
+                break;
+            case TYPE_NUMBER:
+                mNumber = 0.0;
+                break;
+            case TYPE_STRING:
+                mString = new String();
+                break;
+            case TYPE_ARRAY:
+                mArray = new Array();
+                break;
+            case TYPE_OBJECT:
+                mObject = new Object();
+                break;
+            default:
+                break;
+            }
+        }
+
+        Value(Value&& aOther):
+            mID(aOther.mID),
+            mString(aOther.mString)
+        {
+            if(sizeof(String*) >= sizeof(Number)){
+                aOther.mString = nullptr;
+            }else{
+                aOther.mNumber = 0;
+            }
+            aOther.mID = TYPE_NULL;
+        }
+
+        ~Value(){
+            Clear();
+        }
+
+        template<class T>
+        bool Is() const{
+            return mID == GetTypeID<T>();
+        }
+        bool IsNull() const{return Is<Null>();}
+        bool IsBool() const{return Is<Bool>();}
+        bool IsNumber() const{return Is<Number>();}
+        bool IsString() const{return Is<String>();}
+        bool IsArray() const{return Is<Array>();}
+        bool IsObject() const{return Is<Object>();}
+
+        Bool GetBool() const{
+            switch(mID){
+            case TYPE_BOOL:
+                return mBool;
+            case TYPE_NUMBER:
+                return mNumber > 0.0;
+            case TYPE_STRING:{
+                String& string = *mString;
+                if(string == "1" || string == "true"){
+                    return true;
+                }else if(string == "0" || string == "false"){
+                    return false;
+                }
+            }default:
+                throw std::runtime_error("Json::Value : Cannot cast type to Bool");
+            }
+        }
+
+        Number GetNumber() const{
+            switch(mID){
+            case TYPE_BOOL:
+                return mBool ? 1.0 : 0.0;
+            case TYPE_NUMBER:
+                return mNumber;
+            case TYPE_STRING:{
+                return Core::NumericParse::Parse<Number>(*mString).first;
+            }default:
+                throw std::runtime_error("Json::Value : Cannot cast type to Number");
+            }
+        }
+
+        String& GetString(){
+            switch(mID){
+            case TYPE_STRING:{
+                return *mString;
+            }default:
+                throw std::runtime_error("Json::Value : Cannot cast type to String");
+            }
+        }
+
+        const String& GetString() const{
+            switch(mID){
+            case TYPE_STRING:{
+                return *mString;
+            }default:
+                throw std::runtime_error("Json::Value : Cannot cast type to String");
+            }
+        }
+
+        Array& GetArray(){
+            switch(mID){
+            case TYPE_ARRAY:{
+                return *mArray;
+            }default:
+                throw std::runtime_error("Json::Value : Cannot cast type to Array");
+            }
+        }
+
+        const Array& GetArray() const{
+            switch(mID){
+            case TYPE_ARRAY:{
+                return *mArray;
+            }default:
+                throw std::runtime_error("Json::Value : Cannot cast type to Array");
+            }
+        }
+
+        Object& GetObject(){
+            switch(mID){
+            case TYPE_OBJECT:{
+                return *mObject;
+            }default:
+                throw std::runtime_error("Json::Value : Cannot cast type to Object");
+            }
+        }
+
+        const Object& GetObject() const{
+            switch(mID){
+            case TYPE_OBJECT:{
+                return *mObject;
+            }default:
+                throw std::runtime_error("Json::Value : Cannot cast type to Object");
+            }
+        }
+
+        operator Bool() const{return GetBool();}
+        operator Number() const{return GetNumber();}
+        operator String&(){return GetString();}
+        operator const String&() const{return GetString();}
+        operator Array&(){return GetArray();}
+        operator const Array&() const{return GetArray();}
+        operator Object&(){return GetObject();}
+        operator const Object&() const{return GetObject();}
+
+        Value& SetBool(const Bool aValue){
+            if(mID != GetTypeID<Bool>()){
+                Clear();
+                mID = GetTypeID<Bool>();
+            }
+            mBool = aValue;
+            return *this;
+        }
+
+        Value& SetNumber(const Number aValue){
+            if(mID != GetTypeID<Number>()){
+                Clear();
+                mID = GetTypeID<Number>();
+            }
+            mNumber = aValue;
+            return *this;
+        }
+
+        Value& SetString(const Core::ConstStringFragment aValue){
+            if(mID != GetTypeID<String>()){
+                Clear();
+                mID = GetTypeID<String>();
+                mString = new String();
+            }
+            *mString = aValue;
+            return *this;
+        }
+
+        Value& SetArray(Array&& aValue){
+            if(mID != GetTypeID<Array>()){
+                Clear();
+                mID = GetTypeID<Array>();
+                mArray = new Array();
+            }
+            *mArray = std::move(aValue);
+            return *this;
+        }
+
+        Value& SetObject(Object&& aValue){
+            if(mID != GetTypeID<Object>()){
+                Clear();
+                mID = GetTypeID<Object>();
+                mObject = new Object();
+            }
+            *mObject = std::move(aValue);
+            return *this;
+        }
+
+        Value& operator=(const Bool aValue){return SetBool(aValue);}
+        Value& operator=(const Number aValue){return SetNumber(aValue);}
+        Value& operator=(const Core::ConstStringFragment aValue){return SetString(aValue);}
+        Value& operator=(Array&& aValue){return SetArray(std::move(aValue));}
+        Value& operator=(Object&& aValue){return SetObject(std::move(aValue));}
+
+        Value& operator=(Value&& aValue){
+            std::swap(mID, aValue.mID);
+            if(sizeof(String*) >= sizeof(Number)){
+                std::swap(mString, mString);
+            }else{
+                std::swap(mNumber, mNumber);
+            }
+            return *this;
+        }
+    };
+
+    //template<>
+    //Bool& Value::Get<Bool>(){
+
+    //};
+
+    /*class Value : public std::enable_shared_from_this<Value>{
     private:
         Value(const Value&) = delete;
         Value(Value&&) = delete;
@@ -370,7 +635,7 @@ namespace Solaire{ namespace Json{
         TypeID GetTypeID() const override{
             return Json::GetTypeID<Object>();
         }
-    };
+    };*/
 }}
 
 #endif

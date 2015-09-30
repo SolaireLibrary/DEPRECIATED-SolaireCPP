@@ -35,6 +35,34 @@ namespace Solaire{ namespace Core{
 
     // String
 
+    String& String::operator=(const Core::ConstStringFragment aOther){
+        Clear();
+        operator+=(aOther);
+        return *this;
+    }
+
+    String& String::operator=(const std::basic_string<Type>& aOther){
+        Clear();
+        operator+=(Core::ConstStringFragment(aOther.c_str(), aOther.c_str() + aOther.size()));
+        return *this;
+    }
+
+    String& String::operator=(const ConstPointer aOther){
+        Clear();
+        operator+=(Core::ConstStringFragment(aOther));
+        return *this;
+    }
+
+    String& String::operator=(const String& aOther){
+        mContainer = aOther.mContainer;
+        return *this;
+    }
+
+    String& String::operator=(String&& aOther){
+        mContainer = std::move(aOther.mContainer);
+        return *this;
+    }
+
     String::String(Allocator<void>& aAllocator) :
         mContainer(256, aAllocator)
     {

@@ -56,6 +56,13 @@ namespace Solaire{ namespace Core{
     private:
         Container mContainer;
     public:
+        // Assignment
+        String& operator=(const Core::ConstStringFragment aOther);
+        String& operator=(const std::basic_string<Type>& aOther);
+        String& operator=(const ConstPointer aOther);
+        String& operator=(const String& aOther);
+        String& operator=(String&& aOther);
+
         // Constructors
         String(Allocator<void>& aAllocator = GetDefaultAllocator<void>());
         String(const Core::ConstStringFragment aOther, Allocator<void>& aAllocator = GetDefaultAllocator<void>());
