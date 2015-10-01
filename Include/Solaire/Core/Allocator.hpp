@@ -93,6 +93,26 @@ namespace Solaire{ namespace Core{
             }
             return tmp;
         }
+
+        template<class T, class ...PARAMS>
+        std::shared_ptr<T> SharedAllocate(PARAMS&&... aParams){
+            return std::shared_ptr<T>(
+                new(AllocateAndRegister<T>()) T(aParams...),
+                [&](T* const aObject){
+                    Deallocate<T>(aObject);
+                }
+            );
+        }
+
+        template<class T, class ...PARAMS>
+        std::unique_ptr<T> UniqueAllocate(PARAMS&&... aParams){
+            return std::unique_ptr<T>(
+                new(AllocateAndRegister<T>()) T(aParams...),
+                [&](T* const aObject){
+                    Deallocate<T>(aObject);
+                }
+            );
+        }
     };
 
     class DestructorMapAllocator : public Allocator{
@@ -139,21 +159,6 @@ namespace Solaire{ namespace Core{
         static DefaultAllocator ALLOCATOR;
         return ALLOCATOR;
     }
-
-    #define SolairePlacementDeallocator(aAllocator, aType)\
-        [&](aType* const aObject){\
-            aObject->~aType();\
-            aAllocator.Deallocate(aObject, sizeof(aType));\
-        }
-
-    #define SolaireSmartAllocate(aAllocator, aPointerType, aType, aParams)\
-        aPointerType<aType>(\
-            new(aAllocator.Allocate(sizeof(aType))) aType aParams,\
-            SolairePlacementDeallocator(aAllocator, aType)\
-        )
-
-    #define SolaireSharedAllocate(aAllocator, aType, aParams) SolaireSmartAllocate(aAllocator, std::shared_ptr, aType, aParams)
-    #define SolaireUniqueAllocate(aAllocator, aType, aParams) SolaireSmartAllocate(aAllocator, std::unique_ptr, aType, aParams)
 
 }}
 

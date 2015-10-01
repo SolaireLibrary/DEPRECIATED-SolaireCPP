@@ -52,8 +52,9 @@ namespace Solaire{ namespace Json{
             }else if(aIndex < size){
                 aAssignFn();
             }else{
+                Core::Allocator& allocator = mValue.GetAllocator();
                 for(Core::SerialIndex i = size; i <= aIndex; ++i){
-                    std::shared_ptr<Value> val = SolaireSharedAllocate(mValue.GetArray().GetAllocator(), Value, (TYPE_NULL, mValue.GetArray().GetAllocator()));
+                    std::shared_ptr<Value> val = allocator.SharedAllocate<Value>(TYPE_NULL, allocator);
                     mValue.GetArray().PushBack(val);
                 }
                 aAssignFn();
@@ -65,7 +66,8 @@ namespace Solaire{ namespace Json{
             WriteFn(
                 aIndex,
                 [&](){
-                    return SolaireSharedAllocate(mValue.GetArray().GetAllocator(), Value, (aValue, mValue.GetArray().GetAllocator()));
+                    Core::Allocator& allocator = mValue.GetAllocator();
+                    return allocator.SharedAllocate<Value>(aValue, allocator);
                 },
                 [&](){
                     Value* ptr = mValue.GetArray()[aIndex].operator->();
@@ -79,7 +81,8 @@ namespace Solaire{ namespace Json{
             WriteFn(
                 aIndex,
                 [&](){
-                    return SolaireSharedAllocate(mValue.GetArray().GetAllocator(), Value, (std::move(aValue), mValue.GetArray().GetAllocator()));
+                    Core::Allocator& allocator = mValue.GetAllocator();
+                    return allocator.SharedAllocate<Value>(std::move(aValue), allocator);
                 },
                 [&](){
                     Value* ptr = mValue.GetArray()[aIndex].operator->();
@@ -179,13 +182,15 @@ namespace Solaire{ namespace Json{
         }
 
         Core::SerialArrayPtr ReadA(const Core::SerialIndex aIndex) override{
-            return SolaireSharedAllocate(mValue.GetArray().GetAllocator(), SerialArray, (*mValue.GetArray()[aIndex]));
+            Core::Allocator& allocator = mValue.GetAllocator();
+            return allocator.SharedAllocate<SerialArray>(*mValue.GetArray()[aIndex]);
         }
 
         Core::SerialObjectPtr ReadO(const Core::SerialIndex aIndex) override;
 
         Core::ConstSerialArrayPtr ReadA(const Core::SerialIndex aIndex) const override{
-            return SolaireSharedAllocate(mValue.GetArray().GetAllocator(), SerialArray, (*mValue.GetArray()[aIndex]));
+            Core::Allocator& allocator = mValue.GetAllocator();
+            return allocator.SharedAllocate<SerialArray>(*mValue.GetArray()[aIndex]);
         }
 
         Core::ConstSerialObjectPtr ReadO(const Core::SerialIndex aIndex) const override;
@@ -194,7 +199,8 @@ namespace Solaire{ namespace Json{
             WriteFn(
                 aIndex,
                 [&](){
-                    return SolaireSharedAllocate(mValue.GetArray().GetAllocator(), Value, (TYPE_NULL, mValue.GetArray().GetAllocator()));
+                    Core::Allocator& allocator = mValue.GetAllocator();
+                    return allocator.SharedAllocate<Value>(TYPE_NULL, allocator);
                 },
                 [&](){
                     mValue.GetArray()[aIndex]->SetNull();
@@ -281,7 +287,8 @@ namespace Solaire{ namespace Json{
             WriteFn(
                 aTag,
                 [&](){
-                    return SolaireSharedAllocate(mValue.GetAllocator(), Value, (aValue, mValue.GetAllocator()));
+                    Core::Allocator& allocator = mValue.GetAllocator();
+                    return allocator.SharedAllocate<Value>(aValue, allocator);
                 },
                 [&](Value& aVal){
                     (aVal.*SetFn)(aValue);
@@ -294,7 +301,8 @@ namespace Solaire{ namespace Json{
             WriteFn(
                 aTag,
                 [&](){
-                    return SolaireSharedAllocate(mValue.GetAllocator(), Value, (std::move(aValue), mValue.GetAllocator()));
+                    Core::Allocator& allocator = mValue.GetAllocator();
+                    return allocator.SharedAllocate<Value>(std::move(aValue), allocator);
                 },
                 [&](Value& aVal){
                     (aVal.*SetFn)(std::move(aValue));
@@ -390,29 +398,34 @@ namespace Solaire{ namespace Json{
 
         Core::SerialArrayPtr ReadA(const Core::SerialTag aTag) override{
             Value& val = *mValue.GetObject()[aTag];
-            return SolaireSharedAllocate(mValue.GetAllocator(), SerialArray, (val));
+            Core::Allocator& allocator = mValue.GetAllocator();
+            return allocator.SharedAllocate<SerialArray>(val);
         }
 
         Core::SerialObjectPtr ReadO(const Core::SerialTag aTag) override{
             Value& val = *mValue.GetObject()[aTag];
-            return SolaireSharedAllocate(mValue.GetAllocator(), SerialObject, (val));
+            Core::Allocator& allocator = mValue.GetAllocator();
+            return allocator.SharedAllocate<SerialObject>(val);
         }
 
         Core::ConstSerialArrayPtr ReadA(const Core::SerialTag aTag) const override{
             Value& val = *mValue.GetObject()[aTag];
-            return SolaireSharedAllocate(mValue.GetAllocator(), SerialArray, (val));
+            Core::Allocator& allocator = mValue.GetAllocator();
+            return allocator.SharedAllocate<SerialArray>(val);
         }
 
         Core::ConstSerialObjectPtr ReadO(const Core::SerialTag aTag) const override{
             Value& val = *mValue.GetObject()[aTag];
-            return SolaireSharedAllocate(mValue.GetAllocator(), SerialObject, (val));
+            Core::Allocator& allocator = mValue.GetAllocator();
+            return allocator.SharedAllocate<SerialObject>(val);
         }
 
         void WriteN(const Core::SerialTag aTag) override{
             WriteFn(
                 aTag,
                 [&](){
-                    return SolaireSharedAllocate(mValue.GetAllocator(), Value, (TYPE_NULL, mValue.GetAllocator()));
+                    Core::Allocator& allocator = mValue.GetAllocator();
+                    return allocator.SharedAllocate<Value>(TYPE_NULL, allocator);
                 },
                 [&](Value& aValue){
                     aValue.SetNull();
@@ -484,11 +497,13 @@ namespace Solaire{ namespace Json{
     };
 
     Core::SerialObjectPtr SerialArray::ReadO(const Core::SerialIndex aIndex){
-        return SolaireSharedAllocate(mValue.GetAllocator(), SerialObject, (*mValue.GetArray()[aIndex]));
+        Core::Allocator& allocator = mValue.GetAllocator();
+        return allocator.SharedAllocate<SerialObject>(*mValue.GetArray()[aIndex]);
     }
 
     Core::ConstSerialObjectPtr SerialArray::ReadO(const Core::SerialIndex aIndex) const{
-        return SolaireSharedAllocate(mValue.GetAllocator(), SerialObject, (*mValue.GetArray()[aIndex]));
+        Core::Allocator& allocator = mValue.GetAllocator();
+        return allocator.SharedAllocate<SerialObject>(*mValue.GetArray()[aIndex]);
     }
 
     void SerialArray::WriteO(const Core::SerialIndex aIndex, Core::SerialObjectPtr aObject){
@@ -517,13 +532,13 @@ namespace Solaire{ namespace Json{
         Core::SerialArrayPtr CreateA() const override{
             Value* value = new(mParseAllocator.AllocateAndRegister<Value>()) Value(TYPE_ARRAY, mParseAllocator);
             mValueList.push_back(value);
-            return SolaireSharedAllocate(mParseAllocator, SerialArray, (*value));
+            return mParseAllocator.SharedAllocate<SerialArray>(*value);
         }
 
         Core::SerialObjectPtr CreateO() const override{
             Value* value = new(mParseAllocator.AllocateAndRegister<Value>()) Value(TYPE_ARRAY, mParseAllocator);
             mValueList.push_back(value);
-            return SolaireSharedAllocate(mParseAllocator, SerialObject, (*value));
+            return mParseAllocator.SharedAllocate<SerialObject>(*value);
         }
 
         void WriteA(std::ostream& aStream, const Core::ConstSerialArrayPtr aArray) const override{
@@ -552,7 +567,7 @@ namespace Solaire{ namespace Json{
             mParseAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
 
-            return SolaireSharedAllocate(mParseAllocator, SerialArray, (*value));
+            return mParseAllocator.SharedAllocate<SerialArray>(*value);
 
         }
 
@@ -573,7 +588,7 @@ namespace Solaire{ namespace Json{
             mParseAllocator.RegisterDestructor<Value>(value);
             mValueList.push_back(value);
 
-            return SolaireSharedAllocate(mParseAllocator, SerialObject, (*value));
+            return mParseAllocator.SharedAllocate<SerialObject>(*value);
         }
 
         Core::Allocator& GetParseAllocator() const override{

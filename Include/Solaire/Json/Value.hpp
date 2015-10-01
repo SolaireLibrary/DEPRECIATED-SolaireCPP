@@ -178,13 +178,13 @@ namespace Solaire{ namespace Json{
             mAllocator(&aAllocator)
         {}
 
-        Value(Array&& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
+        Value(Array& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(GetTypeID<Array>()),
             mArray(new(aAllocator.AllocateAndRegister<Array>()) Array(std::move(aValue))),
             mAllocator(&aAllocator)
         {}
 
-        Value(Object&& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
+        Value(Object& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
             mID(GetTypeID<Object>()),
             mObject(new(aAllocator.AllocateAndRegister<Object>()) Object(std::move(aValue))),
             mAllocator(&aAllocator)
