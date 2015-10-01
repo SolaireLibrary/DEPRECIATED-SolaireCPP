@@ -41,7 +41,7 @@ namespace Solaire{ namespace Json{
 
     class SerialArray : public Core::SerialArray{
     private:
-        std::shared_ptr<Value> mValue;
+        Core::Allocator::SharedPointer<Value> mValue;
 
         template<class F1, class F2>
         void WriteFn(const Core::SerialIndex aIndex, F1 aNewFn, F2 aAssignFn){
@@ -53,7 +53,7 @@ namespace Solaire{ namespace Json{
             }else{
                 Core::Allocator& allocator = mValue->GetAllocator();
                 for(Core::SerialIndex i = size; i <= aIndex; ++i){
-                    std::shared_ptr<Value> val = allocator.SharedAllocate<Value>(TYPE_NULL, allocator);
+                    Core::Allocator::SharedPointer<Value> val = allocator.SharedAllocate<Value>(TYPE_NULL, allocator);
                     mValue->GetArray().PushBack(val);
                 }
                 aAssignFn();
@@ -95,7 +95,7 @@ namespace Solaire{ namespace Json{
         friend SerialObject;
         friend SerialSystem;
 
-        SerialArray(std::shared_ptr<Value> aValue) :
+        SerialArray(Core::Allocator::SharedPointer<Value> aValue) :
             mValue(aValue)
         {}
 
@@ -260,7 +260,7 @@ namespace Solaire{ namespace Json{
         }
 
         void WriteA(const Core::SerialIndex aIndex, Core::SerialArrayPtr aArray) override{
-            std::shared_ptr<Value> value = std::static_pointer_cast<SerialArray>(aArray)->mValue;
+            Core::Allocator::SharedPointer<Value> value = std::static_pointer_cast<SerialArray>(aArray)->mValue;
             WriteMove<Array&&>(aIndex, std::move(value->GetArray()), &Value::SetArray);
         }
 
@@ -269,7 +269,7 @@ namespace Solaire{ namespace Json{
 
     class SerialObject : public Core::SerialObject{
     private:
-        std::shared_ptr<Value> mValue;
+        Core::Allocator::SharedPointer<Value> mValue;
 
         template<class F1, class F2>
         void WriteFn(const Core::SerialTag aTag, F1 aNewFn, F2 aAssignFn){
@@ -314,7 +314,7 @@ namespace Solaire{ namespace Json{
         friend SerialArray;
         friend SerialSystem;
 
-        SerialObject(std::shared_ptr<Value> aValue) :
+        SerialObject(Core::Allocator::SharedPointer<Value> aValue) :
             mValue(aValue)
         {}
 
@@ -481,12 +481,12 @@ namespace Solaire{ namespace Json{
         }
 
         void WriteA(const Core::SerialTag aTag, Core::SerialArrayPtr aArray) override{
-            std::shared_ptr<SerialArray> ptr = std::static_pointer_cast<SerialArray>(aArray);
+            Core::Allocator::SharedPointer<SerialArray> ptr = std::static_pointer_cast<SerialArray>(aArray);
             WriteMove<Array&&>(aTag, std::move(ptr->mValue->GetArray()), &Value::SetArray);
         }
 
         void WriteO(const Core::SerialTag aTag, Core::SerialObjectPtr aObject) override{
-            std::shared_ptr<SerialObject> ptr = std::static_pointer_cast<SerialObject>(aObject);
+            Core::Allocator::SharedPointer<SerialObject> ptr = std::static_pointer_cast<SerialObject>(aObject);
             WriteMove<Object&&>(aTag, std::move(ptr->mValue->GetObject()), &Value::SetObject);
         }
     };
@@ -502,7 +502,7 @@ namespace Solaire{ namespace Json{
     }
 
     void SerialArray::WriteO(const Core::SerialIndex aIndex, Core::SerialObjectPtr aObject){
-        std::shared_ptr<SerialObject> ptr = std::static_pointer_cast<SerialObject>(aObject);
+        Core::Allocator::SharedPointer<SerialObject> ptr = std::static_pointer_cast<SerialObject>(aObject);
         WriteMove<Object&&>(aIndex, std::move(ptr->mValue->GetObject()), &Value::SetObject);
     }
 
@@ -531,12 +531,12 @@ namespace Solaire{ namespace Json{
         }
 
         void WriteA(std::ostream& aStream, const Core::ConstSerialArrayPtr aArray) const override{
-            std::shared_ptr<Value> ptr = std::static_pointer_cast<const SerialArray>(aArray)->mValue;
+            Core::Allocator::SharedPointer<Value> ptr = std::static_pointer_cast<const SerialArray>(aArray)->mValue;
             aStream << ptr->Parse(mParseAllocator);
         }
 
         void WriteO(std::ostream& aStream, const Core::ConstSerialObjectPtr aObject) const override{
-            std::shared_ptr<Value> ptr = std::static_pointer_cast<const SerialObject>(aObject)->mValue;
+            Core::Allocator::SharedPointer<Value> ptr = std::static_pointer_cast<const SerialObject>(aObject)->mValue;
             aStream << ptr->Parse(mParseAllocator);
         }
 
@@ -550,7 +550,7 @@ namespace Solaire{ namespace Json{
                 }
             }
 
-            std::shared_ptr<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
+            Core::Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
             return mParseAllocator.SharedAllocate<SerialArray>(valuePtr);
 
         }
@@ -565,7 +565,7 @@ namespace Solaire{ namespace Json{
                 }
             }
 
-            std::shared_ptr<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
+            Core::Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
             return mParseAllocator.SharedAllocate<SerialObject>(valuePtr);
         }
 

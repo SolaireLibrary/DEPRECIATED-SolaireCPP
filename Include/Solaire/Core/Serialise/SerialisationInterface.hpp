@@ -43,10 +43,10 @@ namespace Solaire{ namespace Core{
     class SerialArray;
     class SerialObject;
 
-    typedef std::shared_ptr<SerialArray> SerialArrayPtr;
-    typedef std::shared_ptr<SerialObject> SerialObjectPtr;
-    typedef std::shared_ptr<const SerialArray> ConstSerialArrayPtr;
-    typedef std::shared_ptr<const SerialObject> ConstSerialObjectPtr;
+    typedef Allocator::SharedPointer<SerialArray> SerialArrayPtr;
+    typedef Allocator::SharedPointer<SerialObject> SerialObjectPtr;
+    typedef Allocator::SharedPointer<const SerialArray> ConstSerialArrayPtr;
+    typedef Allocator::SharedPointer<const SerialObject> ConstSerialObjectPtr;
 
     enum SerialType{
         SERIAL_TYPE_U8,
