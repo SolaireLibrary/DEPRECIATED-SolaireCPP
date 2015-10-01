@@ -546,6 +546,7 @@ namespace Solaire{ namespace Json{
             while(! aStream.eof()){
                 aStream >> c;
                 if(! parser.Append(c)){
+                    aStream.putback(c);
                     break;
                 }
             }
@@ -561,6 +562,7 @@ namespace Solaire{ namespace Json{
             while(! aStream.eof()){
                 aStream >> c;
                 if(! parser.Append(c)){
+                    aStream.putback(c);
                     break;
                 }
             }
