@@ -350,6 +350,26 @@ namespace Solaire{ namespace Core{ namespace Maths{
         return FromBinary<uint32_t>(*(reinterpret_cast<uint32_t*>(&aValue) + 1), FromBinary<uint32_t>(*reinterpret_cast<uint32_t*>(&aValue), aString));
     }
 
+    template<>
+    const char* FromBinary<int8_t>(int8_t& aValue, const char* aString){
+        return FromBinary<uint8_t>(reinterpret_cast<uint8_t&>(aValue), aString);
+    }
+
+    template<>
+    const char* FromBinary<int16_t>(int16_t& aValue, const char* aString){
+        return FromBinary<uint16_t>(reinterpret_cast<uint16_t&>(aValue), aString);
+    }
+
+    template<>
+    const char* FromBinary<int32_t>(int32_t& aValue, const char* aString){
+        return FromBinary<uint32_t>(reinterpret_cast<uint32_t&>(aValue), aString);
+    }
+
+    template<>
+    const char* FromBinary<int64_t>(int64_t& aValue, const char* aString){
+        return FromBinary<uint64_t>(reinterpret_cast<uint64_t&>(aValue), aString);
+    }
+
     // Conditions
 
     template<class T>
