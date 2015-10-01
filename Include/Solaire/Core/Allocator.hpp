@@ -168,6 +168,78 @@ namespace Solaire{ namespace Core{
         return ALLOCATOR;
     }
 
+    template <class T, Allocator& ALLOCATOR>
+    class STLAllocator {
+    public:
+        typedef T           value_type;
+        typedef T*          pointer;
+        typedef const T*    const_pointer;
+        typedef T&          reference;
+        typedef const T&    const_reference;
+        typedef size_t      size_type;
+        typedef ptrdiff_t   difference_type;
+
+        template <class U>
+        struct rebind {
+            typedef STLAllocator<U, ALLOCATOR> other;
+        };
+
+        pointer address (reference aValue) const {
+            return &aValue;
+        }
+
+        const_pointer address (const_reference aValue) const {
+            return &aValue;
+        }
+
+        STLAllocator() throw(){
+
+        }
+
+        STLAllocator(const STLAllocator&) throw(){
+
+        }
+
+        template <class U>
+        STLAllocator(const STLAllocator<U, ALLOCATOR>&) throw(){
+
+        }
+
+        ~STLAllocator() throw(){
+
+        }
+
+        size_type max_size() const throw(){
+            return std::numeric_limits<std::size_t>::max() / sizeof(T);;
+        }
+
+        pointer allocate(size_type aCount, const void* = 0){
+            return ALLOCATOR.Allocate<T>(aCount);
+        }
+
+        void construct(pointer aAddress, const T& aValue){
+            new(aAddress)T(aValue);
+        }
+
+        void destroy(pointer aAddress){
+            aAddress->~T();
+        }
+
+        void deallocate(pointer aAddress, size_type aCount){
+            ALLOCATOR.Deallocate<T>(aAddress, aCount);
+        }
+    };
+
+    template <class T1, class T2, const Allocator& ALLOCATOR>
+    bool operator==(const STLAllocator<T1, ALLOCATOR>&, const STLAllocator<T2, ALLOCATOR>&) throw(){
+        return true;
+    }
+
+    template <class T1, class T2, const Allocator& ALLOCATOR>
+    bool operator!=(const STLAllocator<T1, ALLOCATOR>&, const STLAllocator<T2, ALLOCATOR>&) throw(){
+        return false;
+    }
+
 }}
 
 #endif
