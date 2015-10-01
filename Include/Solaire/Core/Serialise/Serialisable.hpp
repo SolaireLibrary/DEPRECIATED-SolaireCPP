@@ -41,6 +41,16 @@ namespace Solaire{ namespace Core{
         Allocator::UniquePointer<T> Read(const SerialSystem& aSystem, std::istream& aStream) = delete;
         void Write(const T& aValue, SerialSystem& aSystem, std::ostream& aStream) = delete;
     };
+
+    template<class T, class ...PARAMS>
+    static Allocator::UniquePointer<T> Deserialise(const SerialSystem& aSystem, std::istream& aStream, PARAMS&&... aParams){
+        return Serialisable<T>().Read(aSystem, aStream, aParams...);
+    }
+
+    template<class T, class ...PARAMS>
+    static void Serialise(const T& aValue, const SerialSystem& aSystem, std::ostream& aStream, PARAMS&&... aParams){
+        Serialisable<T>().Write(aValue, aSystem, aStream, aParams...);
+    }
 }}
 
 

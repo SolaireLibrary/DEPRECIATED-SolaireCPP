@@ -522,13 +522,12 @@ namespace Solaire{ namespace Maths{
         typedef Solaire::Maths::Vector<TYPE, LENGTH> Vector;
 
         Allocator::UniquePointer<Vector> Read(const SerialSystem& aSystem, std::istream& aStream){
-            Allocator& allocator = aSystem.GetDataAllocator();
-
-            Allocator::UniquePointer<Vector> vector = allocator.UniqueAllocate<Vector>();
+            Allocator::UniquePointer<Vector> vector = aSystem.GetDataAllocator().UniqueAllocate<Vector>();
+            Vector& ref = *vector;
 
             SerialArrayPtr array_ = aSystem.ReadA(aStream);
             for(uint32_t i = 0; i < LENGTH; ++i){
-                vector->operator[](i) = array_->Read<TYPE>(i);
+                ref[i] = array_->Read<TYPE>(i);
             }
 
             return vector;
