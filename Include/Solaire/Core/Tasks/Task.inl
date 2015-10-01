@@ -35,88 +35,103 @@
 
 namespace Solaire{ namespace Core{
 
-    // Task
+    class TaskImplementationDetails
+    {
+    public:
+        typedef Core::Task Task;
+    private:
+        Task& mTask;
+    public:
+        TaskImplementationDetails(Task& aTask):
+            mTask(aTask)
+        {}
 
-   bool Task::StateTransition(const StateCondition aCondition, const StateAction aAction, const State aTransition, const std::string& aName){
-        if((this->*aCondition)()){
-            try{
-                (this->*aAction)();
-                mState = aTransition;
-                return true;
-            }catch(...){
-                mException = std::current_exception();
-                Cancel();
+        typedef bool(TaskImplementationDetails:: *StateCondition)() const;
+        typedef void(TaskImplementationDetails:: *StateAction)();
+
+        bool StateTransition(const StateCondition aCondition, const StateAction aAction, const Task::State aTransition, const std::string& aName){
+            if((this->*aCondition)()){
+                try{
+                    (this->*aAction)();
+                    mTask.mState = aTransition;
+                    return true;
+                }catch(...){
+                    mTask.mException = std::current_exception();
+                    mTask.Cancel();
+                }
+            }else{
+                mTask.mException = std::make_exception_ptr(std::runtime_error("Utility::Task : Can only enter " + aName));
             }
-        }else{
-            mException = std::make_exception_ptr(std::runtime_error("Utility::Task : Can only enter " + aName));
+            return false;
         }
-        return false;
-    }
 
-    bool Task::PreExecuteCondition() const{
-        return mState == STATE_SCHEDULED && ! CaughtException();
-    }
+        bool PreExecuteCondition() const{
+            return mTask.mState == Task::STATE_SCHEDULED && ! mTask.CaughtException();
+        }
 
-    bool Task::ExecuteCondition() const{
-        return mState == STATE_PRE_EXECUTION && ! CaughtException();
-    }
+        bool ExecuteCondition() const{
+            return mTask.mState == Task::STATE_PRE_EXECUTION && ! mTask.CaughtException();
+        }
 
-    bool Task::PostExecuteCondition() const{
-        return mState == STATE_EXECUTION && ! CaughtException();
-    }
+        bool PostExecuteCondition() const{
+            return mTask.mState == Task::STATE_EXECUTION && ! mTask.CaughtException();
+        }
 
-    bool Task::PauseCondition() const{
-        return mState == STATE_EXECUTION && ! CaughtException();
-    }
+        bool PauseCondition() const{
+            return mTask.mState == Task::STATE_EXECUTION && ! mTask.CaughtException();
+        }
 
-    bool Task::ResumeCondition() const{
-        return mState == STATE_PAUSED && ! CaughtException();
-    }
+        bool ResumeCondition() const{
+            return mTask.mState == Task::STATE_PAUSED && ! mTask.CaughtException();
+        }
 
-    bool Task::CancelCondition() const{
-        return mState != STATE_COMPLETE && mState != STATE_CANCELED && ! CaughtException();
-    }
+        bool CancelCondition() const{
+            return mTask.mState != Task::STATE_COMPLETE && mTask.mState != Task::STATE_CANCELED && ! mTask.CaughtException();
+        }
 
-    bool Task::ResetCondition() const{
-        return mState == STATE_CANCELED || mState == STATE_COMPLETE;
-    }
+        bool ResetCondition() const{
+            return mTask.mState == Task::STATE_CANCELED || mTask.mState == Task::STATE_COMPLETE;
+        }
+
+        void OnPreExecuteInternal(){
+            mTask.OnPreExecute();
+        }
+
+        void OnExecuteInternal(){
+            mTask.OnExecute(mTask.mPauseLocation);
+            mTask.mPauseLocation = 0;
+        }
+
+        void OnPostExecuteInternal(){
+            mTask.OnPostExecute();
+            mTask.OnEndState();
+        }
+
+        void OnPauseInternal(){
+            mTask.OnPause();
+        }
+
+        void OnResumeInternal(){
+            mTask.OnResume(mTask.mPauseLocation);
+        }
+
+        void OnResetInternal(){
+            mTask.mPauseLocation = 0;
+            mTask.mException = nullptr;
+            mTask.mLock.unlock();
+            mTask.OnReset();
+        }
+
+        void OnCancelInternal(){
+            mTask.OnCanceled();
+        }
+    };
+
+    // Task
 
     void Task::Schedule(TaskManager& aManager){
         mLock.lock();
         mManager = &aManager;
-    }
-
-    void Task::OnPreExecuteInternal(){
-        OnPreExecute();
-    }
-
-    void Task::OnExecuteInternal(){
-        OnExecute(mPauseLocation);
-        mPauseLocation = 0;
-    }
-
-    void Task::OnPostExecuteInternal(){
-        OnPostExecute();
-        OnEndState();
-    }
-
-    void Task::OnPauseInternal(){
-        OnPause();
-    }
-
-    void Task::OnResumeInternal(){
-        OnResume(mPauseLocation);
-    }
-
-    void Task::OnResetInternal(){
-        mPauseLocation = 0;
-        mException = nullptr;
-        mLock.unlock();
-        OnReset();
-    }
-
-    void Task::OnCancelInternal(){
-        OnCanceled();
     }
 
     void Task::OnEndState(){
@@ -128,36 +143,36 @@ namespace Solaire{ namespace Core{
     }
 
     bool Task::PreExecute(){
-        return StateTransition(
-            &Task::PreExecuteCondition,
-            &Task::OnPreExecuteInternal,
+        return TaskImplementationDetails(*this).StateTransition(
+            &TaskImplementationDetails::PreExecuteCondition,
+            &TaskImplementationDetails::OnPreExecuteInternal,
             STATE_PRE_EXECUTION,
             "pre-execution"
         );
     }
 
     bool Task::Execute(){
-        return StateTransition(
-            &Task::ExecuteCondition,
-            &Task::OnExecuteInternal,
+        return TaskImplementationDetails(*this).StateTransition(
+            &TaskImplementationDetails::ExecuteCondition,
+            &TaskImplementationDetails::OnExecuteInternal,
             STATE_EXECUTION,
             "execution"
         );
     }
 
     bool Task::PostExecute(){
-        return StateTransition(
-            &Task::PostExecuteCondition,
-            &Task::OnPostExecuteInternal,
+        return TaskImplementationDetails(*this).StateTransition(
+            &TaskImplementationDetails::PostExecuteCondition,
+            &TaskImplementationDetails::OnPostExecuteInternal,
             STATE_POST_EXECUTION,
             "post-execution"
         );
     }
 
     bool Task::Resume(){
-        return StateTransition(
-            &Task::ResumeCondition,
-            &Task::OnResumeInternal,
+        return TaskImplementationDetails(*this).StateTransition(
+            &TaskImplementationDetails::ResumeCondition,
+            &TaskImplementationDetails::OnResumeInternal,
             STATE_PRE_EXECUTION,
             "resumed"
         );
@@ -192,9 +207,9 @@ namespace Solaire{ namespace Core{
 
     bool Task::Pause(const uint16_t aLocation){
         mPauseLocation = aLocation;
-        return StateTransition(
-            &Task::PauseCondition,
-            &Task::OnPauseInternal,
+        return TaskImplementationDetails(*this).StateTransition(
+            &TaskImplementationDetails::PauseCondition,
+            &TaskImplementationDetails::OnPauseInternal,
             STATE_PAUSED,
             "paused"
         );
@@ -218,18 +233,18 @@ namespace Solaire{ namespace Core{
     }
 
     bool Task::Cancel(){
-        return StateTransition(
-            &Task::CancelCondition,
-            &Task::OnCancelInternal,
+        return TaskImplementationDetails(*this).StateTransition(
+            &TaskImplementationDetails::CancelCondition,
+            &TaskImplementationDetails::OnCancelInternal,
             STATE_CANCELED,
             "canceled"
         );
     }
 
     bool Task::Reset(){
-        return StateTransition(
-            &Task::ResetCondition,
-            &Task::OnResetInternal,
+        return TaskImplementationDetails(*this).StateTransition(
+            &TaskImplementationDetails::ResetCondition,
+            &TaskImplementationDetails::OnResetInternal,
             STATE_INITIALISED,
             "reset"
         );
@@ -271,7 +286,7 @@ namespace Solaire{ namespace Core{
         case STATE_CANCELED:
         case STATE_COMPLETE:
         case STATE_INITIALISED:
-            break;
+            return true;
         default:
             if(mLock.try_lock()){
                 mLock.unlock();

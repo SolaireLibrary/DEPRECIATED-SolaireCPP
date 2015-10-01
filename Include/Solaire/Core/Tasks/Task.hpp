@@ -44,6 +44,7 @@
 namespace Solaire{ namespace Core{
 
     class TaskManager;
+    class TaskImplementationDetails;
 
     class Task{
     public:
@@ -58,6 +59,7 @@ namespace Solaire{ namespace Core{
 			STATE_COMPLETE
 		};
         friend TaskManager;
+        friend TaskImplementationDetails;
     private:
         #ifdef SOLAIRE_DISABLE_MULTITHREADING
             typedef DummyLock Mutex;
@@ -72,29 +74,8 @@ namespace Solaire{ namespace Core{
         uint16_t mPauseLocation;
         State mState;
 
-        typedef bool(Task:: *StateCondition)() const;
-        typedef void(Task:: *StateAction)();
-
-        bool StateTransition(const StateCondition aCondition, const StateAction aAction, const State aTransition, const std::string& aName);
-
-        bool PreExecuteCondition() const;
-        bool ExecuteCondition() const;
-        bool PostExecuteCondition() const;
-        bool PauseCondition() const;
-        bool ResumeCondition() const;
-        bool CancelCondition() const;
-        bool ResetCondition() const;
-
         void Schedule(TaskManager& aManager);
         void HandleProgress();
-
-        void OnPreExecuteInternal();
-        void OnExecuteInternal();
-        void OnPostExecuteInternal();
-        void OnPauseInternal();
-        void OnResumeInternal();
-        void OnResetInternal();
-        void OnCancelInternal();
 
         void OnEndState();
         bool PreExecute();
