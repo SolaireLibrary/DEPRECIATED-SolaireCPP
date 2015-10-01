@@ -40,9 +40,9 @@ namespace Solaire{ namespace Core {
     class Crc : public HashFunction<uint32_t>
     {
     private:
-        enum : int{
+        enum : T{
             WIDTH = 8 * sizeof(T),
-            TOPBIT  = 1 << (WIDTH - 1)
+            TOPBIT  = static_cast<T>(1 << (WIDTH - 1))
         };
 
         static constexpr T CalculateCrcBit(const T aRemainder, const uint8_t aBit){
@@ -120,11 +120,13 @@ namespace Solaire{ namespace Core {
     public:
         // Inherited from HashFunction
         HashType Hash(const void* const aValue, const size_t aBytes) override{
-			const uint8_t* const message = static_cast<const uint8_t*>(aValue);
+			const uint8_t* ptr = static_cast<const uint8_t*>(aValue);
+			const uint8_t* const end = ptr + aBytes;
+
 			T remainder = INITIAL_REMAINDER;
 
-            for(int byte = 0; byte < aBytes; ++byte){
-                uint8_t data = message[byte];
+            while(ptr != end){
+                uint8_t data = *(ptr++);
                 if(REFLECT_DATA) data = Maths::Reflect<uint8_t>(data);
                 data ^= remainder >> (WIDTH - 8);
                 remainder = CRC_TABLE[data] ^ (remainder << 8);
