@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include "VectorLogic.inl"
+#include "..\Core\Serialise\Serialisable.hpp"
 
 namespace Solaire{ namespace Maths{
 
@@ -512,6 +513,35 @@ namespace Solaire{ namespace Maths{
 	typedef Vector2<uint8_t> Vector2UB;
 	typedef Vector3<uint8_t> Vector3UB;
 	typedef Vector4<uint8_t> Vector4UB;
+
+}namespace Core{
+    template<typename TYPE, const uint32_t LENGTH>
+    class Serialisable<Solaire::Maths::Vector<TYPE, LENGTH>>
+    {
+    public:
+        typedef Solaire::Maths::Vector<TYPE, LENGTH> Vector;
+
+        Allocator::UniquePointer<Vector> Read(const SerialSystem& aSystem, std::istream& aStream){
+            Allocator& allocator = aSystem.GetDataAllocator();
+
+            Allocator::UniquePointer<Vector> vector = allocator.UniqueAllocate<Vector>();
+
+            SerialArrayPtr array_ = aSystem.ReadA(aStream);
+            for(uint32_t i = 0; i < LENGTH; ++i){
+                vector->operator[](i) = array_->Read<TYPE>(i);
+            }
+
+            return vector;
+        }
+
+        void Write(const Vector& aValue, SerialSystem& aSystem, std::ostream& aStream){
+            SerialArrayPtr array_ = aSystem.CreateA();
+            for(uint32_t i = 0; i < LENGTH; ++i){
+                array_->Write<TYPE>(i, aValue[i]);
+            }
+            aSystem.WriteA(aStream, array_);
+        }
+    };
 
 }}
 
