@@ -125,7 +125,7 @@ namespace Solaire{ namespace Core{
 
     bool SourceBase::AddListener(ListenerBase& aListener){
         if(static_cast<void*>(&aListener) == static_cast<void*>(this)) return false;
-        if(mListeners.Find(&aListener) != mListeners.end()) return false;
+        if(mListeners.FindFirst(&aListener) != mListeners.end()) return false;
 
         mListeners.PushBack(&aListener);
         aListener.mSources.PushBack(this);
@@ -137,11 +137,11 @@ namespace Solaire{ namespace Core{
     }
 
     bool SourceBase::RemoveListener(ListenerBase& aListener){
-        const auto it = mListeners.Find(&aListener);
+        const auto it = mListeners.FindFirst(&aListener);
         if(it == mListeners.end()) return false;
 
         mListeners.Erase(it);
-        aListener.mSources.Erase(aListener.mSources.Find(this));
+        aListener.mSources.Erase(aListener.mSources.FindFirst(this));
 
         OnListenerRemoved(aListener);
         aListener.OnSourceRemoved(*this);

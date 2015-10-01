@@ -37,7 +37,6 @@ Last Modified	: 29th September 2015
 #include "..\Core\Strings\String.hpp"
 #include "..\Core\Strings\NumberParser.hpp"
 #include "..\Core\Iterators\DereferenceIterator.hpp"
-#include "..\Core\Memory\SmartPointer.hpp"
 
 namespace Solaire{ namespace Json{
 

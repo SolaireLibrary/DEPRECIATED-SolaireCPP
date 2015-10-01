@@ -25,60 +25,66 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 2.1
+	\version 3.0
 	\date
 	Created			: 7th September 2015
-	Last Modified	: 21st September 2015
+	Last Modified	: 1st October 2015
 */
+
+#include "..\Core\Memory\Allocator.hpp"
 
 namespace Solaire{ namespace Components{
 
-	class Composite;
+    class Composite;
+    class Component;
 
-	class Component
+    typedef Core::Allocator::SharedPointer<Composite> CompositePointer;
+    typedef Core::Allocator::SharedPointer<Component> ComponentPointer;
+    typedef Core::Allocator::SharedPointer<const Composite> ConstCompositePointer;
+    typedef Core::Allocator::SharedPointer<const Component> ConstComponentPointer;
+
+    class Component : public std::enable_shared_from_this<Component>
 	{
 	private:
-		Component(Component&&);
-		Component(const Component&);
-		Component& operator=(Component&&);
-		Component& operator=(const Component&);
+		Component(Component&&) = delete;
+		Component(const Component&) = delete;
+		Component& operator=(Component&&) = delete;
+		Component& operator=(const Component&) = delete;
 
-		Composite* mParent;
+		CompositePointer mParent;
 	protected:
-		virtual bool PreAttach(Composite& aNewParent) const = 0;
+		virtual bool PreAttach(const ConstCompositePointer aParent) const = 0;
 		virtual void PostAttach() = 0;
 
-		virtual bool PreDetach(const bool aCalledFromDestructor) const = 0;
-		virtual void PostDetach(Composite& aOldParent, const bool aCalledFromDestructor) = 0;
+		virtual bool PreDetach() const = 0;
+		virtual void PostDetach(const ConstCompositePointer aParent) = 0;
 	public:
 		friend Composite;
 
 		template<class T>
-		static bool CheckType(const Component& aComponent){
+		static bool CheckType(const ConstComponentPointer aComponent){
 			static_assert(std::is_base_of<Component, T>::value, "Component::CheckType() template must derive from Component");
-			return dynamic_cast<const T*>(&aComponent) != nullptr;
+			return dynamic_cast<const T*>(aComponent.get()) != nullptr;
 		}
 
 		Component() :
-			mParent(nullptr)
-		{
-
-		}
+			mParent()
+		{}
 
 		virtual ~Component(){
 
 		}
 
 		bool HasParent() const{
-			return mParent != nullptr;
+			return mParent ? true : false;
 		}
 
-		Composite& GetParent(){
-			return *mParent;
+		CompositePointer GetParent(){
+			return mParent;
 		}
 
-		const Composite& GetParent() const{
-			return *mParent;
+		ConstCompositePointer GetParent() const{
+			return mParent;
 		}
 	};
 }}

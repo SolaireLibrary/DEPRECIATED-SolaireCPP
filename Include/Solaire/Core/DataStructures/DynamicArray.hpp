@@ -282,32 +282,102 @@ namespace Solaire{ namespace Core{
 		    return mData[aIndex];
 		}
 
-		Iterator Find(ConstReference aValue){
-		    for(Index i = 0; i < mHead; ++i){
-                if(mData[i] == aValue) return mData + i;
-		    }
-		    return end();
+		ConstIterator FindFirst(ConstReference aValue) const{
+            return FindNext(begin(), aValue);
 		}
 
-		ConstIterator Find(ConstReference aValue) const{
-		    for(Index i = 0; i < mHead; ++i){
-                if(mData[i] == aValue) return mData + i;
-		    }
-		    return end();
+		ConstIterator FindNext(ConstIterator aPos, ConstReference aValue) const{
+            const ConstIterator end = this->end();
+            while(aPos != end){
+                if(*aPos == aValue) return aPos;
+                ++aPos;
+            }
+            return end;
 		}
 
-		Iterator FindIf(const std::function<bool(ConstReference)>& aCondition){
-		    for(Index i = 0; i < mHead; ++i){
-                if(aCondition(mData[i])) return mData + i;
-		    }
-		    return end();
+		ConstIterator FindLast(ConstReference aValue) const{
+            const ConstIterator end = this->end();
+            ConstIterator it = FindFirst(aValue);
+            ConstIterator prev = end;
+
+            while(it != end){
+                prev = it;
+                it = FindNext(it + 1, aValue);
+            }
+
+            return prev;
 		}
 
-		ConstIterator FindIf(const std::function<bool(ConstReference)>& aCondition) const{
-		    for(Index i = 0; i < mHead; ++i){
-                if(aCondition(mData[i])) return mData + i;
-		    }
-		    return end();
+		template<class F>
+		static constexpr bool CheckIfCondition(){
+		    return (
+                std::is_same<Type, F>::value ||
+                std::is_same<ConstType, F>::value ||
+                std::is_same<Reference, F>::value ||
+                std::is_same<ConstReference, F>::value
+            );
+		}
+
+		template<class F>
+		typename std::enable_if<CheckIfCondition<F>(), ConstIterator>::type
+        FindFirst(const F aCondition) const{
+            return FindNext<F>(begin(), aCondition);
+		}
+
+		template<class F>
+		typename std::enable_if<CheckIfCondition<F>(), ConstIterator>::type
+		FindNext(ConstIterator aPos, const F aCondition) const{
+            const ConstIterator end = this->end();
+            while(aPos != end){
+                if(aCondition(*aPos)) return aPos;
+                ++aPos;
+            }
+            return end;
+		}
+
+		template<class F>
+		typename std::enable_if<CheckIfCondition<F>(), ConstIterator>::type
+		FindLast(const F aCondition) const{
+            const ConstIterator end = this->end();
+            ConstIterator it = FindFirst<F>(aCondition);
+            ConstIterator prev = end;
+
+            while(it != end){
+                prev = it;
+                it = FindNext<F>(it + 1, aCondition);
+            }
+
+            return prev;
+		}
+
+		Iterator FindFirst(ConstReference aValue){
+            return const_cast<Iterator>(const_cast<const Self*>(this)->FindFirst(aValue));
+		}
+
+		Iterator FindNext(ConstIterator aPos, ConstReference aValue){
+            return const_cast<Iterator>(const_cast<const Self*>(this)->FindNext(aPos, aValue));
+		}
+
+		Iterator FindLast(ConstReference aValue){
+            return const_cast<Iterator>(const_cast<const Self*>(this)->FindLast(aValue));
+		}
+
+		template<class F>
+		typename std::enable_if<CheckIfCondition<F>(), Iterator>::type
+		FindFirst(const F aCondition){
+            return const_cast<Iterator>(const_cast<const Self*>(this)->FindFirst(aCondition));
+		}
+
+		template<class F>
+		typename std::enable_if<CheckIfCondition<F>(), Iterator>::type
+		FindNext(ConstIterator aPos, const F aCondition){
+            return const_cast<Iterator>(const_cast<const Self*>(this)->FindNext(aPos, aCondition));
+		}
+
+		template<class F>
+		typename std::enable_if<CheckIfCondition<F>(), Iterator>::type
+		FindLast(const F aCondition){
+            return const_cast<Iterator>(const_cast<const Self*>(this)->FindLast(aCondition));
 		}
 
 		Reference Back(){
