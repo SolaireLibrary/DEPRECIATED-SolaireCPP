@@ -121,47 +121,6 @@ namespace Solaire{ namespace Core{
         bool TryWait() const;
     };
 
-    class TaskManager{
-    private:
-        TaskManager(const TaskManager&) = delete;
-        TaskManager(TaskManager&&) = delete;
-        TaskManager& operator=(const TaskManager&) = delete;
-        TaskManager& operator=(TaskManager&&) = delete;
-
-        #ifdef SOLAIRE_DISABLE_MULTITHREADING
-            typedef uint32_t ThreadID;
-            typedef DummyLock Mutex;
-        #else
-            typedef std::thread::id ThreadID;
-            typedef std::mutex Mutex;
-        #endif
-
-        DynamicArray<Task*> mInitialiseTasks;
-        DynamicArray<Task*> mPreExecuteTasks;
-        DynamicArray<Task*> mPostExecuteTasks;
-        DynamicArray<Task*> mCancelTasks;
-        std::map<ThreadID, Task*> mExecutionTasks;
-
-        ThreadID GetThreadID() const;
-    protected:
-        Mutex mLock;
-
-        bool Execute();
-    public:
-        friend Task;
-
-        TaskManager(Allocator& aAllocator);
-
-        virtual ~TaskManager();
-
-        virtual bool Schedule(Task& aTask);
-        virtual void Update();
-        virtual void Wait(const size_t aSleepTime = 33);
-        size_t TaskCount() const;
-
-        virtual size_t ThreadCount() const = 0;
-    };
-
     template<class T>
     class ResultTask : public Task{
     private:
