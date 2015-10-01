@@ -84,7 +84,7 @@ namespace Solaire{ namespace Core{
         virtual Allocator& GetDataAllocator() const = 0;
     };
 
-    class SerialArray{
+    class SerialArray : public std::enable_shared_from_this<SerialArray>{
     public:
         virtual ~SerialArray(){}
 
@@ -129,7 +129,7 @@ namespace Solaire{ namespace Core{
         virtual void WriteO(const SerialIndex aIndex, SerialObjectPtr) = 0;
     };
 
-    class SerialObject{
+    class SerialObject : public std::enable_shared_from_this<SerialObject>{
     public:
         virtual ~SerialObject(){}
 

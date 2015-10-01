@@ -79,7 +79,7 @@ namespace Solaire{ namespace Json{
     template<>
     constexpr TypeID GetTypeID<Object>(){return TYPE_OBJECT;}
 
-    class Value{
+    class Value : public std::enable_shared_from_this<Value>{
     public:
     private:
         Value(const Value&) = delete;
@@ -161,32 +161,32 @@ namespace Solaire{ namespace Json{
         }
 
         Value(const Bool aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
-            mID(GetTypeID<Bool>()),
             mBool(aValue),
+            mID(GetTypeID<Bool>()),
             mAllocator(&aAllocator)
         {}
 
         Value(const Number aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
-            mID(GetTypeID<Number>()),
             mNumber(aValue),
+            mID(GetTypeID<Number>()),
             mAllocator(&aAllocator)
         {}
 
         Value(const Core::ConstStringFragment aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
-            mID(GetTypeID<String>()),
             mString(new(aAllocator.AllocateAndRegister<String>()) String(aValue)),
+            mID(GetTypeID<String>()),
             mAllocator(&aAllocator)
         {}
 
         Value(Array& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
-            mID(GetTypeID<Array>()),
             mArray(new(aAllocator.AllocateAndRegister<Array>()) Array(std::move(aValue))),
+            mID(GetTypeID<Array>()),
             mAllocator(&aAllocator)
         {}
 
         Value(Object& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
-            mID(GetTypeID<Object>()),
             mObject(new(aAllocator.AllocateAndRegister<Object>()) Object(std::move(aValue))),
+            mID(GetTypeID<Object>()),
             mAllocator(&aAllocator)
         {}
 

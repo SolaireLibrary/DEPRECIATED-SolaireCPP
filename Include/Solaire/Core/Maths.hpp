@@ -123,28 +123,28 @@ namespace Solaire{ namespace Core{ namespace Maths{
 
     // Binary string
 
-    static void NybbleToBinary(const uint8_t aValue, char* const aString){
+    static void ToBinary4(const uint8_t aValue, char* const aString){
         *reinterpret_cast<uint32_t*>(aString) = *reinterpret_cast<const uint32_t*>(MathsInternal::BIT_PATTERNS[aValue]);
     }
 
-    static void ToBinary(const uint8_t aValue, char* const aString){
-        NybbleToBinary(Lower4(aValue), aString);
-        NybbleToBinary(Upper4(aValue), aString + 4);
+    static void ToBinary8(const uint8_t aValue, char* const aString){
+        ToBinary4(Lower4(aValue), aString);
+        ToBinary4(Upper4(aValue), aString + 4);
     }
 
-    static void ToBinary(const uint16_t aValue, char* const aString){
-        NybbleToBinary(Lower8(aValue), aString);
-        NybbleToBinary(Upper8(aValue), aString + 8);
+    static void ToBinary16(const uint16_t aValue, char* const aString){
+        ToBinary8(Lower8(aValue), aString);
+        ToBinary8(Upper8(aValue), aString + 8);
     }
 
-    static void ToBinary(const uint32_t aValue, char* const aString){
-        NybbleToBinary(Lower16(aValue), aString);
-        NybbleToBinary(Upper16(aValue), aString + 16);
+    static void ToBinary32(const uint32_t aValue, char* const aString){
+        ToBinary16(Lower16(aValue), aString);
+        ToBinary16(Upper16(aValue), aString + 16);
     }
 
-    static void ToBinary(const uint64_t aValue, char* const aString){
-        NybbleToBinary(Lower32(aValue), aString);
-        NybbleToBinary(Upper32(aValue), aString + 32);
+    static void ToBinary64(const uint64_t aValue, char* const aString){
+        ToBinary32(Lower32(aValue), aString);
+        ToBinary32(Upper32(aValue), aString + 32);
     }
 
     static constexpr uint8_t FromBinary4(const char* const aString){

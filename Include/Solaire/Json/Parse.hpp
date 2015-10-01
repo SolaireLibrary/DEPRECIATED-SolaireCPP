@@ -35,7 +35,7 @@ Last Modified	: 29th September 2015
 
 namespace Solaire{ namespace Json{
 
-    class Parser{
+    class Parser : public std::enable_shared_from_this<Parser>{
     public:
         virtual ~Parser(){}
 
