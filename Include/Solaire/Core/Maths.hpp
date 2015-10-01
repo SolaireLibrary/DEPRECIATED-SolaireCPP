@@ -36,6 +36,11 @@
 namespace Solaire{ namespace Core{ namespace Maths{
 
     namespace MathsInternal{
+
+        static constexpr char HEX_STRING[17]{
+            "0123456789ABCDEF"
+        };
+
         static constexpr char BIT_PATTERNS[16][5]{
             {"0000"}, {"0001"}, {"0010"}, {"0011"}, {"0100"}, {"0101"}, {"0110"}, {"0111"},
             {"1000"}, {"1001"}, {"1010"}, {"1011"}, {"1100"}, {"1101"}, {"1110"}, {"1111"},
@@ -210,58 +215,139 @@ namespace Solaire{ namespace Core{ namespace Maths{
 
     // Hex
 
-    static constexpr char NybbleToHex(const uint8_t aNybble){
-        return aNybble < 10 ? '0' + aNybble : 'A' + (aNybble - 10);
+    template<class T>
+    static char* ToHex(const T aValue, char* aString) = delete;
+
+    template<>
+    char* ToHex<uint8_t>(const uint8_t aValue, char* aString){
+        *aString = MathsInternal::HEX_STRING[aValue >> 4];
+        ++aString;
+        *aString = MathsInternal::HEX_STRING[aValue & 0xF];
+        ++aString;
+        return aString;
     }
 
-    static constexpr uint8_t HexToNybble(const char aHex){
-        return aHex >='0' && aHex <= '9' ? aHex - '0' : (aHex + 10) - 'A';
+    template<>
+    char* ToHex<uint16_t>(const uint16_t aValue, char* aString){
+        return ToHex<uint8_t>(aValue >> 8, ToHex<uint8_t>(aValue & 0xFF, aString));
     }
+
+    template<>
+    char* ToHex<uint32_t>(const uint32_t aValue, char* aString){
+        return ToHex<uint16_t>(aValue >> 16, ToHex<uint16_t>(aValue & 0xFFFF, aString));
+    }
+
+    template<>
+    char* ToHex<uint64_t>(const uint64_t aValue, char* aString){
+        return ToHex<uint32_t>(aValue >> 32L, ToHex<uint32_t>(aValue & 0xFFFFFFFFL, aString));
+    }
+
+    template<class T>
+    static const char* FromHex(T& aValue, const char* aString) = delete;
+
+    template<>
+    const char* FromHex<uint8_t>(uint8_t& aValue, const char* aString){
+        char c;
+
+        c = *aString;
+        aValue = c >='0' && c <= '9' ? c - '0' : (c + 10) - 'A';
+        ++aString;
+
+        c = *aString;
+        aValue |= (c >='0' && c <= '9' ? c - '0' : (c + 10) - 'A') << 4;
+        ++aString;
+        return aString;
+    }
+
+    template<>
+    const char* FromHex<uint16_t>(uint16_t& aValue, const char* aString){
+        return FromHex<uint8_t>(*(reinterpret_cast<uint8_t*>(&aValue) + 1), FromHex<uint8_t>(*reinterpret_cast<uint8_t*>(&aValue), aString));
+    }
+
+    template<>
+    const char* FromHex<uint32_t>(uint32_t& aValue, const char* aString){
+        return FromHex<uint16_t>(*(reinterpret_cast<uint16_t*>(&aValue) + 1), FromHex<uint16_t>(*reinterpret_cast<uint16_t*>(&aValue), aString));
+    }
+
+    template<>
+    const char* FromHex<uint64_t>(uint64_t& aValue, const char* aString){
+        return FromHex<uint32_t>(*(reinterpret_cast<uint32_t*>(&aValue) + 1), FromHex<uint32_t>(*reinterpret_cast<uint32_t*>(&aValue), aString));
+    }
+
 
     // Binary string
 
-    static void ToBinary4(const uint8_t aValue, char* const aString){
-        *reinterpret_cast<uint32_t*>(aString) = *reinterpret_cast<const uint32_t*>(MathsInternal::BIT_PATTERNS[aValue]);
+    template<class T>
+    static char* ToBinary(const T aValue, char* aString) = delete;
+
+    template<>
+    char* ToBinary<uint8_t>(const uint8_t aValue, char* aString){
+        uint32_t* string = reinterpret_cast<uint32_t*>(aString);
+        *string = *reinterpret_cast<const uint32_t*>(MathsInternal::BIT_PATTERNS[aValue & 0xF]);
+        ++string;
+        *string = *reinterpret_cast<const uint32_t*>(MathsInternal::BIT_PATTERNS[aValue >> 4]);
+        return aString + 8;
     }
 
-    static void ToBinary8(const uint8_t aValue, char* const aString){
-        ToBinary4(Lower4(aValue), aString);
-        ToBinary4(Upper4(aValue), aString + 4);
+    template<>
+    char* ToBinary<uint16_t>(const uint16_t aValue, char* aString){
+        return ToBinary<uint8_t>(aValue >> 8, ToBinary<uint8_t>(aValue & 0xFF, aString));
     }
 
-    static void ToBinary16(const uint16_t aValue, char* const aString){
-        ToBinary8(Lower8(aValue), aString);
-        ToBinary8(Upper8(aValue), aString + 8);
+    template<>
+    char* ToBinary<uint32_t>(const uint32_t aValue, char* aString){
+        return ToBinary<uint16_t>(aValue >> 16, ToBinary<uint16_t>(aValue & 0xFFFF, aString));
     }
 
-    static void ToBinary32(const uint32_t aValue, char* const aString){
-        ToBinary16(Lower16(aValue), aString);
-        ToBinary16(Upper16(aValue), aString + 16);
+    template<>
+    char* ToBinary<uint64_t>(const uint64_t aValue, char* aString){
+        return ToBinary<uint32_t>(aValue >> 32L, ToBinary<uint32_t>(aValue & 0xFFFFFFFFL, aString));
     }
 
-    static void ToBinary64(const uint64_t aValue, char* const aString){
-        ToBinary32(Lower32(aValue), aString);
-        ToBinary32(Upper32(aValue), aString + 32);
+    template<>
+    char* ToBinary<int8_t>(const int8_t aValue, char* aString){
+        return ToBinary<uint8_t>(IntactCast<uint8_t>(aValue), aString);
     }
 
-    static constexpr uint8_t FromBinary4(const char* const aString){
-        return (aString[0] == '1' ? 1 : 0) | (aString[1] == '1' ? 2 : 0) | (aString[2] == '1' ? 4 : 0) | (aString[3] == '1' ? 8 : 0);
+    template<>
+    char* ToBinary<int16_t>(const int16_t aValue, char* aString){
+        return ToBinary<uint16_t>(IntactCast<uint16_t>(aValue), aString);
     }
 
-    static constexpr uint8_t FromBinary8(const char* const aString){
-        return FromBinary4(aString) | FromBinary4(aString + 4);
+    template<>
+    char* ToBinary<int32_t>(const int32_t aValue, char* aString){
+        return ToBinary<uint32_t>(IntactCast<uint32_t>(aValue), aString);
     }
 
-    static constexpr uint16_t FromBinary16(const char* const aString){
-        return FromBinary8(aString) | FromBinary8(aString + 8);
+    template<>
+    char* ToBinary<int64_t>(const int64_t aValue, char* aString){
+        return ToBinary<uint64_t>(IntactCast<uint64_t>(aValue), aString);
     }
 
-    static constexpr uint32_t FromBinary32(const char* const aString){
-        return FromBinary16(aString) | FromBinary16(aString + 16);
+    template<class T>
+    static const char* FromBinary(T& aValue, const char* aString) = delete;
+
+    template<>
+    const char* FromBinary<uint8_t>(uint8_t& aValue, const char* aString){
+        aValue = (aString[0] == '1' ? 1 : 0) | (aString[1] == '1' ? 2 : 0) | (aString[2] == '1' ? 4 : 0) | (aString[3] == '1' ? 8 : 0);
+        aString += 4;
+        aValue |= (aString[0] == '1' ? 1 : 0) | (aString[1] == '1' ? 2 : 0) | (aString[2] == '1' ? 4 : 0) | (aString[3] == '1' ? 8 : 0) << 4;
+        return aString + 4;
     }
 
-    static constexpr uint64_t FromBinary64(const char* const aString){
-        return FromBinary32(aString) | FromBinary32(aString + 32);
+    template<>
+    const char* FromBinary<uint16_t>(uint16_t& aValue, const char* aString){
+        return FromBinary<uint8_t>(*(reinterpret_cast<uint8_t*>(&aValue) + 1), FromBinary<uint8_t>(*reinterpret_cast<uint8_t*>(&aValue), aString));
+    }
+
+    template<>
+    const char* FromBinary<uint32_t>(uint32_t& aValue, const char* aString){
+        return FromBinary<uint16_t>(*(reinterpret_cast<uint16_t*>(&aValue) + 1), FromBinary<uint16_t>(*reinterpret_cast<uint16_t*>(&aValue), aString));
+    }
+
+    template<>
+    const char* FromBinary<uint64_t>(uint64_t& aValue, const char* aString){
+        return FromBinary<uint32_t>(*(reinterpret_cast<uint32_t*>(&aValue) + 1), FromBinary<uint32_t>(*reinterpret_cast<uint32_t*>(&aValue), aString));
     }
 
     // Conditions
@@ -316,8 +402,8 @@ namespace Solaire{ namespace Core{ namespace Maths{
     template<>
     constexpr uint16_t Reflect<uint16_t>(const uint16_t aValue){
         return
-            (static_cast<uint16_t>(Reflect<uint8_t>(aValue >> 8))) |
-            static_cast<uint16_t>(Reflect<uint8_t>(aValue & 0xFF) << 8);
+            (static_cast<uint16_t>(Reflect<uint8_t>(aValue >> 8)))|
+            (static_cast<uint16_t>(Reflect<uint8_t>(aValue & 0xFF)) << 8);
     }
 
     template<>
@@ -326,7 +412,7 @@ namespace Solaire{ namespace Core{ namespace Maths{
             (static_cast<uint32_t>(Reflect<uint8_t>(aValue >> 24))) |
             (static_cast<uint32_t>(Reflect<uint8_t>(aValue >> 16)) << 8) |
             (static_cast<uint32_t>(Reflect<uint8_t>(aValue >> 8)) << 16) |
-            static_cast<uint32_t>(Reflect<uint8_t>(aValue & 0xFF) << 24);
+            (static_cast<uint32_t>(Reflect<uint8_t>(aValue & 0xFF)) << 24);
     }
 
     template<>
@@ -339,7 +425,7 @@ namespace Solaire{ namespace Core{ namespace Maths{
             (static_cast<uint64_t>(Reflect<uint8_t>(aValue >> 24L)) << 32L) |
             (static_cast<uint64_t>(Reflect<uint8_t>(aValue >> 16L)) << 40L) |
             (static_cast<uint64_t>(Reflect<uint8_t>(aValue >> 8L)) << 48L) |
-            static_cast<uint64_t>(Reflect<uint8_t>(aValue & 0xFFL) << 56L);
+            (static_cast<uint64_t>(Reflect<uint8_t>(aValue & 0xFFL)) << 56L);
     }
 
     template<>
