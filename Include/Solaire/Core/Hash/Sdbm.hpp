@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_UTILITY_HPP
-#define SOLAIRE_UTILITY_HPP
+#ifndef SOLAIRE_CORE_HASH_SDBM_HPP
+#define SOLAIRE_CORE_HASH_SDBM_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,24 +20,34 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file Utility.hpp
+\file Sdbm.hpp
 \brief
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
 \version 1.0
 \date
-Created			: 17th September 2015
-Last Modified	: 18th September 2015
+Created			: 1st October 2015
+Last Modified	: 1st October 2015
 */
 
-#include "AsyncManager.hpp"
-#include "FunctionalTasks.hpp"
-#include "StringProcessor.hpp"
-#include "Task.hpp"
-#include "Strings\StringFragment.hpp"
-#include "Strings\WordIterator.hpp"
-#include "GenericIterator.hpp"
-#include "Hash.hpp"
+#include "HashFunction.hpp"
+
+namespace Solaire{ namespace Core {
+
+    class Sdbm : public HashFunction<uint32_t>
+    {
+    public:
+        // Inherited from HashFunction
+        HashType Hash(const void* const aValue, const size_t aBytes) override{
+            HashType hash = 0;
+			const uint8_t* const data = static_cast<const uint8_t*>(aValue);
+			for(size_t i = 0; i < aBytes; ++i){
+				hash = data[i] + (hash << 6) + (hash << 16) - hash;
+			}
+			return hash;
+        }
+    };
+}}
 
 #endif
