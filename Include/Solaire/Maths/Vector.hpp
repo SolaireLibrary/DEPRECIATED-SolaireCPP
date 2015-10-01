@@ -480,29 +480,38 @@ namespace Solaire{ namespace Maths{
 		}
 	};
 
-	typedef Vector<double, 2> Vector2D;
-	typedef Vector<double, 3> Vector3D;
-	typedef Vector<double, 4> Vector4D;
+    template<class T>
+    using Vector2 = Vector<T, 2>;
 
-	typedef Vector<float, 2> Vector2F;
-	typedef Vector<float, 3> Vector3F;
-	typedef Vector<float, 4> Vector4F;
+    template<class T>
+    using Vector3 = Vector<T, 3>;
 
-	typedef Vector<int32_t, 2> Vector2I;
-	typedef Vector<int32_t, 3> Vector3I;
-	typedef Vector<int32_t, 4> Vector4I;
+    template<class T>
+    using Vector4 = Vector<T, 4>;
 
-	typedef Vector<uint32_t, 2> Vector2U;
-	typedef Vector<uint32_t, 3> Vector3U;
-	typedef Vector<uint32_t, 4> Vector4U;
+	typedef Vector2<double> Vector2D;
+	typedef Vector3<double> Vector3D;
+	typedef Vector4<double> Vector4D;
 
-	typedef Vector<int8_t, 2> Vector2IB;
-	typedef Vector<int8_t, 3> Vector3IB;
-	typedef Vector<int8_t, 4> Vector4IB;
+	typedef Vector2<float> Vector2F;
+	typedef Vector3<float> Vector3F;
+	typedef Vector4<float> Vector4F;
 
-	typedef Vector<uint8_t, 2> Vector2UB;
-	typedef Vector<uint8_t, 3> Vector3UB;
-	typedef Vector<uint8_t, 4> Vector4UB;
+	typedef Vector2<int32_t> Vector2I;
+	typedef Vector3<int32_t> Vector3I;
+	typedef Vector4<int32_t> Vector4I;
+
+	typedef Vector2<uint32_t> Vector2U;
+	typedef Vector3<uint32_t> Vector3U;
+	typedef Vector4<uint32_t> Vector4U;
+
+	typedef Vector2<int8_t> Vector2IB;
+	typedef Vector3<int8_t> Vector3IB;
+	typedef Vector4<int8_t> Vector4IB;
+
+	typedef Vector2<uint8_t> Vector2UB;
+	typedef Vector3<uint8_t> Vector3UB;
+	typedef Vector4<uint8_t> Vector4UB;
 
 }}
 

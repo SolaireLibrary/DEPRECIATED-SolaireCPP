@@ -94,9 +94,17 @@ namespace Solaire{ namespace Core{
             return tmp;
         }
 
+        typedef std::function<void(void*)> UniqueDeleter;
+
+        template<class T>
+        using SharedPointer = std::shared_ptr<T>;
+
+        template<class T>
+        using UniquePointer = std::unique_ptr<T, UniqueDeleter>;
+
         template<class T, class ...PARAMS>
-        std::shared_ptr<T> SharedAllocate(PARAMS&&... aParams){
-            return std::shared_ptr<T>(
+        SharedPointer<T> SharedAllocate(PARAMS&&... aParams){
+            return SharedPointer<T>(
                 new(AllocateAndRegister<T>()) T(aParams...),
                 [&](T* const aObject){
                     Deallocate<T>(aObject);
@@ -105,12 +113,12 @@ namespace Solaire{ namespace Core{
         }
 
         template<class T, class ...PARAMS>
-        std::unique_ptr<T> UniqueAllocate(PARAMS&&... aParams){
-            return std::unique_ptr<T>(
+        UniquePointer<T> UniqueAllocate(PARAMS&&... aParams){
+            return UniquePointer<T>(
                 new(AllocateAndRegister<T>()) T(aParams...),
-                [&](T* const aObject){
-                    Deallocate<T>(aObject);
-                }
+                UniqueDeleter([&](void* aObject){
+                    Deallocate<T>(static_cast<T*>(aObject));
+                })
             );
         }
     };
