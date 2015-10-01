@@ -32,6 +32,7 @@ Last Modified	: 1st October 2015
 */
 
 #include "HashFunction.hpp"
+#include "..\Maths.hpp"
 
 namespace Solaire{ namespace Core {
 
@@ -43,19 +44,6 @@ namespace Solaire{ namespace Core {
             WIDTH = 8 * sizeof(T),
             TOPBIT  = 1 << (WIDTH - 1)
         };
-
-        template<class R, const uint8_t BITS = 8 * sizeof(R)>
-        static R Reflect(T aData){
-            R reflection = 0;
-            for(uint8_t bit = 0; bit < BITS; ++bit){
-                if(aData & 0x01){
-                    reflection |= (1 << ((BITS - 1) - bit));
-                }
-                aData = (aData >> 1);
-            }
-            return reflection;
-
-        }
 
         static constexpr T CalculateCrcBit(const T aRemainder, const uint8_t aBit){
             return aRemainder & TOPBIT ?
@@ -137,12 +125,12 @@ namespace Solaire{ namespace Core {
 
             for(int byte = 0; byte < aBytes; ++byte){
                 uint8_t data = message[byte];
-                if(REFLECT_DATA) data = Reflect<uint8_t>(data);
+                if(REFLECT_DATA) data = Maths::Reflect<uint8_t>(data);
                 data ^= remainder >> (WIDTH - 8);
                 remainder = CRC_TABLE[data] ^ (remainder << 8);
             }
 
-            return (REFLECT_REMAINDER ? Reflect<T>(remainder): remainder) ^ FINAL_XOR_VALUE;
+            return (REFLECT_REMAINDER ? Maths::Reflect<T>(remainder): remainder) ^ FINAL_XOR_VALUE;
         }
     };
 
