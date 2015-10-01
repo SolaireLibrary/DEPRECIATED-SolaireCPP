@@ -34,7 +34,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <functional>
-#include "..\Allocator.hpp"
+#include "..\Memory\Allocator.hpp"
 #include "..\Iterators\ReverseIterator.hpp"
 #include "..\Iterators\ConstIterator.hpp"
 

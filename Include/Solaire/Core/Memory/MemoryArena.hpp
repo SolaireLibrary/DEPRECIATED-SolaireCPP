@@ -34,7 +34,7 @@ Last Modified	: 25th September 2015
 #include <algorithm>
 #include <type_traits>
 #include "Allocator.hpp"
-#include "DataStructures/DynamicArray.hpp"
+#include "../DataStructures/DynamicArray.hpp"
 
 namespace Solaire{ namespace Core {
 

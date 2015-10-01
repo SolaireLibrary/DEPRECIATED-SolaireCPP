@@ -34,7 +34,7 @@
 #include <type_traits>
 #include <map>
 #include <vector>
-#include "Memory/SmartPointer.hpp"
+#include "SmartPointer.hpp"
 
 namespace Solaire{ namespace Core{
 
