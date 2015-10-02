@@ -807,6 +807,10 @@ namespace Solaire{ namespace Xml{
 
         // Misc
 
+        void SetName(const Core::ConstStringFragment aName){
+            mName = aName;
+        }
+
         Core::ConstStringFragment GetName() const{
             return mName;
         }
