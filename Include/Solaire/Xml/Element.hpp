@@ -304,7 +304,7 @@ namespace Solaire{ namespace Xml{
         }
     };
 
-    class Element : public std::enable_shared_from_this<Attribute>{
+    class Element : public std::enable_shared_from_this<Element>{
     public:
         typedef Core::DynamicArray<ElementPointer>::Iterator ElementIterator;
         typedef Core::DynamicArray<ElementPointer>::ConstIterator ConstElementIterator;
@@ -357,7 +357,7 @@ namespace Solaire{ namespace Xml{
                 break;
             case TYPE_BODY:
                 if(aElement.mValue->IsBool()){
-                    aStream << aElement.mValue->GetBool() ? "true" : "false";
+                    aStream << (aElement.mValue->GetBool() ? "true" : "false");
                 }else if(aElement.mValue->IsNumber()){
                     aStream << aElement.mValue->GetNumber();
                 }else if(aElement.mValue->IsString()){
@@ -531,7 +531,8 @@ namespace Solaire{ namespace Xml{
             STATE_SUCCESS:
             {
                 aCharsRead += count;
-                ElementPointer element; //! \bug this fails -> = aDataAllocator.SharedAllocate<Element>(name);
+
+                ElementPointer element = aDataAllocator.SharedAllocate<Element>(name);
 
                 for(AttributePointer i : attributes){
                     element->AddAttribute(i);

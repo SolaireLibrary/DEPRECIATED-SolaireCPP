@@ -53,8 +53,8 @@ namespace Solaire{ namespace Core{
         ByteParser::Status mStatus;
     public:
         StringParser() :
-            mLastChar('\0'),
-            mFlags(FLAG_IS_FIRST_CHAR)
+            mFlags(FLAG_IS_FIRST_CHAR),
+            mLastChar('\0')
         {}
 
         virtual ~StringParser(){
