@@ -310,7 +310,7 @@ namespace Solaire{ namespace Core{
 
 		template<class F>
 		static constexpr bool CheckIfCondition(){
-		    return (
+		    return ! (
                 std::is_same<Type, F>::value ||
                 std::is_same<ConstType, F>::value ||
                 std::is_same<Reference, F>::value ||

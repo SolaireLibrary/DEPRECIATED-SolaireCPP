@@ -274,9 +274,23 @@ namespace Solaire{ namespace Xml{
                 mType = TYPE_NUMBER;
             }
         }
+
+        Core::ConstStringFragment GetName() const{
+            return mName;
+        }
     };
 
     class Element : std::enable_shared_from_this<Attribute>{
+    public:
+        typedef Core::DynamicArray<ElementPointer>::Iterator ElementIterator;
+        typedef Core::DynamicArray<ElementPointer>::ConstIterator ConstElementIterator;
+        typedef Core::DynamicArray<ElementPointer>::ReverseIterator ReverseElementIterator;
+        typedef Core::DynamicArray<ElementPointer>::ConstReverseIterator ConstReverseElementIterator;
+
+        typedef Core::DynamicArray<AttributePointer>::Iterator AttributeIterator;
+        typedef Core::DynamicArray<AttributePointer>::ConstIterator ConstAttributeIterator;
+        typedef Core::DynamicArray<AttributePointer>::ReverseIterator ReverseAttributeIterator;
+        typedef Core::DynamicArray<AttributePointer>::ConstReverseIterator ConstReverseAttributeIterator;
     private:
         Element(const Element&) = delete;
         Element(Element&&) = delete;
@@ -289,6 +303,7 @@ namespace Solaire{ namespace Xml{
             TYPE_BODY
         };
 
+        Core::String mName;
         Core::DynamicArray<AttributePointer> mAttributes;
         union{
             Core::DynamicArray<ElementPointer>* mChildren;
@@ -296,15 +311,218 @@ namespace Solaire{ namespace Xml{
         };
         Type mType;
     public:
-        typedef Core::DynamicArray<ElementPointer>::Iterator ElementIterator;
-        typedef Core::DynamicArray<ElementPointer>::ConstIterator ConstElementIterator;
-        typedef Core::DynamicArray<ElementPointer>::ReverseIterator ReverseElementIterator;
-        typedef Core::DynamicArray<ElementPointer>::ConstReverseIterator ConstReverseElementIterator;
+        Element(Core::String aName):
+            mName(aName),
+            mAttributes(8, aName.GetAllocator()),
+            mChildren(nullptr),
+            mType(TYPE_EMPTY)
+        {}
 
-        typedef Core::DynamicArray<AttributePointer>::Iterator Attributeterator;
-        typedef Core::DynamicArray<AttributePointer>::ConstIterator ConstAttributeIterator;
-        typedef Core::DynamicArray<AttributePointer>::ReverseIterator ReverseAttributeIterator;
-        typedef Core::DynamicArray<AttributePointer>::ConstReverseIterator ConstReverseAttributeIterator;
+        ~Element(){
+            SetNull();
+        }
+
+        // Value
+
+        bool IsNull(){
+            return mType == TYPE_EMPTY;
+        }
+
+        bool IsBool(){
+            return mType == TYPE_BODY ? mValue->IsBool() : false;
+        }
+
+        bool IsNumber(){
+            return mType == TYPE_BODY ? mValue->IsNumber() : false;
+        }
+
+        bool IsString(){
+            return mType == TYPE_BODY ? mValue->IsString() : false;
+        }
+
+        void SetNull(){
+            switch(mType){
+            case TYPE_CHILDREN:
+                GetAllocator().Deallocate<Core::DynamicArray<ElementPointer>>(mChildren);
+                break;
+            case TYPE_BODY:
+                GetAllocator().Deallocate<Attribute>(mValue);
+                break;
+            default:
+                break;
+            }
+            mChildren = nullptr;
+            mType = TYPE_EMPTY;
+        }
+
+        void SetBool(const bool aValue){
+            if(mType != TYPE_BODY){
+                SetNull();
+                mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute("", aValue);
+            }else{
+                mValue->SetBool(aValue);
+            }
+        }
+
+        void SetNumber(const double aValue){
+            if(mType != TYPE_BODY){
+                SetNull();
+                mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute("", aValue);
+            }else{
+                mValue->SetNumber(aValue);
+            }
+        }
+
+        void SetString(const Core::ConstStringFragment aValue){
+            if(aValue.Size() == 0){
+                SetNull();
+            }else if(mType != TYPE_BODY){
+                SetNull();
+                mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute("", aValue);
+            }else{
+                mValue->SetString(aValue);
+            }
+        }
+
+        // Attribute
+
+        size_t GetAttributeCount() const{
+            return mAttributes.Size();
+        }
+
+        AttributeIterator AttributeBegin(){return mAttributes.begin();}
+        ConstAttributeIterator AttributeBegin() const{return mAttributes.begin();}
+        AttributeIterator AttributeEnd(){return mAttributes.end();}
+        ConstAttributeIterator AttributeEnd() const{return mAttributes.end();}
+        ReverseAttributeIterator AttributeRBegin(){return mAttributes.rbegin();}
+        ConstReverseAttributeIterator AttributeRBegin() const{return mAttributes.rbegin();}
+        ReverseAttributeIterator AttributeREnd(){return mAttributes.rend();}
+        ConstReverseAttributeIterator AttributeREnd() const{return mAttributes.rend();}
+
+        ConstAttributeIterator FindAttribute(const Core::ConstStringFragment aName) const{
+            return mAttributes.FindFirst([&](const ConstAttributePointer aPtr){
+                return aPtr->GetName() == aName;
+            });
+        }
+
+        AttributeIterator FindAttribute(const Core::ConstStringFragment aName){
+            return mAttributes.FindFirst([&](const ConstAttributePointer aPtr){
+                return aPtr->GetName() == aName;
+            });
+        }
+
+        bool AddAttribute(const AttributePointer aPtr){
+            if(mAttributes.FindFirst(aPtr) != AttributeEnd()) return false;
+            mAttributes.PushBack(aPtr);
+            return true;
+        }
+
+        bool EraseAttribute(const Core::ConstStringFragment aName){
+            return EraseAttribute(FindAttribute(aName));
+        }
+
+        bool EraseAttribute(const AttributePointer aPtr){
+            return EraseAttribute(mAttributes.FindFirst(aPtr));
+        }
+
+        bool EraseAttribute(const ConstAttributeIterator aPos){
+            if(aPos == AttributeEnd()) return false;
+            mAttributes.Erase(aPos);
+            return true;
+        }
+
+        // Element
+
+        size_t GetChildCount() const{
+            if(mType != TYPE_CHILDREN) return 0;
+            return mChildren->Size();
+        }
+
+        ElementIterator ChildBegin(){
+            return mType == TYPE_CHILDREN ? mChildren->begin() : ElementIterator();
+        }
+
+        ConstElementIterator ChildBegin() const{
+            return mType == TYPE_CHILDREN ? mChildren->begin() : ConstElementIterator();
+        }
+
+        ElementIterator ChildEnd(){
+            return mType == TYPE_CHILDREN ? mChildren->end() : ElementIterator();
+        }
+
+        ConstElementIterator ChildEnd() const{
+            return mType == TYPE_CHILDREN ? mChildren->end() : ConstElementIterator();
+        }
+
+        ReverseElementIterator ChildRBegin(){
+            return mType == TYPE_CHILDREN ? mChildren->rbegin() : ReverseElementIterator();
+        }
+
+        ConstReverseElementIterator ChildRBegin() const{
+            return mType == TYPE_CHILDREN ? mChildren->rbegin() : ConstReverseElementIterator();
+        }
+
+        ReverseElementIterator ChildREnd(){
+            return mType == TYPE_CHILDREN ? mChildren->rend() : ReverseElementIterator();
+        }
+
+        ConstReverseElementIterator ChildREnd() const{
+            return mType == TYPE_CHILDREN ? mChildren->rend() : ConstReverseElementIterator();
+        }
+
+        ConstElementIterator FindChild(const Core::ConstStringFragment aName) const{
+            if(mType != TYPE_CHILDREN) return ConstElementIterator();
+            return mChildren->FindFirst([&](const ConstElementPointer aPtr){
+                return aPtr->GetName() == aName;
+            });
+        }
+
+        ElementIterator FindChild(const Core::ConstStringFragment aName){
+            if(mType != TYPE_CHILDREN) return ElementIterator();
+            return mChildren->FindFirst([&](const ConstElementPointer aPtr){
+                return aPtr->GetName() == aName;
+            });
+        }
+
+        bool AddChild(const ElementPointer aPtr){
+            if(mType != TYPE_CHILDREN){
+                SetNull();
+                mChildren = new(GetAllocator().AllocateAndRegister<Core::DynamicArray<ElementPointer>>()) Core::DynamicArray<ElementPointer>(8, GetAllocator());
+                mType = TYPE_CHILDREN;
+            }else if(mChildren->FindFirst(aPtr) != ChildEnd()){
+                return false;
+            }
+
+            mChildren->PushBack(aPtr);
+            return true;
+        }
+
+        bool EraseChild(const Core::ConstStringFragment aName){
+            if(mType != TYPE_CHILDREN) return false;
+            return EraseChild(FindChild(aName));
+        }
+
+        bool EraseChild(const ElementPointer aPtr){
+            if(mType != TYPE_CHILDREN) return false;
+            return EraseChild(mChildren->FindFirst(aPtr));
+        }
+
+        bool EraseChild(const ConstElementIterator aPos){
+            if(mType != TYPE_CHILDREN) return false;
+            if(aPos == ChildEnd()) return false;
+            mChildren->Erase(aPos);
+            return true;
+        }
+
+        // Misc
+
+        Core::ConstStringFragment GetName() const{
+            return mName;
+        }
+
+        Core::Allocator& GetAllocator() const{
+            return mAttributes.GetAllocator();
+        }
     };
 
 }}
