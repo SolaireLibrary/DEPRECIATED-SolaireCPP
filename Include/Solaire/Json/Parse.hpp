@@ -195,7 +195,7 @@ namespace Solaire{ namespace Json{
 
         bool Append(const Core::String::Type aChar) override{
             Core::ByteParser& parser = mValue;
-            return parser.Accept(aChar) != Core::ByteParser::STATUS_FAILURE;
+            return parser.Accept(aChar) == Core::ByteParser::STATUS_ACCEPTED;
         }
 
        std::shared_ptr<Value> Get(Core::Allocator& aParseAllocator, Core::Allocator& aDocAllocator) const override{

@@ -159,6 +159,10 @@ namespace Solaire{ namespace Core{
                 mDecimalFlag(false)
             {}
 
+            uint8_t PrecedingZeros() const{
+                return mBody.PrecedingZeros();
+            }
+
             // Inherited from Value
 
             void Reset() override{
@@ -224,6 +228,10 @@ namespace Solaire{ namespace Core{
                 mExponentLastFlag(0)
             {}
 
+            uint8_t PrecedingZeros() const{
+                return mBody.PrecedingZeros();
+            }
+
             // Inherited from Value
 
             void Reset() override{
@@ -252,7 +260,7 @@ namespace Solaire{ namespace Core{
 
             NumericType Get() const override{
                 if(mExponentFlag){
-                    mBody.Get() * static_cast<NumericType>(std::pow(10.0, mExponent.Get()));
+                    return mBody.Get() * static_cast<NumericType>(std::pow(10.0, mExponent.Get()));
                 }else{
                     return mBody.Get();
                 }
