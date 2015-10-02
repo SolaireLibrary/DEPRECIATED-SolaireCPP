@@ -31,11 +31,11 @@
 	Last Modified	: 2nd October 2015
 */
 
-#inlude <cstdint>
+#include <cstdint>
 
 namespace Solaire{ namespace Core{
 
-    class ByteParser class <T>{
+    class ByteParser{
     public:
         enum Status : uint8_t{
             STATUS_ACCEPTED,
@@ -47,9 +47,43 @@ namespace Solaire{ namespace Core{
 
         }
 
-        virtual Status Append(const uint8_t aChar) = 0;
+        virtual Status Accept(const uint8_t aByte) = 0;
         virtual void Reset() = 0;
+        virtual Status GetStatus() const = 0;
+
+        friend std::istream& operator>>(std::istream& aStream, ByteParser& aParser){
+            uint8_t b;
+            int16_t count = 0;
+            Status status = STATUS_FAILURE;
+            while(! aStream.eof()){
+                aStream >> b;
+                ++count;
+                status = aParser.Accept(b);
+
+                switch(status){
+                case STATUS_COMPLETED :
+                    return aStream;
+                case STATUS_FAILURE :
+                    goto REWIND_STREAM;
+                default:
+                    break;
+                }
+            }
+
+            REWIND_STREAM:
+            aStream.seekg(-count, std::ios_base::cur);
+
+            return aStream;
+        }
+    };
+
+    template<class T>
+    class ResultByteParser : public ByteParser{
+    public:
+        virtual ~ResultByteParser(){}
+
         virtual T Get() const = 0;
+    };
 }}
 
 
