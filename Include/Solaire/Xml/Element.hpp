@@ -456,7 +456,7 @@ namespace Solaire{ namespace Xml{
                     }
                 case '>':
                     currentChar = ReadChar();
-                    goto STATE_PARSE_VALUE;
+                    goto STATE_PARSE_VALUE_0;
                 default:
                     goto STATE_PARSE_ATTRIBUTE;
                 }
@@ -473,18 +473,35 @@ namespace Solaire{ namespace Xml{
                 }
             }
 
-            STATE_PARSE_VALUE:
+            STATE_PARSE_VALUE_0:
             {
-                //! \TODO Check for child elements
+                switch(currentChar){
+                case ' ':
+                case '\t':
+                case '\n':
+                    currentChar = ReadChar();
+                    goto STATE_PARSE_VALUE_0;
+                default:
+                    goto STATE_PARSE_VALUE_1;
+                }
+            }
 
+            STATE_PARSE_VALUE_1:
+            {
                 switch(currentChar){
                 case '<':
                     currentChar = ReadChar();
-                    goto STATE_PARSE_END_NAME;
+                    if(currentChar == '/'){
+                        goto STATE_PARSE_END_NAME;
+                    }else{
+                        //! \TODO Read Child elements
+                        // goto STATE_PARSE_VALUE_0
+                        goto STATE_FAIL;
+                    }
                 default:
                     value += currentChar;
                     currentChar = ReadChar();
-                    goto STATE_PARSE_VALUE;
+                    goto STATE_PARSE_VALUE_0;
                 }
             }
 
