@@ -35,6 +35,10 @@ namespace Solaire{ namespace Core{
 
     // String
 
+    Core::Allocator& String::GetAllocator() const{
+        return mContainer.GetAllocator();
+    }
+
     String& String::operator=(const Core::ConstStringFragment aOther){
         Clear();
         operator+=(aOther);

@@ -89,6 +89,9 @@ namespace Solaire{ namespace Core{
         ReverseIterator rend();
         ConstReverseIterator rend() const;
 
+        // Misc
+        Core::Allocator& GetAllocator() const;
+
         // Erase
         void Erase(const ConstIterator aPos);
         void Erase(const ConstIterator aPos, size_t aCount);
