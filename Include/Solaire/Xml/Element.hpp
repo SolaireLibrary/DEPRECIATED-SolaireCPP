@@ -311,6 +311,44 @@ namespace Solaire{ namespace Xml{
         };
         Type mType;
     public:
+        static void Serialise(std::ostream& aStream, const Element& aElement){
+            aStream << '<';
+            aStream << aElement.mName;
+            aStream << ' ';
+            for(const ConstAttributePointer i : aElement.mAttributes){
+                Attribute::Serialise(aStream, *i);
+            }
+            aStream << ' ';
+
+            switch(aElement.mType){
+            case TYPE_EMPTY:
+                aStream << ' ';
+                aStream << '/';
+                aStream << '>';
+                return;
+            case TYPE_CHILDREN:
+                for(const ConstElementPointer i : *aElement.mChildren){
+                    Element::Serialise(aStream, *i);
+                }
+                break;
+            case TYPE_BODY:
+                if(aElement.mValue->IsBool()){
+                    aStream << aElement.mValue->GetBool() ? "true" : "false";
+                }else if(aElement.mValue->IsNumber()){
+                    aStream << aElement.mValue->GetNumber();
+                }else if(aElement.mValue->IsString()){
+                    aStream << aElement.mValue->GetString();
+                }else{
+                    throw std::runtime_error("Xml::Element unexpected type");
+                }
+                break;
+            default:
+                throw std::runtime_error("Xml::Element unexpected type");
+            }
+            aStream << ' ';
+            aStream << '>';
+        }
+
         Element(Core::String aName):
             mName(aName),
             mAttributes(8, aName.GetAllocator()),
