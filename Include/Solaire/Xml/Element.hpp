@@ -494,9 +494,13 @@ namespace Solaire{ namespace Xml{
                     if(currentChar == '/'){
                         goto STATE_PARSE_END_NAME;
                     }else{
-                        //! \TODO Read Child elements
-                        // goto STATE_PARSE_VALUE_0
-                        goto STATE_FAIL;
+                        ElementPointer child = Element::Deserialise(aStream, aParseAllocator, aDataAllocator, aCharsRead);
+                        if(child){
+                            children.PushBack(child);
+                            goto STATE_PARSE_VALUE_0;
+                        }else{
+                            goto STATE_FAIL;
+                        }
                     }
                 default:
                     value += currentChar;
