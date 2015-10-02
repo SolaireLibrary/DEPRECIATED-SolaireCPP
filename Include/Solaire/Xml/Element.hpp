@@ -589,19 +589,19 @@ namespace Solaire{ namespace Xml{
 
         // Value
 
-        bool IsNull(){
+        bool IsNull() const{
             return mType == TYPE_EMPTY;
         }
 
-        bool IsBool(){
+        bool IsBool() const{
             return mType == TYPE_BODY ? mValue->IsBool() : false;
         }
 
-        bool IsNumber(){
+        bool IsNumber() const{
             return mType == TYPE_BODY ? mValue->IsNumber() : false;
         }
 
-        bool IsString(){
+        bool IsString() const{
             return mType == TYPE_BODY ? mValue->IsString() : false;
         }
 
