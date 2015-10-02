@@ -323,7 +323,7 @@ namespace Solaire{ namespace Json{
                     goto LABEL_START;
                 }else{
                     mState = STATE_CHILD_SEPARATOR;
-                    goto LABEL_START;
+                    return STATUS_SUCCESS;
                 }
             }
 
