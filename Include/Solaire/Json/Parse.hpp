@@ -185,7 +185,7 @@ namespace Solaire{ namespace Json{
     class NumberParser : public Parser{
     private:
         typedef Core::NumericParse::DecimalValue<Core::NumericParse::SignedValue, Core::NumericParse::UnsignedValue> DecimalValue;
-        Core::NumericParse::ExponentValue<DecimalValue, DecimalValue> mValue;
+        Core::NumericParser<double>::Type mValue;
     public:
         NumberParser():
             mValue()
@@ -194,7 +194,8 @@ namespace Solaire{ namespace Json{
         // Inherited from aAllocator
 
         bool Append(const Core::String::Type aChar) override{
-            return mValue.Append(aChar);
+            Core::ByteParser& parser = mValue;
+            return parser.Accept(aChar) != Core::ByteParser::STATUS_FAILURE;
         }
 
        std::shared_ptr<Value> Get(Core::Allocator& aParseAllocator, Core::Allocator& aDocAllocator) const override{

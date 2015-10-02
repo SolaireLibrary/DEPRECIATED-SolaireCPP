@@ -237,7 +237,9 @@ namespace Solaire{ namespace Json{
             case TYPE_NUMBER:
                 return mNumber;
             case TYPE_STRING:{
-                return Core::NumericParse::Parse<Number>(*mString).first;
+                Core::NumericParser<Number>::Type parser;
+                parser.Parse(mString->begin(), mString->end());
+                return parser.Get();
             }default:
                 throw std::runtime_error("Json::Value : Cannot cast type to Number");
             }

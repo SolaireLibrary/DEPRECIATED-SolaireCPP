@@ -49,7 +49,7 @@ namespace Solaire{ namespace Core{
             FLAG_IS_QUOTED     = 0x4
         };
 
-        virtual ByteParser::Status Accept(const Flags aFlags, const char aChar);
+        virtual ByteParser::Status Accept(const Flags aFlags, const char aChar) = 0;
     public:
         StringParser() :
             mLastChar('\0'),
@@ -62,7 +62,7 @@ namespace Solaire{ namespace Core{
 
         // Inherited from ByteParser
 
-        ByteParser::Status Accept(const uint8_t aByte){
+        ByteParser::Status Accept(const uint8_t aByte) override{
             const char char_ = aByte;
 
             if(mFlags & FLAG_IS_FIRST_CHAR){

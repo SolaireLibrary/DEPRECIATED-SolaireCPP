@@ -75,6 +75,21 @@ namespace Solaire{ namespace Core{
 
             return aStream;
         }
+
+        template<class Iterator>
+        Iterator Parse(const Iterator aBegin, const Iterator aEnd){
+            for(Iterator i = aBegin; i != aEnd; ++i){
+                switch(Accept(*i)){
+                case STATUS_COMPLETED:
+                    return i;
+                case STATUS_FAILURE:
+                    return aBegin;
+                default:
+                    break;
+                }
+            }
+            return aBegin;
+        }
     };
 
     template<class T>
