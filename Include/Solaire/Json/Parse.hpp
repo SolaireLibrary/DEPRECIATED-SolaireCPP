@@ -35,12 +35,9 @@ Last Modified	: 29th September 2015
 
 namespace Solaire{ namespace Json{
 
-    class Parser : public std::enable_shared_from_this<Parser>{
+    class Parser : public Core::StringParser<std::shared_ptr<Value>>, public std::enable_shared_from_this<Parser>{
     public:
         virtual ~Parser(){}
-
-        virtual bool Append(const Core::String::Type aChar) = 0;
-        virtual std::shared_ptr<Value> Get(Core::Allocator& aParseAllocator, Core::Allocator& aDocAllocator) const = 0;
     };
 
     static std::shared_ptr<Parser> AllocateParser(Core::Allocator&, const TypeID);
@@ -62,32 +59,32 @@ namespace Solaire{ namespace Json{
 
         // Inherited from aAllocator
 
-        bool Append(const Core::String::Type aChar) override{
+        Status Accept(const Flags aFlags, const char aChar) override{
             if(! mFirstQuote){
                 switch(aChar){
                 case ' ':
                 case '\t':
                 case '\n':
-                    return true;
+                    return STATUS_SUCCESS;
                 case '"':
                     mFirstQuote = 1;
-                    return true;
+                    return STATUS_SUCCESS;
                 }
             }else if(! mSecondQuote){
-                if(aChar == '"'){
+                if(aChar == '"' && ! (aFlags & FLAG_IS_ESCAPED)){
                     mSecondQuote = 1;
-                    return true;
+                    return STATUS_COMPLETE;
                 }else{
                     mString += aChar;
-                    return true;
+                    return STATUS_SUCCESS;
                 }
             }
-            return false;
+            return STATUS_FAIL;
         }
 
-        std::shared_ptr<Value> Get(Core::Allocator& aParseAllocator, Core::Allocator& aDocAllocator) const override{
+        std::shared_ptr<Value> Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
             if(! (mFirstQuote && mSecondQuote)) return nullptr;
-            return aParseAllocator.SharedAllocate<Value>(mString, aDocAllocator);
+            return aParseAllocator.SharedAllocate<Value>(mString, aDataAllocator);
         }
     };
 
@@ -102,79 +99,79 @@ namespace Solaire{ namespace Json{
 
         // Inherited from aAllocator
 
-        bool Append(const Core::String::Type aChar) override{
+        Status Accept(const Flags aFlags, const char aChar) override{
             switch(mCount){
             case 0:
                 switch(aChar){
                 case ' ':
                 case '\t':
                 case '\n':
-                    return true;
+                    return STATUS_SUCCESS;
                 case 't':
                 case 'f':
                     mString[mCount++] = aChar;
-                    return true;
+                    return STATUS_SUCCESS;
                 default:
-                    return false;
+                    return STATUS_FAIL;
                 }
             case 1:
                 switch(aChar){
                 case 'r':
-                    if(mString[mCount - 1] != 't') return false;
+                    if(mString[mCount - 1] != 't') return STATUS_FAIL;
                     mString[mCount++] = aChar;
-                    return true;
+                    return STATUS_SUCCESS;
                 case 'a':
-                    if(mString[mCount - 1] != 'f') return false;
+                    if(mString[mCount - 1] != 'f') return STATUS_FAIL;
                     mString[mCount++] = aChar;
-                    return true;
+                    return STATUS_SUCCESS;
                 default:
-                    return false;
+                    return STATUS_FAIL;
                 }
             case 2:
                 switch(aChar){
                 case 'u':
-                    if(mString[mCount - 1] != 'r') return false;
+                    if(mString[mCount - 1] != 'r') return STATUS_FAIL;
                     mString[mCount++] = aChar;
-                    return true;
+                    return STATUS_SUCCESS;
                 case 'l':
-                    if(mString[mCount - 1] != 'a') return false;
+                    if(mString[mCount - 1] != 'a') return STATUS_FAIL;
                     mString[mCount++] = aChar;
-                    return true;
+                    return STATUS_SUCCESS;
                 default:
-                    return false;
+                    return STATUS_FAIL;
                 }
             case 3:
                 switch(aChar){
                 case 'e':
-                    if(mString[mCount - 1] != 'u') return false;
+                    if(mString[mCount - 1] != 'u') return STATUS_FAIL;
                     mString[mCount++] = aChar;
-                    return true;
+                    return STATUS_COMPLETE;
                 case 's':
-                    if(mString[mCount - 1] != 'l') return false;
+                    if(mString[mCount - 1] != 'l') return STATUS_FAIL;
                     mString[mCount++] = aChar;
-                    return true;
+                    return STATUS_SUCCESS;
                 default:
-                    return false;
+                    return STATUS_FAIL;
                 }
             case 4:
                 switch(aChar){
                 case 'e':
-                    if(mString[mCount - 1] != 's') return false;
+                    if(mString[mCount - 1] != 's') return STATUS_FAIL;
                     mString[mCount++] = aChar;
-                    return true;
+                    return STATUS_COMPLETE;
                 default:
-                    return false;
+                    return STATUS_FAIL;
                 }
             default:
-                return false;
+                return STATUS_FAIL;
             }
         }
 
-        std::shared_ptr<Value> Get(Core::Allocator& aParseAllocator, Core::Allocator& aDocAllocator) const override{
+        std::shared_ptr<Value> Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
             if(mCount == 4 && std::memcmp(mString, "true", 4) == 0){
-                return aParseAllocator.SharedAllocate<Value>(true, aDocAllocator);
+                return aParseAllocator.SharedAllocate<Value>(true, aDataAllocator);
             }else if(mCount == 5 && std::memcmp(mString, "false", 5) == 0){
-                return aParseAllocator.SharedAllocate<Value>(false, aDocAllocator);
+                return aParseAllocator.SharedAllocate<Value>(false, aDataAllocator);
             }else{
                 return nullptr;
             }
@@ -193,13 +190,13 @@ namespace Solaire{ namespace Json{
 
         // Inherited from aAllocator
 
-        bool Append(const Core::String::Type aChar) override{
+        Status Accept(const Flags aFlags, const char aChar) override{
             Core::ByteParser& parser = mValue;
-            return parser.Accept(aChar) == Core::ByteParser::STATUS_ACCEPTED;
+            return parser.Accept(aChar);
         }
 
-       std::shared_ptr<Value> Get(Core::Allocator& aParseAllocator, Core::Allocator& aDocAllocator) const override{
-            return aParseAllocator.SharedAllocate<Value>(mValue.Get(), aDocAllocator);
+       std::shared_ptr<Value> Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
+            return aParseAllocator.SharedAllocate<Value>(mValue.Get(aParseAllocator, aDataAllocator), aDataAllocator);
         }
     };
 
@@ -214,38 +211,38 @@ namespace Solaire{ namespace Json{
 
         // Inherited from aAllocator
 
-        bool Append(const Core::String::Type aChar) override{
+        Status Accept(const Flags aFlags, const char aChar) override{
             switch(mCount){
             case 0:
                 if(aChar == 'n'){
                     mString[mCount++] = 'n';
-                    return true;
+                    return STATUS_SUCCESS;
                 }else{
-                    return false;
+                    return STATUS_FAIL;
                 }
             case 1:
                 if(aChar == 'u'){
                     mString[mCount++] = 'u';
-                    return true;
+                    return STATUS_SUCCESS;
                 }else{
-                    return false;
+                    return STATUS_FAIL;
                 }
             case 2:
                 if(aChar == 'l'){
                     mString[mCount++] = 'l';
-                    return true;
+                    return STATUS_SUCCESS;
                 }else{
-                    return false;
+                    return STATUS_FAIL;
                 }
             case 3:
                 if(aChar == 'l'){
                     mString[mCount++] = 'l';
-                    return true;
+                    return STATUS_COMPLETE;
                 }else{
-                    return false;
+                    return STATUS_FAIL;
                 }
             default:
-                return false;
+                return STATUS_FAIL;
             }
         }
 
@@ -280,7 +277,7 @@ namespace Solaire{ namespace Json{
 
         // Inherited from aAllocator
 
-        bool Append(const Core::String::Type aChar) override{
+        Status Accept(const Flags aFlags, const char aChar) override{
             LABEL_START:
             switch(mState){
             case STATE_OPEN_ARRAY :
@@ -303,26 +300,31 @@ namespace Solaire{ namespace Json{
             case ' ':
             case '\t':
             case '\n':
-                return true;
+                return STATUS_SUCCESS;
             case '[':
                 mState = STATE_IDENTIFY_CHILD;
-                return true;
+                return STATUS_SUCCESS;
             default:
-                return false;
+                return STATUS_FAIL;
             }
 
             LABEL_CLOSE_ARRAY:
-            return false;
+            return STATUS_COMPLETE;
 
             LABEL_PARSE_CHILD:
-            if(mParsers.Back()->Append(aChar)){
-                return true;
-            }else if(aChar == ']'){
-                mState = STATE_CLOSE_ARRAY;
-                return true;
-            }else{
-                mState = STATE_CHILD_SEPARATOR;
-                goto LABEL_START;
+            {
+                const Status  status = mParsers.Back()->Accept(aChar);
+                if(status == STATUS_SUCCESS){
+                    return STATUS_SUCCESS;
+                }else if(status == STATUS_FAIL){
+                    return STATUS_FAIL;
+                }else if(aChar == ']'){
+                    mState = STATE_CLOSE_ARRAY;
+                    goto LABEL_START;
+                }else{
+                    mState = STATE_CHILD_SEPARATOR;
+                    goto LABEL_START;
+                }
             }
 
             LABEL_CHILD_SEPARATOR:
@@ -330,15 +332,15 @@ namespace Solaire{ namespace Json{
             case ' ':
             case '\t':
             case '\n':
-                return true;
+                return STATUS_SUCCESS;
             case ',':
                 mState = STATE_IDENTIFY_CHILD;
-                return true;
+                return STATUS_SUCCESS;
             case ']':
                 mState = STATE_CLOSE_ARRAY;
-                return true;
+                goto LABEL_START;
             default:
-                return false;
+                return STATUS_FAIL;
             }
 
             LABEL_IDENTIFY_CHILD:
@@ -346,16 +348,20 @@ namespace Solaire{ namespace Json{
             case ' ':
             case '\t':
             case '\n':
-                return true;
+                return STATUS_SUCCESS;
             case ']':
-                mState = STATE_CLOSE_ARRAY;
-                return true;
+                if(mParsers.IsEmpty()){
+                    mState = STATE_CLOSE_ARRAY;
+                    goto LABEL_START;
+                }else{
+                    return STATUS_FAIL;
+                }
             default:
                 TypeID id;
                 try{
                     id = IdentifyTypeID(aChar);
                 }catch(...){
-                    return false;
+                    return STATUS_FAIL;
                 }
                 mParsers.PushBack(AllocateParser(mAllocator, id));
 
@@ -409,7 +415,7 @@ namespace Solaire{ namespace Json{
 
         // Inherited from aAllocator
 
-        bool Append(const Core::String::Type aChar) override{
+        Status Accept(const Flags aFlags, const char aChar) override{
             LABEL_START:
             switch(mState){
             case STATE_OPEN_OBJECT :
@@ -438,60 +444,72 @@ namespace Solaire{ namespace Json{
             case ' ':
             case '\t':
             case '\n':
-                return true;
+                return STATUS_SUCCESS;
             case '{':
                 mState = STATE_OPEN_NAME;
-                return true;
+                return STATUS_SUCCESS;
             default:
-                return false;
+                return STATUS_FAIL;
             }
 
             LABEL_CLOSE_OBJECT:
-            return false;
+            return STATUS_COMPLETE;
 
             LABEL_OPEN_NAME:
             switch(aChar){
             case ' ':
             case '\t':
             case '\n':
-                return true;
+                return STATUS_SUCCESS;
             case '"':
                 mState = STATE_PARSE_NAME;
-                return true;
+                return STATUS_SUCCESS;
+            case '}':
+                if(mParsers.IsEmpty()){
+                    mState = STATE_CLOSE_OBJECT;
+                    goto LABEL_START;
+                }else{
+                    return STATUS_FAIL;
+                }
             default:
-                return false;
+                return STATUS_FAIL;
             }
 
             LABEL_PARSE_NAME:
-            if(aChar == '"'){
-                //! \TODO Handle escaped character
+            if(aChar == '"' && ! (aFlags & FLAG_IS_ESCAPED)){
                 mState = STATE_NAME_SEPERATOR;
-                return true;
+                return STATUS_SUCCESS;
             }
             mName += aChar;
-            return true;
+            return STATUS_SUCCESS;
 
             LABEL_NAME_SEPERATOR:
             switch(aChar){
             case ' ':
             case '\t':
             case '\n':
+                return STATUS_SUCCESS;
             case ':':
-                return true;
-            default:
                 mState = STATE_IDENTIFY_CHILD;
-                goto LABEL_START;
+                return STATUS_SUCCESS;
+            default:
+                return STATUS_FAIL;
             }
 
             LABEL_PARSE_CHILD:
-            if(mParsers.Back().second->Append(aChar)){
-                return true;
-            }else if(aChar == '}'){
-                mState = STATE_CLOSE_OBJECT;
-                return true;
-            }else{
-                mState = STATE_CHILD_SEPARATOR;
-                goto LABEL_START;
+            {
+                const Status status = mParsers.Back().second->Accept(aChar);
+                if(status == STATUS_SUCCESS){
+                    return STATUS_SUCCESS;
+                }else if(status == STATUS_FAIL){
+                    return STATUS_FAIL;
+                }else if(aChar == '}'){
+                    mState = STATE_CLOSE_OBJECT;
+                    goto LABEL_START;
+                }else{
+                    mState = STATE_CHILD_SEPARATOR;
+                    goto LABEL_START;
+                }
             }
 
             LABEL_CHILD_SEPARATOR:
@@ -499,15 +517,15 @@ namespace Solaire{ namespace Json{
             case ' ':
             case '\t':
             case '\n':
-                return true;
+                return STATUS_SUCCESS;
             case ',':
                 mState = STATE_OPEN_NAME;
-                return true;
+                return STATUS_SUCCESS;
             case '}':
                 mState = STATE_CLOSE_OBJECT;
-                return true;
+                goto LABEL_START;
             default:
-                return false;
+                return STATUS_FAIL;
             }
 
             LABEL_IDENTIFY_CHILD:
@@ -515,16 +533,16 @@ namespace Solaire{ namespace Json{
             case ' ':
             case '\t':
             case '\n':
-                return true;
+                return STATUS_SUCCESS;
             case '}':
                 mState = STATE_CLOSE_OBJECT;
-                return true;
+                goto LABEL_START;
             default:
                 TypeID id;
                 try{
                     id = IdentifyTypeID(aChar);
                 }catch(...){
-                    return false;
+                    return STATUS_FAIL;
                 }
 
                 mParsers.PushBack(std::pair<Core::String, std::shared_ptr<Parser>>(mName,  AllocateParser(mAllocator, id)));

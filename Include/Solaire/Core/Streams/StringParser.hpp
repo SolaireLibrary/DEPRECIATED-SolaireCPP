@@ -39,7 +39,6 @@ namespace Solaire{ namespace Core{
     class StringParser : public ResultByteParser<T>{
     protected:
         typedef uint16_t Flags;
-    private:
         Flags mFlags;
         char mLastChar;
     protected:
@@ -50,6 +49,8 @@ namespace Solaire{ namespace Core{
         };
 
         virtual ByteParser::Status Accept(const Flags aFlags, const char aChar) = 0;
+
+        ByteParser::Status mStatus;
     public:
         StringParser() :
             mLastChar('\0'),
@@ -83,12 +84,16 @@ namespace Solaire{ namespace Core{
                 break;
             }
 
-            const ByteParser::Status status = Accept(mFlags, char_);
+            mStatus = Accept(mFlags, char_);
 
             mLastChar = char_;
             mFlags &= ~(FLAG_IS_FIRST_CHAR | FLAG_IS_ESCAPED);
 
-            return status;
+            return mStatus;
+        }
+
+        virtual ByteParser::Status GetStatus() const override{
+            return mStatus;
         }
 
         virtual void Reset() override{

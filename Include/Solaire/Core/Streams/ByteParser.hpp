@@ -38,9 +38,9 @@ namespace Solaire{ namespace Core{
     class ByteParser{
     public:
         enum Status : uint8_t{
-            STATUS_ACCEPTED,
-            STATUS_COMPLETED,
-            STATUS_FAILURE
+            STATUS_SUCCESS,
+            STATUS_COMPLETE,
+            STATUS_FAIL
         };
 
         virtual ~ByteParser(){
@@ -54,16 +54,16 @@ namespace Solaire{ namespace Core{
         friend std::istream& operator>>(std::istream& aStream, ByteParser& aParser){
             uint8_t b;
             int16_t count = 0;
-            Status status = STATUS_FAILURE;
+            Status status = STATUS_FAIL;
             while(! aStream.eof()){
                 aStream >> b;
                 ++count;
                 status = aParser.Accept(b);
 
                 switch(status){
-                case STATUS_COMPLETED :
+                case STATUS_COMPLETE :
                     return aStream;
-                case STATUS_FAILURE :
+                case STATUS_FAIL :
                     goto REWIND_STREAM;
                 default:
                     break;
@@ -80,9 +80,9 @@ namespace Solaire{ namespace Core{
         Iterator Parse(const Iterator aBegin, const Iterator aEnd){
             for(Iterator i = aBegin; i != aEnd; ++i){
                 switch(Accept(*i)){
-                case STATUS_COMPLETED:
+                case STATUS_COMPLETE:
                     return i;
-                case STATUS_FAILURE:
+                case STATUS_FAIL:
                     return aBegin;
                 default:
                     break;
@@ -97,7 +97,7 @@ namespace Solaire{ namespace Core{
     public:
         virtual ~ResultByteParser(){}
 
-        virtual T Get() const = 0;
+        virtual T Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const = 0;
     };
 }}
 

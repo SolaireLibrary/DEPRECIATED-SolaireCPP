@@ -542,15 +542,7 @@ namespace Solaire{ namespace Json{
 
         Core::SerialArrayPtr ReadA(std::istream& aStream) const override{
             ArrayParser parser(mParseAllocator);
-            char c;
-            while(! aStream.eof()){
-                aStream >> c;
-                if(! parser.Append(c)){
-                    aStream.unget();
-                    break;
-                }
-            }
-
+            aStream >> parser;
             Core::Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
             return mParseAllocator.SharedAllocate<SerialArray>(valuePtr);
 
@@ -558,15 +550,7 @@ namespace Solaire{ namespace Json{
 
         Core::SerialObjectPtr ReadO(std::istream& aStream) const override{
             ObjectParser parser(mParseAllocator);
-            char c;
-            while(! aStream.eof()){
-                aStream >> c;
-                if(! parser.Append(c)){
-                    aStream.unget();
-                    break;
-                }
-            }
-
+            aStream >> parser;
             Core::Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
             return mParseAllocator.SharedAllocate<SerialObject>(valuePtr);
         }

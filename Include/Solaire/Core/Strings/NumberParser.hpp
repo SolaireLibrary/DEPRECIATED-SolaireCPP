@@ -43,12 +43,10 @@ namespace Solaire{ namespace Core{
         public:
             typedef uint32_t NumericType;
         private:
-            Status mStatus;
             char mChars[16];
             uint8_t mCount;
         public:
             UnsignedValue():
-                mStatus(ByteParser::STATUS_FAILURE),
                 mCount(0)
             {}
 
@@ -67,19 +65,19 @@ namespace Solaire{ namespace Core{
             // Inherited from value
 
             void Reset() override{
-                mStatus = STATUS_FAILURE;
+                mStatus = STATUS_FAIL;
                 StringParser::Reset();
                 mCount = 0;
             }
 
             Status Accept(const Flags aFlags, const char aChar) override{
-                if(aChar < '0' || aChar > '9') return mStatus = (mCount > 0 ? ByteParser::STATUS_COMPLETED : ByteParser::STATUS_FAILURE);
+                if(aChar < '0' || aChar > '9') return (mCount > 0 ? ByteParser::STATUS_COMPLETE : ByteParser::STATUS_FAIL);
                 mChars[mCount++] = aChar;
-                return mStatus = ByteParser::STATUS_ACCEPTED;
+                return ByteParser::STATUS_SUCCESS;
             }
 
-            NumericType Get() const override{
-                if(GetStatus() == ByteParser::STATUS_FAILURE) throw std::runtime_error("Core::NumericParser : Failed to parse unsigned value");
+            NumericType Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
+                if(GetStatus() == ByteParser::STATUS_FAIL) throw std::runtime_error("Core::NumericParser : Failed to parse unsigned value");
                 double val = 0;
 
                 uint32_t index = 0;
@@ -126,7 +124,7 @@ namespace Solaire{ namespace Core{
                 if(aFlags & FLAG_IS_FIRST_CHAR){
                      if(aChar == '-'){
                         mSign = -1;
-                        return ByteParser::STATUS_ACCEPTED;
+                        return ByteParser::STATUS_SUCCESS;
                     }else{
                         mSign = 1;
                     }
@@ -134,9 +132,9 @@ namespace Solaire{ namespace Core{
                 return static_cast<ByteParser&>(mValue).Accept(static_cast<uint8_t>(aChar));
             }
 
-            NumericType Get() const override{
-                if(GetStatus() == ByteParser::STATUS_FAILURE) throw std::runtime_error("Core::NumericParser : Failed to parse signed value");
-                return static_cast<NumericType>(mValue.Get()) * static_cast<NumericType>(mSign);
+            NumericType Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
+                if(GetStatus() == ByteParser::STATUS_FAIL) throw std::runtime_error("Core::NumericParser : Failed to parse signed value");
+                return static_cast<NumericType>(mValue.Get(aParseAllocator, aDataAllocator)) * static_cast<NumericType>(mSign);
             }
 
             Status GetStatus() const override{
@@ -175,7 +173,7 @@ namespace Solaire{ namespace Core{
             Status Accept(const Flags aFlags, const char aChar) override{
                 if(aChar == '.' && ! mDecimalFlag){
                     mDecimalFlag = true;
-                    return ByteParser::STATUS_ACCEPTED;
+                    return ByteParser::STATUS_SUCCESS;
                 }
 
                 return mDecimalFlag ?
@@ -183,9 +181,9 @@ namespace Solaire{ namespace Core{
                     static_cast<ByteParser&>(mBody).Accept(static_cast<uint8_t>(aChar));
             }
 
-            NumericType Get() const override{
+            NumericType Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
                 if(mDecimalFlag){
-                    double decimal = mDecimal.Get();
+                    double decimal = mDecimal.Get(aParseAllocator, aDataAllocator);
                     while(decimal >= 1.0 && decimal != 0.0){
                         decimal /= 10.0;
                     }
@@ -194,15 +192,15 @@ namespace Solaire{ namespace Core{
                         decimal /= 10.0;
                         --zeros;
                     }
-                    return mBody.Get() + decimal;
+                    return mBody.Get(aParseAllocator, aDataAllocator) + decimal;
                 }else{
-                    return mBody.Get();
+                    return mBody.Get(aParseAllocator, aDataAllocator);
                 }
             }
 
             Status GetStatus() const override{
                 if(mDecimalFlag){
-                    return mBody.GetStatus() == ByteParser::STATUS_FAILURE ? ByteParser::STATUS_FAILURE : mDecimal.GetStatus();
+                    return mBody.GetStatus() == ByteParser::STATUS_FAIL ? ByteParser::STATUS_FAIL : mDecimal.GetStatus();
                 }else{
                     return mBody.GetStatus();
                 }
@@ -246,10 +244,10 @@ namespace Solaire{ namespace Core{
                 if((aChar == 'e' || aChar == 'E') && ! mExponentFlag){
                     mExponentFlag = 1;
                     mExponentLastFlag = 1;
-                    return ByteParser::STATUS_ACCEPTED;
+                    return ByteParser::STATUS_SUCCESS;
                 }else if(aChar == '+' && mExponentLastFlag){
                     mExponentLastFlag = 0;
-                    return ByteParser::STATUS_ACCEPTED;
+                    return ByteParser::STATUS_SUCCESS;
                 }
                 mExponentLastFlag = 0;
 
@@ -258,17 +256,17 @@ namespace Solaire{ namespace Core{
                     static_cast<ByteParser&>(mBody).Accept(static_cast<uint8_t>(aChar));
             }
 
-            NumericType Get() const override{
+            NumericType Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
                 if(mExponentFlag){
-                    return mBody.Get() * static_cast<NumericType>(std::pow(10.0, mExponent.Get()));
+                    return mBody.Get(aParseAllocator, aDataAllocator) * static_cast<NumericType>(std::pow(10.0, mExponent.Get(aParseAllocator, aDataAllocator)));
                 }else{
-                    return mBody.Get();
+                    return mBody.Get(aParseAllocator, aDataAllocator);
                 }
             }
 
             ByteParser::Status GetStatus() const override{
                 if(mExponentFlag){
-                    return mBody.GetStatus() == ByteParser::STATUS_FAILURE ? ByteParser::STATUS_FAILURE : mExponent.GetStatus();
+                    return mBody.GetStatus() == ByteParser::STATUS_FAIL ? ByteParser::STATUS_FAIL : mExponent.GetStatus();
                 }else{
                     return mBody.GetStatus();
                 }
