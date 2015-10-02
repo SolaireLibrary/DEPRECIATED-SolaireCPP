@@ -89,9 +89,11 @@ namespace Solaire{ namespace Xml{
             aStream << '"';
             switch(aAttribute.mType){
             case TYPE_STRING:
-                Core::String value = *aAttribute.mString;
-                SerialiseXmlGlyphs(value);
-                aStream << value;;
+                {
+                    Core::String value = *aAttribute.mString;
+                    SerialiseXmlGlyphs(value);
+                    aStream << value;
+                }
                 break;
             case TYPE_NUMBER:
                 aStream << aAttribute.mNumber;
@@ -175,7 +177,7 @@ namespace Solaire{ namespace Xml{
             if(value.Size() == 0){
                 return aDataAllocator.SharedAllocate<Attribute>(name);
             }else{
-                DesrialiseXmlGlyphs(value);
+                DeserialiseXmlGlyphs(value);
                 return aDataAllocator.SharedAllocate<Attribute>(name, value);
             }
 
