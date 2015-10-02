@@ -116,9 +116,9 @@ namespace Solaire{ namespace Xml{
             char currentChar;
 
             const auto ReadChar = [&]()->char{
-                char c;
                 if(aStream.eof()) throw std::runtime_error("Xml::Attribute : End of stream reached unexpectedly");
-                aStream >> c;
+                char c  = aStream.get();
+                std::cout<< "Attrib ->\t" << c << std::endl;
                 ++count;
                 return c;
             };
@@ -148,6 +148,7 @@ namespace Solaire{ namespace Xml{
                     goto STATE_OPEN_VALUE;
                 default:
                     name += currentChar;
+                    currentChar = ReadChar();
                     goto STATE_PARSE_NAME;
                 }
             }
@@ -294,8 +295,8 @@ namespace Solaire{ namespace Xml{
             if(mType == TYPE_STRING){
                 *mString = aValue;
             }else{
-                new(GetAllocator().AllocateAndRegister<Core::String>()) Core::String(aValue);
-                mType = TYPE_NUMBER;
+                mString = new(GetAllocator().AllocateAndRegister<Core::String>()) Core::String(aValue);
+                mType = TYPE_STRING;
             }
         }
 
@@ -385,11 +386,17 @@ namespace Solaire{ namespace Xml{
             char currentChar;
 
             const auto ReadChar = [&]()->char{
-                char c;
                 if(aStream.eof()) throw std::runtime_error("Xml::Attribute : End of stream reached unexpectedly");
-                aStream >> c;
+                char c  = aStream.get();
+                std::cout<< "Element ->\t" << c << std::endl;
                 ++count;
                 return c;
+            };
+
+            const auto UnreadChar = [&]()->void{
+                std::cout << "Element <-\t" << currentChar << std::endl;
+                aStream.unget();
+                --count;
             };
 
             currentChar = ReadChar();
@@ -464,8 +471,10 @@ namespace Solaire{ namespace Xml{
 
             STATE_PARSE_ATTRIBUTE:
             {
+                UnreadChar();
                 AttributePointer ptr = Attribute::Deserialise(aStream, aParseAllocator, aDataAllocator, aCharsRead);
                 if(ptr){
+                    currentChar = ReadChar();
                     attributes.PushBack(ptr);
                     goto STATE_OPEN_ATTRIBUTE;
                 }else{
@@ -538,7 +547,7 @@ namespace Solaire{ namespace Xml{
                     element->AddAttribute(i);
                 }
 
-                if(value.Size() != 0){
+                if(value.Size() > 0){
                     DeserialiseXmlGlyphs(value);
                     element->SetString(value);
                 }
@@ -628,6 +637,30 @@ namespace Solaire{ namespace Xml{
             }
         }
 
+        bool GetBool() const{
+            if(mType != TYPE_BODY){
+               throw std::runtime_error("Xml::Element : Does not have body value");
+            }else{
+                mValue->GetBool();
+            }
+        }
+
+        double GetNumber() const{
+            if(mType != TYPE_BODY){
+               throw std::runtime_error("Xml::Element : Does not have body value");
+            }else{
+                mValue->GetNumber();
+            }
+        }
+
+        Core::ConstStringFragment GetString() const{
+            if(mType != TYPE_BODY){
+               throw std::runtime_error("Xml::Element : Does not have body value");
+            }else{
+                mValue->GetString();
+            }
+        }
+
         // Attribute
 
         size_t GetAttributeCount() const{
@@ -714,15 +747,22 @@ namespace Solaire{ namespace Xml{
             return mType == TYPE_CHILDREN ? mChildren->rend() : ConstReverseElementIterator();
         }
 
-        ConstElementIterator FindChild(const Core::ConstStringFragment aName) const{
+        ConstElementIterator FindFirstChild(const Core::ConstStringFragment aName) const{
             if(mType != TYPE_CHILDREN) return ConstElementIterator();
             return mChildren->FindFirst([&](const ConstElementPointer aPtr){
                 return aPtr->GetName() == aName;
             });
         }
 
-        ElementIterator FindChild(const Core::ConstStringFragment aName){
-            if(mType != TYPE_CHILDREN) return ElementIterator();
+        ConstElementIterator FindNextChild(const ConstElementIterator aPos, const Core::ConstStringFragment aName) const{
+            if(mType != TYPE_CHILDREN) return ConstElementIterator();
+            return mChildren->FindNext(aPos, [&](const ConstElementPointer aPtr){
+                return aPtr->GetName() == aName;
+            });
+        }
+
+        ConstElementIterator FindLastChildChild(const Core::ConstStringFragment aName) const{
+            if(mType != TYPE_CHILDREN) return ConstElementIterator();
             return mChildren->FindFirst([&](const ConstElementPointer aPtr){
                 return aPtr->GetName() == aName;
             });
@@ -739,11 +779,6 @@ namespace Solaire{ namespace Xml{
 
             mChildren->PushBack(aPtr);
             return true;
-        }
-
-        bool EraseChild(const Core::ConstStringFragment aName){
-            if(mType != TYPE_CHILDREN) return false;
-            return EraseChild(FindChild(aName));
         }
 
         bool EraseChild(const ElementPointer aPtr){
