@@ -439,6 +439,9 @@ namespace Solaire{ namespace Xml{
                 case '\n':
                     currentChar = ReadChar();
                     goto STATE_OPEN_ATTRIBUTE;
+                case '>':
+                    currentChar = ReadChar();
+                    goto STATE_PARSE_VALUE_0;
                 default:
                     name += currentChar;
                     currentChar = ReadChar();
@@ -501,11 +504,15 @@ namespace Solaire{ namespace Xml{
                 case '<':
                     currentChar = ReadChar();
                     if(currentChar == '/'){
+                        currentChar = ReadChar();
                         goto STATE_PARSE_END_NAME;
                     }else{
+                        UnreadChar();
+                        UnreadChar();
                         ElementPointer child = Element::Deserialise(aStream, aParseAllocator, aDataAllocator, aCharsRead);
                         if(child){
                             children.PushBack(child);
+                            currentChar = ReadChar();
                             goto STATE_PARSE_VALUE_0;
                         }else{
                             goto STATE_FAIL;
@@ -524,6 +531,11 @@ namespace Solaire{ namespace Xml{
 
                 STATE_END_NAME_INTERNAL:
                 switch(currentChar){
+                case ' ':
+                case '\t':
+                case '\n':
+                    currentChar = ReadChar();
+                    goto STATE_END_NAME_INTERNAL;
                 case '>':
                     if(name == endName){
                         goto STATE_SUCCESS;
