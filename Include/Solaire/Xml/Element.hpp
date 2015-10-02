@@ -44,6 +44,22 @@ namespace Solaire{ namespace Xml{
     typedef Core::Allocator::SharedPointer<const Element> ConstElementPointer;
     typedef Core::Allocator::SharedPointer<const Attribute> ConstAttributePointer;
 
+    static void DeserialiseXmlGlyphs(Core::String& aString){
+        aString.ReplaceAll("&lt;", "<");
+        aString.ReplaceAll("&gt;", ">");
+        aString.ReplaceAll("&amp;", "&");
+        aString.ReplaceAll("&apos;", "'");
+        aString.ReplaceAll("&quot;", "\"");
+    }
+
+    static void SerialiseXmlGlyphs(Core::String& aString){
+        aString.ReplaceAll("<", "&lt;");
+        aString.ReplaceAll(">", "&gt;");
+        aString.ReplaceAll("&", "&amp;");
+        aString.ReplaceAll("'", "&apos;");
+        aString.ReplaceAll("\"", "&quot;");
+    }
+
 
     class Attribute : public std::enable_shared_from_this<Attribute>{
     private:
@@ -73,7 +89,9 @@ namespace Solaire{ namespace Xml{
             aStream << '"';
             switch(aAttribute.mType){
             case TYPE_STRING:
-                aStream << *aAttribute.mString;
+                Core::String value = *aAttribute.mString;
+                SerialiseXmlGlyphs(value);
+                aStream << value;;
                 break;
             case TYPE_NUMBER:
                 aStream << aAttribute.mNumber;
@@ -157,6 +175,7 @@ namespace Solaire{ namespace Xml{
             if(value.Size() == 0){
                 return aDataAllocator.SharedAllocate<Attribute>(name);
             }else{
+                DesrialiseXmlGlyphs(value);
                 return aDataAllocator.SharedAllocate<Attribute>(name, value);
             }
 
@@ -337,7 +356,9 @@ namespace Solaire{ namespace Xml{
                 }else if(aElement.mValue->IsNumber()){
                     aStream << aElement.mValue->GetNumber();
                 }else if(aElement.mValue->IsString()){
-                    aStream << aElement.mValue->GetString();
+                    Core::String value = aElement.mValue->GetString();
+                    SerialiseXmlGlyphs(value);
+                    aStream << value;
                 }else{
                     throw std::runtime_error("Xml::Element unexpected type");
                 }
