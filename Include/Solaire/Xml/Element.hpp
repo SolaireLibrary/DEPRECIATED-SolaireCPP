@@ -39,9 +39,11 @@ namespace Solaire{ namespace Xml{
 
     class Attribute;
     class Element;
+
     typedef Core::Allocator::SharedPointer<Element> ElementPointer;
-    typedef Core::Allocator::SharedPointer<Attribute> AttributePointer;
     typedef Core::Allocator::SharedPointer<const Element> ConstElementPointer;
+
+    typedef Core::Allocator::SharedPointer<Attribute> AttributePointer;
     typedef Core::Allocator::SharedPointer<const Attribute> ConstAttributePointer;
 
     static void DeserialiseXmlGlyphs(Core::String& aString){
@@ -107,7 +109,7 @@ namespace Solaire{ namespace Xml{
             aStream << '"';
         }
 
-        static AttributePointer Deserialise(std::istream& aStream, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator){
+        static AttributePointer Deserialise(std::istream& aStream, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator, size_t& aCharsRead){
             Core::String name(aDataAllocator);
             Core::String value(aParseAllocator);
             size_t count = 0;
@@ -174,6 +176,7 @@ namespace Solaire{ namespace Xml{
             }
 
             STATE_SUCCESS:
+            aCharsRead += count;
             if(value.Size() == 0){
                 return aDataAllocator.SharedAllocate<Attribute>(name);
             }else{
@@ -301,7 +304,7 @@ namespace Solaire{ namespace Xml{
         }
     };
 
-    class Element : std::enable_shared_from_this<Attribute>{
+    class Element : public std::enable_shared_from_this<Attribute>{
     public:
         typedef Core::DynamicArray<ElementPointer>::Iterator ElementIterator;
         typedef Core::DynamicArray<ElementPointer>::ConstIterator ConstElementIterator;
@@ -370,6 +373,164 @@ namespace Solaire{ namespace Xml{
             }
             aStream << ' ';
             aStream << '>';
+        }
+
+        static ElementPointer Deserialise(std::istream& aStream, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator, size_t& aCharsRead){
+            Core::String name(aDataAllocator);
+            Core::String value(aParseAllocator);
+            Core::DynamicArray<AttributePointer> attributes(8, aParseAllocator);
+            Core::DynamicArray<ElementPointer> children(8, aParseAllocator);
+
+            size_t count = 0;
+            char currentChar;
+
+            const auto ReadChar = [&]()->char{
+                char c;
+                if(aStream.eof()) throw std::runtime_error("Xml::Attribute : End of stream reached unexpectedly");
+                aStream >> c;
+                ++count;
+                return c;
+            };
+
+            currentChar = ReadChar();
+            goto STATE_OPEN_START_TAG;
+
+            STATE_OPEN_START_TAG:
+            {
+                switch(currentChar){
+                case ' ':
+                case '\t':
+                case '\n':
+                    currentChar = ReadChar();
+                    goto STATE_OPEN_START_TAG;
+                case '<':
+                    currentChar = ReadChar();
+                    goto STATE_OPEN_BEGIN_NAME;
+                default:
+                    goto STATE_FAIL;
+                }
+            }
+
+            STATE_OPEN_BEGIN_NAME:
+            {
+                switch(currentChar){
+                case ' ':
+                case '\t':
+                case '\n':
+                    currentChar = ReadChar();
+                    goto STATE_OPEN_BEGIN_NAME;
+                default:
+                    goto STATE_PARSE_BEGIN_NAME;
+                }
+            }
+
+            STATE_PARSE_BEGIN_NAME:
+            {
+                switch(currentChar){
+                case ' ':
+                case '\t':
+                case '\n':
+                    currentChar = ReadChar();
+                    goto STATE_OPEN_ATTRIBUTE;
+                default:
+                    name += currentChar;
+                    currentChar = ReadChar();
+                    goto STATE_PARSE_BEGIN_NAME;
+                }
+            }
+
+            STATE_OPEN_ATTRIBUTE:
+            {
+                switch(currentChar){
+                case ' ':
+                case '\t':
+                case '\n':
+                    currentChar = ReadChar();
+                    goto STATE_OPEN_ATTRIBUTE;
+                case '/':
+                    currentChar = ReadChar();
+                    if(currentChar == '>'){
+                        goto STATE_SUCCESS;
+                    }else{
+                        goto STATE_FAIL;
+                    }
+                case '>':
+                    currentChar = ReadChar();
+                    goto STATE_PARSE_VALUE;
+                default:
+                    goto STATE_PARSE_ATTRIBUTE;
+                }
+            }
+
+            STATE_PARSE_ATTRIBUTE:
+            {
+                AttributePointer ptr = Attribute::Deserialise(aStream, aParseAllocator, aDataAllocator, aCharsRead);
+                if(ptr){
+                    attributes.PushBack(ptr);
+                    goto STATE_OPEN_ATTRIBUTE;
+                }else{
+                    goto STATE_FAIL;
+                }
+            }
+
+            STATE_PARSE_VALUE:
+            {
+                //! \TODO Check for child elements
+
+                switch(currentChar){
+                case '<':
+                    currentChar = ReadChar();
+                    goto STATE_PARSE_END_NAME;
+                default:
+                    value += currentChar;
+                    currentChar = ReadChar();
+                    goto STATE_PARSE_VALUE;
+                }
+            }
+
+            STATE_PARSE_END_NAME:
+            {
+                Core::String endName(aParseAllocator);
+
+                STATE_END_NAME_INTERNAL:
+                switch(currentChar){
+                case '>':
+                    if(name == endName){
+                        goto STATE_SUCCESS;
+                    }else{
+                        goto STATE_FAIL;
+                    }
+                default:
+                    endName += currentChar;
+                    currentChar = ReadChar();
+                    goto STATE_END_NAME_INTERNAL;
+                }
+            }
+
+            STATE_SUCCESS:
+            {
+                aCharsRead += count;
+                ElementPointer element; //! \bug this fails -> = aDataAllocator.SharedAllocate<Element>(name);
+
+                for(AttributePointer i : attributes){
+                    element->AddAttribute(i);
+                }
+
+                if(value.Size() != 0){
+                    DeserialiseXmlGlyphs(value);
+                    element->SetString(value);
+                }
+
+                for(ElementPointer i : children){
+                    element->AddChild(i);
+                }
+
+                return element;
+            }
+
+            STATE_FAIL:
+            for(size_t i = 0; i < count; ++i) aStream.unget();
+            return ElementPointer();
         }
 
         Element(Core::String aName):
