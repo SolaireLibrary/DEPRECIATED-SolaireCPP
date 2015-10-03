@@ -521,8 +521,8 @@ namespace Solaire{ namespace Maths{
     public:
         typedef Solaire::Maths::Vector<TYPE, LENGTH> Vector;
 
-        Allocator::UniquePointer<Vector> Read(const SerialSystem& aSystem, std::istream& aStream){
-            Allocator::UniquePointer<Vector> vector = aSystem.GetDataAllocator().UniqueAllocate<Vector>();
+        Allocator::SharedPointer<Vector> Read(const SerialSystem& aSystem, std::istream& aStream){
+            Allocator::SharedPointer<Vector> vector = aSystem.GetDataAllocator().SharedAllocate<Vector>();
             Vector& ref = *vector;
 
             SerialArrayPtr array_ = aSystem.ReadA(aStream);

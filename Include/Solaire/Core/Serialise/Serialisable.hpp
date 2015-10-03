@@ -31,6 +31,7 @@
 	Last Modified	: 30th September 2015
 */
 
+#include <sstream>
 #include "SerialisationInterface.hpp"
 
 namespace Solaire{ namespace Core{
@@ -38,18 +39,25 @@ namespace Solaire{ namespace Core{
     template<class T>
     class Serialisable{
 
-        Allocator::UniquePointer<T> Read(const SerialSystem& aSystem, std::istream& aStream) = delete;
+        Allocator::SharedPointer<T> Read(const SerialSystem& aSystem, std::istream& aStream) = delete;
         void Write(const T& aValue, SerialSystem& aSystem, std::ostream& aStream) = delete;
     };
 
     template<class T, class ...PARAMS>
-    static Allocator::UniquePointer<T> Deserialise(const SerialSystem& aSystem, std::istream& aStream, PARAMS&&... aParams){
+    static Allocator::SharedPointer<T> Deserialise(const SerialSystem& aSystem, std::istream& aStream, PARAMS&&... aParams){
         return Serialisable<T>().Read(aSystem, aStream, aParams...);
     }
 
     template<class T, class ...PARAMS>
     static void Serialise(const T& aValue, const SerialSystem& aSystem, std::ostream& aStream, PARAMS&&... aParams){
         Serialisable<T>().Write(aValue, aSystem, aStream, aParams...);
+    }
+
+    template<class A, class B>
+    static Allocator::SharedPointer<A> serial_cast(Allocator::SharedPointer<B> aPointer, const SerialSystem& aSystem){
+        std::stringstream ss;
+        Serialise<B>(*aPointer, aSystem, ss);
+        return Deserialise<A>(aSystem, ss);
     }
 }}
 
