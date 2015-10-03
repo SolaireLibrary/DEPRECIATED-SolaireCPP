@@ -429,38 +429,64 @@ namespace Solaire{ namespace Xml{
         template<class Iterator>
         static bool Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Element& aElement, ParseMode aMode){
 
-            const auto FormatTag = [&](bool aEndTag){
+            const auto NewLine = [&]()->void{
+                *aParseEnd = '\n';
+                ++aParseEnd;
+            };
+
+            const auto Indent = [&]()->void{
+                if(aMode.indentMode == ParseMode::INDENT_TABS){
+                    for(uint16_t i = 0; i < aMode.depth; ++i){
+                        *aParseEnd = '\t';
+                        ++aParseEnd;
+                    }
+                }else if(aMode.indentMode == ParseMode::INDENT_SPACES){
+                    for(uint16_t i = 0; i < aMode.depth; ++i){
+                        *aParseEnd = ' ';
+                        ++aParseEnd;
+                        *aParseEnd = ' ';
+                        ++aParseEnd;
+                        *aParseEnd = ' ';
+                        ++aParseEnd;
+                        *aParseEnd = ' ';
+                        ++aParseEnd;
+                    }
+                };
+            };
+
+            const auto FormatBody = [&]()->void{
+                if(aMode.lineMode == ParseMode::LINE_ALWAYS
+){
+                    NewLine();
+                    ++aMode.depth;
+                    Indent();
+                    --aMode.depth;
+                }
+            };
+
+            const auto FormatStartTag = [&]()->void{
                 if(
                    aMode.lineMode == ParseMode::LINE_ALWAYS ||
-                   (aMode.lineMode == ParseMode::LINE_ONLY_CHILDREN && (
-                        (aElement.mType == TYPE_CHILDREN && ! aElement.mChildren->IsEmpty()) || ! aEndTag)
-                    )
+                   aMode.lineMode == ParseMode::LINE_ONLY_CHILDREN
                 ){
-                    *aParseEnd = '\n';
-                    ++aParseEnd;
-                    if(aMode.indentMode == ParseMode::INDENT_TABS){
-                        for(uint16_t i = 0; i < aMode.depth; ++i){
-                            *aParseEnd = '\t';
-                            ++aParseEnd;
-                        }
-                    }else if(aMode.indentMode == ParseMode::INDENT_SPACES){
-                        for(uint16_t i = 0; i < aMode.depth; ++i){
-                            *aParseEnd = ' ';
-                            ++aParseEnd;
-                            *aParseEnd = ' ';
-                            ++aParseEnd;
-                            *aParseEnd = ' ';
-                            ++aParseEnd;
-                            *aParseEnd = ' ';
-                            ++aParseEnd;
-                        }
-                    }
+                    NewLine();
+                    Indent();
+                }
+            };
+
+            const auto FormatEndTag = [&]()->void{
+                if(
+                   aMode.lineMode == ParseMode::LINE_ALWAYS ||
+                   (ParseMode::LINE_ONLY_CHILDREN && aElement.mType == TYPE_CHILDREN)
+                ){
+                    NewLine();
+                    Indent();
                 }
             };
 
             aParseEnd = aBegin;
 
-            FormatTag(false);
+            FormatStartTag();
             *aParseEnd = '<';
             ++aParseEnd;
             aParseEnd = Core::SerialHelper::CopyString(aParseEnd, aElement.mName);
@@ -489,6 +515,7 @@ namespace Solaire{ namespace Xml{
             case TYPE_BODY:
                 *aParseEnd = '>';
                 ++aParseEnd;
+                FormatBody();
                 if(aElement.mValue->IsBool()){
                     aParseEnd = Core::SerialHelper::CopyBool(aParseEnd, aElement.mValue->GetBool());
                 }else if(aElement.mValue->IsNumber()){
@@ -507,7 +534,7 @@ namespace Solaire{ namespace Xml{
                 return false;
             }
 
-            FormatTag(true);
+            FormatEndTag();
             *aParseEnd = '<';
             ++aParseEnd;
             *aParseEnd = '/';
