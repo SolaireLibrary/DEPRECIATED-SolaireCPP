@@ -85,6 +85,27 @@ namespace Solaire{ namespace Xml{
             bool mBool;
         };
     public:
+        static size_t EstimateSerialLength(const Attribute& aAttribute){
+            size_t count = 0;
+            count += aAttribute.mName.Size();
+            count += 2;
+            switch(aAttribute.mType){
+            case TYPE_STRING:
+                count += aAttribute.mString->Size() * 2;
+                break;
+            case TYPE_NUMBER:
+                count += 16;
+                break;
+            case TYPE_BOOL:
+                count += 5;
+                break;
+            default:
+                break;
+            }
+            ++count;
+            return count;
+        }
+
         static void Serialise(std::ostream& aStream, const Attribute& aAttribute){
             aStream << aAttribute.mName;
             aStream << '=';
@@ -334,6 +355,40 @@ namespace Solaire{ namespace Xml{
         };
         Type mType;
     public:
+        static size_t EstimateSerialLength(const Element& aElement){
+            size_t count = 0;
+            ++count;
+            count += aElement.mName.Size();
+            ++count;
+            for(const ConstAttributePointer i : aElement.mAttributes){
+               count += Attribute::EstimateSerialLength(*i);
+            }
+            ++count;
+
+            switch(aElement.mType){
+            case TYPE_EMPTY:
+                count += 3;
+                return count;
+            case TYPE_CHILDREN:
+                for(const ConstElementPointer i : *aElement.mChildren){
+                    count += Element::EstimateSerialLength(*i);
+                }
+                break;
+            case TYPE_BODY:
+                if(aElement.mValue->IsBool()){
+                    count += 5;
+                }else if(aElement.mValue->IsNumber()){
+                    count += 16;
+                }else if(aElement.mValue->IsString()){
+                    count += aElement.mValue->GetString().Size() * 2;
+                }
+                break;
+            default:
+                break;
+            }
+            count += 2;
+            return count;
+        }
         static void Serialise(std::ostream& aStream, const Element& aElement){
             aStream << '<';
             aStream << aElement.mName;
