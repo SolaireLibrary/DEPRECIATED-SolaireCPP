@@ -629,11 +629,21 @@ namespace Solaire{ namespace Xml{
                 case '\n':
                     ++aParseEnd;
                     goto STATE_OPEN_BEGIN_NAME;
+                case '!':
+                    goto STATE_COMMENT;
+                case '?':
+                    goto STATE_PROLOG;
                 default:
                     nameBegin = aParseEnd;
                     goto STATE_PARSE_BEGIN_NAME;
                 }
             }
+
+            STATE_COMMENT:
+            goto STATE_ERROR;
+
+            STATE_PROLOG:
+            goto STATE_ERROR;
 
             STATE_PARSE_BEGIN_NAME:
             {
