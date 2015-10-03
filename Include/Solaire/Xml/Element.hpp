@@ -368,37 +368,6 @@ namespace Solaire{ namespace Xml{
         };
         Type mType;
     public:
-        static size_t EstimateSerialLength(const Element& aElement){
-            size_t count = 3;
-            count += aElement.mName.Size();
-            for(const ConstAttributePointer i : aElement.mAttributes){
-               count += Attribute::EstimateSerialLength(*i);
-            }
-
-            switch(aElement.mType){
-            case TYPE_EMPTY:
-                count += 3;
-                return count;
-            case TYPE_CHILDREN:
-                for(const ConstElementPointer i : *aElement.mChildren){
-                    count += Element::EstimateSerialLength(*i);
-                }
-                break;
-            case TYPE_BODY:
-                if(aElement.mValue->IsBool()){
-                    count += 5;
-                }else if(aElement.mValue->IsNumber()){
-                    count += 16;
-                }else if(aElement.mValue->IsString()){
-                    count += aElement.mValue->GetString().Size() * 2;
-                }
-                break;
-            default:
-                break;
-            }
-            return count + 2;
-        }
-
         struct ParseMode{
 
             enum LineMode : uint8_t{
@@ -425,6 +394,85 @@ namespace Solaire{ namespace Xml{
                 indentMode(aIndentMode)
             {}
         };
+
+        static size_t EstimateSerialLength(const Element& aElement, ParseMode aMode){
+            size_t count = 3;
+
+            const auto NewLine = [&]()->void{
+                ++count;
+            };
+
+            const auto Indent = [&]()->void{
+                if(aMode.indentMode == ParseMode::INDENT_TABS){
+                    count += aMode.depth;
+                }else if(aMode.indentMode == ParseMode::INDENT_SPACES){
+                    count += aMode.depth * 4;
+                };
+            };
+
+            const auto FormatBody = [&]()->void{
+                if(aMode.lineMode == ParseMode::LINE_ALWAYS
+            ){
+                    NewLine();
+                    ++aMode.depth;
+                    Indent();
+                    --aMode.depth;
+                }
+            };
+
+            const auto FormatStartTag = [&]()->void{
+                if(
+                   aMode.lineMode == ParseMode::LINE_ALWAYS ||
+                   aMode.lineMode == ParseMode::LINE_ONLY_CHILDREN
+                ){
+                    NewLine();
+                    Indent();
+                }
+            };
+
+            const auto FormatEndTag = [&]()->void{
+                if(
+                   aMode.lineMode == ParseMode::LINE_ALWAYS ||
+                   (ParseMode::LINE_ONLY_CHILDREN && aElement.mType == TYPE_CHILDREN)
+                ){
+                    NewLine();
+                    Indent();
+                }
+            };
+
+            FormatStartTag();
+            count += aElement.mName.Size();
+            for(const ConstAttributePointer i : aElement.mAttributes){
+               count += Attribute::EstimateSerialLength(*i);
+            }
+
+            switch(aElement.mType){
+            case TYPE_EMPTY:
+                count += 3;
+                return count;
+            case TYPE_CHILDREN:
+                for(const ConstElementPointer i : *aElement.mChildren){
+                    ++aMode.depth;
+                    count += Element::EstimateSerialLength(*i, aMode);
+                    --aMode.depth;
+                }
+                break;
+            case TYPE_BODY:
+                FormatBody();
+                if(aElement.mValue->IsBool()){
+                    count += 5;
+                }else if(aElement.mValue->IsNumber()){
+                    count += 16;
+                }else if(aElement.mValue->IsString()){
+                    count += aElement.mValue->GetString().Size() * 2;
+                }
+                break;
+            default:
+                break;
+            }
+            FormatEndTag();
+            return count + 2;
+        }
 
         template<class Iterator>
         static bool Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Element& aElement, ParseMode aMode){
