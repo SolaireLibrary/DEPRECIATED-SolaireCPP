@@ -524,7 +524,6 @@ namespace Solaire{ namespace Xml{
             Iterator nameEnd = aEnd;
             Iterator valueBegin = aEnd;
             Iterator valueEnd = aEnd;
-            bool hasValue = false;
             Core::DynamicArray<AttributePointer> attributes(8, aParseAllocator);
             Core::DynamicArray<ElementPointer> children(8, aParseAllocator);
 
@@ -623,37 +622,45 @@ namespace Solaire{ namespace Xml{
                 case '\t':
                 case '\n':
                     ++aParseEnd;
-                    valueBegin = aParseEnd;
                     goto STATE_PARSE_VALUE_0;
+                case '<':
+                    ++aParseEnd;
+                    goto STATE_PARSE_BODY_TAG;
                 default:
-                    goto STATE_PARSE_VALUE_1;
+                    valueBegin = aParseEnd;
+                    goto STATE_PARSE_BODY_VALUE;
                 }
             }
 
-            STATE_PARSE_VALUE_1:
+            STATE_PARSE_BODY_VALUE:
             {
                 switch(*aParseEnd){
                 case '<':
                     valueEnd = aParseEnd;
                     ++aParseEnd;
-                    if(*aParseEnd == '/'){
-                        ++aParseEnd;
-                        hasValue = (valueBegin != aEnd) && (valueEnd - valueBegin) > 0;
-                        goto STATE_PARSE_END_NAME;
-                    }else{
-                        --aParseEnd;
-                        ElementPointer child = Element::Deserialise(aParseEnd, aEnd, aParseEnd, aParseAllocator, aDataAllocator);
-                        if(child){
-                            children.PushBack(child);
-                        ++aParseEnd;
-                            goto STATE_PARSE_VALUE_0;
-                        }else{
-                            goto STATE_FAIL;
-                        }
-                    }
+                    goto STATE_PARSE_BODY_TAG;
                 default:
                     ++aParseEnd;
-                    goto STATE_PARSE_VALUE_0;
+                    goto STATE_PARSE_BODY_VALUE;
+                }
+            }
+
+            STATE_PARSE_BODY_TAG:
+            {
+                switch(*aParseEnd){
+                case '/':
+                    ++aParseEnd;
+                    goto STATE_PARSE_END_NAME;
+                default:
+                    --aParseEnd;
+                    ElementPointer child = Element::Deserialise(aParseEnd, aEnd, aParseEnd, aParseAllocator, aDataAllocator);
+                    if(child){
+                        children.PushBack(child);
+                    ++aParseEnd;
+                        goto STATE_PARSE_VALUE_0;
+                    }else{
+                        goto STATE_FAIL;
+                    }
                 }
             }
 
@@ -690,7 +697,7 @@ namespace Solaire{ namespace Xml{
                     element->AddAttribute(i);
                 }
 
-                if(hasValue){
+                if(valueBegin != aEnd && (valueEnd - valueBegin) > 0){
                     Core::String value(valueBegin, valueEnd, aDataAllocator);
                     Core::SerialHelper::DeserialiseXmlGlyphs(value);
                     element->SetString(value);
@@ -756,6 +763,7 @@ namespace Solaire{ namespace Xml{
             if(mType != TYPE_BODY){
                 SetNull();
                 mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute("", aValue);
+                mType = TYPE_BODY;
             }else{
                 mValue->SetBool(aValue);
             }
@@ -765,6 +773,7 @@ namespace Solaire{ namespace Xml{
             if(mType != TYPE_BODY){
                 SetNull();
                 mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute("", aValue);
+                mType = TYPE_BODY;
             }else{
                 mValue->SetNumber(aValue);
             }
@@ -776,6 +785,7 @@ namespace Solaire{ namespace Xml{
             }else if(mType != TYPE_BODY){
                 SetNull();
                 mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute("", aValue);
+                mType = TYPE_BODY;
             }else{
                 mValue->SetString(aValue);
             }
