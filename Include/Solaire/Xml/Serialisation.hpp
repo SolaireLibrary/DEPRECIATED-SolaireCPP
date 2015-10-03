@@ -476,6 +476,13 @@ namespace Solaire{ namespace Xml{
             aStream << string;
         }
 
+        ElementPointer ReadElement(std::istream& aStream) const{
+            Core::String string(GetParseAllocator());
+            aStream >> string;
+            Core::String::Iterator it = string.begin();
+            return Element::Deserialise(it, string.end(), it, GetParseAllocator(), GetDataAllocator());
+        }
+
     public:
         SerialSystem(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator, Element::ParseMode aMode) :
             mMode(aMode),
@@ -498,26 +505,20 @@ namespace Solaire{ namespace Xml{
         }
 
         void WriteA(std::ostream& aStream, const Core::ConstSerialArrayPtr aArray) const override{
-            //WriteElement(aStream, std::static_pointer_cast<SerialArray>(aArray)->mValue);
+            WriteElement(aStream, std::static_pointer_cast<const SerialArray>(aArray)->mValue);
         }
 
         void WriteO(std::ostream& aStream, const Core::ConstSerialObjectPtr aObject) const override{
-            //WriteElement(aStream, std::static_pointer_cast<SerialArray>(aObject)->mValue);
+            WriteElement(aStream, std::static_pointer_cast<const SerialObject>(aObject)->mValue);
         }
 
         Core::SerialArrayPtr ReadA(std::istream& aStream) const override{
-            //ArrayParser parser(mParseAllocator);
-            //aStream >> parser;
-            //Core::Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
-            //return mParseAllocator.SharedAllocate<SerialArray>(valuePtr);
+            return GetParseAllocator().SharedAllocate<SerialArray>(ReadElement(aStream));
 
         }
 
         Core::SerialObjectPtr ReadO(std::istream& aStream) const override{
-            //ObjectParser parser(mParseAllocator);
-            //aStream >> parser;
-            //Core::Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
-            //return mParseAllocator.SharedAllocate<SerialObject>(valuePtr);
+            return GetParseAllocator().SharedAllocate<SerialObject>(ReadElement(aStream));
         }
 
         Core::Allocator& GetParseAllocator() const override{
