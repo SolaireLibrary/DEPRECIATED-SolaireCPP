@@ -35,6 +35,29 @@ Last Modified	: 29th September 2015
 #include "..\Core\Strings\NumberParser.hpp"
 #include "..\Core\Iterators\DereferenceIterator.hpp"
 
+namespace Solaire{ namespace Core{
+
+    namespace SerialHelper{
+
+        static void DeserialiseXmlGlyphs(Core::String& aString){
+            aString.ReplaceAll("&lt;", "<");
+            aString.ReplaceAll("&gt;", ">");
+            aString.ReplaceAll("&amp;", "&");
+            aString.ReplaceAll("&apos;", "'");
+            aString.ReplaceAll("&quot;", "\"");
+        }
+
+        static void SerialiseXmlGlyphs(Core::String& aString){
+            aString.ReplaceAll("<", "&lt;");
+            aString.ReplaceAll(">", "&gt;");
+            aString.ReplaceAll("&", "&amp;");
+            aString.ReplaceAll("'", "&apos;");
+            aString.ReplaceAll("\"", "&quot;");
+        }
+    }
+
+}}
+
 namespace Solaire{ namespace Xml{
 
     class Attribute;
@@ -45,23 +68,6 @@ namespace Solaire{ namespace Xml{
 
     typedef Core::Allocator::SharedPointer<Attribute> AttributePointer;
     typedef Core::Allocator::SharedPointer<const Attribute> ConstAttributePointer;
-
-    static void DeserialiseXmlGlyphs(Core::String& aString){
-        aString.ReplaceAll("&lt;", "<");
-        aString.ReplaceAll("&gt;", ">");
-        aString.ReplaceAll("&amp;", "&");
-        aString.ReplaceAll("&apos;", "'");
-        aString.ReplaceAll("&quot;", "\"");
-    }
-
-    static void SerialiseXmlGlyphs(Core::String& aString){
-        aString.ReplaceAll("<", "&lt;");
-        aString.ReplaceAll(">", "&gt;");
-        aString.ReplaceAll("&", "&amp;");
-        aString.ReplaceAll("'", "&apos;");
-        aString.ReplaceAll("\"", "&quot;");
-    }
-
 
     class Attribute : public std::enable_shared_from_this<Attribute>{
     private:
@@ -105,7 +111,7 @@ namespace Solaire{ namespace Xml{
         }
 
         template<class Iterator>
-        static void Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Attribute& aAttribute){
+        static bool Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Attribute& aAttribute){
             aParseEnd = aBegin;
             for(const char c : aAttribute.mName){
                 *aParseEnd = c;
@@ -119,48 +125,22 @@ namespace Solaire{ namespace Xml{
             case TYPE_STRING:
                 {
                     Core::String value = *aAttribute.mString;
-                    SerialiseXmlGlyphs(value);
-                    for(const char c : value){
-                        *aParseEnd = c;
-                        ++aParseEnd;
-                    }
+                    Core::SerialHelper::SerialiseXmlGlyphs(value);
+                    aParseEnd = Core::SerialHelper::CopyString(aParseEnd, value);
                 }
                 break;
             case TYPE_NUMBER:
-                {
-                    char* const begin = &(*aParseEnd);
-                    const char* const end = Core::NumericParse::ToString(begin, aAttribute.mNumber);
-                    aParseEnd += end - begin;
-                }
+                aParseEnd = Core::SerialHelper::CopyNumber(aParseEnd, aAttribute.mNumber);
                 break;
             case TYPE_BOOL:
-                if(aAttribute.mBool){
-                    *aParseEnd = 't';
-                    ++aParseEnd;
-                    *aParseEnd = 'r';
-                    ++aParseEnd;
-                    *aParseEnd = 'u';
-                    ++aParseEnd;
-                    *aParseEnd = 'e';
-                    ++aParseEnd;
-                }else{
-                    *aParseEnd = 'f';
-                    ++aParseEnd;
-                    *aParseEnd = 'a';
-                    ++aParseEnd;
-                    *aParseEnd = 'l';
-                    ++aParseEnd;
-                    *aParseEnd = 's';
-                    ++aParseEnd;
-                    *aParseEnd = 'e';
-                    ++aParseEnd;
-                }
+                aParseEnd = Core::SerialHelper::CopyBool(aParseEnd, aAttribute.mBool);
                 break;
             default:
                 break;
             }
             *aParseEnd = '"';
             ++aParseEnd;
+            return true;
         }
 
         template<class Iterator>
@@ -232,7 +212,7 @@ namespace Solaire{ namespace Xml{
                     return aDataAllocator.SharedAllocate<Attribute>(name);
                 }else{
                     Core::String value(valueBegin, valueEnd, aDataAllocator);
-                    DeserialiseXmlGlyphs(value);
+                    Core::SerialHelper::DeserialiseXmlGlyphs(value);
                     return aDataAllocator.SharedAllocate<Attribute>(name, value);
                 }
             }
@@ -418,55 +398,73 @@ namespace Solaire{ namespace Xml{
             }
             return count + 2;
         }
-        static void Serialise(std::ostream& aStream, const Element& aElement){
-            aStream << '<';
-            aStream << aElement.mName;
-            aStream << ' ';
+
+        template<class Iterator>
+        static bool Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Element& aElement){
+            aParseEnd = aBegin;
+
+            *aParseEnd = '<';
+            ++aParseEnd;
+            aParseEnd = Core::SerialHelper::CopyString(aParseEnd, aElement.mName);
+            bool attributeParsed = false;
             for(const ConstAttributePointer i : aElement.mAttributes){
-                Core::DynamicArray<char> parse(Attribute::EstimateSerialLength(*i), '/0');
-                Core::DynamicArray<char>::Iterator parseEnd;
-                Attribute::Serialise(parse.begin(), parse.end(), parseEnd, *i);
-                aStream << &parse[0];
+                attributeParsed = true;
+                Attribute::Serialise(aParseEnd, aEnd, aParseEnd, *i);
+                *aParseEnd = ' ';
+                ++aParseEnd;
             }
-            aStream << ' ';
+            if(attributeParsed) --aParseEnd;
 
             switch(aElement.mType){
             case TYPE_EMPTY:
-                aStream << ' ';
-                aStream << '/';
-                aStream << '>';
-                return;
+                *aParseEnd = '/';
+                ++aParseEnd;
+                *aParseEnd = '>';
+                ++aParseEnd;
+                return true;
             case TYPE_CHILDREN:
+                *aParseEnd = '>';
+                ++aParseEnd;
                 for(const ConstElementPointer i : *aElement.mChildren){
-                    Element::Serialise(aStream, *i);
+                    Element::Serialise(aParseEnd, aEnd, aParseEnd, *i);
                 }
                 break;
             case TYPE_BODY:
+                *aParseEnd = '>';
+                ++aParseEnd;
                 if(aElement.mValue->IsBool()){
-                    aStream << (aElement.mValue->GetBool() ? "true" : "false");
+                    aParseEnd = Core::SerialHelper::CopyBool(aParseEnd, aElement.mValue->GetBool());
                 }else if(aElement.mValue->IsNumber()){
-                    aStream << aElement.mValue->GetNumber();
+                    aParseEnd = Core::SerialHelper::CopyNumber(aParseEnd, aElement.mValue->GetNumber());
                 }else if(aElement.mValue->IsString()){
                     Core::String value = aElement.mValue->GetString();
-                    SerialiseXmlGlyphs(value);
-                    aStream << value;
+                    Core::SerialHelper::SerialiseXmlGlyphs(value);
+                    aParseEnd = Core::SerialHelper::CopyString(aParseEnd, value);
                 }else{
-                    throw std::runtime_error("Xml::Element unexpected type");
+                    aParseEnd = aBegin;
+                    return false;
                 }
                 break;
             default:
-                throw std::runtime_error("Xml::Element unexpected type");
+                aParseEnd = aBegin;
+                return false;
             }
-            aStream << ' ';
-            aStream << '>';
+            *aParseEnd = '<';
+            ++aParseEnd;
+            *aParseEnd = '/';
+            ++aParseEnd;
+            aParseEnd = Core::SerialHelper::CopyString(aParseEnd, aElement.mName);
+            *aParseEnd = '>';
+            ++aParseEnd;
+            return true;
         }
 
         template<class Iterator>
         static ElementPointer Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator){
-            Iterator nameBegin = aParseEnd;
-            Iterator nameEnd = aParseEnd;
-            Iterator valueBegin = aParseEnd;
-            Iterator valueEnd = aParseEnd;
+            Iterator nameBegin = aEnd;
+            Iterator nameEnd = aEnd;
+            Iterator valueBegin = aEnd;
+            Iterator valueEnd = aEnd;
             bool hasValue = false;
             Core::DynamicArray<AttributePointer> attributes(8, aParseAllocator);
             Core::DynamicArray<ElementPointer> children(8, aParseAllocator);
@@ -581,7 +579,7 @@ namespace Solaire{ namespace Xml{
                     ++aParseEnd;
                     if(*aParseEnd == '/'){
                         ++aParseEnd;
-                        hasValue = (valueEnd - valueBegin) > 0;
+                        hasValue = (valueBegin != aEnd) && (valueEnd - valueBegin) > 0;
                         goto STATE_PARSE_END_NAME;
                     }else{
                         --aParseEnd;
@@ -635,7 +633,7 @@ namespace Solaire{ namespace Xml{
 
                 if(hasValue){
                     Core::String value(valueBegin, valueEnd, aDataAllocator);
-                    DeserialiseXmlGlyphs(value);
+                    Core::SerialHelper::DeserialiseXmlGlyphs(value);
                     element->SetString(value);
                 }
 

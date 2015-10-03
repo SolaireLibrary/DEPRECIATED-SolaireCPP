@@ -33,13 +33,17 @@
 
 #include <sstream>
 #include "SerialisationInterface.hpp"
+#include "..\Strings\NumberParser.hpp"
 
 namespace Solaire{ namespace Core{
 
     template<class T>
     class Serialisable{
 
-        Allocator::SharedPointer<T> Read(const SerialSystem& aSystem, std::istream& aStream) = delete;
+        template<class Iterator>
+        Allocator::SharedPointer<T> Read(const SerialSystem& aSystem) = delete;
+
+        template<class Iterator>
         void Write(const T& aValue, SerialSystem& aSystem, std::ostream& aStream) = delete;
     };
 
@@ -58,6 +62,29 @@ namespace Solaire{ namespace Core{
         std::stringstream ss;
         Serialise<B>(*aPointer, aSystem, ss);
         return Deserialise<A>(aSystem, ss);
+    }
+
+    namespace SerialHelper{
+        template<class Iterator>
+        static Iterator CopyString(const Iterator aBegin, const Core::ConstStringFragment aString){
+            const size_t size = aString.Size();
+            char* const dst = &(*aBegin);
+            const char* const src = &(*aString.begin());
+            std::memcpy(dst, src, size);
+            return aBegin + size;
+        }
+
+        template<class Iterator>
+        static Iterator CopyNumber(const Iterator aBegin, const double aNumber){
+            char* const begin = &(*aBegin);
+            const char* const end = Core::NumericParse::ToString(begin, aNumber);
+            return aBegin + (end - begin);
+        }
+
+        template<class Iterator>
+        static Iterator CopyBool(const Iterator aBegin, const bool aBool){
+            return CopyString(aBegin, aBool ? "true" : "false");
+        }
     }
 }}
 
