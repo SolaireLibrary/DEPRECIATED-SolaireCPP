@@ -376,8 +376,11 @@ namespace Solaire{ namespace Xml{
 
         template<class Iterator>
         static ElementPointer Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator){
-            Core::String name(aDataAllocator);
-            Core::String value(aParseAllocator);
+            Iterator nameBegin = aParseEnd;
+            Iterator nameEnd = aParseEnd;
+            Iterator valueBegin = aParseEnd;
+            Iterator valueEnd = aParseEnd;
+            bool hasValue = false;
             Core::DynamicArray<AttributePointer> attributes(8, aParseAllocator);
             Core::DynamicArray<ElementPointer> children(8, aParseAllocator);
 
@@ -409,6 +412,7 @@ namespace Solaire{ namespace Xml{
                     ++aParseEnd;
                     goto STATE_OPEN_BEGIN_NAME;
                 default:
+                    nameBegin = aParseEnd;
                     goto STATE_PARSE_BEGIN_NAME;
                 }
             }
@@ -419,13 +423,14 @@ namespace Solaire{ namespace Xml{
                 case ' ':
                 case '\t':
                 case '\n':
+                    nameEnd = aParseEnd;
                     ++aParseEnd;
                     goto STATE_OPEN_ATTRIBUTE;
                 case '>':
+                    nameEnd = aParseEnd;
                     ++aParseEnd;
                     goto STATE_PARSE_VALUE_0;
                 default:
-                    name += *aParseEnd;
                     ++aParseEnd;
                     goto STATE_PARSE_BEGIN_NAME;
                 }
@@ -474,6 +479,7 @@ namespace Solaire{ namespace Xml{
                 case '\t':
                 case '\n':
                     ++aParseEnd;
+                    valueBegin = aParseEnd;
                     goto STATE_PARSE_VALUE_0;
                 default:
                     goto STATE_PARSE_VALUE_1;
@@ -484,9 +490,11 @@ namespace Solaire{ namespace Xml{
             {
                 switch(*aParseEnd){
                 case '<':
+                    valueEnd = aParseEnd;
                     ++aParseEnd;
                     if(*aParseEnd == '/'){
                         ++aParseEnd;
+                        hasValue = (valueEnd - valueBegin) > 0;
                         goto STATE_PARSE_END_NAME;
                     }else{
                         --aParseEnd;
@@ -500,7 +508,6 @@ namespace Solaire{ namespace Xml{
                         }
                     }
                 default:
-                    value += *aParseEnd;
                     ++aParseEnd;
                     goto STATE_PARSE_VALUE_0;
                 }
@@ -508,7 +515,7 @@ namespace Solaire{ namespace Xml{
 
             STATE_PARSE_END_NAME:
             {
-                Core::String endName(aParseAllocator);
+                //Core::String endName(aParseAllocator);
 
                 STATE_END_NAME_INTERNAL:
                 switch(*aParseEnd){
@@ -518,13 +525,13 @@ namespace Solaire{ namespace Xml{
                     ++aParseEnd;
                     goto STATE_END_NAME_INTERNAL;
                 case '>':
-                    if(name == endName){
+                    //if(name == endName){
                         goto STATE_SUCCESS;
-                    }else{
-                        goto STATE_FAIL;
-                    }
+                    //}else{
+                    //    goto STATE_FAIL;
+                    //}
                 default:
-                    endName += *aParseEnd;
+                    //endName += *aParseEnd;
                     ++aParseEnd;
                     goto STATE_END_NAME_INTERNAL;
                 }
@@ -532,13 +539,15 @@ namespace Solaire{ namespace Xml{
 
             STATE_SUCCESS:
             {
+                Core::String name(nameBegin, nameEnd, aDataAllocator);
                 ElementPointer element = aDataAllocator.SharedAllocate<Element>(name);
 
                 for(AttributePointer i : attributes){
                     element->AddAttribute(i);
                 }
 
-                if(value.Size() > 0){
+                if(hasValue){
+                    Core::String value(valueBegin, valueEnd, aDataAllocator);
                     DeserialiseXmlGlyphs(value);
                     element->SetString(value);
                 }
