@@ -111,8 +111,10 @@ namespace Solaire{ namespace Xml{
 
         template<class Iterator>
         static AttributePointer Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator){
-            Core::String name(aDataAllocator);
-            Core::String value(aParseAllocator);
+            Iterator nameBegin = aParseEnd;
+            Iterator nameEnd = aParseEnd;
+            Iterator valueBegin = aParseEnd;
+            Iterator valueEnd = aParseEnd;
 
             aParseEnd = aBegin;
             goto STATE_FIND_NAME;
@@ -126,6 +128,7 @@ namespace Solaire{ namespace Xml{
                     ++aParseEnd;
                     goto STATE_FIND_NAME;
                 default:
+                    nameBegin = aParseEnd;
                     goto STATE_PARSE_NAME;
                 }
             }
@@ -134,11 +137,11 @@ namespace Solaire{ namespace Xml{
             {
                 switch(*aParseEnd){
                 case '=':
-                    if(name.Size() == 0) goto STATE_FAIL;
+                    nameEnd = aParseEnd;
+                    if((aParseEnd - nameBegin) == 0) goto STATE_FAIL;
                     ++aParseEnd;
                     goto STATE_OPEN_VALUE;
                 default:
-                    name += *aParseEnd;
                     ++aParseEnd;
                     goto STATE_PARSE_NAME;
                 }
@@ -149,6 +152,7 @@ namespace Solaire{ namespace Xml{
                 switch(*aParseEnd){
                 case '"':
                     ++aParseEnd;
+                    valueBegin = aParseEnd;
                     goto STATE_PARSE_VALUE;
                 default:
                     goto STATE_FAIL;
@@ -159,20 +163,24 @@ namespace Solaire{ namespace Xml{
             {
                 switch(*aParseEnd){
                 case '"':
+                    valueEnd = aParseEnd;
                     goto STATE_SUCCESS;
                 default:
-                    value += *aParseEnd;
                     ++aParseEnd;
                     goto STATE_PARSE_VALUE;
                 }
             }
 
             STATE_SUCCESS:
-            if(value.Size() == 0){
-                return aDataAllocator.SharedAllocate<Attribute>(name);
-            }else{
-                DeserialiseXmlGlyphs(value);
-                return aDataAllocator.SharedAllocate<Attribute>(name, value);
+            {
+                Core::String name(nameBegin, nameEnd, aDataAllocator);
+                if((valueEnd - valueBegin) == 0){
+                    return aDataAllocator.SharedAllocate<Attribute>(name);
+                }else{
+                    Core::String value(valueBegin, valueEnd, aDataAllocator);
+                    DeserialiseXmlGlyphs(value);
+                    return aDataAllocator.SharedAllocate<Attribute>(name, value);
+                }
             }
 
             STATE_FAIL:
