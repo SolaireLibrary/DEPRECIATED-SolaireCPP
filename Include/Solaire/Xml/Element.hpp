@@ -106,28 +106,63 @@ namespace Solaire{ namespace Xml{
             return count;
         }
 
-        static void Serialise(std::ostream& aStream, const Attribute& aAttribute){
-            aStream << aAttribute.mName;
-            aStream << '=';
-            aStream << '"';
+        template<class Iterator>
+        static void Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Attribute& aAttribute){
+            aParseEnd = aBegin;
+            for(const char c : aAttribute.mName){
+                *aParseEnd = c;
+                ++aParseEnd;
+            }
+            *aParseEnd = '=';
+            ++aParseEnd;
+            *aParseEnd = '"';
+            ++aParseEnd;
             switch(aAttribute.mType){
             case TYPE_STRING:
                 {
                     Core::String value = *aAttribute.mString;
                     SerialiseXmlGlyphs(value);
-                    aStream << value;
+                    for(const char c : value){
+                        *aParseEnd = c;
+                        ++aParseEnd;
+                    }
                 }
                 break;
             case TYPE_NUMBER:
-                aStream << aAttribute.mNumber;
+                {
+                    char* const begin = &(*aParseEnd);
+                    const char* const end = Core::NumericParse::ToString(begin, aAttribute.mNumber);
+                    aParseEnd += end - begin;
+                }
                 break;
             case TYPE_BOOL:
-                aStream << aAttribute.mBool;
+                if(aAttribute.mBool){
+                    *aParseEnd = 't';
+                    ++aParseEnd;
+                    *aParseEnd = 'r';
+                    ++aParseEnd;
+                    *aParseEnd = 'u';
+                    ++aParseEnd;
+                    *aParseEnd = 'e';
+                    ++aParseEnd;
+                }else{
+                    *aParseEnd = 'f';
+                    ++aParseEnd;
+                    *aParseEnd = 'a';
+                    ++aParseEnd;
+                    *aParseEnd = 'l';
+                    ++aParseEnd;
+                    *aParseEnd = 's';
+                    ++aParseEnd;
+                    *aParseEnd = 'e';
+                    ++aParseEnd;
+                }
                 break;
             default:
                 break;
             }
-            aStream << '"';
+            *aParseEnd = '"';
+            ++aParseEnd;
         }
 
         template<class Iterator>
@@ -394,7 +429,10 @@ namespace Solaire{ namespace Xml{
             aStream << aElement.mName;
             aStream << ' ';
             for(const ConstAttributePointer i : aElement.mAttributes){
-                Attribute::Serialise(aStream, *i);
+                Core::DynamicArray<char> parse(Attribute::EstimateSerialLength(*i), '/0');
+                Core::DynamicArray<char>::Iterator parseEnd;
+                Attribute::Serialise(parse.begin(), parse.end(), parseEnd, *i);
+                aStream << &parse[0];
             }
             aStream << ' ';
 
