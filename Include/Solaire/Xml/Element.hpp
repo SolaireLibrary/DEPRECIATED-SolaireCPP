@@ -400,38 +400,67 @@ namespace Solaire{ namespace Xml{
         }
 
         struct ParseMode{
-            uint16_t depth;
-            struct{
-                uint8_t newLines : 1;
-                uint8_t indent : 1;
+
+            enum LineMode : uint8_t{
+                LINE_NEVER,
+                LINE_ONLY_CHILDREN,
+                LINE_ALWAYS
             };
 
-            ParseMode():
-                depth(0),
-                newLines(0),
-                indent(0)
-            {}
+            enum IndentMode : uint8_t{
+                INDENT_NONE,
+                INDENT_TABS,
+                INDENT_SPACES
+            };
 
-            ParseMode(const bool aNewLines, const bool aIndent):
+            struct{
+                uint16_t depth : 12;
+                uint16_t lineMode : 2;
+                uint16_t indentMode : 2;
+            };
+
+            ParseMode(const LineMode aLineMode = LINE_NEVER, const IndentMode aIndentMode = INDENT_NONE):
                 depth(0),
-                newLines(aNewLines),
-                indent(aIndent)
+                lineMode(aLineMode),
+                indentMode(aIndentMode)
             {}
         };
 
         template<class Iterator>
         static bool Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Element& aElement, ParseMode aMode){
-            aParseEnd = aBegin;
-            if(aMode.newLines){
-                *aParseEnd = '\n';
-                ++aParseEnd;
-                if(aMode.indent){
-                    for(uint16_t i = 0; i < aMode.depth; ++i){
-                        *aParseEnd = '\t';
-                        ++aParseEnd;
+
+            const auto FormatTag = [&](bool aEndTag){
+                if(
+                   aMode.lineMode == ParseMode::LINE_ALWAYS ||
+                   (aMode.lineMode == ParseMode::LINE_ONLY_CHILDREN && (
+                        (aElement.mType == TYPE_CHILDREN && ! aElement.mChildren->IsEmpty()) || ! aEndTag)
+                    )
+                ){
+                    *aParseEnd = '\n';
+                    ++aParseEnd;
+                    if(aMode.indentMode == ParseMode::INDENT_TABS){
+                        for(uint16_t i = 0; i < aMode.depth; ++i){
+                            *aParseEnd = '\t';
+                            ++aParseEnd;
+                        }
+                    }else if(aMode.indentMode == ParseMode::INDENT_SPACES){
+                        for(uint16_t i = 0; i < aMode.depth; ++i){
+                            *aParseEnd = ' ';
+                            ++aParseEnd;
+                            *aParseEnd = ' ';
+                            ++aParseEnd;
+                            *aParseEnd = ' ';
+                            ++aParseEnd;
+                            *aParseEnd = ' ';
+                            ++aParseEnd;
+                        }
                     }
                 }
-            }
+            };
+
+            aParseEnd = aBegin;
+
+            FormatTag(false);
             *aParseEnd = '<';
             ++aParseEnd;
             aParseEnd = Core::SerialHelper::CopyString(aParseEnd, aElement.mName);
@@ -477,16 +506,8 @@ namespace Solaire{ namespace Xml{
                 aParseEnd = aBegin;
                 return false;
             }
-            if(aMode.newLines){
-                *aParseEnd = '\n';
-                ++aParseEnd;
-                if(aMode.indent){
-                    for(uint16_t i = 0; i < aMode.depth; ++i){
-                        *aParseEnd = '\t';
-                        ++aParseEnd;
-                    }
-                }
-            }
+
+            FormatTag(true);
             *aParseEnd = '<';
             ++aParseEnd;
             *aParseEnd = '/';
