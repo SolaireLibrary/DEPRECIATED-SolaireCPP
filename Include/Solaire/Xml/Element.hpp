@@ -406,14 +406,11 @@ namespace Solaire{ namespace Xml{
             *aParseEnd = '<';
             ++aParseEnd;
             aParseEnd = Core::SerialHelper::CopyString(aParseEnd, aElement.mName);
-            bool attributeParsed = false;
             for(const ConstAttributePointer i : aElement.mAttributes){
-                attributeParsed = true;
-                Attribute::Serialise(aParseEnd, aEnd, aParseEnd, *i);
                 *aParseEnd = ' ';
                 ++aParseEnd;
+                Attribute::Serialise(aParseEnd, aEnd, aParseEnd, *i);
             }
-            if(attributeParsed) --aParseEnd;
 
             switch(aElement.mType){
             case TYPE_EMPTY:
