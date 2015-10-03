@@ -109,30 +109,21 @@ namespace Solaire{ namespace Xml{
             aStream << '"';
         }
 
-        static AttributePointer Deserialise(std::istream& aStream, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator, size_t& aCharsRead){
+        template<class Iterator>
+        static AttributePointer Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator){
             Core::String name(aDataAllocator);
             Core::String value(aParseAllocator);
-            size_t count = 0;
-            char currentChar;
 
-            const auto ReadChar = [&]()->char{
-                if(aStream.eof()) throw std::runtime_error("Xml::Attribute : End of stream reached unexpectedly");
-                char c  = aStream.get();
-                std::cout<< "Attrib ->\t" << c << std::endl;
-                ++count;
-                return c;
-            };
-
-            currentChar = ReadChar();
+            aParseEnd = aBegin;
             goto STATE_FIND_NAME;
 
             STATE_FIND_NAME:
             {
-                switch(currentChar){
+                switch(*aParseEnd){
                 case ' ':
                 case '\t':
                 case '\n':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_FIND_NAME;
                 default:
                     goto STATE_PARSE_NAME;
@@ -141,23 +132,23 @@ namespace Solaire{ namespace Xml{
 
             STATE_PARSE_NAME:
             {
-                switch(currentChar){
+                switch(*aParseEnd){
                 case '=':
                     if(name.Size() == 0) goto STATE_FAIL;
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_OPEN_VALUE;
                 default:
-                    name += currentChar;
-                    currentChar = ReadChar();
+                    name += *aParseEnd;
+                    ++aParseEnd;
                     goto STATE_PARSE_NAME;
                 }
             }
 
             STATE_OPEN_VALUE:
             {
-                switch(currentChar){
+                switch(*aParseEnd){
                 case '"':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_PARSE_VALUE;
                 default:
                     goto STATE_FAIL;
@@ -166,18 +157,17 @@ namespace Solaire{ namespace Xml{
 
             STATE_PARSE_VALUE:
             {
-                switch(currentChar){
+                switch(*aParseEnd){
                 case '"':
                     goto STATE_SUCCESS;
                 default:
-                    value += currentChar;
-                    currentChar = ReadChar();
+                    value += *aParseEnd;
+                    ++aParseEnd;
                     goto STATE_PARSE_VALUE;
                 }
             }
 
             STATE_SUCCESS:
-            aCharsRead += count;
             if(value.Size() == 0){
                 return aDataAllocator.SharedAllocate<Attribute>(name);
             }else{
@@ -186,7 +176,7 @@ namespace Solaire{ namespace Xml{
             }
 
             STATE_FAIL:
-            for(size_t i = 0; i < count; ++i) aStream.unget();
+            aParseEnd = aBegin;
             return AttributePointer();
         }
 
@@ -376,42 +366,26 @@ namespace Solaire{ namespace Xml{
             aStream << '>';
         }
 
-        static ElementPointer Deserialise(std::istream& aStream, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator, size_t& aCharsRead){
+        template<class Iterator>
+        static ElementPointer Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator){
             Core::String name(aDataAllocator);
             Core::String value(aParseAllocator);
             Core::DynamicArray<AttributePointer> attributes(8, aParseAllocator);
             Core::DynamicArray<ElementPointer> children(8, aParseAllocator);
 
-            size_t count = 0;
-            char currentChar;
-
-            const auto ReadChar = [&]()->char{
-                if(aStream.eof()) throw std::runtime_error("Xml::Attribute : End of stream reached unexpectedly");
-                char c  = aStream.get();
-                std::cout<< "Element ->\t" << c << std::endl;
-                ++count;
-                return c;
-            };
-
-            const auto UnreadChar = [&]()->void{
-                std::cout << "Element <-\t" << currentChar << std::endl;
-                aStream.unget();
-                --count;
-            };
-
-            currentChar = ReadChar();
+            aParseEnd = aBegin;
             goto STATE_OPEN_START_TAG;
 
             STATE_OPEN_START_TAG:
             {
-                switch(currentChar){
+                switch(*aParseEnd){
                 case ' ':
                 case '\t':
                 case '\n':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_OPEN_START_TAG;
                 case '<':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_OPEN_BEGIN_NAME;
                 default:
                     goto STATE_FAIL;
@@ -420,11 +394,11 @@ namespace Solaire{ namespace Xml{
 
             STATE_OPEN_BEGIN_NAME:
             {
-                switch(currentChar){
+                switch(*aParseEnd){
                 case ' ':
                 case '\t':
                 case '\n':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_OPEN_BEGIN_NAME;
                 default:
                     goto STATE_PARSE_BEGIN_NAME;
@@ -433,39 +407,39 @@ namespace Solaire{ namespace Xml{
 
             STATE_PARSE_BEGIN_NAME:
             {
-                switch(currentChar){
+                switch(*aParseEnd){
                 case ' ':
                 case '\t':
                 case '\n':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_OPEN_ATTRIBUTE;
                 case '>':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_PARSE_VALUE_0;
                 default:
-                    name += currentChar;
-                    currentChar = ReadChar();
+                    name += *aParseEnd;
+                    ++aParseEnd;
                     goto STATE_PARSE_BEGIN_NAME;
                 }
             }
 
             STATE_OPEN_ATTRIBUTE:
             {
-                switch(currentChar){
+                switch(*aParseEnd){
                 case ' ':
                 case '\t':
                 case '\n':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_OPEN_ATTRIBUTE;
                 case '/':
-                    currentChar = ReadChar();
-                    if(currentChar == '>'){
+                    ++aParseEnd;
+                    if(*aParseEnd == '>'){
                         goto STATE_SUCCESS;
                     }else{
                         goto STATE_FAIL;
                     }
                 case '>':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_PARSE_VALUE_0;
                 default:
                     goto STATE_PARSE_ATTRIBUTE;
@@ -474,10 +448,10 @@ namespace Solaire{ namespace Xml{
 
             STATE_PARSE_ATTRIBUTE:
             {
-                UnreadChar();
-                AttributePointer ptr = Attribute::Deserialise(aStream, aParseAllocator, aDataAllocator, aCharsRead);
+                --aParseEnd;
+                AttributePointer ptr = Attribute::Deserialise(aParseEnd, aEnd, aParseEnd, aParseAllocator, aDataAllocator);
                 if(ptr){
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     attributes.PushBack(ptr);
                     goto STATE_OPEN_ATTRIBUTE;
                 }else{
@@ -487,11 +461,11 @@ namespace Solaire{ namespace Xml{
 
             STATE_PARSE_VALUE_0:
             {
-                switch(currentChar){
+                switch(*aParseEnd){
                 case ' ':
                 case '\t':
                 case '\n':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_PARSE_VALUE_0;
                 default:
                     goto STATE_PARSE_VALUE_1;
@@ -500,27 +474,26 @@ namespace Solaire{ namespace Xml{
 
             STATE_PARSE_VALUE_1:
             {
-                switch(currentChar){
+                switch(*aParseEnd){
                 case '<':
-                    currentChar = ReadChar();
-                    if(currentChar == '/'){
-                        currentChar = ReadChar();
+                    ++aParseEnd;
+                    if(*aParseEnd == '/'){
+                        ++aParseEnd;
                         goto STATE_PARSE_END_NAME;
                     }else{
-                        UnreadChar();
-                        UnreadChar();
-                        ElementPointer child = Element::Deserialise(aStream, aParseAllocator, aDataAllocator, aCharsRead);
+                        --aParseEnd;
+                        ElementPointer child = Element::Deserialise(aParseEnd, aEnd, aParseEnd, aParseAllocator, aDataAllocator);
                         if(child){
                             children.PushBack(child);
-                            currentChar = ReadChar();
+                        ++aParseEnd;
                             goto STATE_PARSE_VALUE_0;
                         }else{
                             goto STATE_FAIL;
                         }
                     }
                 default:
-                    value += currentChar;
-                    currentChar = ReadChar();
+                    value += *aParseEnd;
+                    ++aParseEnd;
                     goto STATE_PARSE_VALUE_0;
                 }
             }
@@ -530,11 +503,11 @@ namespace Solaire{ namespace Xml{
                 Core::String endName(aParseAllocator);
 
                 STATE_END_NAME_INTERNAL:
-                switch(currentChar){
+                switch(*aParseEnd){
                 case ' ':
                 case '\t':
                 case '\n':
-                    currentChar = ReadChar();
+                    ++aParseEnd;
                     goto STATE_END_NAME_INTERNAL;
                 case '>':
                     if(name == endName){
@@ -543,16 +516,14 @@ namespace Solaire{ namespace Xml{
                         goto STATE_FAIL;
                     }
                 default:
-                    endName += currentChar;
-                    currentChar = ReadChar();
+                    endName += *aParseEnd;
+                    ++aParseEnd;
                     goto STATE_END_NAME_INTERNAL;
                 }
             }
 
             STATE_SUCCESS:
             {
-                aCharsRead += count;
-
                 ElementPointer element = aDataAllocator.SharedAllocate<Element>(name);
 
                 for(AttributePointer i : attributes){
@@ -572,7 +543,7 @@ namespace Solaire{ namespace Xml{
             }
 
             STATE_FAIL:
-            for(size_t i = 0; i < count; ++i) aStream.unget();
+            aParseEnd = aBegin;
             return ElementPointer();
         }
 
