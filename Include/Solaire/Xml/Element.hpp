@@ -86,9 +86,8 @@ namespace Solaire{ namespace Xml{
         };
     public:
         static size_t EstimateSerialLength(const Attribute& aAttribute){
-            size_t count = 0;
+            size_t count = 3;
             count += aAttribute.mName.Size();
-            count += 2;
             switch(aAttribute.mType){
             case TYPE_STRING:
                 count += aAttribute.mString->Size() * 2;
@@ -102,7 +101,6 @@ namespace Solaire{ namespace Xml{
             default:
                 break;
             }
-            ++count;
             return count;
         }
 
@@ -391,14 +389,11 @@ namespace Solaire{ namespace Xml{
         Type mType;
     public:
         static size_t EstimateSerialLength(const Element& aElement){
-            size_t count = 0;
-            ++count;
+            size_t count = 3;
             count += aElement.mName.Size();
-            ++count;
             for(const ConstAttributePointer i : aElement.mAttributes){
                count += Attribute::EstimateSerialLength(*i);
             }
-            ++count;
 
             switch(aElement.mType){
             case TYPE_EMPTY:
@@ -421,8 +416,7 @@ namespace Solaire{ namespace Xml{
             default:
                 break;
             }
-            count += 2;
-            return count;
+            return count + 2;
         }
         static void Serialise(std::ostream& aStream, const Element& aElement){
             aStream << '<';
