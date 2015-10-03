@@ -149,6 +149,7 @@ namespace Solaire{ namespace Xml{
             Iterator nameEnd = aParseEnd;
             Iterator valueBegin = aParseEnd;
             Iterator valueEnd = aParseEnd;
+            char quoteStyle;
 
             aParseEnd = aBegin;
             goto STATE_FIND_NAME;
@@ -185,6 +186,8 @@ namespace Solaire{ namespace Xml{
             {
                 switch(*aParseEnd){
                 case '"':
+                case '\'':
+                    quoteStyle = *aParseEnd;
                     ++aParseEnd;
                     valueBegin = aParseEnd;
                     goto STATE_PARSE_VALUE;
@@ -195,11 +198,10 @@ namespace Solaire{ namespace Xml{
 
             STATE_PARSE_VALUE:
             {
-                switch(*aParseEnd){
-                case '"':
+                if(*aParseEnd == quoteStyle){
                     valueEnd = aParseEnd;
                     goto STATE_SUCCESS;
-                default:
+                }else{
                     ++aParseEnd;
                     goto STATE_PARSE_VALUE;
                 }
