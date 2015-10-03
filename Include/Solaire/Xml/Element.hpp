@@ -642,12 +642,22 @@ namespace Solaire{ namespace Xml{
             }
 
             STATE_COMMENT:
-            goto STATE_FAIL;
+            {
+                //! \TODO Handle comments correctly
+                switch(*aParseEnd){
+                case '>':
+                    ++aParseEnd;
+                    goto STATE_OPEN_START_TAG;
+                default:
+                    ++aParseEnd;
+                    goto STATE_COMMENT;
+                }
+            }
 
             STATE_PROLOG:
             {
                 //! \TODO Handle prolog correctly
-                 switch(*aParseEnd){
+                switch(*aParseEnd){
                 case '>':
                     ++aParseEnd;
                     goto STATE_OPEN_START_TAG;
