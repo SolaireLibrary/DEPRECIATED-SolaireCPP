@@ -630,8 +630,10 @@ namespace Solaire{ namespace Xml{
                     ++aParseEnd;
                     goto STATE_OPEN_BEGIN_NAME;
                 case '!':
+                    ++aParseEnd;
                     goto STATE_COMMENT;
                 case '?':
+                    ++aParseEnd;
                     goto STATE_PROLOG;
                 default:
                     nameBegin = aParseEnd;
@@ -640,10 +642,20 @@ namespace Solaire{ namespace Xml{
             }
 
             STATE_COMMENT:
-            goto STATE_ERROR;
+            goto STATE_FAIL;
 
             STATE_PROLOG:
-            goto STATE_ERROR;
+            {
+                //! \TODO Handle prolog correctly
+                 switch(*aParseEnd){
+                case '>':
+                    ++aParseEnd;
+                    goto STATE_OPEN_START_TAG;
+                default:
+                    ++aParseEnd;
+                    goto STATE_PROLOG;
+                }
+            }
 
             STATE_PARSE_BEGIN_NAME:
             {
