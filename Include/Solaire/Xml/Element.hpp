@@ -399,10 +399,39 @@ namespace Solaire{ namespace Xml{
             return count + 2;
         }
 
-        template<class Iterator>
-        static bool Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Element& aElement){
-            aParseEnd = aBegin;
+        struct ParseMode{
+            uint16_t depth;
+            struct{
+                uint8_t newLines : 1;
+                uint8_t indent : 1;
+            };
 
+            ParseMode():
+                depth(0),
+                newLines(0),
+                indent(0)
+            {}
+
+            ParseMode(const bool aNewLines, const bool aIndent):
+                depth(0),
+                newLines(aNewLines),
+                indent(aIndent)
+            {}
+        };
+
+        template<class Iterator>
+        static bool Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Element& aElement, ParseMode aMode){
+            aParseEnd = aBegin;
+            if(aMode.newLines){
+                *aParseEnd = '\n';
+                ++aParseEnd;
+                if(aMode.indent){
+                    for(uint16_t i = 0; i < aMode.depth; ++i){
+                        *aParseEnd = '\t';
+                        ++aParseEnd;
+                    }
+                }
+            }
             *aParseEnd = '<';
             ++aParseEnd;
             aParseEnd = Core::SerialHelper::CopyString(aParseEnd, aElement.mName);
@@ -422,9 +451,11 @@ namespace Solaire{ namespace Xml{
             case TYPE_CHILDREN:
                 *aParseEnd = '>';
                 ++aParseEnd;
+                ++aMode.depth;
                 for(const ConstElementPointer i : *aElement.mChildren){
-                    Element::Serialise(aParseEnd, aEnd, aParseEnd, *i);
+                    Element::Serialise(aParseEnd, aEnd, aParseEnd, *i, aMode);
                 }
+                --aMode.depth;
                 break;
             case TYPE_BODY:
                 *aParseEnd = '>';
@@ -445,6 +476,16 @@ namespace Solaire{ namespace Xml{
             default:
                 aParseEnd = aBegin;
                 return false;
+            }
+            if(aMode.newLines){
+                *aParseEnd = '\n';
+                ++aParseEnd;
+                if(aMode.indent){
+                    for(uint16_t i = 0; i < aMode.depth; ++i){
+                        *aParseEnd = '\t';
+                        ++aParseEnd;
+                    }
+                }
             }
             *aParseEnd = '<';
             ++aParseEnd;
