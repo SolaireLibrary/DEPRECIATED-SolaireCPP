@@ -49,90 +49,90 @@ namespace Solaire{
         int8_t mReadCount;
     public:
         void ReadLock(){
-            mStateLock.lock();
-            if(mReadCount == 0){
-                ++mReadCount;
-            }else if(mReadCount > 0){
-                ++mReadCount;
-            }else{
-                mStateLock.unlock();
-                mWriteLock.lock();
-                mStateLock.lock();
-                mWriteLock.unlock();
-                ++mReadCount;
+            mStateLock.lock();              // Prevent the state from being modified
+            if(mReadCount >= 0){            // If there are no locks or an existing read lock
+                ++mReadCount;               //  Add an additional read lock
+            }else{                          // If there is a write lock
+                mStateLock.unlock();        //  Allow the state to be modified again
+                mWriteLock.lock();          //  Wait for the write lock to release
+                mStateLock.lock();          //  Prevent the state from being modified again
+                mWriteLock.unlock();        //  Release the write lock
+                ++mReadCount;               //  Create a new read lock
             }
-            mStateLock.unlock();
+            mStateLock.unlock();            // Allow the state to be modified again
         }
 
         bool TryReadLock(){
-            mStateLock.lock();
-            if(mReadCount >= 0){
-                ++mReadCount;
-                mStateLock.unlock();
-                return true;
-            }else{
-                mStateLock.unlock();
-                return false;
+            mStateLock.lock();              // Prevent the state from being modified
+            if(mReadCount >= 0){            // If there are no locks or an existing read lock
+                ++mReadCount;               //  Add an additional read lock
+                mStateLock.unlock();        //  Allow the state to be modified again
+                return true;                //  The lock was successful
+            }else{                          // If there is a write lock
+                mStateLock.unlock();        //  Allow the state to be modified again
+                return false;               //  The lock failed
             }
         }
 
         void ReadUnlock(){
-            mStateLock.lock();
-            if(mReadCount > 0){
-                --mReadCount;
-                if(mReadCount == 0){
-                    mStateLock.unlock();
-                }else{
+            mStateLock.lock();              // Prevent the state from being modified
+            if(mReadCount > 0){             // If there is an existing read lock
+                --mReadCount;               //  Remove a shared lock
+                if(mReadCount == 0){        //  If there are no more shared locks
+                    mStateLock.unlock();    //      Allow the state to be modified again
+                }else{                      //  If there is at least one more shared lock
                     //! \TODO Notify that read lock has been released
-                    mStateLock.unlock();
+                    mStateLock.unlock();    //      Allow the state to be modified again
                 }
-            }else{
-                mStateLock.unlock();
+            }else{                          // If there are no locks, or a write lock
+                mStateLock.unlock();        //  Allow the state to be modified again
                 throw std::runtime_error("RWMutex : Is not read locked");
             }
         }
 
         void WriteLock(){
-            mStateLock.lock();
-            if(mReadCount == 0){
-                --mReadCount;
+            mStateLock.lock();              // Prevent the state from being modified
+            if(mReadCount == 0){            // If there are no locks
+                --mReadCount;               //  Create a write lock
                 mWriteLock.lock();
-            }else if(mReadCount > 0){
-                mStateLock.unlock();
+                mStateLock.unlock();        //  Allow the state to be modified again
+            }else if(mReadCount > 0){       // If there is a read lock
+                mStateLock.unlock();        //  Allow the state to be modified again
                 //! \TODO Wait for read lock to be released
-                mStateLock.lock();
-                --mReadCount;
+                mStateLock.lock();          //  Prevent the state from being modified again
+                --mReadCount;               //  Create a write lock
                 mWriteLock.lock();
-            }else{
-                mStateLock.unlock();
-                mWriteLock.lock();
-                mStateLock.lock();
-                --mReadCount;
+                mStateLock.unlock();        //  Allow the state to be modified again
+            }else{                          // If there is a write lock
+                mStateLock.unlock();        //  Allow the state to be modified again
+                mWriteLock.lock();          //  Wait for the write lock to release
+                mStateLock.lock();          //  Prevent the state from being modified again
+                --mReadCount;               //  Create a write lock
+                mStateLock.unlock();        //  Allow the state to be modified again
             }
-            mStateLock.unlock();
         }
 
         bool TryWriteLock(){
-            mStateLock.lock();
-            if(mReadCount == 0){
-                --mReadCount;
+            mStateLock.lock();              // Prevent the state from being modified
+            if(mReadCount == 0){            // If there are no locks
+                --mReadCount;               //  Create a write lock
                 mWriteLock.lock();
-                mStateLock.unlock();
-                return true;
-            }else{
-                mStateLock.unlock();
-                return false;
+                mStateLock.unlock();        //  Allow the state to be modified again
+                return true;                //  The lock was successful
+            }else{                          // If there is a write or read lock
+                mStateLock.unlock();        //  Allow the state to be modified again
+                return false;               //  The lock failed
             }
         }
 
         void WriteUnlock(){
-            mStateLock.lock();
-            if(mReadCount < 0){
-                ++mReadCount;
+            mStateLock.lock();              // Prevent the state from being modified
+            if(mReadCount < 0){             // If there is a write lock
+                ++mReadCount;               //  Remove the write lock
                 mWriteLock.unlock();
-                mStateLock.unlock();
-            }else{
-                mStateLock.unlock();
+                mStateLock.unlock();        //  Allow the state to be modified again
+            }else{                          // If there is no lock, or a read lock
+                mStateLock.unlock();        //  Allow the state to be modified again
                 throw std::runtime_error("RWMutex : Is not write locked");
             }
         }
