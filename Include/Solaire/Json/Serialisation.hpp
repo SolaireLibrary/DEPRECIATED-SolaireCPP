@@ -127,6 +127,8 @@ namespace Solaire{ namespace Json{
                 throw std::runtime_error("Json::SerialObject : Unknown type");
             }
         }
+    protected:
+        // Inherited from SerialArray
 
         bool ReadB(const SerialIndex aIndex) const override{
             return mValue->GetArray()[aIndex]->GetBool();
@@ -293,7 +295,7 @@ namespace Solaire{ namespace Json{
                     (aVal.*SetFn)(aValue);
                 }
             );
-        }
+    }
 
         template<class T>
         void WriteMove(const SerialTag aTag, T&& aValue, Value&(Value::*SetFn)(T&&)){
@@ -342,6 +344,8 @@ namespace Solaire{ namespace Json{
                 throw std::runtime_error("Json::SerialObject : Unknown type");
             }
         }
+    protected:
+        // Inherited from SerialArray
 
         bool ReadB(const SerialTag aTag) const override{
             return mValue->GetObject()[aTag]->GetBool();

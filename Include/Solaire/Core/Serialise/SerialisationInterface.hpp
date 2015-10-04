@@ -85,12 +85,7 @@ namespace Solaire{
     };
 
     class SerialArray : public std::enable_shared_from_this<SerialArray>{
-    public:
-        virtual ~SerialArray(){}
-
-        virtual SerialIndex Size() const = 0;
-        virtual SerialType TypeOf(const SerialIndex aIndex) const = 0;
-
+    protected:
         virtual bool ReadB(const SerialIndex aIndex) const = 0;
         virtual char ReadC(const SerialIndex aIndex) const = 0;
         virtual uint8_t ReadU8(const SerialIndex aIndex) const = 0;
@@ -127,9 +122,17 @@ namespace Solaire{
 
         virtual void WriteA(const SerialIndex aIndex, SerialArrayPtr) = 0;
         virtual void WriteO(const SerialIndex aIndex, SerialObjectPtr) = 0;
+    public:
+        virtual ~SerialArray(){}
+
+        virtual SerialIndex Size() const = 0;
+        virtual SerialType TypeOf(const SerialIndex aIndex) const = 0;
 
         template<class T>
         T Read(const SerialIndex aIndex) const = delete;
+
+        template<class T>
+        T Read(const SerialIndex aIndex) = delete;
 
         template<class T>
         void Write(const SerialIndex aIndex, const T aValue) = delete;
@@ -148,6 +151,10 @@ namespace Solaire{
     template<> float SerialArray::Read<float>(const SerialIndex aIndex) const{return ReadF(aIndex);}
     template<> double SerialArray::Read<double>(const SerialIndex aIndex) const{return ReadD(aIndex);}
     template<> SerialString SerialArray::Read<SerialString>(const SerialIndex aIndex) const{return ReadS(aIndex);}
+    template<> ConstSerialArrayPtr SerialArray::Read<ConstSerialArrayPtr>(const SerialIndex aIndex) const{return ReadA(aIndex);}
+    template<> ConstSerialObjectPtr SerialArray::Read<ConstSerialObjectPtr>(const SerialIndex aIndex) const{return ReadO(aIndex);}
+    template<> SerialArrayPtr SerialArray::Read<SerialArrayPtr>(const SerialIndex aIndex){return ReadA(aIndex);}
+    template<> SerialObjectPtr SerialArray::Read<SerialObjectPtr>(const SerialIndex aIndex){return ReadO(aIndex);}
 
     template<> void SerialArray::Write<bool>(const SerialIndex aIndex, const bool aValue){WriteB(aIndex, aValue);}
     template<> void SerialArray::Write<char>(const SerialIndex aIndex, const char aValue){WriteC(aIndex, aValue);}
@@ -162,13 +169,11 @@ namespace Solaire{
     template<> void SerialArray::Write<float>(const SerialIndex aIndex, const float aValue){WriteF(aIndex, aValue);}
     template<> void SerialArray::Write<double>(const SerialIndex aIndex, const double aValue){WriteD(aIndex, aValue);}
     template<> void SerialArray::Write<SerialString>(const SerialIndex aIndex, const SerialString aValue){WriteS(aIndex, aValue);}
+    template<> void SerialArray::Write<SerialArrayPtr>(const SerialIndex aIndex, const SerialArrayPtr aValue){WriteA(aIndex, aValue);}
+    template<> void SerialArray::Write<SerialObjectPtr>(const SerialIndex aIndex, const SerialObjectPtr aValue){WriteO(aIndex, aValue);}
 
     class SerialObject : public std::enable_shared_from_this<SerialObject>{
-    public:
-        virtual ~SerialObject(){}
-
-        virtual SerialType TypeOf(const SerialTag aTag) const = 0;
-
+    protected:
         virtual bool ReadB(const SerialTag aTag) const = 0;
         virtual char ReadC(const SerialTag aTag) const = 0;
         virtual uint8_t ReadU8(const SerialTag aTag) const = 0;
@@ -205,9 +210,16 @@ namespace Solaire{
 
         virtual void WriteA(const SerialTag aTag, SerialArrayPtr) = 0;
         virtual void WriteO(const SerialTag aTag, SerialObjectPtr) = 0;
+    public:
+        virtual ~SerialObject(){}
+
+        virtual SerialType TypeOf(const SerialTag aTag) const = 0;
 
         template<class T>
         T Read(const SerialTag aTag) const = delete;
+
+        template<class T>
+        T Read(const SerialTag aTag) = delete;
 
         template<class T>
         void Write(const SerialTag aTag, T aValue) = delete;
@@ -226,6 +238,10 @@ namespace Solaire{
     template<> float SerialObject::Read<float>(const SerialTag aTag) const{return ReadF(aTag);}
     template<> double SerialObject::Read<double>(const SerialTag aTag) const{return ReadD(aTag);}
     template<> SerialString SerialObject::Read<SerialString>(const SerialTag aTag) const{return ReadS(aTag);}
+    template<> ConstSerialArrayPtr SerialObject::Read<ConstSerialArrayPtr>(const SerialTag aTag) const{return ReadA(aTag);}
+    template<> ConstSerialObjectPtr SerialObject::Read<ConstSerialObjectPtr>(const SerialTag aTag) const{return ReadO(aTag);}
+    template<> SerialArrayPtr SerialObject::Read<SerialArrayPtr>(const SerialTag aTag){return ReadA(aTag);}
+    template<> SerialObjectPtr SerialObject::Read<SerialObjectPtr>(const SerialTag aTag){return ReadO(aTag);}
 
     template<> void SerialObject::Write<bool>(const SerialTag aTag, const bool aValue){WriteB(aTag, aValue);}
     template<> void SerialObject::Write<char>(const SerialTag aTag, const char aValue){WriteC(aTag, aValue);}
@@ -240,6 +256,8 @@ namespace Solaire{
     template<> void SerialObject::Write<float>(const SerialTag aTag, const float aValue){WriteF(aTag, aValue);}
     template<> void SerialObject::Write<double>(const SerialTag aTag, const double aValue){WriteD(aTag, aValue);}
     template<> void SerialObject::Write<SerialString>(const SerialTag aTag, const SerialString aValue){WriteS(aTag, aValue);}
+    template<> void SerialObject::Write<SerialArrayPtr>(const SerialTag aTag, const SerialArrayPtr aValue){WriteA(aTag, aValue);}
+    template<> void SerialObject::Write<SerialObjectPtr>(const SerialTag aTag, const SerialObjectPtr aValue){WriteO(aTag, aValue);}
 }
 
 

@@ -33,6 +33,7 @@
 
 #include "Element.hpp"
 #include "..\Core\Serialise\SerialisationInterface.hpp"
+#include "..\Core\Streams\StreamIterator.hpp"
 
 namespace Solaire{ namespace Xml{
 
@@ -103,6 +104,8 @@ namespace Solaire{ namespace Xml{
                 return SERIAL_TYPE_O;
             }
         }
+    protected:
+        // Inherited from SerialArray
 
         bool ReadB(const SerialIndex aIndex) const override{
             return LookupIndex(aIndex)->GetBool();
@@ -295,7 +298,6 @@ namespace Solaire{ namespace Xml{
         ~XmlSerialObject(){
 
         }
-
         // Inherited from SerialObject
 
         SerialType TypeOf(const SerialTag aTag) const override{
@@ -330,6 +332,8 @@ namespace Solaire{ namespace Xml{
 
             throw std::runtime_error("Xml::SerialObject : Could not find tag");
         }
+    protected:
+        // Inherited from SerialArray
 
         bool ReadB(const SerialTag aTag) const override{
             const ConstAttributePointer attribute = LookupTagA(aTag);
@@ -579,10 +583,9 @@ namespace Solaire{ namespace Xml{
         }
 
         ElementPointer ReadElement(std::istream& aStream) const{
-            String string(GetParseAllocator());
-            aStream >> string;
-            String::Iterator it = string.begin();
-            return Element::Deserialise(it, string.end(), it, GetParseAllocator(), GetDataAllocator());
+            IStreamIterator begin(aStream);
+            IStreamIterator end;
+            return Element::Deserialise<IStreamIterator>(begin, end, begin, GetParseAllocator(), GetDataAllocator());
         }
 
     public:
