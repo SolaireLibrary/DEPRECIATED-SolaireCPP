@@ -521,24 +521,24 @@ namespace Solaire{ namespace Maths{
     public:
         typedef Solaire::Maths::Vector<TYPE, LENGTH> Vector;
 
-        Allocator::SharedPointer<Vector> Read(const SerialSystem& aSystem, std::istream& aStream){
+        void Serialise(Vector aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot){
+            SerialArrayPtr array_ = aSystem.CreateA();
+            for(uint32_t i = 0; i < LENGTH; ++i){
+                array_->Write<TYPE>(i, aValue[i]);
+            }
+            aRoot->Write<SerialArrayPtr>(aTag, array_);
+        }
+
+        std::shared_ptr<Vector> Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot){
             Allocator::SharedPointer<Vector> vector = aSystem.GetDataAllocator().SharedAllocate<Vector>();
             Vector& ref = *vector;
 
-            SerialArrayPtr array_ = aSystem.ReadA(aStream);
+            SerialArrayPtr array_ = aRoot->Read<SerialArrayPtr>(aTag);
             for(uint32_t i = 0; i < LENGTH; ++i){
                 ref[i] = array_->Read<TYPE>(i);
             }
 
             return vector;
-        }
-
-        void Write(const Vector& aValue, SerialSystem& aSystem, std::ostream& aStream){
-            SerialArrayPtr array_ = aSystem.CreateA();
-            for(uint32_t i = 0; i < LENGTH; ++i){
-                array_->Write<TYPE>(i, aValue[i]);
-            }
-            aSystem.WriteA(aStream, array_);
         }
     };
 

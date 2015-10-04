@@ -144,14 +144,14 @@ namespace Solaire{ namespace Json{
 
         template<class T>
         std::shared_ptr<Value> RpcSerialise(T aValue){
-            Serialise<T>(aValue, mSystem, "rpcSerialise", mSerialObject);
+            Serialisable<T>::Serialise(aValue, mSystem, "rpcSerialise", mSerialObject);
             return mSerialObject->mValue->GetObject()["rpcSerialise"];
         }
 
         template<class T>
         std::shared_ptr<T> RpcDeserialise(std::shared_ptr<Value> aValue){
             return mSerialObject->mValue->GetObject().emplace("rpcDeserialise", aValue);
-            return Deserialise<T>(mSystem, "rpcDeserialise", aValue);
+            return Serialisable<T>::Deserialise(mSystem, "rpcDeserialise", aValue);
         }
 
         template<class ...Params>

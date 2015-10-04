@@ -37,19 +37,13 @@
 
 namespace Solaire{
 
-    template<class T>
+    template<class T, class Enable = void>
     class Serialisable{
 
-        Allocator::SharedPointer<T> Read(const SerialSystem& aSystem, std::istream& aStream) = delete;
-
-        void Write(const T& aValue, SerialSystem& aSystem, std::ostream& aStream) = delete;
+        static void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot) = delete;
+        static std::shared_ptr<T> Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot) = delete;
     };
 
-    template<class T>
-    static void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot) = delete;
-
-    template<class T>
-    static std::shared_ptr<T> Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot) = delete;
 
     /*template<class A, class B>
     static Allocator::SharedPointer<A> serial_cast(Allocator::SharedPointer<B> aPointer, const SerialSystem& aSystem){
@@ -80,6 +74,21 @@ namespace Solaire{
             return CopyString(aBegin, aBool ? "true" : "false");
         }
     }
+
+    // Primatives
+
+    template<class T>
+    class Serialisable<T, typename std::enable_if<std::is_arithmetic<T>::value>::type>
+    {
+    public:
+        void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot){
+            aRoot->Write<T>(aTag);
+        }
+
+        std::shared_ptr<T> Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot){
+            return aSystem.GetDataAllocator().SharedAllocate<T>(aRoot->Read<T>(aTag));
+        }
+    };
 }
 
 
