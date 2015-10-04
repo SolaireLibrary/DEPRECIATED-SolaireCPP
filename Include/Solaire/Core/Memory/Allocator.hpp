@@ -31,6 +31,7 @@
 	Last Modified	: 25th September 2015
 */
 
+#include <limits>
 #include <type_traits>
 #include <map>
 #include <vector>

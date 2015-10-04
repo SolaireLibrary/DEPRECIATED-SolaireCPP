@@ -31,6 +31,7 @@
 	Last Modified	: 28th September 2015
 */
 
+#include <cmath>
 #include "..\Streams\StringParser.hpp"
 #include "..\Strings\StringFragment.hpp"
 #include "..\DataStructures\DynamicArray.hpp"
