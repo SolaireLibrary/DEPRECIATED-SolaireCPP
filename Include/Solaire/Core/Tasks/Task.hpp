@@ -32,12 +32,7 @@
 */
 
 #include <map>
-#ifndef SOLAIRE_DISABLE_MULTITHREADING
-    #include <thread>
-    #include <mutex>
-#else
-    #include "DummyLock.hpp"
-#endif
+#include "ThreadTypes.hpp"
 #include "../Macros.hpp"
 #include "../DataStructures/DynamicArray.hpp"
 
@@ -61,12 +56,6 @@ namespace Solaire{
         friend TaskManager;
         friend TaskImplementationDetails;
     private:
-        #ifdef SOLAIRE_DISABLE_MULTITHREADING
-            typedef DummyLock Mutex;
-        #else
-            typedef std::mutex Mutex;
-        #endif
-
         DynamicArray<void*> mProgressList;
         TaskManager* mManager;
         std::exception_ptr mException;

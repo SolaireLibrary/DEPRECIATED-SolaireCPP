@@ -31,9 +31,45 @@
 	Last Modified	: 4th October 2015
 */
 
+#ifndef SOLAIRE_DISABLE_MULTITHREADING
+    #include <mutex>
+    #include <thread>
+#endif
+
 
 namespace Solaire{
+    #ifdef SOLAIRE_DISABLE_MULTITHREADING
+        typedef uint32_t ThreadID;
 
+        class Mutex{
+        private:
+            bool mLocked;
+        public:
+            Mutex() :
+                mLocked(false)
+            {}
+
+            void lock(){
+                mLocked = true;
+            }
+
+            void unlock(){
+                mLocked = false;
+            }
+
+            bool try_lock(){
+                if(mLocked){
+                    return false;
+                }else{
+                    mLocked = true;
+                    return false;
+                }
+            }
+        };
+    #else
+        typedef std::thread::id ThreadID;
+        typedef std::mutex Mutex;
+    #endif
 }
 
 

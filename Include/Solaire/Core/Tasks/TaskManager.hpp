@@ -31,6 +31,7 @@
 	Last Modified	: 30th September 2015
 */
 
+#include "ThreadTypes.hpp"
 #include "Task.hpp"
 
 namespace Solaire{
@@ -41,14 +42,6 @@ namespace Solaire{
         TaskManager(TaskManager&&) = delete;
         TaskManager& operator=(const TaskManager&) = delete;
         TaskManager& operator=(TaskManager&&) = delete;
-
-        #ifdef SOLAIRE_DISABLE_MULTITHREADING
-            typedef uint32_t ThreadID;
-            typedef DummyLock Mutex;
-        #else
-            typedef std::thread::id ThreadID;
-            typedef std::mutex Mutex;
-        #endif
 
         DynamicArray<Task*> mInitialiseTasks;
         DynamicArray<Task*> mPreExecuteTasks;

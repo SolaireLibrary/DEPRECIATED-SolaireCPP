@@ -37,7 +37,7 @@ namespace Solaire{
 
     // TaskManager
 
-    TaskManager::ThreadID TaskManager::GetThreadID() const{
+    ThreadID TaskManager::GetThreadID() const{
         #ifdef SOLAIRE_DISABLE_MULTITHREADING
             return 0;
         #else
