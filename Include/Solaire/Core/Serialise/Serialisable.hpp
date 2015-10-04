@@ -40,10 +40,8 @@ namespace Solaire{
     template<class T>
     class Serialisable{
 
-        template<class Iterator>
-        Allocator::SharedPointer<T> Read(const SerialSystem& aSystem) = delete;
+        Allocator::SharedPointer<T> Read(const SerialSystem& aSystem, std::istream& aStream) = delete;
 
-        template<class Iterator>
         void Write(const T& aValue, SerialSystem& aSystem, std::ostream& aStream) = delete;
     };
 
