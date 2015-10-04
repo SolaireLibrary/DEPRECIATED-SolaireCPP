@@ -538,73 +538,126 @@ namespace Solaire{ namespace Json{
         }
     }
 
-    /*Value::Value(Value&& aOther):
+    Value::Value(Value&& aOther):
         mAllocator(aOther.mAllocator),
-        mType(aOther.mType)
+        mType(TYPE_NULL),
+        mValueNull(this)
     {
-        switch(mType){
-
-        }
+        operator=(std::move(aOther));
     }
 
-    Value::Value(Allocator& aAllocator){
+    Value::Value(Allocator& aAllocator):
+        mAllocator(&aAllocator),
+        mType(TYPE_NULL),
+        mValueNull(this)
+    {}
 
+    Value::Value(Allocator& aAllocator, const TypeID aType):
+        mAllocator(&aAllocator),
+        mType(TYPE_NULL),
+        mValueNull(this)
+    {
+        operator=(aType);
     }
 
-    Value::Value(Allocator& aAllocator, const TypeID aType){
-
+    Value::Value(Allocator& aAllocator, const bool aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_BOOL),
+        mValueNull(this)
+    {
+        mValueBool = aValue;
     }
 
-    Value::Value(Allocator& aAllocator, const bool aValue){
-
+    Value::Value(Allocator& aAllocator, const uint8_t aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NUMBER),
+        mValueNull(this)
+    {
+        mValueNumber = static_cast<double>(aValue);
     }
 
-    Value::Value(Allocator& aAllocator, const uint8_t aValue){
-
+    Value::Value(Allocator& aAllocator, const uint16_t aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NUMBER),
+        mValueNull(this)
+    {
+        mValueNumber = static_cast<double>(aValue);
     }
 
-    Value::Value(Allocator& aAllocator, const uint16_t aValue){
-
+    Value::Value(Allocator& aAllocator, const uint32_t aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NUMBER),
+        mValueNull(this)
+    {
+        mValueNumber = static_cast<double>(aValue);
     }
 
-    Value::Value(Allocator& aAllocator, const uint32_t aValue){
-
+    Value::Value(Allocator& aAllocator, const uint64_t aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NUMBER),
+        mValueNull(this)
+    {
+        mValueNumber = static_cast<double>(aValue);
     }
 
-    Value(Allocator& aAllocator, const uint64_t aValue){
-
+    Value::Value(Allocator& aAllocator, const int8_t aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NUMBER),
+        mValueNull(this)
+    {
+        mValueNumber = static_cast<double>(aValue);
     }
 
-    Value::Value(Allocator& aAllocator, const int8_t aValue){
-
+    Value::Value(Allocator& aAllocator, const int16_t aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NUMBER),
+        mValueNull(this)
+    {
+        mValueNumber = static_cast<double>(aValue);
     }
 
-    Value::Value(Allocator& aAllocator, const int16_t aValue){
-
+    Value::Value(Allocator& aAllocator, const int32_t aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NUMBER),
+        mValueNull(this)
+    {
+        mValueNumber = static_cast<double>(aValue);
     }
 
-    Value::Value(Allocator& aAllocator, const int32_t aValue){
-
+    Value::Value(Allocator& aAllocator, const int64_t aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NUMBER),
+        mValueNull(this)
+    {
+        mValueNumber = static_cast<double>(aValue);
     }
 
-    Value::Value(Allocator& aAllocator, const int64_t aValue){
-
+    Value::Value(Allocator& aAllocator, const float aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NUMBER),
+        mValueNull(this)
+    {
+        mValueNumber = static_cast<double>(aValue);
     }
 
-    Value::Value(Allocator& aAllocator, const float aValue){
-
+    Value::Value(Allocator& aAllocator, const double aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NUMBER),
+        mValueNull(this)
+    {
+        mValueNumber = aValue;
     }
 
-    Value::Value(Allocator& aAllocator, const double aValue){
-
+    Value::Value(Allocator& aAllocator, const ConstStringFragment aValue):
+        mAllocator(&aAllocator),
+        mType(TYPE_NULL),
+        mValueNull(this)
+    {
+        mValueString = aValue;
     }
-
-    Value::Value(Allocator& aAllocator, const ConstStringFragment aValue){
-
-    }*/
 
     Value& Value::operator=(Value&& aOther){
-        operator=(aOther.mType);
+        operator=(TYPE_NULL);
         mType = aOther.mType;
 
         switch(mType){
@@ -633,6 +686,7 @@ namespace Solaire{ namespace Json{
             break;
         }
 
+        mAllocator = aOther.mAllocator;
         return *this;
     }
 
