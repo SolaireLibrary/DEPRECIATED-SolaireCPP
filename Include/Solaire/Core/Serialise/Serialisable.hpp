@@ -52,6 +52,30 @@ namespace Solaire{
         return Deserialise<A>(aSystem, ss);
     }*/
 
+    namespace SerialHelper{
+        template<class Iterator>
+        static Iterator CopyString(const Iterator aBegin, const ConstStringFragment aString){
+            const size_t size = aString.Size();
+            char* const dst = &(*aBegin);
+            const char* const src = &(*aString.begin());
+            std::memcpy(dst, src, size);
+            return aBegin + size;
+        }
+
+        template<class Iterator>
+        static Iterator CopyNumber(const Iterator aBegin, const double aNumber){
+            char* const begin = &(*aBegin);
+            const char* const end = NumericParse::ToString(begin, aNumber);
+            return aBegin + (end - begin);
+        }
+
+        template<class Iterator>
+        static Iterator CopyBool(const Iterator aBegin, const bool aBool){
+            return CopyString(aBegin, aBool ? "true" : "false");
+        }
+    }
+
+
     // Primatives
 
     template<class T>
