@@ -34,6 +34,7 @@
 #ifndef SOLAIRE_DISABLE_MULTITHREADING
     #include <mutex>
     #include <thread>
+    #include <atomic>
 #endif
 
 
@@ -66,9 +67,18 @@ namespace Solaire{
                 }
             }
         };
+
+        typedef Mutex RecursiveMutex;
+
+        template<class T>
+        using Atomic = T;
     #else
         typedef std::thread::id ThreadID;
         typedef std::mutex Mutex;
+        typedef std::recursive_mutex RecursiveMutex;
+
+        template<class T>
+        using Atomic = std::atomic<T>;
     #endif
 }
 

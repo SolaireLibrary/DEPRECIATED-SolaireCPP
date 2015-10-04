@@ -50,7 +50,7 @@ namespace Solaire{
 
         std::vector<std::thread> mThreads;
         std::condition_variable mConditionVariable;
-        bool mExit;
+        Atomic<bool> mExit;
     public:
         AsyncManager(const size_t aThreads, Allocator<Task*> aAllocator = GetDefaultAllocator<void*>()):
             TaskManager(aAllocator),
