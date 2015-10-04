@@ -164,6 +164,15 @@ namespace Solaire{ namespace Json{
             return value;
         }
 
+        void ThrowIfError(const RpcResponse aResponse) const{
+            Object& response = aResponse->GetObject();
+            auto it = response.find("error");
+            if(it != response.end()){
+                ConstStringFragment message = it->second->GetObject()["message"]->GetString();
+                throw std::runtime_error(std::string(message.begin(), message.end()));
+            }
+        }
+
         Allocator* mAllocator;
         RpcBuilder mBuilder;
         JsonSerialSystem mSystem;
@@ -173,12 +182,11 @@ namespace Solaire{ namespace Json{
         virtual RpcResponse SendRequest(RpcRequest aRequest) = 0;
         virtual RpcRequestID GenerateRequestID() const = 0;
     public:
-
         template<class R, class ...Params>
         std::shared_ptr<R> SendRequest(const ConstStringFragment aMethodName, Params... aParams){
             RpcRequest requst = mBuilder.BuildRpcRequest(GenerateRequestID(), aMethodName, SerialiseParams(aParams...));
             RpcResponse response = SendRequest(requst);
-            //! \TODO Check for error
+            ThrowIfError(response);
             return RpcDeserialise<R>(response->GetObject()["data"]);
         }
 
