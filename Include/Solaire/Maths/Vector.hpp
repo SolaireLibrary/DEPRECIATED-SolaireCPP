@@ -516,7 +516,7 @@ namespace Solaire{ namespace Maths{
 
 }
     template<typename TYPE, const uint32_t LENGTH>
-    class Serialisable<Solaire::Maths::Vector<TYPE, LENGTH>>
+    class Serialisable<Solaire::Maths::Vector<TYPE, LENGTH>, Solaire::Maths::Vector<TYPE, LENGTH>>
     {
     public:
         typedef Solaire::Maths::Vector<TYPE, LENGTH> Vector;
@@ -530,12 +530,11 @@ namespace Solaire{ namespace Maths{
         }
 
         std::shared_ptr<Vector> Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot){
-            Allocator::SharedPointer<Vector> vector = aSystem.GetDataAllocator().SharedAllocate<Vector>();
-            Vector& ref = *vector;
+            Vector vector;
 
             SerialArrayPtr array_ = aRoot->Read<SerialArrayPtr>(aTag);
             for(uint32_t i = 0; i < LENGTH; ++i){
-                ref[i] = array_->Read<TYPE>(i);
+                vector[i] = array_->Read<TYPE>(i);
             }
 
             return vector;

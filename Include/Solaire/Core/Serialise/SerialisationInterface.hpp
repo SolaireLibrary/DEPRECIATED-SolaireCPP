@@ -67,6 +67,27 @@ namespace Solaire{
         SERIAL_TYPE_N
     };
 
+    template<class T>
+    static constexpr bool IsSerialPrimative(){
+        return
+            std::is_same<T, uint8_t>::value ||
+            std::is_same<T, uint16_t>::value ||
+            std::is_same<T, uint32_t>::value ||
+            std::is_same<T, uint64_t>::value ||
+            std::is_same<T, int8_t>::value ||
+            std::is_same<T, int16_t>::value ||
+            std::is_same<T, int32_t>::value ||
+            std::is_same<T, int64_t>::value ||
+            std::is_same<T, float>::value ||
+            std::is_same<T, double>::value ||
+            std::is_same<T, char>::value ||
+            std::is_same<T, bool>::value ||
+            std::is_same<T, SerialArrayPtr>::value ||
+            std::is_same<T, SerialObjectPtr>::value ||
+            std::is_same<T, ConstSerialArrayPtr>::value ||
+            std::is_same<T, ConstSerialObjectPtr>::value;
+    }
+
     class SerialSystem{
     public:
         virtual ~SerialSystem(){}

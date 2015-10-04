@@ -37,11 +37,11 @@
 
 namespace Solaire{
 
-    template<class T, class Enable = void>
+    template<class T, class R = std::shared_ptr<T>, class Enable = void>
     class Serialisable{
 
         static void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot) = delete;
-        static std::shared_ptr<T> Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot) = delete;
+        static R Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot) = delete;
     };
 
 
@@ -52,41 +52,18 @@ namespace Solaire{
         return Deserialise<A>(aSystem, ss);
     }*/
 
-    namespace SerialHelper{
-        template<class Iterator>
-        static Iterator CopyString(const Iterator aBegin, const ConstStringFragment aString){
-            const size_t size = aString.Size();
-            char* const dst = &(*aBegin);
-            const char* const src = &(*aString.begin());
-            std::memcpy(dst, src, size);
-            return aBegin + size;
-        }
-
-        template<class Iterator>
-        static Iterator CopyNumber(const Iterator aBegin, const double aNumber){
-            char* const begin = &(*aBegin);
-            const char* const end = NumericParse::ToString(begin, aNumber);
-            return aBegin + (end - begin);
-        }
-
-        template<class Iterator>
-        static Iterator CopyBool(const Iterator aBegin, const bool aBool){
-            return CopyString(aBegin, aBool ? "true" : "false");
-        }
-    }
-
     // Primatives
 
     template<class T>
-    class Serialisable<T, typename std::enable_if<std::is_arithmetic<T>::value>::type>
+    class Serialisable<T, T, typename std::enable_if<IsSerialPrimative<T>>::type>
     {
     public:
         void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot){
-            aRoot->Write<T>(aTag);
+            aRoot->Write<T>(aTag, aValue);
         }
 
         std::shared_ptr<T> Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot){
-            return aSystem.GetDataAllocator().SharedAllocate<T>(aRoot->Read<T>(aTag));
+            return aRoot->Read<T>(aTag);
         }
     };
 }
