@@ -223,8 +223,8 @@ namespace Solaire{ namespace Json{
             ObjectValue object_;
         } mValue;
     private:
-        static bool Serialise(const  std::function<char(void)> aGetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue);
-        static std::shared_ptr<Value> Deserialise(const  std::function<void(char)> aSetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue);
+        static bool Serialise(const  std::function<void(char)> aSetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue);
+        static std::shared_ptr<Value> Deserialise(const  std::function<char(void)> aGetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue);
     public:
         static size_t EstimateSerialLength(const Value& aValue);
 
@@ -232,7 +232,7 @@ namespace Solaire{ namespace Json{
         static bool Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Value& aValue){
             aParseEnd = aBegin;
             return Serialise(
-                [&]()->char{return *aParseEnd;},
+                [&](char aChar)->void{*aParseEnd = aChar;},
                 [&]()->void{++aParseEnd;},
                 [&]()->void{--aParseEnd;},
                 aValue
@@ -243,7 +243,7 @@ namespace Solaire{ namespace Json{
         static std::shared_ptr<Value> Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Allocator& aParseAllocator, Allocator& aDataAllocator){
             aParseEnd = aBegin;
             return Serialise(
-                [&](char aChar)->void{*aParseEnd = aChar;},
+                [&]()->char{return *aParseEnd;},
                 [&]()->void{++aParseEnd;},
                 [&]()->void{--aParseEnd;},
                 aParseAllocator,
@@ -270,6 +270,8 @@ namespace Solaire{ namespace Json{
 
         Value& operator=(Value&& aOther);
         Value& operator=(const TypeID);
+
+        TypeID GetType() const;
 
         NullValue& AsNull();
         BoolValue& AsBool();

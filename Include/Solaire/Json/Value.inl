@@ -419,11 +419,37 @@ namespace Solaire{ namespace Json{
 
     // Value
 
-    bool Value::Serialise(const  std::function<char(void)> aGetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue){
-        throw 0;
+    bool Value::Serialise(const  std::function<void(char)> aSetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue){
+        const auto WriteString = [&](ConstStringFragment aString)->void{
+            for(const char c : aString){
+                aSetFn(c);
+                aForwardFn();
+            }
+        };
+
+        switch(aValue.mType){
+        case TYPE_NULL:
+            WriteString("null");
+            return true;
+        case TYPE_BOOL:
+            WriteString(aValue.mData.bool_ ? "true" : "false");
+            return true;
+        case TYPE_NUMBER:
+            {
+                char buf[16];
+                WriteString(ConstStringFragment(buf, NumericParse::ToString(buf, aValue.mData.double_)));
+            }
+            return true;
+        case TYPE_ARRAY:
+            return false;
+        case TYPE_OBJECT:
+            return false;
+        default:
+            return false;
+        }
     }
 
-    std::shared_ptr<Value> Value::Deserialise(const  std::function<void(char)> aSetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue){
+    std::shared_ptr<Value> Value::Deserialise(const  std::function<char(void)> aGetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue){
         throw 0;
     }
 
@@ -570,6 +596,10 @@ namespace Solaire{ namespace Json{
 
     Value::~Value(){
         operator=(TYPE_NULL);
+    }
+
+    TypeID Value::GetType() const{
+        return mType;
     }
 
     NullValue& Value::AsNull(){
