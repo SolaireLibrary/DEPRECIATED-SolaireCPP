@@ -207,21 +207,21 @@ namespace Solaire{ namespace Json{
         Allocator* mAllocator;
         TypeID mType;
         union{
-            bool bool_;
-            double double_;
-            String* string_;
-            ArrayType* array_;
-            ObjectType* object_;
-        } mData;
+            bool mDataBool;
+            double mDataNumber;
+            String* mDataString;
+            ArrayType* mDataArray;
+            ObjectType* mDataObject;
+        };
 
         union{
-            NullValue null_;
-            BoolValue bool_;
-            NumberValue double_;
-            StringValue string_;
-            ArrayValue array_;
-            ObjectValue object_;
-        } mValue;
+            NullValue mValueNull;
+            BoolValue mValueBool;
+            NumberValue mValueNumber;
+            StringValue mValueString;
+            ArrayValue mValueArray;
+            ObjectValue mValueObject;
+        };
     private:
         static bool Serialise(const  std::function<void(char)> aSetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue);
         static std::shared_ptr<Value> Deserialise(const  std::function<char(void)> aGetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue);

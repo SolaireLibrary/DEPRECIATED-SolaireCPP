@@ -55,9 +55,9 @@ namespace Solaire{ namespace Json{
     BoolValue::operator bool() const{
         switch(mParent->mType){
         case TYPE_BOOL:
-           return mParent->mData.bool_;
+           return mParent->mDataBool;
         case TYPE_NUMBER:
-            return mParent->mData.double_ > 0.0;
+            return mParent->mDataNumber > 0.0;
         default:
             throw std::runtime_error("Json::BoolValue : Cannot convert value to bool");
         }
@@ -73,7 +73,7 @@ namespace Solaire{ namespace Json{
             *mParent = TYPE_NULL;
             break;
         }
-        mParent->mData.bool_ = aValue;
+        mParent->mDataBool = aValue;
         mParent->mType = TYPE_BOOL;
         return *this;
     }
@@ -124,9 +124,9 @@ namespace Solaire{ namespace Json{
     NumberValue::operator double() const{
         switch(mParent->mType){
         case TYPE_BOOL:
-           return mParent->mData.bool_ ? 1.0 : 0.0;
+           return mParent->mDataBool ? 1.0 : 0.0;
         case TYPE_NUMBER:
-            return mParent->mData.double_;
+            return mParent->mDataNumber;
         default:
             throw std::runtime_error("Json::NumberValue : Cannot convert value to double");
         }
@@ -178,7 +178,7 @@ namespace Solaire{ namespace Json{
             *mParent = TYPE_NULL;
             break;
         }
-        mParent->mData.double_ = aValue;
+        mParent->mDataNumber = aValue;
         mParent->mType = TYPE_NUMBER;
         return *this;
     }
@@ -193,11 +193,11 @@ namespace Solaire{ namespace Json{
     StringValue::operator char() const{
         switch(mParent->mType){
         case TYPE_BOOL:
-           return mParent->mData.bool_ ? '0' : '1';
+           return mParent->mDataBool ? '0' : '1';
         case TYPE_NUMBER:
-            return static_cast<char>(mParent->mData.double_);
+            return static_cast<char>(mParent->mDataNumber);
         case TYPE_STRING:
-            return (*mParent->mData.string_)[0];
+            return (*mParent->mDataString)[0];
         default:
             throw std::runtime_error("Json::StringValue : Cannot convert value to char");
         }
@@ -207,7 +207,7 @@ namespace Solaire{ namespace Json{
         //! \TODO Buffer temp string for non string types
         switch(mParent->mType){
         case TYPE_STRING:
-            return *mParent->mData.string_;
+            return *mParent->mDataString;
         default:
             throw std::runtime_error("Json::StringValue : Cannot convert value to ConstStringFragment");
         }
@@ -224,8 +224,8 @@ namespace Solaire{ namespace Json{
             *mParent = TYPE_NULL;
             break;
         }
-        (*mParent->mData.string_).Clear();
-        (*mParent->mData.string_) += aValue;
+        (*mParent->mDataString).Clear();
+        (*mParent->mDataString) += aValue;
         mParent->mType = TYPE_STRING;
         return *this;
     }
@@ -241,7 +241,7 @@ namespace Solaire{ namespace Json{
             *mParent = TYPE_NULL;
             break;
         }
-        (*mParent->mData.string_) = aValue;
+        (*mParent->mDataString) = aValue;
         mParent->mType = TYPE_STRING;
         return *this;
     }
@@ -256,9 +256,9 @@ namespace Solaire{ namespace Json{
     size_t ArrayValue::Size() const{
         switch(mParent->mType){
         case TYPE_ARRAY:
-            return mParent->mData.array_->Size();
+            return mParent->mDataArray->Size();
         case TYPE_OBJECT:
-            return mParent->mData.object_->Size();
+            return mParent->mDataObject->Size();
             break;
         default:
             return 0;
@@ -268,9 +268,9 @@ namespace Solaire{ namespace Json{
     Value& ArrayValue::operator[](const size_t aIndex){
         switch(mParent->mType){
         case TYPE_ARRAY:
-            return *(*mParent->mData.array_)[0];
+            return *(*mParent->mDataArray)[0];
         case TYPE_OBJECT:
-            return *(*mParent->mData.object_)[0].second;
+            return *(*mParent->mDataObject)[0].second;
             break;
         default:
             throw std::runtime_error("Json::ArrayValue : Cannot access this type by index");
@@ -280,9 +280,9 @@ namespace Solaire{ namespace Json{
     const Value& ArrayValue::operator[](const size_t aIndex) const{
         switch(mParent->mType){
         case TYPE_ARRAY:
-            return *(*mParent->mData.array_)[0];
+            return *(*mParent->mDataArray)[0];
         case TYPE_OBJECT:
-            return *(*mParent->mData.object_)[0].second;
+            return *(*mParent->mDataObject)[0].second;
             break;
         default:
             throw std::runtime_error("Json::ArrayValue : Cannot access this type by index");
@@ -292,7 +292,7 @@ namespace Solaire{ namespace Json{
     Value& ArrayValue::PushBack(std::shared_ptr<Value> aValue){
         switch(mParent->mType){
         case TYPE_ARRAY:
-            return *mParent->mData.array_->PushBack(aValue);
+            return *mParent->mDataArray->PushBack(aValue);
         default:
             throw std::runtime_error("Json::ArrayValue : Type is not array");
         }
@@ -301,9 +301,9 @@ namespace Solaire{ namespace Json{
     void ArrayValue::Erase(const size_t aIndex){
         switch(mParent->mType){
         case TYPE_ARRAY:
-            mParent->mData.array_->Erase(mParent->mData.array_->begin() + aIndex);
+            mParent->mDataArray->Erase(mParent->mDataArray->begin() + aIndex);
         case TYPE_OBJECT:
-            mParent->mData.object_->Erase(mParent->mData.object_->begin() + aIndex);
+            mParent->mDataObject->Erase(mParent->mDataObject->begin() + aIndex);
             break;
         default:
             throw std::runtime_error("Json::ArrayValue : Cannot erase from this type by index");
@@ -314,9 +314,9 @@ namespace Solaire{ namespace Json{
         const std::shared_ptr<Value> value = const_cast<Value&>(aValue).shared_from_this();
         switch(mParent->mType){
         case TYPE_ARRAY:
-            mParent->mData.array_->Erase(mParent->mData.array_->FindFirst(value));
+            mParent->mDataArray->Erase(mParent->mDataArray->FindFirst(value));
         case TYPE_OBJECT:
-            mParent->mData.object_->Erase(mParent->mData.object_->FindFirst([=](const std::pair<String, std::shared_ptr<Value>>& i){
+            mParent->mDataObject->Erase(mParent->mDataObject->FindFirst([=](const std::pair<String, std::shared_ptr<Value>>& i){
                 return i.second == value;
             }));
             break;
@@ -333,14 +333,14 @@ namespace Solaire{ namespace Json{
     {}
 
     DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator ObjectValue::SearchByObjectName(const ConstStringFragment aName) const{
-        return mParent->mData.object_->FindFirst([=](const std::pair<String, std::shared_ptr<Value>>& i){
+        return mParent->mDataObject->FindFirst([=](const std::pair<String, std::shared_ptr<Value>>& i){
             return i.first == aName;
         });
     }
 
     DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator ObjectValue::SearchByObjectValue(const Value& aValue) const{
         std::shared_ptr<Value> value = const_cast<Value&>(aValue).shared_from_this();
-        return mParent->mData.object_->FindFirst([=](const std::pair<String, std::shared_ptr<Value>>& i){
+        return mParent->mDataObject->FindFirst([=](const std::pair<String, std::shared_ptr<Value>>& i){
             return i.second == value;
         });
     }
@@ -348,7 +348,7 @@ namespace Solaire{ namespace Json{
     size_t ObjectValue::Size() const{
         switch(mParent->mType){
         case TYPE_OBJECT:
-            return mParent->mData.object_->Size();
+            return mParent->mDataObject->Size();
             break;
         default:
             return 0;
@@ -376,7 +376,7 @@ namespace Solaire{ namespace Json{
     bool ObjectValue::Contains(const ConstStringFragment aName) const{
         switch(mParent->mType){
         case TYPE_OBJECT:
-            return SearchByObjectName(aName) != mParent->mData.object_->end();
+            return SearchByObjectName(aName) != mParent->mDataObject->end();
         default:
             throw std::runtime_error("Json::ObjectValue : Cannot search this type by name");
         }
@@ -385,8 +385,8 @@ namespace Solaire{ namespace Json{
     Value& ObjectValue::Add(const ConstStringFragment aName, std::shared_ptr<Value> aValue){
         switch(mParent->mType){
         case TYPE_OBJECT:
-            if(SearchByObjectName(aName) != mParent->mData.object_->end())  throw std::runtime_error("Json::ObjectValue : Already contains named value with this name");
-            return *mParent->mData.object_->PushBack(std::pair<String, std::shared_ptr<Value>>(String(aName, mParent->GetAllocator()), aValue)).second;
+            if(SearchByObjectName(aName) != mParent->mDataObject->end())  throw std::runtime_error("Json::ObjectValue : Already contains named value with this name");
+            return *mParent->mDataObject->PushBack(std::pair<String, std::shared_ptr<Value>>(String(aName, mParent->GetAllocator()), aValue)).second;
             break;
         default:
             throw std::runtime_error("Json::ObjectValue : Cannot add named value to this type");
@@ -396,7 +396,7 @@ namespace Solaire{ namespace Json{
     void ObjectValue::Erase(const ConstStringFragment aName){
         switch(mParent->mType){
         case TYPE_OBJECT:
-            mParent->mData.object_->Erase(SearchByObjectName(aName));
+            mParent->mDataObject->Erase(SearchByObjectName(aName));
             break;
         default:
             throw std::runtime_error("Json::ObjectValue : Cannot erase from this type by name");
@@ -406,10 +406,10 @@ namespace Solaire{ namespace Json{
     void ObjectValue::Erase(const Value& aValue){
         switch(mParent->mType){
         case TYPE_ARRAY:
-            mParent->mData.array_->Erase(mParent->mData.array_->FindFirst(const_cast<Value&>(aValue).shared_from_this()));
+            mParent->mDataArray->Erase(mParent->mDataArray->FindFirst(const_cast<Value&>(aValue).shared_from_this()));
             break;
         case TYPE_OBJECT:
-            mParent->mData.object_->Erase(SearchByObjectValue(aValue));
+            mParent->mDataObject->Erase(SearchByObjectValue(aValue));
             break;
         default:
             throw std::runtime_error("Json::ObjectValue : Cannot erase from this type by value");
@@ -432,15 +432,20 @@ namespace Solaire{ namespace Json{
             WriteString("null");
             return true;
         case TYPE_BOOL:
-            WriteString(aValue.mData.bool_ ? "true" : "false");
+            WriteString(aValue.mDataBool ? "true" : "false");
             return true;
         case TYPE_NUMBER:
             {
                 char buf[16];
-                WriteString(ConstStringFragment(buf, NumericParse::ToString(buf, aValue.mData.double_)));
+                WriteString(ConstStringFragment(buf, NumericParse::ToString(buf, aValue.mDataNumber)));
             }
             return true;
         case TYPE_ARRAY:
+            aSetFn('[');
+            aForwardFn();
+            for(std::shared_ptr<Value> value : *aValue.mDataArray)
+            aSetFn(']');
+            aForwardFn();
             return false;
         case TYPE_OBJECT:
             return false;
@@ -530,22 +535,22 @@ namespace Solaire{ namespace Json{
         case TYPE_NULL:
             break;
         case TYPE_BOOL:
-            mData.bool_ = aOther.mData.bool_;
+            mDataBool = aOther.mDataBool;
             break;
         case TYPE_NUMBER:
-            mData.double_ = aOther.mData.double_;
+            mDataNumber = aOther.mDataNumber;
             break;
         case TYPE_STRING:
-            mData.string_ = aOther.mData.string_;
-            aOther.mData.string_ = nullptr;
+            mDataString = aOther.mDataString;
+            aOther.mDataString = nullptr;
             break;
         case TYPE_ARRAY:
-            mData.array_ = aOther.mData.array_;
-            aOther.mData.array_ = nullptr;
+            mDataArray = aOther.mDataArray;
+            aOther.mDataArray = nullptr;
             break;
         case TYPE_OBJECT:
-            mData.object_ = aOther.mData.object_;
-            aOther.mData.object_ = nullptr;
+            mDataObject = aOther.mDataObject;
+            aOther.mDataObject = nullptr;
             break;
         default:
             throw std::runtime_error("Json::Value : Unknown type");
@@ -561,16 +566,16 @@ namespace Solaire{ namespace Json{
 
         switch(mType){
         case TYPE_STRING:
-            mAllocator->Deallocate<String>(mData.string_);
-            mData.string_ = nullptr;
+            mAllocator->Deallocate<String>(mDataString);
+            mDataString = nullptr;
             break;
         case TYPE_ARRAY:
-            mAllocator->Deallocate<ArrayType>(mData.array_);
-            mData.array_ = nullptr;
+            mAllocator->Deallocate<ArrayType>(mDataArray);
+            mDataArray = nullptr;
             break;
         case TYPE_OBJECT:
-            mAllocator->Deallocate<ObjectType>(mData.object_);
-            mData.object_ = nullptr;
+            mAllocator->Deallocate<ObjectType>(mDataObject);
+            mDataObject = nullptr;
             break;
         default:
             break;
@@ -578,13 +583,13 @@ namespace Solaire{ namespace Json{
 
         switch(aType){
         case TYPE_STRING:
-            mData.string_ = new(mAllocator->AllocateAndRegister<String>()) String(*mAllocator);
+            mDataString = new(mAllocator->AllocateAndRegister<String>()) String(*mAllocator);
             break;
         case TYPE_ARRAY:
-            mData.array_ = new(mAllocator->AllocateAndRegister<ArrayType>()) ArrayType(8, *mAllocator);
+            mDataArray = new(mAllocator->AllocateAndRegister<ArrayType>()) ArrayType(8, *mAllocator);
             break;
         case TYPE_OBJECT:
-            mData.object_ = new(mAllocator->AllocateAndRegister<ObjectType>()) ObjectType(8, *mAllocator);
+            mDataObject = new(mAllocator->AllocateAndRegister<ObjectType>()) ObjectType(8, *mAllocator);
             break;
         default:
             break;
@@ -603,51 +608,51 @@ namespace Solaire{ namespace Json{
     }
 
     NullValue& Value::AsNull(){
-        return mValue.null_;
+        return mValueNull;
     }
 
     BoolValue& Value::AsBool(){
-        return mValue.bool_;
+        return mValueBool;
     }
 
     NumberValue& Value::AsNumber(){
-        return mValue.double_;
+        return mValueNumber;
     }
 
     StringValue& Value::AsString(){
-        return mValue.string_;
+        return mValueString;
     }
 
     ArrayValue& Value::AsArray(){
-        return mValue.array_;
+        return mValueArray;
     }
 
     ObjectValue& Value::AsObject(){
-        return mValue.object_;
+        return mValueObject;
     }
 
     const NullValue& Value::AsNull() const{
-        return mValue.null_;
+        return mValueNull;
     }
 
     const BoolValue& Value::AsBool() const{
-        return mValue.bool_;
+        return mValueBool;
     }
 
     const NumberValue& Value::AsNumber() const{
-        return mValue.double_;
+        return mValueNumber;
     }
 
     const StringValue& Value::AsString() const{
-        return mValue.string_;
+        return mValueString;
     }
 
     const ArrayValue& Value::AsArray() const{
-        return mValue.array_;
+        return mValueArray;
     }
 
     const ObjectValue& Value::AsObject() const{
-        return mValue.object_;
+        return mValueObject;
     }
 
     Allocator& Value::GetAllocator() const{
