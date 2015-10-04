@@ -646,6 +646,7 @@ namespace Solaire{ namespace Xml{
             STATE_COMMENT:
             {
                 //! \TODO Handle comments correctly
+                //! \TODO Handle DTD correctly
                 switch(*aParseEnd){
                 case '>':
                     ++aParseEnd;
@@ -904,7 +905,7 @@ namespace Solaire{ namespace Xml{
             if(mType != TYPE_BODY){
                throw std::runtime_error("Xml::Element : Does not have body value");
             }else{
-                mValue->GetBool();
+                return mValue->GetBool();
             }
         }
 
@@ -912,7 +913,7 @@ namespace Solaire{ namespace Xml{
             if(mType != TYPE_BODY){
                throw std::runtime_error("Xml::Element : Does not have body value");
             }else{
-                mValue->GetNumber();
+                return mValue->GetNumber();
             }
         }
 
@@ -920,7 +921,7 @@ namespace Solaire{ namespace Xml{
             if(mType != TYPE_BODY){
                throw std::runtime_error("Xml::Element : Does not have body value");
             }else{
-                mValue->GetString();
+                return mValue->GetString();
             }
         }
 
