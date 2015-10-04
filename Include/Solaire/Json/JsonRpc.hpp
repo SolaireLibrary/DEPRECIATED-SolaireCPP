@@ -32,6 +32,7 @@ Last Modified	: 4th October 2015
 */
 
 #include "Value.hpp"
+#include "Serialisation.hpp"
 
 namespace Solaire{ namespace Json{
 
@@ -64,7 +65,7 @@ namespace Solaire{ namespace Json{
             std::shared_ptr<Value> ptr = mAllocator->SharedAllocate<Value>(TYPE_OBJECT, *mAllocator);
             Object& request = ptr->GetObject();
 
-            request.emplace("jsonrpc", mAllocator->SharedAllocate<Value>("1.0", *mAllocator));
+            request.emplace("jsonrpc", mAllocator->SharedAllocate<Value>("2.0", *mAllocator));
             if(aIsError){
                 request.emplace("error", aPayload);
             }else{
@@ -82,7 +83,7 @@ namespace Solaire{ namespace Json{
             std::shared_ptr<Value> ptr = mAllocator->SharedAllocate<Value>(TYPE_OBJECT, *mAllocator);
             Object& request = ptr->GetObject();
 
-            request.emplace("jsonrpc", mAllocator->SharedAllocate<Value>("1.0", *mAllocator));
+            request.emplace("jsonrpc", mAllocator->SharedAllocate<Value>("2.0", *mAllocator));
             request.emplace("method", mAllocator->SharedAllocate<Value>(aMethodName, *mAllocator));
             if(aParam){
                 if(aParam->IsArray()){
@@ -131,6 +132,60 @@ namespace Solaire{ namespace Json{
 
         RpcResponse BuildRpcResponseFail(const RpcRequestID aID, RpcError aError){
             return BuildRpcResponse(aID, aError, true);
+        }
+    };
+
+    class RpcServer{
+
+    };
+
+    class RpcClient{
+    private:
+
+        template<class T>
+        std::shared_ptr<Value> RpcSerialise(T aValue){
+            Serialise<T>(aValue, mSystem, "rpcSerialise", mSerialObject);
+            return mSerialObject->mValue->GetObject()["rpcSerialise"];
+        }
+
+        template<class T>
+        std::shared_ptr<T> RpcDeserialise(std::shared_ptr<Value> aValue){
+            return mSerialObject->mValue->GetObject().emplace("rpcDeserialise", aValue);
+            return Deserialise<T>(mSystem, "rpcDeserialise", aValue);
+        }
+
+        template<class ...Params>
+        std::shared_ptr<Value> SerialiseParams(Params&& ...aParams){
+            std::shared_ptr<Value> value = mAllocator->SharedAllocate<Value>(TYPE_ARRAY, *mAllocator);
+            Array& array_ = value->GetArray();
+
+            array_.PushBack(RpcSerialise(aParams...));
+
+            return value;
+        }
+
+        Allocator* mAllocator;
+        RpcBuilder mBuilder;
+        JsonSerialSystem mSystem;
+        std::shared_ptr<JsonSerialObject> mSerialObject;
+    protected:
+        virtual void SendNotification(RpcNotification aNotification) = 0;
+        virtual RpcResponse SendRequest(RpcRequest aRequest) = 0;
+        virtual RpcRequestID GenerateRequestID() const = 0;
+    public:
+
+        template<class R, class ...Params>
+        std::shared_ptr<R> SendRequest(const ConstStringFragment aMethodName, Params... aParams){
+            RpcRequest requst = mBuilder.BuildRpcRequest(GenerateRequestID(), aMethodName, SerialiseParams(aParams...));
+            RpcResponse response = SendRequest(requst);
+            //! \TODO Check for error
+            return RpcDeserialise<R>(response->GetObject()["data"]);
+        }
+
+        template<class ...Params>
+        void SendNotification(const ConstStringFragment aMethodName, Params... aParams){
+            RpcNotification notification = mBuilder.BuildRpcNotification(aMethodName, SerialiseParams(aParams...));
+            SendNotification(notification);
         }
     };
 }}

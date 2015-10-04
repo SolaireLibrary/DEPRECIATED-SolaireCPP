@@ -45,22 +45,18 @@ namespace Solaire{
         void Write(const T& aValue, SerialSystem& aSystem, std::ostream& aStream) = delete;
     };
 
-    template<class T, class ...PARAMS>
-    static Allocator::SharedPointer<T> Deserialise(const SerialSystem& aSystem, std::istream& aStream, PARAMS&&... aParams){
-        return Serialisable<T>().Read(aSystem, aStream, aParams...);
-    }
+    template<class T>
+    static void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot) = delete;
 
-    template<class T, class ...PARAMS>
-    static void Serialise(const T& aValue, const SerialSystem& aSystem, std::ostream& aStream, PARAMS&&... aParams){
-        Serialisable<T>().Write(aValue, aSystem, aStream, aParams...);
-    }
+    template<class T>
+    static std::shared_ptr<T> Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot) = delete;
 
-    template<class A, class B>
+    /*template<class A, class B>
     static Allocator::SharedPointer<A> serial_cast(Allocator::SharedPointer<B> aPointer, const SerialSystem& aSystem){
         std::stringstream ss;
         Serialise<B>(*aPointer, aSystem, ss);
         return Deserialise<A>(aSystem, ss);
-    }
+    }*/
 
     namespace SerialHelper{
         template<class Iterator>
