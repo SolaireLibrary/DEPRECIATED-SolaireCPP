@@ -37,6 +37,48 @@
 namespace Solaire{
 
     class RWMutex{
+    public:
+        class ReadLockWrapper{
+        private:
+            RWMutex& mParent;
+        public:
+            ReadLockWrapper(RWMutex& aParent) :
+                mParent(aParent)
+            {}
+
+            void lock(){
+                mParent.ReadLock();
+            }
+
+            void unlock(){
+                mParent.ReadUnlock();
+            }
+
+            bool try_lock(){
+                return mParent.TryReadLock();
+            }
+        };
+
+        class WriteLockWrapper{
+        private:
+            RWMutex& mParent;
+        public:
+            WriteLockWrapper(RWMutex& aParent) :
+                mParent(aParent)
+            {}
+
+            void lock(){
+                mParent.WriteLock();
+            }
+
+            void unlock(){
+                mParent.WriteUnlock();
+            }
+
+            bool try_lock(){
+                return mParent.TryWriteLock();
+            }
+        };
     private:
         RWMutex(const RWMutex&) = delete;
         RWMutex(RWMutex&&) = delete;
@@ -46,8 +88,17 @@ namespace Solaire{
 
         Mutex mWriteLock;
         RecursiveMutex mStateLock;
+        union{
+            ReadLockWrapper mReadWrapper;
+            WriteLockWrapper mWriteWrapper;
+        };
         int8_t mReadCount;
     public:
+        RWMutex():
+            mReadWrapper(*this),
+            mReadCount(0)
+        {}
+
         void ReadLock(){
             mStateLock.lock();              // Prevent the state from being modified
             if(mReadCount >= 0){            // If there are no locks or an existing read lock
@@ -135,6 +186,14 @@ namespace Solaire{
                 mStateLock.unlock();        //  Allow the state to be modified again
                 throw std::runtime_error("RWMutex : Is not write locked");
             }
+        }
+
+        ReadLockWrapper& GetReadLock(){
+            return mReadWrapper;
+        }
+
+        WriteLockWrapper& GetWriteLock(){
+            return mWriteWrapper;
         }
 
     };
