@@ -39,6 +39,7 @@ namespace Solaire{
 
     template<class T, class R = std::shared_ptr<T>, class Enable = void>
     class Serialisable{
+        typedef R DeserialiseType;
 
         static void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot) = delete;
         static R Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot) = delete;
@@ -82,6 +83,8 @@ namespace Solaire{
     class Serialisable<T, T, typename std::enable_if<IsSerialPrimative<T>>::type>
     {
     public:
+        typedef T DeserialiseType;
+
         void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot){
             aRoot->Write<T>(aTag, aValue);
         }

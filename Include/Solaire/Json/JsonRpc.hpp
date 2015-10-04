@@ -168,7 +168,7 @@ namespace Solaire{ namespace Json{
         virtual RpcRequestID GenerateRequestID() const = 0;
     public:
         template<class R, class ...Params>
-        std::shared_ptr<R> SendRequest(const ConstStringFragment aMethodName, Params... aParams){
+        typename Serialisable<R>::DeserialiseType SendRequest(const ConstStringFragment aMethodName, Params... aParams){
             RpcRequest requst = mBuilder.BuildRpcRequest(GenerateRequestID(), aMethodName, SerialiseParams(aParams...));
             RpcResponse response = SendRequest(requst);
             ThrowIfError(response);

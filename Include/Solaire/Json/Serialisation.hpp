@@ -573,16 +573,16 @@ namespace Solaire{ namespace Json{
     template<class T>
     std::shared_ptr<Value> JsonSerialise(Allocator& aParseAllocator, Allocator& aDataAllocator, T aValue){
         JsonSerialSystem system(aParseAllocator, aDataAllocator);
-        std::shared_ptr<JsonSerialObject> object = aParseAllocator.SharedAllocate<JsonSerialObject>(aParseAllocator.SharedAllocate<Value>(TYPE_ARRAY, aParseAllocator));
+        std::shared_ptr<JsonSerialObject> object = system.CreateO();
 
         Serialisable<T>::Serialise(aValue, system, "rpcSerialise", object);
         return object->mValue->GetObject()["rpcSerialise"];
     }
 
     template<class T>
-    std::shared_ptr<T> JsonDeserialise(Allocator& aParseAllocator, Allocator& aDataAllocator, std::shared_ptr<Value> aValue){
+    typename Serialisable<T>::DeserialiseType JsonDeserialise(Allocator& aParseAllocator, Allocator& aDataAllocator, std::shared_ptr<Value> aValue){
         JsonSerialSystem system(aParseAllocator, aDataAllocator);
-        std::shared_ptr<JsonSerialObject> object = aParseAllocator.SharedAllocate<JsonSerialObject>(aParseAllocator.SharedAllocate<Value>(TYPE_ARRAY, aParseAllocator));
+        std::shared_ptr<JsonSerialObject> object = system.CreateO();
 
         return object->mValue->GetObject().emplace("rpcDeserialise", aValue);
         return Serialisable<T>::Deserialise(object, "rpcDeserialise", aValue);
