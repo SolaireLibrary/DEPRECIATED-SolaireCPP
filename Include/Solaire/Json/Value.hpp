@@ -173,6 +173,9 @@ namespace Solaire{ namespace Json{
         ObjectValue(Value* aParent);
     private:
         Value* mParent;
+    private:
+        DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator SearchByObjectName(const ConstStringFragment aName) const;
+        DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator SearchByObjectValue(const Value& aValue) const;
     public:
         size_t Size() const;
 
@@ -186,7 +189,7 @@ namespace Solaire{ namespace Json{
         void Erase(const Value& aValue);
     };
 
-    class Value{
+    class Value : public std::enable_shared_from_this<Value>{
     public:
         friend NullValue;
         friend BoolValue;
@@ -194,6 +197,9 @@ namespace Solaire{ namespace Json{
         friend StringValue;
         friend ArrayValue;
         friend ObjectValue;
+    private:
+        typedef DynamicArray<std::shared_ptr<Value>> ArrayType;
+        typedef DynamicArray<std::pair<String, std::shared_ptr<Value>>> ObjectType;
     private:
         Value(const Value&) = delete;
         Value& operator=(const Value&) = delete;
@@ -204,8 +210,8 @@ namespace Solaire{ namespace Json{
             bool bool_;
             double double_;
             String* string_;
-            DynamicArray<std::shared_ptr<Value>>* array_;
-            DynamicArray<std::pair<String, std::shared_ptr<Value>>>* object_;
+            ArrayType* array_;
+            ObjectType* object_;
         } mData;
 
         union{
@@ -215,7 +221,7 @@ namespace Solaire{ namespace Json{
             StringValue string_;
             ArrayValue array_;
             ObjectValue object_;
-        } mParent;
+        } mValue;
     private:
         static bool Serialise(const  std::function<char(void)> aGetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue);
         static std::shared_ptr<Value> Deserialise(const  std::function<void(char)> aSetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue);
@@ -260,8 +266,10 @@ namespace Solaire{ namespace Json{
         Value(Allocator& aAllocator, const float aValue);
         Value(Allocator& aAllocator, const double aValue);
         Value(Allocator& aAllocator, const ConstStringFragment aValue);
+        ~Value();
 
         Value& operator=(Value&& aOther);
+        Value& operator=(const TypeID);
 
         NullValue& AsNull();
         BoolValue& AsBool();
