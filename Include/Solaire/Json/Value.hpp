@@ -25,10 +25,10 @@
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
-\version 1.0
+\version 2.0
 \date
 Created			: 29th September 2015
-Last Modified	: 29th September 2015
+Last Modified	: 4th October 2015
 */
 
 #include <Type_traits>
@@ -62,7 +62,7 @@ namespace Solaire{ namespace Json{
 
         NullValue(Value* aParent);
     private:
-        Value* mValue;
+        Value* mParent;
     public:
     };
 
@@ -77,7 +77,7 @@ namespace Solaire{ namespace Json{
 
         BoolValue(Value* aParent);
     private:
-        Value* mValue;
+        Value* mParent;
     public:
         operator bool() const;
         BoolValue& operator=(const bool aValue);
@@ -94,7 +94,7 @@ namespace Solaire{ namespace Json{
 
         NumberValue(Value* aParent);
     private:
-        Value* mValue;
+        Value* mParent;
     public:
         operator uint8_t() const;
         operator uint16_t() const;
@@ -130,7 +130,7 @@ namespace Solaire{ namespace Json{
 
         StringValue(Value* aParent);
     private:
-        Value* mValue;
+        Value* mParent;
     public:
         operator char() const;
         operator ConstStringFragment() const;
@@ -149,7 +149,7 @@ namespace Solaire{ namespace Json{
 
         ArrayValue(Value* aParent);
     private:
-        Value* mValue;
+        Value* mParent;
     public:
         size_t Size() const;
 
@@ -172,7 +172,7 @@ namespace Solaire{ namespace Json{
 
         ObjectValue(Value* aParent);
     private:
-        Value* mValue;
+        Value* mParent;
     public:
         size_t Size() const;
 
@@ -199,7 +199,7 @@ namespace Solaire{ namespace Json{
         Value& operator=(const Value&) = delete;
     private:
         Allocator* mAllocator;
-        TypeID mID;
+        TypeID mType;
         union{
             bool bool_;
             double double_;
@@ -215,7 +215,7 @@ namespace Solaire{ namespace Json{
             StringValue string_;
             ArrayValue array_;
             ObjectValue object_;
-        } mValue;
+        } mParent;
     private:
         static bool Serialise(const  std::function<char(void)> aGetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue);
         static std::shared_ptr<Value> Deserialise(const  std::function<void(char)> aSetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue);
@@ -280,5 +280,7 @@ namespace Solaire{ namespace Json{
         Allocator& GetAllocator() const;
     };
 }}
+
+#include "Value.inl"
 
 #endif
