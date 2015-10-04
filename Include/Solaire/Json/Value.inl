@@ -489,7 +489,53 @@ namespace Solaire{ namespace Json{
     }
 
     size_t Value::EstimateSerialLength(const Value& aValue){
-        throw 0;
+        size_t count = 0;
+
+        const auto WriteString = [&](ConstStringFragment aString)->void{
+            count += aString.Size();
+        };
+
+        switch(aValue.mType){
+        case TYPE_NULL:
+            WriteString("null");
+            return count;
+        case TYPE_BOOL:
+            WriteString(aValue.mDataBool ? "true" : "false");
+            return count;
+        case TYPE_NUMBER:
+            count += 16;
+            return count;
+        case TYPE_ARRAY:
+            {
+                ++count;
+                ArrayType::Iterator end = aValue.mDataArray->end();
+                for(ArrayType::Iterator i = aValue.mDataArray->begin(); i != end; ++i){
+                    count += EstimateSerialLength(**i);
+                    if((i - 1) != end){
+                        ++count;
+                    }
+                }
+                ++count;
+                return count;
+            }
+        case TYPE_OBJECT:
+            {
+                ++count;
+                ObjectType::Iterator end = aValue.mDataObject->end();
+                for(ObjectType::Iterator i = aValue.mDataObject->begin(); i != end; ++i){
+                    count += 3;
+                    WriteString(i->first);
+                    count += EstimateSerialLength(*i->second);
+                    if((i - 1) != end){
+                        ++count;
+                    }
+                }
+                ++count;
+                return count;
+            }
+        default:
+            return false;
+        }
     }
 
     /*Value::Value(Value&& aOther):
