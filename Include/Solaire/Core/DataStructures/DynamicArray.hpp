@@ -38,7 +38,7 @@
 #include "..\Iterators\ReverseIterator.hpp"
 #include "..\Iterators\ConstIterator.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     template<class TYPE, class CONST_TYPE = const TYPE, class INDEX = uint16_t>
 	class DynamicArray{
@@ -52,8 +52,8 @@ namespace Solaire{ namespace Core{
 		typedef ConstType* ConstPointer;
 		typedef Pointer Iterator;
 		typedef ConstPointer ConstIterator;
-		typedef Core::ReverseIterator<Type, Iterator> ReverseIterator;
-		typedef Core::ConstIterator<Type, ReverseIterator> ConstReverseIterator;
+		typedef ReverseIteratorWrapper<Type, Iterator> ReverseIterator;
+		typedef ConstIteratorWrapper<Type, ReverseIterator> ConstReverseIterator;
 		typedef INDEX Index;
 		typedef DynamicArray<TYPE, CONST_TYPE, INDEX> Self;
 	private:
@@ -78,7 +78,7 @@ namespace Solaire{ namespace Core{
         }
 
         void ShiftDown(const ConstPointer aPosition){
-            if(aPosition < mData || aPosition >= mData + mHead) throw std::runtime_error("Core::DynamicArray : Position is out of bounds");
+            if(aPosition < mData || aPosition >= mData + mHead) throw std::runtime_error("DynamicArray : Position is out of bounds");
             --mHead;
             for(Index i = aPosition - mData; i < mHead; ++i){
                 mData[i] = std::move(mData[i + 1]);
@@ -87,7 +87,7 @@ namespace Solaire{ namespace Core{
         }
 
         void ShiftUp(const ConstPointer aPosition){
-            if(aPosition < mData || aPosition >= mData + mHead) throw std::runtime_error("Core::DynamicArray : Position is out of bounds");
+            if(aPosition < mData || aPosition >= mData + mHead) throw std::runtime_error("DynamicArray : Position is out of bounds");
             if(mHead >= mSize) IncreaseSize();
             ++mHead;
 
@@ -273,12 +273,12 @@ namespace Solaire{ namespace Core{
 		}
 
 		Reference operator[](const Index aIndex){
-		    if(aIndex < 0 || aIndex >= mHead) throw std::runtime_error("Core::DynamicArray : Index is out of bounds");
+		    if(aIndex < 0 || aIndex >= mHead) throw std::runtime_error("DynamicArray : Index is out of bounds");
 		    return mData[aIndex];
 		}
 
 		ConstReference operator[](const Index aIndex) const{
-		    if(aIndex < 0 || aIndex >= mHead) throw std::runtime_error("Core::DynamicArray : Index is out of bounds");
+		    if(aIndex < 0 || aIndex >= mHead) throw std::runtime_error("DynamicArray : Index is out of bounds");
 		    return mData[aIndex];
 		}
 
@@ -428,6 +428,6 @@ namespace Solaire{ namespace Core{
 		    return ConstReverseIterator(ReverseIterator(Iterator(begin() - 1)));
 		}
 	};
-}}
+}
 
 #endif

@@ -31,7 +31,7 @@ Created			: 18th September 2015
 Last Modified	: 28th September 2015
 */
 
-namespace Solaire { namespace Core {
+namespace Solaire {
 
     // StringComparison
 
@@ -73,7 +73,7 @@ namespace Solaire { namespace Core {
                 return std::memcmp(b1, b2, sizeof(ConstStringFragment::Type) * s3);
             }
         }else{
-            if(s1 < length || s2 < length) throw std::runtime_error("Core::StringComparison::operator() : Fragment length is less than comparison length");
+            if(s1 < length || s2 < length) throw std::runtime_error("StringComparison::operator() : Fragment length is less than comparison length");
             return std::memcmp(b1, b2, sizeof(ConstStringFragment::Type) * length);
         }
     }
@@ -314,13 +314,13 @@ namespace Solaire { namespace Core {
 
     StringFragment& StringFragment::ReplaceNext(const ConstIterator aPos, const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
         const size_t size = aTarget.Size();
-        if(size != aReplacement.Size()) throw std::runtime_error("Core::StringFragment::ReplaceNext : String fragments must be of equal length");
+        if(size != aReplacement.Size()) throw std::runtime_error("StringFragment::ReplaceNext : String fragments must be of equal length");
 
         const Iterator pos = const_cast<Iterator>(FindNext(aPos, aTarget).begin());
         const ConstIterator end = this->end();
         if(pos != end){
             const size_t dif = end - pos;
-            if(dif < size) throw std::runtime_error("Core::StringFragment::ReplaceNext : String fragment size exceeded");
+            if(dif < size) throw std::runtime_error("StringFragment::ReplaceNext : String fragment size exceeded");
             std::memcpy(pos, aTarget.begin(), sizeof(Type) * size);
         }
 
@@ -433,7 +433,7 @@ namespace Solaire { namespace Core {
         return mFragment.FindLast(aFragment);
     }
 
-}}
+}
 
 
 #endif

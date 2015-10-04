@@ -36,7 +36,7 @@ Last Modified	: 25th September 2015
 #include "Allocator.hpp"
 #include "../DataStructures/DynamicArray.hpp"
 
-namespace Solaire{ namespace Core {
+namespace Solaire{
 
     /*!
         \class MemoryArena
@@ -246,6 +246,6 @@ namespace Solaire{ namespace Core {
     };
 
 
-}}
+}
 
 #endif

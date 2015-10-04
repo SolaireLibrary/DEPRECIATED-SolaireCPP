@@ -31,10 +31,10 @@
 	Last Modified	: 27th September 2015
 */
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
 	template<class T, class ITERATOR>
-	class ConstIterator{
+	class ConstIteratorWrapper{
 	private:
 		ITERATOR mIterator;
 	public:
@@ -42,13 +42,13 @@ namespace Solaire{ namespace Core{
 		typedef const T ConstType;
 		typedef ConstType& ConstReference;
 		typedef ConstType* ConstPointer;
-		typedef ConstIterator<Type, ITERATOR> Self;
+		typedef ConstIteratorWrapper<Type, ITERATOR> Self;
 
-		ConstIterator() :
+		ConstIteratorWrapper() :
 			mIterator()
 		{}
 
-		ConstIterator(const ITERATOR aOther) :
+		ConstIteratorWrapper(const ITERATOR aOther) :
 			mIterator(aOther)
 		{}
 
@@ -124,7 +124,7 @@ namespace Solaire{ namespace Core{
 			return mIterator >= aOther.mIterator;
 		}
 	};
-}}
+}
 
 
 #endif

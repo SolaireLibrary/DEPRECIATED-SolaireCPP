@@ -35,7 +35,7 @@
 #include <fstream>
 #include "StringBufferFactory.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class StringFileFactory : public StringBufferFactory{
     private:
@@ -45,7 +45,7 @@ namespace Solaire{ namespace Core{
 
         void Lock() override{
             std::ifstream file(mFile);
-            if(! file.is_open()) throw std::runtime_error("Core::StringFileFactory : Could not open requested file for reading");
+            if(! file.is_open()) throw std::runtime_error("StringFileFactory : Could not open requested file for reading");
 
             mBuffer = std::string(
                 std::istream_iterator<char>(file),
@@ -80,6 +80,6 @@ namespace Solaire{ namespace Core{
         }
     };
 
-}}
+}
 
 #endif

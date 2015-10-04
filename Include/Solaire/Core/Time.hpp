@@ -34,7 +34,7 @@
 #include <stdexcept>
 #include <chrono>
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class Timer{
     private:
@@ -118,6 +118,6 @@ namespace Solaire{ namespace Core{
         }
     };
 
-}}
+}
 
 #endif

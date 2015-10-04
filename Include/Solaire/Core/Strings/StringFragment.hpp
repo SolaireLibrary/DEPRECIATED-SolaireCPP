@@ -35,7 +35,7 @@ Last Modified	: 28th September 2015
 #include "..\Iterators\ReverseIterator.hpp"
 #include "..\Iterators\ConstIterator.hpp"
 
-namespace Solaire { namespace Core {
+namespace Solaire {
     class ConstStringFragment;
 
     struct StringComparison{
@@ -61,8 +61,8 @@ namespace Solaire { namespace Core {
         typedef ConstType* ConstPointer;
         typedef Pointer Iterator;
         typedef ConstPointer ConstIterator;
-        typedef Core::ReverseIterator<Type, Iterator> ReverseIterator;
-        typedef Core::ConstIterator<Type, ReverseIterator> ConstReverseIterator;
+        typedef ReverseIteratorWrapper<Type, Iterator> ReverseIterator;
+        typedef ConstIteratorWrapper<Type, ReverseIterator> ConstReverseIterator;
 	private:
 		Pointer mBegin;
 		Pointer mEnd;
@@ -149,7 +149,7 @@ namespace Solaire { namespace Core {
         typedef ConstType& ConstReference;
         typedef ConstType* ConstPointer;
         typedef ConstPointer ConstIterator;
-        typedef Core::ConstIterator<Type, StringFragment::ReverseIterator> ConstReverseIterator;
+        typedef ConstIteratorWrapper<Type, StringFragment::ReverseIterator> ConstReverseIterator;
 	private:
 		StringFragment mFragment;
 	public:
@@ -188,7 +188,7 @@ namespace Solaire { namespace Core {
             return aStream >> aFragment.mFragment;
         }
 	};
-}}
+}
 
 #include "StringFragment.inl"
 

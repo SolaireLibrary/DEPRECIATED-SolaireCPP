@@ -31,15 +31,15 @@
 	Last Modified	: 28th September 2015
 */
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     // String
 
-    Core::Allocator& String::GetAllocator() const{
+    Allocator& String::GetAllocator() const{
         return mContainer.GetAllocator();
     }
 
-    String& String::operator=(const Core::ConstStringFragment aOther){
+    String& String::operator=(const ConstStringFragment aOther){
         Clear();
         operator+=(aOther);
         return *this;
@@ -47,13 +47,13 @@ namespace Solaire{ namespace Core{
 
     String& String::operator=(const std::basic_string<Type>& aOther){
         Clear();
-        operator+=(Core::ConstStringFragment(aOther.c_str(), aOther.c_str() + aOther.size()));
+        operator+=(ConstStringFragment(aOther.c_str(), aOther.c_str() + aOther.size()));
         return *this;
     }
 
     String& String::operator=(const ConstPointer aOther){
         Clear();
-        operator+=(Core::ConstStringFragment(aOther));
+        operator+=(ConstStringFragment(aOther));
         return *this;
     }
 
@@ -99,7 +99,7 @@ namespace Solaire{ namespace Core{
         mContainer.PushBack('\0');
     }
 
-    String::String(const Core::ConstStringFragment aOther, Allocator& aAllocator) :
+    String::String(const ConstStringFragment aOther, Allocator& aAllocator) :
         mContainer(aOther.begin(), aOther.end(), aAllocator)
     {
         mContainer.PushBack('\0');
@@ -111,7 +111,7 @@ namespace Solaire{ namespace Core{
 
     void String::Erase(const ConstIterator aPos, size_t aCount){
         while(aCount != 0){
-            if(aPos == mContainer.end()) throw std::runtime_error("Core::String::Erase : Cannot erase past end of string");
+            if(aPos == mContainer.end()) throw std::runtime_error("String::Erase : Cannot erase past end of string");
             mContainer.Erase(aPos);
             --aCount;
         }
@@ -441,7 +441,7 @@ namespace Solaire{ namespace Core{
         }
         return *this;
     }
-}}
+}
 
 
 #endif

@@ -54,7 +54,7 @@ namespace Solaire{ namespace Maths{
 
             HAS_MSVC_VECTORS = 0,
 
-            IS_POWER_OF_TWO = Core::Maths::IsPow2(LENGTH),
+            IS_POWER_OF_TWO = Maths::IsPow2(LENGTH),
 
             GCC_VECTORS = HAS_GCC_VECTORS && IS_POWER_OF_TWO,
             MSVC_VECTORS = HAS_MSVC_VECTORS,
@@ -221,7 +221,7 @@ namespace Solaire{ namespace Maths{
 
         static inline T* LerpEq(T* const aOutput, const T* const aVector, const double aWeight){
             for(uint32_t i = 0; i < LENGTH; ++i){
-                aOutput[i] = static_cast<T>(Core::Maths::Lerp(static_cast<double>(aOutput[i]), static_cast<double>(aVector[i]), aWeight));
+                aOutput[i] = static_cast<T>(Maths::Lerp(static_cast<double>(aOutput[i]), static_cast<double>(aVector[i]), aWeight));
             }
             return aOutput;
         }

@@ -61,7 +61,7 @@ namespace Solaire{ namespace Ui{
 
     class MouseSource;
 
-    class MouseListener : public Core::Listener<MouseSource, MouseListener>{
+    class MouseListener : public Listener<MouseSource, MouseListener>{
     protected:
         virtual void OnButtonPress(const MouseButton aButton, const uint64_t aTime) = 0;
         virtual void OnButtonRelease(const MouseButton aButton, const uint64_t aTime) = 0;
@@ -70,7 +70,7 @@ namespace Solaire{ namespace Ui{
     public:
         friend MouseSource;
 
-        MouseListener(Core::Allocator& aAllocator = Core::GetDefaultAllocator()) :
+        MouseListener(Allocator& aAllocator = GetDefaultAllocator()) :
             Listener(aAllocator)
         {}
 
@@ -79,7 +79,7 @@ namespace Solaire{ namespace Ui{
         }
     };
 
-    class MouseSource : public Core::Source<MouseSource, MouseListener>
+    class MouseSource : public Source<MouseSource, MouseListener>
     {
     protected:
         void PressButton(const MouseButton aButton, const uint64_t aTime){
@@ -110,7 +110,7 @@ namespace Solaire{ namespace Ui{
             }
         }
     public:
-        MouseSource(Core::Allocator& aAllocator = Core::GetDefaultAllocator()) :
+        MouseSource(Allocator& aAllocator = GetDefaultAllocator()) :
             Source(aAllocator)
         {}
 
@@ -123,7 +123,7 @@ namespace Solaire{ namespace Ui{
     private:
         struct ButtonInfo{
             typedef std::pair<uint64_t, uint64_t> TimePair;
-            Core::CyclicalDeque<TimePair> history;
+            CyclicalDeque<TimePair> history;
             bool isPressed;
 
             ButtonInfo() :
@@ -149,12 +149,12 @@ namespace Solaire{ namespace Ui{
             }
         };
 
-        //Core::WrapperAllocator<void*> mAllocator;
+        //WrapperAllocator<void*> mAllocator;
         ButtonInfo mButtons[BUTTON_COUNT];
         typedef std::pair<uint64_t, float> WheelHistory;
-        Core::CyclicalDeque<WheelHistory> mWheelHistory;
+        CyclicalDeque<WheelHistory> mWheelHistory;
         typedef std::pair<uint64_t, MouseCoord> PositionHistory;
-        Core::CyclicalDeque<PositionHistory> mPositionHistory;
+        CyclicalDeque<PositionHistory> mPositionHistory;
 
         ButtonInfo& GetButtonInfo(const MouseButton aButton){
             return mButtons[aButton];
@@ -211,9 +211,9 @@ namespace Solaire{ namespace Ui{
         }
 
     public:
-        Mouse()://Core::Allocator& aAllocator = Core::GetDefaultAllocator() :
-            //KeySource(reinterpret_cast<Core::WrapperAllocator<ListenerBase*>&>(mAllocator)),
-           // KeyAllocator(reinterpret_cast<Core::WrapperAllocator<SourceBase*>&>(mAllocator)),
+        Mouse()://Allocator& aAllocator = GetDefaultAllocator() :
+            //KeySource(reinterpret_cast<WrapperAllocator<ListenerBase*>&>(mAllocator)),
+           // KeyAllocator(reinterpret_cast<WrapperAllocator<SourceBase*>&>(mAllocator)),
             //mAllocator(aAllocator)
             mWheelHistory(SOLAIRE_INPUT_HISTORY),
             mPositionHistory(SOLAIRE_INPUT_HISTORY)
@@ -258,7 +258,7 @@ namespace Solaire{ namespace Ui{
                     const double p0 = i->second;
                     const double p1 = j->second;
                     const double w = t0 / t1;
-                    return static_cast<float>(Core::Maths::Lerp(p0, p1, w));
+                    return static_cast<float>(Maths::Lerp(p0, p1, w));
                 }
                 ++i;
                 ++j;

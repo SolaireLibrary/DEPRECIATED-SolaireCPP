@@ -36,7 +36,7 @@
 #include "../DataStructures/DynamicArray.hpp"
 #include "StringFragment.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class String{
     public:
@@ -57,7 +57,7 @@ namespace Solaire{ namespace Core{
         Container mContainer;
     public:
         // Assignment
-        String& operator=(const Core::ConstStringFragment aOther);
+        String& operator=(const ConstStringFragment aOther);
         String& operator=(const std::basic_string<Type>& aOther);
         String& operator=(const ConstPointer aOther);
         String& operator=(const String& aOther);
@@ -67,7 +67,7 @@ namespace Solaire{ namespace Core{
         String(const String& aOther);
         String(String&& aOther);
         String(Allocator& aAllocator = GetDefaultAllocator());
-        String(const Core::ConstStringFragment aOther, Allocator& aAllocator = GetDefaultAllocator());
+        String(const ConstStringFragment aOther, Allocator& aAllocator = GetDefaultAllocator());
         String(const std::basic_string<Type>& aOther, Allocator& aAllocator = GetDefaultAllocator());
         String(const ConstPointer aPointer, Allocator& aAllocator = GetDefaultAllocator());
         String(const ConstPointer aPointer, const size_t aSize, Allocator& aAllocator = GetDefaultAllocator());
@@ -90,7 +90,7 @@ namespace Solaire{ namespace Core{
         ConstReverseIterator rend() const;
 
         // Misc
-        Core::Allocator& GetAllocator() const;
+        Allocator& GetAllocator() const;
 
         // Erase
         void Erase(const ConstIterator aPos);
@@ -209,7 +209,7 @@ namespace Solaire{ namespace Core{
             return aStream;
         }
     };
-}}
+}
 
 #include "String.inl"
 

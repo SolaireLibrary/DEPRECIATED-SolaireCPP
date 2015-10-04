@@ -33,7 +33,7 @@
 
 #include "Task.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class TaskManager{
     private:
@@ -75,7 +75,7 @@ namespace Solaire{ namespace Core{
 
         virtual size_t ThreadCount() const = 0;
     };
-}}
+}
 
 #include "TaskManager.inl"
 

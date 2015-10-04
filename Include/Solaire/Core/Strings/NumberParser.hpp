@@ -35,7 +35,7 @@
 #include "..\Strings\StringFragment.hpp"
 #include "..\DataStructures\DynamicArray.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     namespace NumericParse{
 
@@ -76,8 +76,8 @@ namespace Solaire{ namespace Core{
                 return ByteParser::STATUS_SUCCESS;
             }
 
-            NumericType Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
-                if(GetStatus() == ByteParser::STATUS_FAIL) throw std::runtime_error("Core::NumericParser : Failed to parse unsigned value");
+            NumericType Get(Allocator& aParseAllocator, Allocator& aDataAllocator) const override{
+                if(GetStatus() == ByteParser::STATUS_FAIL) throw std::runtime_error("NumericParser : Failed to parse unsigned value");
                 double val = 0;
 
                 uint32_t index = 0;
@@ -132,8 +132,8 @@ namespace Solaire{ namespace Core{
                 return static_cast<ByteParser&>(mValue).Accept(static_cast<uint8_t>(aChar));
             }
 
-            NumericType Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
-                if(GetStatus() == ByteParser::STATUS_FAIL) throw std::runtime_error("Core::NumericParser : Failed to parse signed value");
+            NumericType Get(Allocator& aParseAllocator, Allocator& aDataAllocator) const override{
+                if(GetStatus() == ByteParser::STATUS_FAIL) throw std::runtime_error("NumericParser : Failed to parse signed value");
                 return static_cast<NumericType>(mValue.Get(aParseAllocator, aDataAllocator)) * static_cast<NumericType>(mSign);
             }
 
@@ -181,7 +181,7 @@ namespace Solaire{ namespace Core{
                     static_cast<ByteParser&>(mBody).Accept(static_cast<uint8_t>(aChar));
             }
 
-            NumericType Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
+            NumericType Get(Allocator& aParseAllocator, Allocator& aDataAllocator) const override{
                 if(mDecimalFlag){
                     double decimal = mDecimal.Get(aParseAllocator, aDataAllocator);
                     while(decimal >= 1.0 && decimal != 0.0){
@@ -256,7 +256,7 @@ namespace Solaire{ namespace Core{
                     static_cast<ByteParser&>(mBody).Accept(static_cast<uint8_t>(aChar));
             }
 
-            NumericType Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const override{
+            NumericType Get(Allocator& aParseAllocator, Allocator& aDataAllocator) const override{
                 if(mExponentFlag){
                     return mBody.Get(aParseAllocator, aDataAllocator) * static_cast<NumericType>(std::pow(10.0, mExponent.Get(aParseAllocator, aDataAllocator)));
                 }else{
@@ -344,7 +344,7 @@ namespace Solaire{ namespace Core{
     template<> struct NumericParser<float>{typedef NumericParserF Type;};
     template<> struct NumericParser<double>{typedef NumericParserD Type;};
 
-}}
+}
 
 
 #endif

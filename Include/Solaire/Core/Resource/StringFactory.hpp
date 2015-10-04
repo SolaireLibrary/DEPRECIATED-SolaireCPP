@@ -34,7 +34,7 @@
 #include <string>
 #include "ResourceFactory.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class StringFactory : public ResourceFactory{
     private:
@@ -58,6 +58,6 @@ namespace Solaire{ namespace Core{
         virtual const std::string& GetString() const = 0;
     };
 
-}}
+}
 
 #endif

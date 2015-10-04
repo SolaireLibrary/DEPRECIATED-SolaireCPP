@@ -31,23 +31,23 @@
 	Last Modified	: 27th September 2015
 */
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
 	template<class T, class ITERATOR>
-	class PairFirstIterator{
+	class PairFirstIteratorWrapper{
 	private:
 		ITERATOR mIterator;
 	public:
 		typedef T Type;
 		typedef Type& Reference;
 		typedef Type* Pointer;
-		typedef PairFirstIterator<Type, ITERATOR> Self;
+		typedef PairFirstIteratorWrapper<Type, ITERATOR> Self;
 
-		PairFirstIterator() :
+		PairFirstIteratorWrapper() :
 			mIterator()
 		{}
 
-		PairFirstIterator(const ITERATOR aOther) :
+		PairFirstIteratorWrapper(const ITERATOR aOther) :
 			mIterator(aOther)
 		{}
 
@@ -125,20 +125,20 @@ namespace Solaire{ namespace Core{
 	};
 
 	template<class T, class ITERATOR>
-	class PairSecondIterator{
+	class PairSecondIteratorWrapper{
 	private:
 		ITERATOR mIterator;
 	public:
 		typedef T Type;
 		typedef Type& Reference;
 		typedef Type* Pointer;
-		typedef PairSecondIterator<Type, ITERATOR> Self;
+		typedef PairSecondIteratorWrapper<Type, ITERATOR> Self;
 
-		PairSecondIterator() :
+		PairSecondIteratorWrapper() :
 			mIterator()
 		{}
 
-		PairSecondIterator(const ITERATOR aOther) :
+		PairSecondIteratorWrapper(const ITERATOR aOther) :
 			mIterator(aOther)
 		{}
 
@@ -214,7 +214,7 @@ namespace Solaire{ namespace Core{
 			return mIterator >= aOther.mIterator;
 		}
 	};
-}}
+}
 
 
 #endif

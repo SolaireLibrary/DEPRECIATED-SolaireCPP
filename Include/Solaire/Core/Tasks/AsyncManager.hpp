@@ -35,7 +35,7 @@
 
 #ifndef SOLAIRE_DISABLE_MULTITHREADING
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     Class AsyncManager : public TaskManager{
     private:
@@ -84,7 +84,7 @@ namespace Solaire{ namespace Core{
             }
         }
     };
-}}
+}
 
 #else
     #if SOLAIRE_WARNINGS

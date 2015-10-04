@@ -107,14 +107,14 @@ namespace Solaire{ namespace Ui{
 
     class KeySource;
 
-    class KeyListener : public Core::Listener<KeySource, KeyListener>{
+    class KeyListener : public Listener<KeySource, KeyListener>{
     protected:
         virtual void OnKeyPress(const Keycode aKey, const uint64_t aTime) = 0;
         virtual void OnKeyRelease(const Keycode aKey, const uint64_t aTime) = 0;
     public:
         friend KeySource;
 
-        KeyListener(Core::Allocator& aAllocator = Core::GetDefaultAllocator()) :
+        KeyListener(Allocator& aAllocator = GetDefaultAllocator()) :
             Listener(aAllocator)
         {}
 
@@ -123,7 +123,7 @@ namespace Solaire{ namespace Ui{
         }
     };
 
-    class KeySource : public Core::Source<KeySource, KeyListener>
+    class KeySource : public Source<KeySource, KeyListener>
     {
     protected:
         void PressKey(const Keycode aKey, const uint64_t aTime){
@@ -140,7 +140,7 @@ namespace Solaire{ namespace Ui{
             }
         }
     public:
-        KeySource(Core::Allocator& aAllocator = Core::GetDefaultAllocator()) :
+        KeySource(Allocator& aAllocator = GetDefaultAllocator()) :
             Source(aAllocator)
         {}
 
@@ -154,7 +154,7 @@ namespace Solaire{ namespace Ui{
         struct KeyInfo{
             typedef std::pair<uint64_t, uint64_t> TimePair;
 
-            Core::CyclicalDeque<TimePair> history;
+            CyclicalDeque<TimePair> history;
             bool isPressed;
 
             KeyInfo() :
@@ -180,7 +180,7 @@ namespace Solaire{ namespace Ui{
             }
         };
 
-        //Core::WrapperAllocator<void*> mAllocator;
+        //WrapperAllocator<void*> mAllocator;
         KeyInfo mKeys[KEY_COUNT];
 
         KeyInfo& GetKeyInfo(const Keycode aKey){
@@ -228,9 +228,9 @@ namespace Solaire{ namespace Ui{
         }
 
     public:
-        Keyboard()//Core::Allocator& aAllocator = Core::GetDefaultAllocator() :
-            //KeySource(reinterpret_cast<Core::WrapperAllocator<ListenerBase*>&>(mAllocator)),
-           // KeyAllocator(reinterpret_cast<Core::WrapperAllocator<SourceBase*>&>(mAllocator)),
+        Keyboard()//Allocator& aAllocator = GetDefaultAllocator() :
+            //KeySource(reinterpret_cast<WrapperAllocator<ListenerBase*>&>(mAllocator)),
+           // KeyAllocator(reinterpret_cast<WrapperAllocator<SourceBase*>&>(mAllocator)),
             //mAllocator(aAllocator)
         {}
 

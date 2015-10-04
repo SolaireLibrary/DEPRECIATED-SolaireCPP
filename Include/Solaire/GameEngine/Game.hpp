@@ -45,9 +45,9 @@ namespace Solaire{ namespace Game{
 
         virtual uint64_t GetElapsedTime() const = 0;
 
-        virtual Core::Allocator& GetGameAllocator() const = 0;
-        virtual Core::Allocator& GetLevelAllocator() const = 0;
-        virtual Core::Allocator& GetFrameAllocator() const = 0;
+        virtual Allocator& GetGameAllocator() const = 0;
+        virtual Allocator& GetLevelAllocator() const = 0;
+        virtual Allocator& GetFrameAllocator() const = 0;
 
         virtual void Pause() = 0;
         virtual uint64_t Resume() = 0;

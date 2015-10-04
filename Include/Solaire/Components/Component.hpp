@@ -38,10 +38,10 @@ namespace Solaire{ namespace Components{
     class Composite;
     class Component;
 
-    typedef Core::Allocator::SharedPointer<Composite> CompositePointer;
-    typedef Core::Allocator::SharedPointer<Component> ComponentPointer;
-    typedef Core::Allocator::SharedPointer<const Composite> ConstCompositePointer;
-    typedef Core::Allocator::SharedPointer<const Component> ConstComponentPointer;
+    typedef Allocator::SharedPointer<Composite> CompositePointer;
+    typedef Allocator::SharedPointer<Component> ComponentPointer;
+    typedef Allocator::SharedPointer<const Composite> ConstCompositePointer;
+    typedef Allocator::SharedPointer<const Component> ConstComponentPointer;
 
     class Component : public std::enable_shared_from_this<Component>
 	{

@@ -31,7 +31,7 @@
 	Last Modified	: 27th September 2015
 */
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
     class DummyLock{
     private:
         bool mLocked;
@@ -57,7 +57,7 @@ namespace Solaire{ namespace Core{
             }
         }
     };
-}}
+}
 
 
 #endif

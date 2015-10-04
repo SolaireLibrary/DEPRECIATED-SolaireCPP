@@ -514,7 +514,7 @@ namespace Solaire{ namespace Maths{
 	typedef Vector3<uint8_t> Vector3UB;
 	typedef Vector4<uint8_t> Vector4UB;
 
-}namespace Core{
+}
     template<typename TYPE, const uint32_t LENGTH>
     class Serialisable<Solaire::Maths::Vector<TYPE, LENGTH>>
     {
@@ -542,7 +542,7 @@ namespace Solaire{ namespace Maths{
         }
     };
 
-}}
+}
 
 
 #endif

@@ -33,7 +33,7 @@
 
 #include <cstdint>
 
-namespace Solaire{ namespace Core{ namespace Maths{
+namespace Solaire{ namespace Maths{
 
     namespace MathsInternal{
 
@@ -474,7 +474,7 @@ namespace Solaire{ namespace Core{ namespace Maths{
         return (1.0 - aWeight) * aFirst + aWeight * aSecond;
     }
 
-}}}
+}}
 
 
 #endif

@@ -37,12 +37,12 @@
 #include "..\Iterators\ConstIterator.hpp"
 #include "..\Iterators\ReverseIterator.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     template<class K, class T>
     class SparseArray{
     public:
-        static_assert(std::is_integral<K>::value, "Core::SparseArray : Key type must be an integer value");
+        static_assert(std::is_integral<K>::value, "SparseArray : Key type must be an integer value");
 
         typedef K Key;
         typedef T Type;
@@ -52,10 +52,10 @@ namespace Solaire{ namespace Core{
         typedef Type& Reference;
         typedef const Type& ConstReference;
 
-        typedef Core::PairSecondIterator<Type, typename std::map<Key,Type>::iterator> Iterator;
-        typedef Core::ConstIterator<Type, Iterator> ConstIterator;
-        typedef Core::PairSecondIterator<Type, typename std::map<Key,Type>::reverse_iterator> ReverseIterator;
-        typedef Core::ConstIterator<Type, ReverseIterator> ConstReverseIterator;
+        typedef PairSecondIteratorWrapper<Type, typename std::map<Key,Type>::iterator> Iterator;
+        typedef ConstIteratorWrapper<Type, Iterator> ConstIterator;
+        typedef PairSecondIteratorWrapper<Type, typename std::map<Key,Type>::reverse_iterator> ReverseIterator;
+        typedef ConstIteratorWrapper<Type, ReverseIterator> ConstReverseIterator;
     private:
         std::map<Key,Type> mMap;
     public:
@@ -97,7 +97,7 @@ namespace Solaire{ namespace Core{
         ConstReference operator[](const Key aKey) const{
             auto it = mMap.find(aKey);
             if(it == mMap.end()){
-                throw std::runtime_error("Core::SparseArray does not contain key");
+                throw std::runtime_error("SparseArray does not contain key");
             }
             return it->second;
         }
@@ -135,7 +135,7 @@ namespace Solaire{ namespace Core{
         }
     };
 
-}}
+}
 
 
 #endif

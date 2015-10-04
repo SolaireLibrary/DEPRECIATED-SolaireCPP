@@ -34,7 +34,7 @@ Last Modified	: 1st October 2015
 #include <type_traits>
 #include "HashFunction.hpp"
 
-namespace Solaire{ namespace Core {
+namespace Solaire{
 
     template<class T>
     class HashSum : public HashFunction<T>
@@ -78,6 +78,6 @@ namespace Solaire{ namespace Core {
     typedef HashSum<uint16_t> HashSum16;
     typedef HashSum<uint32_t> HashSum32;
     typedef HashSum<uint64_t> HashSum64;
-}}
+}
 
 #endif

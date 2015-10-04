@@ -33,7 +33,7 @@ Last Modified	: 1st October 2015
 
 #include "HashFunction.hpp"
 
-namespace Solaire{ namespace Core {
+namespace Solaire{
 
     template<class T, typename Enable = typename std::enable_if<std::is_same<T, uint32_t>::value, void>::type>
     class Addler : public HashFunction<uint32_t>
@@ -54,6 +54,6 @@ namespace Solaire{ namespace Core {
     };
 
     typedef Addler<uint32_t> Addler32;
-}}
+}
 
 #endif

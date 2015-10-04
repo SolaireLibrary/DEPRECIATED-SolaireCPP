@@ -33,7 +33,7 @@
 
 #include "DataStructures/DynamicArray.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class ListenerBase;
 
@@ -272,7 +272,7 @@ namespace Solaire{ namespace Core{
         }
     };
 
-}}
+}
 
 
 #endif

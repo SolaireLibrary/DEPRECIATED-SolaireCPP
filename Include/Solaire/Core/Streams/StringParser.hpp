@@ -33,7 +33,7 @@
 
 #include "ByteParser.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     template<class T>
     class StringParser : public ResultByteParser<T>{
@@ -100,7 +100,7 @@ namespace Solaire{ namespace Core{
             mFlags = FLAG_IS_FIRST_CHAR;
         }
     };
-}}
+}
 
 
 #endif

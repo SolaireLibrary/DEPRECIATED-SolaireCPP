@@ -33,7 +33,7 @@ Last Modified	: 1st October 2015
 
 #include "HashFunction.hpp"
 
-namespace Solaire{ namespace Core {
+namespace Solaire{
 
     class Djb2 : public HashFunction<uint32_t>
     {
@@ -48,6 +48,6 @@ namespace Solaire{ namespace Core {
 			return hash;
         }
     };
-}}
+}
 
 #endif

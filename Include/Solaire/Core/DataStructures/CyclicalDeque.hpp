@@ -33,7 +33,7 @@
 
 #include "DynamicArray.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     template<class TYPE, class CONST_TYPE = const TYPE, class INDEX = uint16_t>
 	class CyclicalDeque{
@@ -220,6 +220,6 @@ namespace Solaire{ namespace Core{
 		    return mArray.rend();
 		}
 	};
-}}
+}
 
 #endif

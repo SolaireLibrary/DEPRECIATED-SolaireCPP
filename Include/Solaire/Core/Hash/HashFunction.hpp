@@ -33,7 +33,7 @@ Last Modified	: 1st October 2015
 
 #include <cstdint>
 
-namespace Solaire{ namespace Core {
+namespace Solaire{
 
     template<class HASH_TYPE, typename Enable = typename std::enable_if<std::is_unsigned<HASH_TYPE>::value, void>::type>
     class HashFunction
@@ -58,6 +58,6 @@ namespace Solaire{ namespace Core {
     typedef HashFunction<uint32_t> Hash32;
     typedef HashFunction<uint64_t> Hash64;
 
-}}
+}
 
 #endif

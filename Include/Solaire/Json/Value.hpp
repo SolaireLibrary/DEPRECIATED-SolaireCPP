@@ -53,9 +53,9 @@ namespace Solaire{ namespace Json{
     typedef void Null;
     typedef bool Bool;
     typedef double Number;
-    typedef Core::String String;
-    typedef Core::DynamicArray<std::shared_ptr<Value>> Array;
-    typedef std::map<Core::String, std::shared_ptr<Value>> Object;
+    typedef String String;
+    typedef DynamicArray<std::shared_ptr<Value>> Array;
+    typedef std::map<String, std::shared_ptr<Value>> Object;
 
     template<class T>
     static constexpr TypeID GetTypeID() = delete;
@@ -92,7 +92,7 @@ namespace Solaire{ namespace Json{
             Object* mObject;
         };
         TypeID mID;
-        Core::Allocator* mAllocator;
+        Allocator* mAllocator;
 
         void Clear(){
             switch(mID){
@@ -120,7 +120,7 @@ namespace Solaire{ namespace Json{
             mID = TYPE_NULL;
         }
     public:
-        Value(const TypeID aType = TYPE_NULL, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
+        Value(const TypeID aType = TYPE_NULL, Allocator& aAllocator = GetDefaultAllocator()):
             mID(aType),
             mAllocator(&aAllocator)
         {
@@ -159,31 +159,31 @@ namespace Solaire{ namespace Json{
             aOther.mID = TYPE_NULL;
         }
 
-        Value(const Bool aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
+        Value(const Bool aValue, Allocator& aAllocator = GetDefaultAllocator()):
             mBool(aValue),
             mID(GetTypeID<Bool>()),
             mAllocator(&aAllocator)
         {}
 
-        Value(const Number aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
+        Value(const Number aValue, Allocator& aAllocator = GetDefaultAllocator()):
             mNumber(aValue),
             mID(GetTypeID<Number>()),
             mAllocator(&aAllocator)
         {}
 
-        Value(const Core::ConstStringFragment aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
+        Value(const ConstStringFragment aValue, Allocator& aAllocator = GetDefaultAllocator()):
             mString(new(aAllocator.AllocateAndRegister<String>()) String(aValue)),
             mID(GetTypeID<String>()),
             mAllocator(&aAllocator)
         {}
 
-        Value(Array& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
+        Value(Array& aValue, Allocator& aAllocator = GetDefaultAllocator()):
             mArray(new(aAllocator.AllocateAndRegister<Array>()) Array(std::move(aValue))),
             mID(GetTypeID<Array>()),
             mAllocator(&aAllocator)
         {}
 
-        Value(Object& aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
+        Value(Object& aValue, Allocator& aAllocator = GetDefaultAllocator()):
             mObject(new(aAllocator.AllocateAndRegister<Object>()) Object(std::move(aValue))),
             mID(GetTypeID<Object>()),
             mAllocator(&aAllocator)
@@ -193,7 +193,7 @@ namespace Solaire{ namespace Json{
             Clear();
         }
 
-        Core::Allocator& GetAllocator() const{
+        Allocator& GetAllocator() const{
             return *mAllocator;
         }
 
@@ -237,7 +237,7 @@ namespace Solaire{ namespace Json{
             case TYPE_NUMBER:
                 return mNumber;
             case TYPE_STRING:{
-                Core::NumericParser<Number>::Type parser;
+                NumericParser<Number>::Type parser;
                 parser.Parse(mString->begin(), mString->end());
                 return parser.Get(*mAllocator, *mAllocator);
             }default:
@@ -331,7 +331,7 @@ namespace Solaire{ namespace Json{
             return *this;
         }
 
-        Value& SetString(const Core::ConstStringFragment aValue){
+        Value& SetString(const ConstStringFragment aValue){
             if(mID != GetTypeID<String>()){
                 Clear();
                 mID = GetTypeID<String>();
@@ -366,7 +366,7 @@ namespace Solaire{ namespace Json{
 
         Value& operator=(const Bool aValue){return SetBool(aValue);}
         Value& operator=(const Number aValue){return SetNumber(aValue);}
-        Value& operator=(const Core::ConstStringFragment aValue){return SetString(aValue);}
+        Value& operator=(const ConstStringFragment aValue){return SetString(aValue);}
         Value& operator=(Array&& aValue){return SetArray(std::move(aValue));}
         Value& operator=(Object&& aValue){return SetObject(std::move(aValue));}
 
@@ -381,8 +381,8 @@ namespace Solaire{ namespace Json{
             return *this;
         }
 
-        Core::String Parse(Core::Allocator& aAllocator) const{
-            Core::String tmp(aAllocator);
+        String Parse(Allocator& aAllocator) const{
+            String tmp(aAllocator);
             switch(mID){
             case TYPE_NULL:
                 tmp += "null";
@@ -434,7 +434,7 @@ namespace Solaire{ namespace Json{
         Value& operator=(const Value&) = delete;
         Value& operator=(Value&&) = delete;
     protected:
-        virtual Core::String Parse(Core::Allocator& aAllocator) const = 0;
+        virtual String Parse(Allocator& aAllocator) const = 0;
     public:
         friend Array;
         friend Object;
@@ -472,8 +472,8 @@ namespace Solaire{ namespace Json{
     protected:
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator& aAllocator) const override{
-            return Core::String(mValue ? "true" : "false", aAllocator);
+        String Parse(Allocator& aAllocator) const override{
+            return String(mValue ? "true" : "false", aAllocator);
         }
     public:
         Bool():
@@ -506,11 +506,11 @@ namespace Solaire{ namespace Json{
     protected:
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator& aAllocator) const override{
-            Core::String::Type buf[32];
-            Core::String::Pointer end = Core::NumericParse::ToString(buf, mValue);
+        String Parse(Allocator& aAllocator) const override{
+            String::Type buf[32];
+            String::Pointer end = NumericParse::ToString(buf, mValue);
 
-            return Core::String(buf, end, aAllocator);
+            return String(buf, end, aAllocator);
         }
     public:
         Number():
@@ -539,31 +539,31 @@ namespace Solaire{ namespace Json{
 
     class String : public Value{
     private:
-        Core::String mValue;
+        String mValue;
     protected:
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator& aAllocator) const override{
-            return Core::String(mValue.begin(), mValue.end(), aAllocator);
+        String Parse(Allocator& aAllocator) const override{
+            return String(mValue.begin(), mValue.end(), aAllocator);
         }
     public:
-        String(Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
+        String(Allocator& aAllocator = GetDefaultAllocator()):
             mValue(aAllocator)
         {}
 
-        String(const Core::ConstStringFragment aValue, Core::Allocator& aAllocator = Core::GetDefaultAllocator()):
+        String(const ConstStringFragment aValue, Allocator& aAllocator = GetDefaultAllocator()):
             mValue(aValue, aAllocator)
         {}
 
-        operator Core::String&(){
+        operator String&(){
             return mValue;
         }
 
-        operator const Core::String&() const{
+        operator const String&() const{
             return mValue;
         }
 
-        String& operator=(const Core::ConstStringFragment aValue){
+        String& operator=(const ConstStringFragment aValue){
             mValue = aValue;
             return *this;
         }
@@ -579,8 +579,8 @@ namespace Solaire{ namespace Json{
     protected:
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator& aAllocator) const override{
-            return Core::String("null", aAllocator);
+        String Parse(Allocator& aAllocator) const override{
+            return String("null", aAllocator);
         }
     public:
         // Inherited from Value
@@ -599,18 +599,18 @@ namespace Solaire{ namespace Json{
         typedef Type&& Move;
 		typedef std::shared_ptr<Type> Pointer;
 		typedef std::shared_ptr<const Type> ConstPointer;
-		typedef typename Core::DynamicArray<Pointer>::Iterator Iterator;
-		typedef typename Core::DynamicArray<Pointer>::ConstIterator ConstIterator;
-		typedef typename Core::DynamicArray<Pointer>::ReverseIterator ReverseIterator;
-		typedef typename Core::DynamicArray<Pointer>::ConstReverseIterator ConstReverseIterator;
+		typedef typename DynamicArray<Pointer>::Iterator Iterator;
+		typedef typename DynamicArray<Pointer>::ConstIterator ConstIterator;
+		typedef typename DynamicArray<Pointer>::ReverseIterator ReverseIterator;
+		typedef typename DynamicArray<Pointer>::ConstReverseIterator ConstReverseIterator;
     private:
-        Core::DynamicArray<Pointer> mValues;
+        DynamicArray<Pointer> mValues;
     protected:
 
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator& aAllocator) const override{
-            Core::String tmp(aAllocator);
+        String Parse(Allocator& aAllocator) const override{
+            String tmp(aAllocator);
             tmp += '[';
             const ConstIterator end = mValues.end();
             for(ConstIterator i = mValues.begin(); i != end; ++i){
@@ -621,7 +621,7 @@ namespace Solaire{ namespace Json{
             return tmp;
         }
     public:
-        Array(Core::Allocator& aAllocator) :
+        Array(Allocator& aAllocator) :
             mValues(32, aAllocator)
         {}
         // Delegated to mValues
@@ -663,25 +663,25 @@ namespace Solaire{ namespace Json{
 
     class Object : public Value{
     public:
-		typedef std::pair<Core::String, std::shared_ptr<Value>> Type;
+		typedef std::pair<String, std::shared_ptr<Value>> Type;
 		typedef const Type ConstType;
 		typedef Type& Reference;
 		typedef ConstType& ConstReference;
         typedef Type&& Move;
 		typedef Type* Pointer;
 		typedef ConstType* ConstPointer;
-		typedef typename std::map<Core::String, std::shared_ptr<Value>>::iterator Iterator;
-		typedef typename std::map<Core::String, std::shared_ptr<Value>>::const_iterator ConstIterator;
-		typedef typename std::map<Core::String, std::shared_ptr<Value>>::reverse_iterator ReverseIterator;
-		typedef typename std::map<Core::String, std::shared_ptr<Value>>::const_reverse_iterator ConstReverseIterator;
+		typedef typename std::map<String, std::shared_ptr<Value>>::iterator Iterator;
+		typedef typename std::map<String, std::shared_ptr<Value>>::const_iterator ConstIterator;
+		typedef typename std::map<String, std::shared_ptr<Value>>::reverse_iterator ReverseIterator;
+		typedef typename std::map<String, std::shared_ptr<Value>>::const_reverse_iterator ConstReverseIterator;
     private:
-        std::map<Core::String, std::shared_ptr<Value>> mValues;
+        std::map<String, std::shared_ptr<Value>> mValues;
     protected:
 
         // Inherited from Value
 
-        Core::String Parse(Core::Allocator& aAllocator) const override{
-            Core::String tmp(aAllocator);
+        String Parse(Allocator& aAllocator) const override{
+            String tmp(aAllocator);
             tmp += '{';
             for(const Type& i : mValues){
                 tmp += '"';
@@ -696,22 +696,22 @@ namespace Solaire{ namespace Json{
         }
     public:
 
-        Value& Add(const Core::ConstStringFragment aName, std::shared_ptr<Value> aValue){
+        Value& Add(const ConstStringFragment aName, std::shared_ptr<Value> aValue){
             return *(mValues.emplace(aName, aValue).first->second);
         }
 
-        void Erase(const Core::ConstStringFragment aName){
+        void Erase(const ConstStringFragment aName){
             auto valueIt = mValues.find(aName);
             mValues.erase(valueIt);
         }
 
         // Delegated to mValues
 
-        Iterator Find(const Core::ConstStringFragment aName){return mValues.find(aName);}
-        ConstIterator Find(const Core::ConstStringFragment aName) const{return mValues.find(aName);}
+        Iterator Find(const ConstStringFragment aName){return mValues.find(aName);}
+        ConstIterator Find(const ConstStringFragment aName) const{return mValues.find(aName);}
 
-        Value& operator[](const Core::ConstStringFragment aName){return *(mValues.find(aName)->second);}
-        const Value& operator[](const Core::ConstStringFragment aName) const{return *(mValues.find(aName)->second);}
+        Value& operator[](const ConstStringFragment aName){return *(mValues.find(aName)->second);}
+        const Value& operator[](const ConstStringFragment aName) const{return *(mValues.find(aName)->second);}
 
         Iterator begin(){return mValues.begin();}
         ConstIterator begin() const{return mValues.begin();}

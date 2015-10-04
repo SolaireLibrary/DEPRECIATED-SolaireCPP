@@ -31,23 +31,23 @@
 	Last Modified	: 27th September 2015
 */
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
 	template<class T, class ITERATOR>
-	class DereferenceIterator{
+	class DereferenceIteratorWrapper{
 	private:
 		ITERATOR mIterator;
 	public:
 		typedef T Type;
 		typedef Type& Reference;
 		typedef Type* Pointer;
-		typedef DereferenceIterator<Type, ITERATOR> Self;
+		typedef DereferenceIteratorWrapper<Type, ITERATOR> Self;
 
-		DereferenceIterator() :
+		DereferenceIteratorWrapper() :
 			mIterator()
 		{}
 
-		DereferenceIterator(const ITERATOR aOther) :
+		DereferenceIteratorWrapper(const ITERATOR aOther) :
 			mIterator(aOther)
 		{}
 
@@ -123,7 +123,7 @@ namespace Solaire{ namespace Core{
 			return mIterator >= aOther.mIterator;
 		}
 	};
-}}
+}
 
 
 #endif

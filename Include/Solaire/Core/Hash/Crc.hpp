@@ -34,7 +34,7 @@ Last Modified	: 1st October 2015
 #include "HashFunction.hpp"
 #include "..\Maths.hpp"
 
-namespace Solaire{ namespace Core {
+namespace Solaire{
 
     template<class T, const T POLYNOMIAL, const T INITIAL_REMAINDER, const T FINAL_XOR_VALUE, const bool REFLECT_DATA, const bool REFLECT_REMAINDER>
     class Crc : public HashFunction<uint32_t>
@@ -142,6 +142,6 @@ namespace Solaire{ namespace Core {
     typedef Crc<uint16_t, 0x1021,       0xFFFF,     0x0000,         false,  false>  CrcCcitt;
     typedef Crc<uint16_t, 0x8005,       0x0000,     0x0000,         true,   true>   Crc16;
     typedef Crc<uint32_t, 0x04C11DB7,   0xFFFFFFFF, 0xFFFFFFFF,     true,   true>   Crc32;
-}}
+}
 
 #endif

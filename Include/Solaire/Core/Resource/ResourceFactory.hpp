@@ -36,7 +36,7 @@
 #endif
 #include <cstdint>
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class Resource{
     public:
@@ -104,6 +104,6 @@ namespace Solaire{ namespace Core{
         }
     };
 
-}}
+}
 
 #endif

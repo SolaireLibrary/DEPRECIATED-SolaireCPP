@@ -33,7 +33,7 @@
 
 #include "TaskManager.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     // TaskManager
 
@@ -214,7 +214,7 @@ namespace Solaire{ namespace Core{
             #endif
         }
     }
-}}
+}
 
 
 #endif

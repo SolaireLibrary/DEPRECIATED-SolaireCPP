@@ -33,7 +33,7 @@
 
 #include <cstdint>
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class ByteParser{
     public:
@@ -97,9 +97,9 @@ namespace Solaire{ namespace Core{
     public:
         virtual ~ResultByteParser(){}
 
-        virtual T Get(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) const = 0;
+        virtual T Get(Allocator& aParseAllocator, Allocator& aDataAllocator) const = 0;
     };
-}}
+}
 
 
 #endif

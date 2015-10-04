@@ -34,10 +34,10 @@
 #include <cstdint>
 #include "..\Strings\StringFragment.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
-    typedef Core::ConstStringFragment SerialTag;
-    typedef Core::ConstStringFragment SerialString;
+    typedef ConstStringFragment SerialTag;
+    typedef ConstStringFragment SerialString;
     typedef size_t SerialIndex;
 
     class SerialArray;
@@ -240,7 +240,7 @@ namespace Solaire{ namespace Core{
     template<> void SerialObject::Write<float>(const SerialTag aTag, const float aValue){WriteF(aTag, aValue);}
     template<> void SerialObject::Write<double>(const SerialTag aTag, const double aValue){WriteD(aTag, aValue);}
     template<> void SerialObject::Write<SerialString>(const SerialTag aTag, const SerialString aValue){WriteS(aTag, aValue);}
-}}
+}
 
 
 #endif

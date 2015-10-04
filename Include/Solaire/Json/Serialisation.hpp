@@ -36,24 +36,24 @@
 
 namespace Solaire{ namespace Json{
 
-    class SerialSystem;
-    class SerialObject;
+    class JsonSerialSystem;
+    class JsonSerialObject;
 
-    class SerialArray : public Core::SerialArray{
+    class JsonSerialArray : public SerialArray{
     private:
-        Core::Allocator::SharedPointer<Value> mValue;
+        Allocator::SharedPointer<Value> mValue;
 
         template<class F1, class F2>
-        void WriteFn(const Core::SerialIndex aIndex, F1 aNewFn, F2 aAssignFn){
-            const Core::SerialIndex size = mValue->GetArray().Size();
+        void WriteFn(const SerialIndex aIndex, F1 aNewFn, F2 aAssignFn){
+            const SerialIndex size = mValue->GetArray().Size();
             if(aIndex == size){
                 mValue->GetArray().PushBack(aNewFn());
             }else if(aIndex < size){
                 aAssignFn();
             }else{
-                Core::Allocator& allocator = mValue->GetAllocator();
-                for(Core::SerialIndex i = size; i <= aIndex; ++i){
-                    Core::Allocator::SharedPointer<Value> val = allocator.SharedAllocate<Value>(TYPE_NULL, allocator);
+                Allocator& allocator = mValue->GetAllocator();
+                for(SerialIndex i = size; i <= aIndex; ++i){
+                    Allocator::SharedPointer<Value> val = allocator.SharedAllocate<Value>(TYPE_NULL, allocator);
                     mValue->GetArray().PushBack(val);
                 }
                 aAssignFn();
@@ -61,11 +61,11 @@ namespace Solaire{ namespace Json{
         }
 
         template<class T>
-        void WriteCopy(const Core::SerialIndex aIndex, const T aValue, Value&(Value::*SetFn)(const T)){
+        void WriteCopy(const SerialIndex aIndex, const T aValue, Value&(Value::*SetFn)(const T)){
             WriteFn(
                 aIndex,
                 [&](){
-                    Core::Allocator& allocator = mValue->GetAllocator();
+                    Allocator& allocator = mValue->GetAllocator();
                     return allocator.SharedAllocate<Value>(aValue, allocator);
                 },
                 [&](){
@@ -76,11 +76,11 @@ namespace Solaire{ namespace Json{
         }
 
         template<class T>
-        void WriteMove(const Core::SerialIndex aIndex, T&& aValue, Value&(Value::*SetFn)(T&&)){
+        void WriteMove(const SerialIndex aIndex, T&& aValue, Value&(Value::*SetFn)(T&&)){
             WriteFn(
                 aIndex,
                 [&](){
-                    Core::Allocator& allocator = mValue->GetAllocator();
+                    Allocator& allocator = mValue->GetAllocator();
                     return allocator.SharedAllocate<Value>(std::move(aValue), allocator);
                 },
                 [&](){
@@ -92,113 +92,113 @@ namespace Solaire{ namespace Json{
 
 
     public:
-        friend SerialObject;
-        friend SerialSystem;
+        friend JsonSerialObject;
+        friend JsonSerialSystem;
 
-        SerialArray(Core::Allocator::SharedPointer<Value> aValue) :
+        JsonSerialArray(Allocator::SharedPointer<Value> aValue) :
             mValue(aValue)
         {}
 
-        ~SerialArray(){
+        ~JsonSerialArray(){
 
         }
 
         // Inherited from SerialArray
 
-        Core::SerialIndex Size() const override{
+        SerialIndex Size() const override{
             return mValue->GetArray().Size();
         }
 
-        Core::SerialType TypeOf(const Core::SerialIndex aIndex) const override{
+        SerialType TypeOf(const SerialIndex aIndex) const override{
             switch(mValue->GetArray()[aIndex]->GetType()){
             case TYPE_NULL:
-                return Core::SERIAL_TYPE_N;
+                return SERIAL_TYPE_N;
             case TYPE_BOOL:
-                return Core::SERIAL_TYPE_B;
+                return SERIAL_TYPE_B;
             case TYPE_NUMBER:
-                return Core::SERIAL_TYPE_D;
+                return SERIAL_TYPE_D;
             case TYPE_STRING:
-                return Core::SERIAL_TYPE_S;
+                return SERIAL_TYPE_S;
             case TYPE_ARRAY:
-                return Core::SERIAL_TYPE_A;
+                return SERIAL_TYPE_A;
             case TYPE_OBJECT:
-                return Core::SERIAL_TYPE_O;
+                return SERIAL_TYPE_O;
             default:
                 throw std::runtime_error("Json::SerialObject : Unknown type");
             }
         }
 
-        bool ReadB(const Core::SerialIndex aIndex) const override{
+        bool ReadB(const SerialIndex aIndex) const override{
             return mValue->GetArray()[aIndex]->GetBool();
         }
 
-        char ReadC(const Core::SerialIndex aIndex) const override{
+        char ReadC(const SerialIndex aIndex) const override{
             return mValue->GetArray()[aIndex]->GetString()[0];
         }
 
-        uint8_t ReadU8(const Core::SerialIndex aIndex) const override{
+        uint8_t ReadU8(const SerialIndex aIndex) const override{
             return static_cast<uint8_t>(mValue->GetArray()[aIndex]->GetNumber());
         }
 
-        uint16_t ReadU16(const Core::SerialIndex aIndex) const override{
+        uint16_t ReadU16(const SerialIndex aIndex) const override{
             return static_cast<uint16_t>(mValue->GetArray()[aIndex]->GetNumber());
         }
 
-        uint32_t ReadU32(const Core::SerialIndex aIndex) const override{
+        uint32_t ReadU32(const SerialIndex aIndex) const override{
             return static_cast<uint32_t>(mValue->GetArray()[aIndex]->GetNumber());
         }
 
-        uint64_t ReadU64(const Core::SerialIndex aIndex) const override{
+        uint64_t ReadU64(const SerialIndex aIndex) const override{
             return static_cast<uint64_t>(mValue->GetArray()[aIndex]->GetNumber());
         }
 
-        int8_t ReadI8(const Core::SerialIndex aIndex) const override{
+        int8_t ReadI8(const SerialIndex aIndex) const override{
             return static_cast<int8_t>(mValue->GetArray()[aIndex]->GetNumber());
         }
 
-        int16_t ReadI16(const Core::SerialIndex aIndex) const override{
+        int16_t ReadI16(const SerialIndex aIndex) const override{
             return static_cast<int16_t>(mValue->GetArray()[aIndex]->GetNumber());
         }
 
-        int32_t ReadI32(const Core::SerialIndex aIndex) const override{
+        int32_t ReadI32(const SerialIndex aIndex) const override{
             return static_cast<int32_t>(mValue->GetArray()[aIndex]->GetNumber());
         }
 
-        int64_t ReadI64(const Core::SerialIndex aIndex) const override{
+        int64_t ReadI64(const SerialIndex aIndex) const override{
             return static_cast<int64_t>(mValue->GetArray()[aIndex]->GetNumber());
         }
 
-        float ReadF(const Core::SerialIndex aIndex) const override{
+        float ReadF(const SerialIndex aIndex) const override{
             return static_cast<float>(mValue->GetArray()[aIndex]->GetNumber());
         }
 
-        double ReadD(const Core::SerialIndex aIndex) const override{
+        double ReadD(const SerialIndex aIndex) const override{
             return static_cast<double>(mValue->GetArray()[aIndex]->GetNumber());
         }
 
-        Core::SerialString ReadS(const Core::SerialIndex aIndex) const override{
+        SerialString ReadS(const SerialIndex aIndex) const override{
             return mValue->GetArray()[aIndex]->GetString();
         }
 
-        Core::SerialArrayPtr ReadA(const Core::SerialIndex aIndex) override{
-            Core::Allocator& allocator = mValue->GetAllocator();
-            return allocator.SharedAllocate<SerialArray>(mValue->GetArray()[aIndex]);
+        SerialArrayPtr ReadA(const SerialIndex aIndex) override{
+            Allocator& allocator = mValue->GetAllocator();
+            return allocator.SharedAllocate<JsonSerialArray>(mValue->GetArray()[aIndex]);
         }
 
-        Core::SerialObjectPtr ReadO(const Core::SerialIndex aIndex) override;
+        SerialObjectPtr ReadO(const SerialIndex aIndex) override;
 
-        Core::ConstSerialArrayPtr ReadA(const Core::SerialIndex aIndex) const override{
-            Core::Allocator& allocator = mValue->GetAllocator();
-            return allocator.SharedAllocate<SerialArray>(mValue->GetArray()[aIndex]);
+        ConstSerialArrayPtr ReadA(const SerialIndex aIndex) const override{
+            Allocator& allocator = mValue->GetAllocator();
+            return allocator.SharedAllocate<JsonSerialArray>(mValue->GetArray()[aIndex]);
         }
 
-        Core::ConstSerialObjectPtr ReadO(const Core::SerialIndex aIndex) const override;
+        ConstSerialObjectPtr ReadO(const SerialIndex aIndex) const override;
 
-        void WriteN(const Core::SerialIndex aIndex) override{
+        void WriteN(const SerialIndex aIndex) override{
             WriteFn(
                 aIndex,
                 [&](){
-                    Core::Allocator& allocator = mValue->GetAllocator();
+                    Allocator& allocator = mValue->GetAllocator();
                     return allocator.SharedAllocate<Value>(TYPE_NULL, allocator);
                 },
                 [&](){
@@ -207,72 +207,72 @@ namespace Solaire{ namespace Json{
             );
         }
 
-        void WriteB(const Core::SerialIndex aIndex, const bool aValue) override{
+        void WriteB(const SerialIndex aIndex, const bool aValue) override{
             WriteCopy<Bool>(aIndex, aValue, &Value::SetBool);
         }
 
-        void WriteC(const Core::SerialIndex aIndex, const char aValue) override{
-            WriteS(aIndex, Core::SerialString(&aValue, &aValue + 1));
+        void WriteC(const SerialIndex aIndex, const char aValue) override{
+            WriteS(aIndex, SerialString(&aValue, &aValue + 1));
         }
 
-        void WriteU8(const Core::SerialIndex aIndex, const uint8_t aValue) override{
+        void WriteU8(const SerialIndex aIndex, const uint8_t aValue) override{
             WriteCopy<Number>(aIndex, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteU16(const Core::SerialIndex aIndex, const uint16_t aValue) override{
+        void WriteU16(const SerialIndex aIndex, const uint16_t aValue) override{
             WriteCopy<Number>(aIndex, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteU32(const Core::SerialIndex aIndex, const uint32_t aValue) override{
+        void WriteU32(const SerialIndex aIndex, const uint32_t aValue) override{
             WriteCopy<Number>(aIndex, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteU64(const Core::SerialIndex aIndex, const uint64_t aValue) override{
+        void WriteU64(const SerialIndex aIndex, const uint64_t aValue) override{
             WriteCopy<Number>(aIndex, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteI8(const Core::SerialIndex aIndex, const int8_t aValue) override{
+        void WriteI8(const SerialIndex aIndex, const int8_t aValue) override{
             WriteCopy<Number>(aIndex, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteI16(const Core::SerialIndex aIndex, const int16_t aValue) override{
+        void WriteI16(const SerialIndex aIndex, const int16_t aValue) override{
             WriteCopy<Number>(aIndex, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteI32(const Core::SerialIndex aIndex, const int32_t aValue) override{
+        void WriteI32(const SerialIndex aIndex, const int32_t aValue) override{
             WriteCopy<Number>(aIndex, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteI64(const Core::SerialIndex aIndex, const int64_t aValue) override{
+        void WriteI64(const SerialIndex aIndex, const int64_t aValue) override{
             WriteCopy<Number>(aIndex, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteF(const Core::SerialIndex aIndex, const float aValue) override{
+        void WriteF(const SerialIndex aIndex, const float aValue) override{
             WriteCopy<Number>(aIndex, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteD(const Core::SerialIndex aIndex, const double aValue) override{
+        void WriteD(const SerialIndex aIndex, const double aValue) override{
             WriteCopy<Number>(aIndex, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteS(const Core::SerialIndex aIndex, const Core::SerialString aValue) override{
-            WriteCopy<const Core::ConstStringFragment>(aIndex, aValue, &Value::SetString);
+        void WriteS(const SerialIndex aIndex, const SerialString aValue) override{
+            WriteCopy<const ConstStringFragment>(aIndex, aValue, &Value::SetString);
         }
 
-        void WriteA(const Core::SerialIndex aIndex, Core::SerialArrayPtr aArray) override{
-            Core::Allocator::SharedPointer<Value> value = std::static_pointer_cast<SerialArray>(aArray)->mValue;
+        void WriteA(const SerialIndex aIndex, SerialArrayPtr aArray) override{
+            Allocator::SharedPointer<Value> value = std::static_pointer_cast<JsonSerialArray>(aArray)->mValue;
             WriteMove<Array&&>(aIndex, std::move(value->GetArray()), &Value::SetArray);
         }
 
-        void WriteO(const Core::SerialIndex aIndex, Core::SerialObjectPtr aObject) override;
+        void WriteO(const SerialIndex aIndex, SerialObjectPtr aObject) override;
     };
 
-    class SerialObject : public Core::SerialObject{
+    class JsonSerialObject : public SerialObject{
     private:
-        Core::Allocator::SharedPointer<Value> mValue;
+        Allocator::SharedPointer<Value> mValue;
 
         template<class F1, class F2>
-        void WriteFn(const Core::SerialTag aTag, F1 aNewFn, F2 aAssignFn){
+        void WriteFn(const SerialTag aTag, F1 aNewFn, F2 aAssignFn){
             auto it = mValue->GetObject().find(aTag);
             if(it == mValue->GetObject().end()){
                 aAssignFn(*it->second);
@@ -282,11 +282,11 @@ namespace Solaire{ namespace Json{
         }
 
         template<class T>
-        void WriteCopy(const Core::SerialTag aTag, const T aValue, Value&(Value::*SetFn)(const T)){
+        void WriteCopy(const SerialTag aTag, const T aValue, Value&(Value::*SetFn)(const T)){
             WriteFn(
                 aTag,
                 [&](){
-                    Core::Allocator& allocator = mValue->GetAllocator();
+                    Allocator& allocator = mValue->GetAllocator();
                     return allocator.SharedAllocate<Value>(aValue, allocator);
                 },
                 [&](Value& aVal){
@@ -296,11 +296,11 @@ namespace Solaire{ namespace Json{
         }
 
         template<class T>
-        void WriteMove(const Core::SerialTag aTag, T&& aValue, Value&(Value::*SetFn)(T&&)){
+        void WriteMove(const SerialTag aTag, T&& aValue, Value&(Value::*SetFn)(T&&)){
             WriteFn(
                 aTag,
                 [&](){
-                    Core::Allocator& allocator = mValue->GetAllocator();
+                    Allocator& allocator = mValue->GetAllocator();
                     return allocator.SharedAllocate<Value>(std::move(aValue), allocator);
                 },
                 [&](Value& aVal){
@@ -311,115 +311,115 @@ namespace Solaire{ namespace Json{
 
 
     public:
-        friend SerialArray;
-        friend SerialSystem;
+        friend JsonSerialArray;
+        friend JsonSerialSystem;
 
-        SerialObject(Core::Allocator::SharedPointer<Value> aValue) :
+        JsonSerialObject(Allocator::SharedPointer<Value> aValue) :
             mValue(aValue)
         {}
 
-        ~SerialObject(){
+        ~JsonSerialObject(){
 
         }
 
         // Inherited from SerialObject
 
-        Core::SerialType TypeOf(const Core::SerialTag aTag) const override{
+        SerialType TypeOf(const SerialTag aTag) const override{
             switch(mValue->GetObject()[aTag]->GetType()){
             case TYPE_NULL:
-                return Core::SERIAL_TYPE_N;
+                return SERIAL_TYPE_N;
             case TYPE_BOOL:
-                return Core::SERIAL_TYPE_B;
+                return SERIAL_TYPE_B;
             case TYPE_NUMBER:
-                return Core::SERIAL_TYPE_D;
+                return SERIAL_TYPE_D;
             case TYPE_STRING:
-                return Core::SERIAL_TYPE_S;
+                return SERIAL_TYPE_S;
             case TYPE_ARRAY:
-                return Core::SERIAL_TYPE_A;
+                return SERIAL_TYPE_A;
             case TYPE_OBJECT:
-                return Core::SERIAL_TYPE_O;
+                return SERIAL_TYPE_O;
             default:
                 throw std::runtime_error("Json::SerialObject : Unknown type");
             }
         }
 
-        bool ReadB(const Core::SerialTag aTag) const override{
+        bool ReadB(const SerialTag aTag) const override{
             return mValue->GetObject()[aTag]->GetBool();
         }
 
-        char ReadC(const Core::SerialTag aTag) const override{
+        char ReadC(const SerialTag aTag) const override{
             return mValue->GetObject()[aTag]->GetString()[0];
         }
 
-        uint8_t ReadU8(const Core::SerialTag aTag) const override{
+        uint8_t ReadU8(const SerialTag aTag) const override{
             return static_cast<uint8_t>(mValue->GetObject()[aTag]->GetNumber());
         }
 
-        uint16_t ReadU16(const Core::SerialTag aTag) const override{
+        uint16_t ReadU16(const SerialTag aTag) const override{
             return static_cast<uint16_t>(mValue->GetObject()[aTag]->GetNumber());
         }
 
-        uint32_t ReadU32(const Core::SerialTag aTag) const override{
+        uint32_t ReadU32(const SerialTag aTag) const override{
             return static_cast<uint32_t>(mValue->GetObject()[aTag]->GetNumber());
         }
 
-        uint64_t ReadU64(const Core::SerialTag aTag) const override{
+        uint64_t ReadU64(const SerialTag aTag) const override{
             return static_cast<uint64_t>(mValue->GetObject()[aTag]->GetNumber());
         }
 
-        int8_t ReadI8(const Core::SerialTag aTag) const override{
+        int8_t ReadI8(const SerialTag aTag) const override{
             return static_cast<int8_t>(mValue->GetObject()[aTag]->GetNumber());
         }
 
-        int16_t ReadI16(const Core::SerialTag aTag) const override{
+        int16_t ReadI16(const SerialTag aTag) const override{
             return static_cast<int16_t>(mValue->GetObject()[aTag]->GetNumber());
         }
 
-        int32_t ReadI32(const Core::SerialTag aTag) const override{
+        int32_t ReadI32(const SerialTag aTag) const override{
             return static_cast<int32_t>(mValue->GetObject()[aTag]->GetNumber());
         }
 
-        int64_t ReadI64(const Core::SerialTag aTag) const override{
+        int64_t ReadI64(const SerialTag aTag) const override{
             return static_cast<int64_t>(mValue->GetObject()[aTag]->GetNumber());
         }
 
-        float ReadF(const Core::SerialTag aTag) const override{
+        float ReadF(const SerialTag aTag) const override{
             return static_cast<float>(mValue->GetObject()[aTag]->GetNumber());
         }
 
-        double ReadD(const Core::SerialTag aTag) const override{
+        double ReadD(const SerialTag aTag) const override{
             return static_cast<double>(mValue->GetObject()[aTag]->GetNumber());
         }
 
-        Core::SerialString ReadS(const Core::SerialTag aTag) const override{
+        SerialString ReadS(const SerialTag aTag) const override{
             return mValue->GetObject()[aTag]->GetString();
         }
 
-        Core::SerialArrayPtr ReadA(const Core::SerialTag aTag) override{
-            Core::Allocator& allocator = mValue->GetAllocator();
-            return allocator.SharedAllocate<SerialArray>(mValue->GetObject()[aTag]);
+        SerialArrayPtr ReadA(const SerialTag aTag) override{
+            Allocator& allocator = mValue->GetAllocator();
+            return allocator.SharedAllocate<JsonSerialArray>(mValue->GetObject()[aTag]);
         }
 
-        Core::SerialObjectPtr ReadO(const Core::SerialTag aTag) override{
-            Core::Allocator& allocator = mValue->GetAllocator();
-            return allocator.SharedAllocate<SerialObject>(mValue->GetObject()[aTag]);
+        SerialObjectPtr ReadO(const SerialTag aTag) override{
+            Allocator& allocator = mValue->GetAllocator();
+            return allocator.SharedAllocate<JsonSerialObject>(mValue->GetObject()[aTag]);
         }
 
-        Core::ConstSerialArrayPtr ReadA(const Core::SerialTag aTag) const override{
-            Core::Allocator& allocator = mValue->GetAllocator();
-            return allocator.SharedAllocate<SerialArray>(mValue->GetObject()[aTag]);
+        ConstSerialArrayPtr ReadA(const SerialTag aTag) const override{
+            Allocator& allocator = mValue->GetAllocator();
+            return allocator.SharedAllocate<JsonSerialArray>(mValue->GetObject()[aTag]);
         }
 
-        Core::ConstSerialObjectPtr ReadO(const Core::SerialTag aTag) const override{
-            Core::Allocator& allocator = mValue->GetAllocator();
-            return allocator.SharedAllocate<SerialObject>(mValue->GetObject()[aTag]);
+        ConstSerialObjectPtr ReadO(const SerialTag aTag) const override{
+            Allocator& allocator = mValue->GetAllocator();
+            return allocator.SharedAllocate<JsonSerialObject>(mValue->GetObject()[aTag]);
         }
 
-        void WriteN(const Core::SerialTag aTag) override{
+        void WriteN(const SerialTag aTag) override{
             WriteFn(
                 aTag,
                 [&](){
-                    Core::Allocator& allocator = mValue->GetAllocator();
+                    Allocator& allocator = mValue->GetAllocator();
                     return allocator.SharedAllocate<Value>(TYPE_NULL, allocator);
                 },
                 [&](Value& aValue){
@@ -428,138 +428,138 @@ namespace Solaire{ namespace Json{
             );
         }
 
-        void WriteB(const Core::SerialTag aTag, const bool aValue) override{
+        void WriteB(const SerialTag aTag, const bool aValue) override{
             WriteCopy<Bool>(aTag, aValue, &Value::SetBool);
         }
 
-        void WriteC(const Core::SerialTag aTag, const char aValue) override{
-            WriteS(aTag, Core::SerialString(&aValue, &aValue + 1));
+        void WriteC(const SerialTag aTag, const char aValue) override{
+            WriteS(aTag, SerialString(&aValue, &aValue + 1));
         }
 
-        void WriteU8(const Core::SerialTag aTag, const uint8_t aValue) override{
+        void WriteU8(const SerialTag aTag, const uint8_t aValue) override{
             WriteCopy<Number>(aTag, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteU16(const Core::SerialTag aTag, const uint16_t aValue) override{
+        void WriteU16(const SerialTag aTag, const uint16_t aValue) override{
             WriteCopy<Number>(aTag, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteU32(const Core::SerialTag aTag, const uint32_t aValue) override{
+        void WriteU32(const SerialTag aTag, const uint32_t aValue) override{
             WriteCopy<Number>(aTag, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteU64(const Core::SerialTag aTag, const uint64_t aValue) override{
+        void WriteU64(const SerialTag aTag, const uint64_t aValue) override{
             WriteCopy<Number>(aTag, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteI8(const Core::SerialTag aTag, const int8_t aValue) override{
+        void WriteI8(const SerialTag aTag, const int8_t aValue) override{
             WriteCopy<Number>(aTag, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteI16(const Core::SerialTag aTag, const int16_t aValue) override{
+        void WriteI16(const SerialTag aTag, const int16_t aValue) override{
             WriteCopy<Number>(aTag, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteI32(const Core::SerialTag aTag, const int32_t aValue) override{
+        void WriteI32(const SerialTag aTag, const int32_t aValue) override{
             WriteCopy<Number>(aTag, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteI64(const Core::SerialTag aTag, const int64_t aValue) override{
+        void WriteI64(const SerialTag aTag, const int64_t aValue) override{
             WriteCopy<Number>(aTag, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteF(const Core::SerialTag aTag, const float aValue) override{
+        void WriteF(const SerialTag aTag, const float aValue) override{
             WriteCopy<Number>(aTag, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteD(const Core::SerialTag aTag, const double aValue) override{
+        void WriteD(const SerialTag aTag, const double aValue) override{
             WriteCopy<Number>(aTag, static_cast<Number>(aValue), &Value::SetNumber);
         }
 
-        void WriteS(const Core::SerialTag aTag, const Core::SerialString aValue) override{
-            WriteCopy<const Core::ConstStringFragment>(aTag, aValue, &Value::SetString);
+        void WriteS(const SerialTag aTag, const SerialString aValue) override{
+            WriteCopy<const ConstStringFragment>(aTag, aValue, &Value::SetString);
         }
 
-        void WriteA(const Core::SerialTag aTag, Core::SerialArrayPtr aArray) override{
-            Core::Allocator::SharedPointer<SerialArray> ptr = std::static_pointer_cast<SerialArray>(aArray);
+        void WriteA(const SerialTag aTag, SerialArrayPtr aArray) override{
+            Allocator::SharedPointer<JsonSerialArray> ptr = std::static_pointer_cast<JsonSerialArray>(aArray);
             WriteMove<Array&&>(aTag, std::move(ptr->mValue->GetArray()), &Value::SetArray);
         }
 
-        void WriteO(const Core::SerialTag aTag, Core::SerialObjectPtr aObject) override{
-            Core::Allocator::SharedPointer<SerialObject> ptr = std::static_pointer_cast<SerialObject>(aObject);
+        void WriteO(const SerialTag aTag, SerialObjectPtr aObject) override{
+            Allocator::SharedPointer<JsonSerialObject> ptr = std::static_pointer_cast<JsonSerialObject>(aObject);
             WriteMove<Object&&>(aTag, std::move(ptr->mValue->GetObject()), &Value::SetObject);
         }
     };
 
-    Core::SerialObjectPtr SerialArray::ReadO(const Core::SerialIndex aIndex){
-        Core::Allocator& allocator = mValue->GetAllocator();
-        return allocator.SharedAllocate<SerialObject>(mValue->GetArray()[aIndex]);
+    SerialObjectPtr JsonSerialArray::ReadO(const SerialIndex aIndex){
+        Allocator& allocator = mValue->GetAllocator();
+        return allocator.SharedAllocate<JsonSerialObject>(mValue->GetArray()[aIndex]);
     }
 
-    Core::ConstSerialObjectPtr SerialArray::ReadO(const Core::SerialIndex aIndex) const{
-        Core::Allocator& allocator = mValue->GetAllocator();
-        return allocator.SharedAllocate<SerialObject>((mValue->GetArray())[aIndex]);
+    ConstSerialObjectPtr JsonSerialArray::ReadO(const SerialIndex aIndex) const{
+        Allocator& allocator = mValue->GetAllocator();
+        return allocator.SharedAllocate<JsonSerialObject>((mValue->GetArray())[aIndex]);
     }
 
-    void SerialArray::WriteO(const Core::SerialIndex aIndex, Core::SerialObjectPtr aObject){
-        Core::Allocator::SharedPointer<SerialObject> ptr = std::static_pointer_cast<SerialObject>(aObject);
+    void JsonSerialArray::WriteO(const SerialIndex aIndex, SerialObjectPtr aObject){
+        Allocator::SharedPointer<JsonSerialObject> ptr = std::static_pointer_cast<JsonSerialObject>(aObject);
         WriteMove<Object&&>(aIndex, std::move(ptr->mValue->GetObject()), &Value::SetObject);
     }
 
-    class SerialSystem : public Core::SerialSystem{
+    class JsonSerialSystem : public SerialSystem{
     private:
-        Core::Allocator& mParseAllocator;
-        Core::Allocator& mDataAllocator;
+        Allocator& mParseAllocator;
+        Allocator& mDataAllocator;
     public:
-        SerialSystem(Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator) :
+        JsonSerialSystem(Allocator& aParseAllocator, Allocator& aDataAllocator) :
             mParseAllocator(aParseAllocator),
             mDataAllocator(aDataAllocator)
         {}
 
-        ~SerialSystem(){
+        ~JsonSerialSystem(){
 
         }
 
         // Inherited from SerialSystem
 
-        Core::SerialArrayPtr CreateA() const override{
-            return mParseAllocator.SharedAllocate<SerialArray>(mParseAllocator.SharedAllocate<Value>(TYPE_ARRAY, mParseAllocator));
+        SerialArrayPtr CreateA() const override{
+            return mParseAllocator.SharedAllocate<JsonSerialArray>(mParseAllocator.SharedAllocate<Value>(TYPE_ARRAY, mParseAllocator));
         }
 
-        Core::SerialObjectPtr CreateO() const override{
-            return mParseAllocator.SharedAllocate<SerialObject>(mParseAllocator.SharedAllocate<Value>(TYPE_OBJECT, mParseAllocator));
+        SerialObjectPtr CreateO() const override{
+            return mParseAllocator.SharedAllocate<JsonSerialObject>(mParseAllocator.SharedAllocate<Value>(TYPE_OBJECT, mParseAllocator));
         }
 
-        void WriteA(std::ostream& aStream, const Core::ConstSerialArrayPtr aArray) const override{
-            Core::Allocator::SharedPointer<Value> ptr = std::static_pointer_cast<const SerialArray>(aArray)->mValue;
+        void WriteA(std::ostream& aStream, const ConstSerialArrayPtr aArray) const override{
+            Allocator::SharedPointer<Value> ptr = std::static_pointer_cast<const JsonSerialArray>(aArray)->mValue;
             aStream << ptr->Parse(mParseAllocator);
         }
 
-        void WriteO(std::ostream& aStream, const Core::ConstSerialObjectPtr aObject) const override{
-            Core::Allocator::SharedPointer<Value> ptr = std::static_pointer_cast<const SerialObject>(aObject)->mValue;
+        void WriteO(std::ostream& aStream, const ConstSerialObjectPtr aObject) const override{
+            Allocator::SharedPointer<Value> ptr = std::static_pointer_cast<const JsonSerialObject>(aObject)->mValue;
             aStream << ptr->Parse(mParseAllocator);
         }
 
-        Core::SerialArrayPtr ReadA(std::istream& aStream) const override{
+        SerialArrayPtr ReadA(std::istream& aStream) const override{
             ArrayParser parser(mParseAllocator);
             aStream >> parser;
-            Core::Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
-            return mParseAllocator.SharedAllocate<SerialArray>(valuePtr);
+            Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
+            return mParseAllocator.SharedAllocate<JsonSerialArray>(valuePtr);
 
         }
 
-        Core::SerialObjectPtr ReadO(std::istream& aStream) const override{
+        SerialObjectPtr ReadO(std::istream& aStream) const override{
             ObjectParser parser(mParseAllocator);
             aStream >> parser;
-            Core::Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
-            return mParseAllocator.SharedAllocate<SerialObject>(valuePtr);
+            Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
+            return mParseAllocator.SharedAllocate<JsonSerialObject>(valuePtr);
         }
 
-        Core::Allocator& GetParseAllocator() const override{
+        Allocator& GetParseAllocator() const override{
             return mParseAllocator;
         };
 
-        Core::Allocator& GetDataAllocator() const override{
+        Allocator& GetDataAllocator() const override{
             return mDataAllocator;
         };
 

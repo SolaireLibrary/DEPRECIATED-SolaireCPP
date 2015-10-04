@@ -35,7 +35,7 @@
 #include "SerialisationInterface.hpp"
 #include "..\Strings\NumberParser.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     template<class T>
     class Serialisable{
@@ -66,7 +66,7 @@ namespace Solaire{ namespace Core{
 
     namespace SerialHelper{
         template<class Iterator>
-        static Iterator CopyString(const Iterator aBegin, const Core::ConstStringFragment aString){
+        static Iterator CopyString(const Iterator aBegin, const ConstStringFragment aString){
             const size_t size = aString.Size();
             char* const dst = &(*aBegin);
             const char* const src = &(*aString.begin());
@@ -77,7 +77,7 @@ namespace Solaire{ namespace Core{
         template<class Iterator>
         static Iterator CopyNumber(const Iterator aBegin, const double aNumber){
             char* const begin = &(*aBegin);
-            const char* const end = Core::NumericParse::ToString(begin, aNumber);
+            const char* const end = NumericParse::ToString(begin, aNumber);
             return aBegin + (end - begin);
         }
 
@@ -86,7 +86,7 @@ namespace Solaire{ namespace Core{
             return CopyString(aBegin, aBool ? "true" : "false");
         }
     }
-}}
+}
 
 
 #endif

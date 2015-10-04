@@ -36,7 +36,7 @@
 #include <vector>
 #include <memory>
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class Allocator{
     public:
@@ -240,6 +240,6 @@ namespace Solaire{ namespace Core{
         return false;
     }
 
-}}
+}
 
 #endif

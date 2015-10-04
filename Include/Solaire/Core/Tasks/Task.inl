@@ -34,12 +34,10 @@
 #include "Task.hpp"
 #include "TaskManager.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class TaskImplementationDetails
     {
-    public:
-        typedef Core::Task Task;
     private:
         Task& mTask;
     public:
@@ -362,7 +360,7 @@ namespace Solaire{ namespace Core{
             }
         }
     };*/
-}}
+}
 
 
 #endif

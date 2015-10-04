@@ -31,10 +31,10 @@
 	Last Modified	: 27th September 2015
 */
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
 	template<class T, class ITERATOR, class FUNCTION>
-	class ConditionalIterator{
+	class ConditionalIteratorWrapper{
 	private:
 		ITERATOR mIterator;
 		ITERATOR mBegin;
@@ -44,16 +44,16 @@ namespace Solaire{ namespace Core{
 		typedef T Type;
 		typedef Type& Reference;
 		typedef Type* Pointer;
-		typedef DereferenceIterator<Type, ITERATOR> Self;
+		typedef ConditionalIteratorWrapper<Type, ITERATOR> Self;
 
-		ConditionalIterator() :
+		ConditionalIteratorWrapper() :
 			mIterator(),
 			mBegin(),
 			mEnd(),
 			mCondition(nullptr)
 		{}
 
-		ConditionalIterator(const ITERATOR aIterator, const ITERATOR aBegin, const ITERATOR aEnd, FUNCTION& aCondition) :
+		ConditionalIteratorWrapper(const ITERATOR aIterator, const ITERATOR aBegin, const ITERATOR aEnd, FUNCTION& aCondition) :
 			mIterator(aIterator),
 			mBegin(aBegin),
 			mEnd(aEnd),
@@ -155,7 +155,7 @@ namespace Solaire{ namespace Core{
 			return mIterator >= aOther.mIterator;
 		}
 	};
-}}
+}
 
 
 #endif

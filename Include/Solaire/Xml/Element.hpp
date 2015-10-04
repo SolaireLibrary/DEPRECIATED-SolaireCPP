@@ -35,11 +35,11 @@ Last Modified	: 29th September 2015
 #include "..\Core\Strings\NumberParser.hpp"
 #include "..\Core\Iterators\DereferenceIterator.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     namespace SerialHelper{
 
-        static void DeserialiseXmlGlyphs(Core::String& aString){
+        static void DeserialiseXmlGlyphs(String& aString){
             aString.ReplaceAll("&lt;", "<");
             aString.ReplaceAll("&gt;", ">");
             aString.ReplaceAll("&amp;", "&");
@@ -47,7 +47,7 @@ namespace Solaire{ namespace Core{
             aString.ReplaceAll("&quot;", "\"");
         }
 
-        static void SerialiseXmlGlyphs(Core::String& aString){
+        static void SerialiseXmlGlyphs(String& aString){
             aString.ReplaceAll("<", "&lt;");
             aString.ReplaceAll(">", "&gt;");
             aString.ReplaceAll("&", "&amp;");
@@ -56,18 +56,18 @@ namespace Solaire{ namespace Core{
         }
     }
 
-}}
+}
 
 namespace Solaire{ namespace Xml{
 
     class Attribute;
     class Element;
 
-    typedef Core::Allocator::SharedPointer<Element> ElementPointer;
-    typedef Core::Allocator::SharedPointer<const Element> ConstElementPointer;
+    typedef Allocator::SharedPointer<Element> ElementPointer;
+    typedef Allocator::SharedPointer<const Element> ConstElementPointer;
 
-    typedef Core::Allocator::SharedPointer<Attribute> AttributePointer;
-    typedef Core::Allocator::SharedPointer<const Attribute> ConstAttributePointer;
+    typedef Allocator::SharedPointer<Attribute> AttributePointer;
+    typedef Allocator::SharedPointer<const Attribute> ConstAttributePointer;
 
     class Attribute : public std::enable_shared_from_this<Attribute>{
     private:
@@ -83,10 +83,10 @@ namespace Solaire{ namespace Xml{
             TYPE_NULL
         };
 
-        Core::String mName;
+        String mName;
         Type mType;
         union{
-            Core::String* mString;
+            String* mString;
             double mNumber;
             bool mBool;
         };
@@ -124,16 +124,16 @@ namespace Solaire{ namespace Xml{
             switch(aAttribute.mType){
             case TYPE_STRING:
                 {
-                    Core::String value = *aAttribute.mString;
-                    Core::SerialHelper::SerialiseXmlGlyphs(value);
-                    aParseEnd = Core::SerialHelper::CopyString(aParseEnd, value);
+                    String value = *aAttribute.mString;
+                    SerialHelper::SerialiseXmlGlyphs(value);
+                    aParseEnd = SerialHelper::CopyString(aParseEnd, value);
                 }
                 break;
             case TYPE_NUMBER:
-                aParseEnd = Core::SerialHelper::CopyNumber(aParseEnd, aAttribute.mNumber);
+                aParseEnd = SerialHelper::CopyNumber(aParseEnd, aAttribute.mNumber);
                 break;
             case TYPE_BOOL:
-                aParseEnd = Core::SerialHelper::CopyBool(aParseEnd, aAttribute.mBool);
+                aParseEnd = SerialHelper::CopyBool(aParseEnd, aAttribute.mBool);
                 break;
             default:
                 break;
@@ -144,7 +144,7 @@ namespace Solaire{ namespace Xml{
         }
 
         template<class Iterator>
-        static AttributePointer Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator){
+        static AttributePointer Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Allocator& aParseAllocator, Allocator& aDataAllocator){
             Iterator nameBegin = aParseEnd;
             Iterator nameEnd = aParseEnd;
             Iterator valueBegin = aParseEnd;
@@ -209,12 +209,12 @@ namespace Solaire{ namespace Xml{
 
             STATE_SUCCESS:
             {
-                Core::String name(nameBegin, nameEnd, aDataAllocator);
+                String name(nameBegin, nameEnd, aDataAllocator);
                 if((valueEnd - valueBegin) == 0){
                     return aDataAllocator.SharedAllocate<Attribute>(name);
                 }else{
-                    Core::String value(valueBegin, valueEnd, aDataAllocator);
-                    Core::SerialHelper::DeserialiseXmlGlyphs(value);
+                    String value(valueBegin, valueEnd, aDataAllocator);
+                    SerialHelper::DeserialiseXmlGlyphs(value);
                     return aDataAllocator.SharedAllocate<Attribute>(name, value);
                 }
             }
@@ -224,24 +224,24 @@ namespace Solaire{ namespace Xml{
             return AttributePointer();
         }
 
-        Attribute(Core::String aName):
+        Attribute(String aName):
             mName(aName),
             mType(TYPE_NULL)
         {}
 
-        Attribute(Core::String aName, const bool aValue):
+        Attribute(String aName, const bool aValue):
             mName(aName),
             mType(TYPE_BOOL),
             mBool(aValue)
         {}
 
-        Attribute(Core::String aName, const double aValue):
+        Attribute(String aName, const double aValue):
             mName(aName),
             mType(TYPE_NUMBER),
             mNumber(aValue)
         {}
 
-        Attribute(Core::String aName, const Core::ConstStringFragment aValue):
+        Attribute(String aName, const ConstStringFragment aValue):
             mName(aName),
             mType(TYPE_NULL)
         {
@@ -252,7 +252,7 @@ namespace Solaire{ namespace Xml{
             SetNull();
         }
 
-        Core::Allocator& GetAllocator() const{
+        Allocator& GetAllocator() const{
             return mName.GetAllocator();
         }
 
@@ -294,7 +294,7 @@ namespace Solaire{ namespace Xml{
             }
         }
 
-        Core::ConstStringFragment GetString() const{
+        ConstStringFragment GetString() const{
             switch(mType){
             case TYPE_STRING:
                 return *mString;
@@ -305,7 +305,7 @@ namespace Solaire{ namespace Xml{
 
         void SetNull(){
             if(mType == TYPE_STRING){
-                GetAllocator().Deallocate<Core::String>(mString);
+                GetAllocator().Deallocate<String>(mString);
             }
             mType = TYPE_NULL;
         }
@@ -322,34 +322,34 @@ namespace Solaire{ namespace Xml{
             mNumber = aValue;
         }
 
-        void SetString(const Core::ConstStringFragment aValue){
+        void SetString(const ConstStringFragment aValue){
             //! \TODO Check if bool
             //! \TODO Check if number
 
             if(mType == TYPE_STRING){
                 *mString = aValue;
             }else{
-                mString = new(GetAllocator().AllocateAndRegister<Core::String>()) Core::String(aValue);
+                mString = new(GetAllocator().AllocateAndRegister<String>()) String(aValue);
                 mType = TYPE_STRING;
             }
         }
 
-        Core::ConstStringFragment GetName() const{
+        ConstStringFragment GetName() const{
             return mName;
         }
     };
 
     class Element : public std::enable_shared_from_this<Element>{
     public:
-        typedef Core::DynamicArray<ElementPointer>::Iterator ElementIterator;
-        typedef Core::DynamicArray<ElementPointer>::ConstIterator ConstElementIterator;
-        typedef Core::DynamicArray<ElementPointer>::ReverseIterator ReverseElementIterator;
-        typedef Core::DynamicArray<ElementPointer>::ConstReverseIterator ConstReverseElementIterator;
+        typedef DynamicArray<ElementPointer>::Iterator ElementIterator;
+        typedef DynamicArray<ElementPointer>::ConstIterator ConstElementIterator;
+        typedef DynamicArray<ElementPointer>::ReverseIterator ReverseElementIterator;
+        typedef DynamicArray<ElementPointer>::ConstReverseIterator ConstReverseElementIterator;
 
-        typedef Core::DynamicArray<AttributePointer>::Iterator AttributeIterator;
-        typedef Core::DynamicArray<AttributePointer>::ConstIterator ConstAttributeIterator;
-        typedef Core::DynamicArray<AttributePointer>::ReverseIterator ReverseAttributeIterator;
-        typedef Core::DynamicArray<AttributePointer>::ConstReverseIterator ConstReverseAttributeIterator;
+        typedef DynamicArray<AttributePointer>::Iterator AttributeIterator;
+        typedef DynamicArray<AttributePointer>::ConstIterator ConstAttributeIterator;
+        typedef DynamicArray<AttributePointer>::ReverseIterator ReverseAttributeIterator;
+        typedef DynamicArray<AttributePointer>::ConstReverseIterator ConstReverseAttributeIterator;
     private:
         Element(const Element&) = delete;
         Element(Element&&) = delete;
@@ -362,10 +362,10 @@ namespace Solaire{ namespace Xml{
             TYPE_BODY
         };
 
-        Core::String mName;
-        Core::DynamicArray<AttributePointer> mAttributes;
+        String mName;
+        DynamicArray<AttributePointer> mAttributes;
         union{
-            Core::DynamicArray<ElementPointer>* mChildren;
+            DynamicArray<ElementPointer>* mChildren;
             Attribute* mValue;
         };
         Type mType;
@@ -539,7 +539,7 @@ namespace Solaire{ namespace Xml{
             FormatStartTag();
             *aParseEnd = '<';
             ++aParseEnd;
-            aParseEnd = Core::SerialHelper::CopyString(aParseEnd, aElement.mName);
+            aParseEnd = SerialHelper::CopyString(aParseEnd, aElement.mName);
             for(const ConstAttributePointer i : aElement.mAttributes){
                 *aParseEnd = ' ';
                 ++aParseEnd;
@@ -567,13 +567,13 @@ namespace Solaire{ namespace Xml{
                 ++aParseEnd;
                 FormatBody();
                 if(aElement.mValue->IsBool()){
-                    aParseEnd = Core::SerialHelper::CopyBool(aParseEnd, aElement.mValue->GetBool());
+                    aParseEnd = SerialHelper::CopyBool(aParseEnd, aElement.mValue->GetBool());
                 }else if(aElement.mValue->IsNumber()){
-                    aParseEnd = Core::SerialHelper::CopyNumber(aParseEnd, aElement.mValue->GetNumber());
+                    aParseEnd = SerialHelper::CopyNumber(aParseEnd, aElement.mValue->GetNumber());
                 }else if(aElement.mValue->IsString()){
-                    Core::String value = aElement.mValue->GetString();
-                    Core::SerialHelper::SerialiseXmlGlyphs(value);
-                    aParseEnd = Core::SerialHelper::CopyString(aParseEnd, value);
+                    String value = aElement.mValue->GetString();
+                    SerialHelper::SerialiseXmlGlyphs(value);
+                    aParseEnd = SerialHelper::CopyString(aParseEnd, value);
                 }else{
                     aParseEnd = aBegin;
                     return false;
@@ -589,20 +589,20 @@ namespace Solaire{ namespace Xml{
             ++aParseEnd;
             *aParseEnd = '/';
             ++aParseEnd;
-            aParseEnd = Core::SerialHelper::CopyString(aParseEnd, aElement.mName);
+            aParseEnd = SerialHelper::CopyString(aParseEnd, aElement.mName);
             *aParseEnd = '>';
             ++aParseEnd;
             return true;
         }
 
         template<class Iterator>
-        static ElementPointer Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Core::Allocator& aParseAllocator, Core::Allocator& aDataAllocator){
+        static ElementPointer Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Allocator& aParseAllocator, Allocator& aDataAllocator){
             Iterator nameBegin = aEnd;
             Iterator nameEnd = aEnd;
             Iterator valueBegin = aEnd;
             Iterator valueEnd = aEnd;
-            Core::DynamicArray<AttributePointer> attributes(8, aParseAllocator);
-            Core::DynamicArray<ElementPointer> children(8, aParseAllocator);
+            DynamicArray<AttributePointer> attributes(8, aParseAllocator);
+            DynamicArray<ElementPointer> children(8, aParseAllocator);
 
             aParseEnd = aBegin;
             goto STATE_OPEN_START_TAG;
@@ -776,7 +776,7 @@ namespace Solaire{ namespace Xml{
 
             STATE_PARSE_END_NAME:
             {
-                //Core::String endName(aParseAllocator);
+                //String endName(aParseAllocator);
 
                 STATE_END_NAME_INTERNAL:
                 switch(*aParseEnd){
@@ -800,7 +800,7 @@ namespace Solaire{ namespace Xml{
 
             STATE_SUCCESS:
             {
-                Core::String name(nameBegin, nameEnd, aDataAllocator);
+                String name(nameBegin, nameEnd, aDataAllocator);
                 ElementPointer element = aDataAllocator.SharedAllocate<Element>(name);
 
                 for(AttributePointer i : attributes){
@@ -808,8 +808,8 @@ namespace Solaire{ namespace Xml{
                 }
 
                 if(valueBegin != aEnd && (valueEnd - valueBegin) > 0){
-                    Core::String value(valueBegin, valueEnd, aDataAllocator);
-                    Core::SerialHelper::DeserialiseXmlGlyphs(value);
+                    String value(valueBegin, valueEnd, aDataAllocator);
+                    SerialHelper::DeserialiseXmlGlyphs(value);
                     element->SetString(value);
                 }
 
@@ -825,7 +825,7 @@ namespace Solaire{ namespace Xml{
             return ElementPointer();
         }
 
-        Element(Core::String aName):
+        Element(String aName):
             mName(aName),
             mAttributes(8, aName.GetAllocator()),
             mChildren(nullptr),
@@ -857,7 +857,7 @@ namespace Solaire{ namespace Xml{
         void SetNull(){
             switch(mType){
             case TYPE_CHILDREN:
-                GetAllocator().Deallocate<Core::DynamicArray<ElementPointer>>(mChildren);
+                GetAllocator().Deallocate<DynamicArray<ElementPointer>>(mChildren);
                 break;
             case TYPE_BODY:
                 GetAllocator().Deallocate<Attribute>(mValue);
@@ -889,7 +889,7 @@ namespace Solaire{ namespace Xml{
             }
         }
 
-        void SetString(const Core::ConstStringFragment aValue){
+        void SetString(const ConstStringFragment aValue){
             if(aValue.Size() == 0){
                 SetNull();
             }else if(mType != TYPE_BODY){
@@ -917,7 +917,7 @@ namespace Solaire{ namespace Xml{
             }
         }
 
-        Core::ConstStringFragment GetString() const{
+        ConstStringFragment GetString() const{
             if(mType != TYPE_BODY){
                throw std::runtime_error("Xml::Element : Does not have body value");
             }else{
@@ -940,13 +940,13 @@ namespace Solaire{ namespace Xml{
         ReverseAttributeIterator AttributeREnd(){return mAttributes.rend();}
         ConstReverseAttributeIterator AttributeREnd() const{return mAttributes.rend();}
 
-        ConstAttributeIterator FindAttribute(const Core::ConstStringFragment aName) const{
+        ConstAttributeIterator FindAttribute(const ConstStringFragment aName) const{
             return mAttributes.FindFirst([&](const ConstAttributePointer aPtr){
                 return aPtr->GetName() == aName;
             });
         }
 
-        AttributeIterator FindAttribute(const Core::ConstStringFragment aName){
+        AttributeIterator FindAttribute(const ConstStringFragment aName){
             return mAttributes.FindFirst([&](const ConstAttributePointer aPtr){
                 return aPtr->GetName() == aName;
             });
@@ -958,7 +958,7 @@ namespace Solaire{ namespace Xml{
             return true;
         }
 
-        bool EraseAttribute(const Core::ConstStringFragment aName){
+        bool EraseAttribute(const ConstStringFragment aName){
             return EraseAttribute(FindAttribute(aName));
         }
 
@@ -1011,21 +1011,21 @@ namespace Solaire{ namespace Xml{
             return mType == TYPE_CHILDREN ? mChildren->rend() : ConstReverseElementIterator();
         }
 
-        ConstElementIterator FindFirstChild(const Core::ConstStringFragment aName) const{
+        ConstElementIterator FindFirstChild(const ConstStringFragment aName) const{
             if(mType != TYPE_CHILDREN) return ConstElementIterator();
             return mChildren->FindFirst([&](const ConstElementPointer aPtr){
                 return aPtr->GetName() == aName;
             });
         }
 
-        ConstElementIterator FindNextChild(const ConstElementIterator aPos, const Core::ConstStringFragment aName) const{
+        ConstElementIterator FindNextChild(const ConstElementIterator aPos, const ConstStringFragment aName) const{
             if(mType != TYPE_CHILDREN) return ConstElementIterator();
             return mChildren->FindNext(aPos, [&](const ConstElementPointer aPtr){
                 return aPtr->GetName() == aName;
             });
         }
 
-        ConstElementIterator FindLastChildChild(const Core::ConstStringFragment aName) const{
+        ConstElementIterator FindLastChildChild(const ConstStringFragment aName) const{
             if(mType != TYPE_CHILDREN) return ConstElementIterator();
             return mChildren->FindFirst([&](const ConstElementPointer aPtr){
                 return aPtr->GetName() == aName;
@@ -1035,7 +1035,7 @@ namespace Solaire{ namespace Xml{
         bool AddChild(const ElementPointer aPtr){
             if(mType != TYPE_CHILDREN){
                 SetNull();
-                mChildren = new(GetAllocator().AllocateAndRegister<Core::DynamicArray<ElementPointer>>()) Core::DynamicArray<ElementPointer>(8, GetAllocator());
+                mChildren = new(GetAllocator().AllocateAndRegister<DynamicArray<ElementPointer>>()) DynamicArray<ElementPointer>(8, GetAllocator());
                 mType = TYPE_CHILDREN;
             }else if(mChildren->FindFirst(aPtr) != ChildEnd()){
                 return false;
@@ -1059,15 +1059,15 @@ namespace Solaire{ namespace Xml{
 
         // Misc
 
-        void SetName(const Core::ConstStringFragment aName){
+        void SetName(const ConstStringFragment aName){
             mName = aName;
         }
 
-        Core::ConstStringFragment GetName() const{
+        ConstStringFragment GetName() const{
             return mName;
         }
 
-        Core::Allocator& GetAllocator() const{
+        Allocator& GetAllocator() const{
             return mAttributes.GetAllocator();
         }
     };

@@ -41,7 +41,7 @@
 #include "../Macros.hpp"
 #include "../DataStructures/DynamicArray.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class TaskManager;
     class TaskImplementationDetails;
@@ -185,7 +185,7 @@ namespace Solaire{ namespace Core{
             }
         }
     };
-}}
+}
 
 #include "Task.inl"
 

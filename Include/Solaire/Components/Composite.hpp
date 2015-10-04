@@ -44,7 +44,7 @@ namespace Solaire{ namespace Components{
 		Composite& operator=(Composite&&) = delete;
 		Composite& operator=(const Composite&) = delete;
 
-		Core::DynamicArray<ComponentPointer> mComponents;
+		DynamicArray<ComponentPointer> mComponents;
 		bool mInDestructor;
 	protected:
 		virtual bool PreAttach(const ConstComponentPointer aComponent) const = 0;
@@ -59,7 +59,7 @@ namespace Solaire{ namespace Components{
 			return dynamic_cast<const T*>(&aComposite) != nullptr;
 		}
 
-		Composite(Core::Allocator& aAllocator):
+		Composite(Allocator& aAllocator):
 		    mComponents(32, aAllocator),
             mInDestructor(false)
         {}
@@ -71,7 +71,7 @@ namespace Solaire{ namespace Components{
             }
 		}
 
-		Core::Allocator& GetAllocator() const{
+		Allocator& GetAllocator() const{
 		    return mComponents.GetAllocator();
 		}
 
@@ -128,10 +128,10 @@ namespace Solaire{ namespace Components{
 
 		// Iterators
 
-		typedef typename Core::DynamicArray<ComponentPointer>::Iterator Iterator;
-		typedef typename Core::DynamicArray<ComponentPointer>::ConstIterator ConstIterator;
-		typedef typename Core::DynamicArray<ComponentPointer>::ReverseIterator ReverseIterator;
-		typedef typename Core::DynamicArray<ComponentPointer>::ConstReverseIterator ConstReverseIterator;
+		typedef typename DynamicArray<ComponentPointer>::Iterator Iterator;
+		typedef typename DynamicArray<ComponentPointer>::ConstIterator ConstIterator;
+		typedef typename DynamicArray<ComponentPointer>::ReverseIterator ReverseIterator;
+		typedef typename DynamicArray<ComponentPointer>::ConstReverseIterator ConstReverseIterator;
 
 		Iterator begin(){return mComponents.begin();}
 		ConstIterator begin() const{return mComponents.begin();}

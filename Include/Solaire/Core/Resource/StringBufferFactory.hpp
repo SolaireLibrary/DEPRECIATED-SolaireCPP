@@ -33,7 +33,7 @@
 
 #include "StringFactory.hpp"
 
-namespace Solaire{ namespace Core{
+namespace Solaire{
 
     class StringBufferFactory : public StringFactory{
     protected:
@@ -80,6 +80,6 @@ namespace Solaire{ namespace Core{
         }
     };
 
-}}
+}
 
 #endif
