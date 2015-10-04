@@ -419,7 +419,7 @@ namespace Solaire{ namespace Json{
 
     // Value
 
-    bool Value::Serialise(const  std::function<void(char)> aSetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue){
+    bool Value::Serialise(const std::function<void(char)>& aSetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, const Value& aValue){
         const auto WriteString = [&](ConstStringFragment aString)->void{
             for(const char c : aString){
                 aSetFn(c);
@@ -441,20 +441,50 @@ namespace Solaire{ namespace Json{
             }
             return true;
         case TYPE_ARRAY:
-            aSetFn('[');
-            aForwardFn();
-            for(std::shared_ptr<Value> value : *aValue.mDataArray)
-            aSetFn(']');
-            aForwardFn();
-            return false;
+            {
+                aSetFn('[');
+                aForwardFn();
+                ArrayType::Iterator end = aValue.mDataArray->end();
+                for(ArrayType::Iterator i = aValue.mDataArray->begin(); i != end; ++i){
+                    if(! Serialise(aSetFn, aForwardFn, aBackwardFn, **i)) return false;
+                    if((i - 1) != end){
+                        aSetFn(',');
+                        aForwardFn();
+                    }
+                }
+                aSetFn(']');
+                aForwardFn();
+                return false;
+            }
         case TYPE_OBJECT:
-            return false;
+            {
+                aSetFn('{');
+                aForwardFn();
+                ObjectType::Iterator end = aValue.mDataObject->end();
+                for(ObjectType::Iterator i = aValue.mDataObject->begin(); i != end; ++i){
+                    aSetFn('"');
+                    aForwardFn();
+                    WriteString(i->first);
+                    aSetFn('"');
+                    aForwardFn();
+                    aSetFn(':');
+                    aForwardFn();
+                    if(! Serialise(aSetFn, aForwardFn, aBackwardFn, *i->second)) return false;
+                    if((i - 1) != end){
+                        aSetFn(',');
+                        aForwardFn();
+                    }
+                }
+                aSetFn('}');
+                aForwardFn();
+                return false;
+            }
         default:
             return false;
         }
     }
 
-    std::shared_ptr<Value> Value::Deserialise(const  std::function<char(void)> aGetFn,  std::function<void(void)> aForwardFn,  std::function<void(void)> aBackwardFn, const Value& aValue){
+    std::shared_ptr<Value> Value::Deserialise(const std::function<char(void)>& aGetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, const Value& aValue){
         throw 0;
     }
 
