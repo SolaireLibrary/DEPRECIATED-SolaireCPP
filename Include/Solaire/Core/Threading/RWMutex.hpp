@@ -36,15 +36,107 @@
 
 namespace Solaire{
 
-    template<class Mutex>
     class RWMutex{
+    private:
         RWMutex(const RWMutex&) = delete;
         RWMutex(RWMutex&&) = delete;
 
         RWMutex operator=(const RWMutex&) = delete;
         RWMutex operator=(RWMutex&&) = delete;
-    private:
+
+        Mutex mWriteLock;
+        RecursiveMutex mStateLock;
+        int8_t mReadCount;
     public:
+        void ReadLock(){
+            mStateLock.lock();
+            if(mReadCount == 0){
+                ++mReadCount;
+            }else if(mReadCount > 0){
+                ++mReadCount;
+            }else{
+                mStateLock.unlock();
+                mWriteLock.lock();
+                mStateLock.lock();
+                mWriteLock.unlock();
+                ++mReadCount;
+            }
+            mStateLock.unlock();
+        }
+
+        bool TryReadLock(){
+            mStateLock.lock();
+            if(mReadCount >= 0){
+                ++mReadCount;
+                mStateLock.unlock();
+                return true;
+            }else{
+                mStateLock.unlock();
+                return false;
+            }
+        }
+
+        void ReadUnlock(){
+            mStateLock.lock();
+            if(mReadCount > 0){
+                --mReadCount;
+                if(mReadCount == 0){
+                    mStateLock.unlock();
+                }else{
+                    //! \TODO Notify that read lock has been released
+                    mStateLock.unlock();
+                }
+            }else{
+                mStateLock.unlock();
+                throw std::runtime_error("RWMutex : Is not read locked");
+            }
+        }
+
+        void WriteLock(){
+            mStateLock.lock();
+            if(mReadCount == 0){
+                --mReadCount;
+                mWriteLock.lock();
+            }else if(mReadCount > 0){
+                mStateLock.unlock();
+                //! \TODO Wait for read lock to be released
+                mStateLock.lock();
+                --mReadCount;
+                mWriteLock.lock();
+            }else{
+                mStateLock.unlock();
+                mWriteLock.lock();
+                mStateLock.lock();
+                --mReadCount;
+            }
+            mStateLock.unlock();
+        }
+
+        bool TryWriteLock(){
+            mStateLock.lock();
+            if(mReadCount == 0){
+                --mReadCount;
+                mWriteLock.lock();
+                mStateLock.unlock();
+                return true;
+            }else{
+                mStateLock.unlock();
+                return false;
+            }
+        }
+
+        void WriteUnlock(){
+            mStateLock.lock();
+            if(mReadCount < 0){
+                ++mReadCount;
+                mWriteLock.unlock();
+                mStateLock.unlock();
+            }else{
+                mStateLock.unlock();
+                throw std::runtime_error("RWMutex : Is not write locked");
+            }
+        }
+
     };
 
 }
