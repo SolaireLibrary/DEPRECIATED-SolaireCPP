@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_INIT_GCC_INL
-#define SOLAIRE_CORE_INIT_GCC_INL
+#ifndef SOLAIRE_INIT_GCC_INL
+#define SOLAIRE_INIT_GCC_INL
 
 //Copyright 2015 Adam Smith
 //

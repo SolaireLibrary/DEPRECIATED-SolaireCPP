@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_MATHS_HPP
-#define SOLAIRE_CORE_MATHS_HPP
+#ifndef SOLAIRE_MATHS_HPP
+#define SOLAIRE_MATHS_HPP
 
 //Copyright 2015 Adam Smith
 //

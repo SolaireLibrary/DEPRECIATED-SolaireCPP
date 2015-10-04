@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_HASH_CRC_HPP
-#define SOLAIRE_CORE_HASH_CRC_HPP
+#ifndef SOLAIRE_HASH_CRC_HPP
+#define SOLAIRE_HASH_CRC_HPP
 
 //Copyright 2015 Adam Smith
 //

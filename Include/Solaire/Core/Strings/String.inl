@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_STRING_INL
-#define SOLAIRE_CORE_STRING_INL
+#ifndef SOLAIRE_STRING_INL
+#define SOLAIRE_STRING_INL
 
 //Copyright 2015 Adam Smith
 //

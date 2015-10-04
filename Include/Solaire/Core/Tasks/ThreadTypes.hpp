@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_INIT_CLANG_INL
-#define SOLAIRE_INIT_CLANG_INL
+#ifndef SOLAIRE_THREAD_TYPES_HPP
+#define SOLAIRE_THREAD_TYPES_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,21 +20,21 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file Clang.inl
+	\file ThreadTypes.hpp
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 1.0
+	\version 2.0
 	\date
-	Created			: 23rd September 2015
-	Last Modified	: 23rd September 2015
+	Created			: 4th October 2015
+	Last Modified	: 4th October 2015
 */
 
-#define SOLAIRE_COMPILER SOLAIRE_CLANG
-#define SOLAIRE_COMPILER_VERSION (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
 
-#define SOLAIRE_WARNINGS 1
-#define SOLAIRE_INLINE __attribute__ ((always_inline))
+namespace Solaire{
+
+}
+
 
 #endif

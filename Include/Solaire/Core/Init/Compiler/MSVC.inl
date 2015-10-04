@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_INIT_MSVC_INL
-#define SOLAIRE_CORE_INIT_MSVC_INL
+#ifndef SOLAIRE_INIT_MSVC_INL
+#define SOLAIRE_INIT_MSVC_INL
 
 //Copyright 2015 Adam Smith
 //

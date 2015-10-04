@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_MACROS_HPP
-#define SOLAIRE_CORE_MACROS_HPP
+#ifndef SOLAIRE_MACROS_HPP
+#define SOLAIRE_MACROS_HPP
 
 //Copyright 2015 Adam Smith
 //

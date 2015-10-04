@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_TASK_INL
-#define SOLAIRE_CORE_TASK_INL
+#ifndef SOLAIRE_TASK_INL
+#define SOLAIRE_TASK_INL
 
 //Copyright 2015 Adam Smith
 //

@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_CORE_HASH_DJB2_HPP
-#define SOLAIRE_CORE_HASH_DJB2_HPP
+#ifndef SOLAIRE_HASH_DJB2_HPP
+#define SOLAIRE_HASH_DJB2_HPP
 
 //Copyright 2015 Adam Smith
 //
