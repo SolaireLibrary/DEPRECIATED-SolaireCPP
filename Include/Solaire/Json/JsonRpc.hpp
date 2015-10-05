@@ -47,13 +47,97 @@ namespace Solaire{ namespace Json{
         RPC_INTERNAL_ERROR      = -32603
     };
 
-    typedef std::shared_ptr<Value> RpcRequest;
+    class RpcRequestBase{
+    private:
+        String mMethodName;
+        std::shared_ptr<Value> mParams;
+    protected:
+        enum : RpcRequestID{
+            RPC_NOTIFICATION_ID = INT64_MAX
+        };
+    public:
+        static std::shared_ptr<Value> Serialise(const RpcRequestBase& aRequest){
+            if(aRequest.mMethodName.Size() == 0) return std::shared_ptr<Value>();
+
+            Allocator& allocator = aRequest.GetAllocator();
+
+            std::shared_ptr<Value> ptr = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
+            ObjectValue& request = ptr->AsObject();
+
+            request.Add("jsonrpc", allocator.SharedAllocate<Value>(allocator, "2.0"));
+            request.Add("method", allocator.SharedAllocate<Value>(allocator, aRequest.mMethodName));
+            if(aRequest.mParams){
+                request.Add("params", aRequest.mParams);
+            }else{
+                request.Add("params", allocator.SharedAllocate<Value>(allocator, TYPE_NULL));
+            }
+
+            const RpcRequestID id = aRequest.GetRequestID();
+
+            if(id == RPC_NOTIFICATION_ID){
+                request.Add("id", allocator.SharedAllocate<Value>(allocator, TYPE_NULL));
+            }else{
+                request.Add("id", allocator.SharedAllocate<Value>(allocator, id));
+            }
+
+            return ptr;
+        }
+    protected:
+        virtual RpcRequestID GetRequestID() const = 0;
+    public:
+        RpcRequestBase(Allocator& aAllocator):
+            mMethodName(aAllocator)
+        {}
+
+        virtual ~RpcRequestBase(){
+
+        }
+
+        void SetMethodName(const ConstStringFragment aName){
+            mMethodName = aName;
+        }
+
+        ConstStringFragment GetMethodName() const{
+            return mMethodName;
+        }
+
+        void SetParams(std::shared_ptr<Value> aParams){
+            mParams.swap(aParams);
+        }
+
+        template<class ...Params>
+        void SerialiseAndSetParams(Params&& ...aParams){
+            Allocator& allocator = GetAllocator();
+            std::shared_ptr<Value> value = allocator.SharedAllocate<Value>(allocator, TYPE_ARRAY);
+            ArrayValue& array_ = value->AsArray();
+            array_.PushBack(JsonSerialise(aParams...));
+            SetParams(value);
+        }
+
+        std::shared_ptr<const Value> GetParams() const{
+            return mParams;
+        }
+
+        Allocator& GetAllocator() const{
+            return mMethodName.GetAllocator();
+        }
+    };
+
+    class RpcRequest : public RpcRequestBase{
+
+    };
+
+    class RpcNotification : public RpcRequestBase{
+
+    };
+
+    /*typedef std::shared_ptr<Value> RpcRequest;
     typedef std::shared_ptr<Value> RpcNotification;
     typedef std::shared_ptr<Value> RpcResponse;
     typedef std::shared_ptr<Value> RpcResult;
-    typedef std::shared_ptr<Value> RpcError;
+    typedef std::shared_ptr<Value> RpcError;*/
 
-    class RpcBuilder{
+    /*class RpcBuilder{
     private:
         enum : RpcRequestID{
             RPC_NOTIFICATION_ID = INT64_MAX
@@ -63,15 +147,15 @@ namespace Solaire{ namespace Json{
 
         RpcResponse BuildRpcResponse(const RpcRequestID aID, std::shared_ptr<Value> aPayload, bool aIsError){
             std::shared_ptr<Value> ptr = mAllocator->SharedAllocate<Value>(TYPE_OBJECT, *mAllocator);
-            Object& request = ptr->GetObject();
+            ObjectValue& request = ptr->AsObject();
 
-            request.emplace("jsonrpc", mAllocator->SharedAllocate<Value>("2.0", *mAllocator));
+            request.Add("jsonrpc", mAllocator->SharedAllocate<Value>(*mAllocator, "2.0"));
             if(aIsError){
-                request.emplace("error", aPayload);
+                request.Add("error", aPayload);
             }else{
-                request.emplace("result", aPayload ? aPayload : mAllocator->SharedAllocate<Value>(TYPE_NULL, *mAllocator));
+                request.Add("result", aPayload ? aPayload : mAllocator->SharedAllocate<Value>(*mAllocator, TYPE_NULL));
             }
-            request.emplace("id", mAllocator->SharedAllocate<Value>(static_cast<Number>(aID), *mAllocator));
+            request.Add("id", mAllocator->SharedAllocate<Value>(*mAllocator, aID));
             return ptr;
         }
     public:
@@ -81,26 +165,26 @@ namespace Solaire{ namespace Json{
 
        RpcRequest BuildRpcRequest(RpcRequestID aID, const ConstStringFragment aMethodName, std::shared_ptr<Value> aParam = std::shared_ptr<Value>()){
             std::shared_ptr<Value> ptr = mAllocator->SharedAllocate<Value>(TYPE_OBJECT, *mAllocator);
-            Object& request = ptr->GetObject();
+            ObjectValue& request = ptr->AsObject();
 
-            request.emplace("jsonrpc", mAllocator->SharedAllocate<Value>("2.0", *mAllocator));
-            request.emplace("method", mAllocator->SharedAllocate<Value>(aMethodName, *mAllocator));
+            request.Add("jsonrpc", mAllocator->SharedAllocate<Value>(*mAllocator, "2.0"));
+            request.Add("method", mAllocator->SharedAllocate<Value>(*mAllocator, aMethodName));
             if(aParam){
-                if(aParam->IsArray()){
-                    request.emplace("params", aParam);
+                if(aParam->GetType() == TYPE_ARRAY){
+                    request.Add("params", aParam);
                 }else{
-                    std::shared_ptr<Value>paramPtr = mAllocator->SharedAllocate<Value>(TYPE_ARRAY, *mAllocator);
-                    Array& params = paramPtr->GetArray();
+                    std::shared_ptr<Value>paramPtr = mAllocator->SharedAllocate<Value>(*mAllocator, TYPE_ARRAY);
+                    ArrayValue& params = paramPtr->AsArray();
                     params.PushBack(aParam);
-                    request.emplace("params", paramPtr);
+                    request.Add("params", paramPtr);
                 }
             }else{
-                request.emplace("params", mAllocator->SharedAllocate<Value>(TYPE_NULL, *mAllocator));
+                request.Add("params", mAllocator->SharedAllocate<Value>(*mAllocator, TYPE_NULL));
             }
             if(aID == RPC_NOTIFICATION_ID){
-                request.emplace("id", mAllocator->SharedAllocate<Value>(TYPE_NULL, *mAllocator));
+                request.Add("id", mAllocator->SharedAllocate<Value>(*mAllocator, TYPE_NULL));
             }else{
-                request.emplace("id", mAllocator->SharedAllocate<Value>(static_cast<Number>(aID), *mAllocator));
+                request.Add("id", mAllocator->SharedAllocate<Value>(*mAllocator, aID));
             }
 
             return ptr;
@@ -133,9 +217,9 @@ namespace Solaire{ namespace Json{
         RpcResponse BuildRpcResponseFail(const RpcRequestID aID, RpcError aError){
             return BuildRpcResponse(aID, aError, true);
         }
-    };
+    };*/
 
-    class RpcServer{
+    /*class RpcServer{
 
     };
 
@@ -180,7 +264,7 @@ namespace Solaire{ namespace Json{
             RpcNotification notification = mBuilder.BuildRpcNotification(aMethodName, SerialiseParams(aParams...));
             SendNotification(notification);
         }
-    };
+    };*/
 }}
 
 #endif
