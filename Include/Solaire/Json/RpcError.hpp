@@ -36,11 +36,12 @@ Last Modified	: 5th October 2015
 
 namespace Solaire{ namespace Json{
 
-    typedef int64_t RpcErrorID;
+    typedef int64_t RpcErrorCode;
 
-    enum : RpcErrorID{
+    enum : RpcErrorCode{
         // Defined by Solaire
         RPC_EXCEPTION_THROWN_ON_SERVER = 1,
+        RPC_REQUEST_WHEN_NOTIFICATION_EXPECTED = 2,
 
         // Defined by JsonRpc 2.0
         RPC_PARSE_ERROR         = -32700,
@@ -54,7 +55,7 @@ namespace Solaire{ namespace Json{
     private:
         String mMessage;
         std::shared_ptr<Value> mData;
-        RpcErrorID mCode;
+        RpcErrorCode mCode;
     public:
         static std::shared_ptr<Value> Serialise(const RpcError& aError);
     public:
@@ -64,8 +65,8 @@ namespace Solaire{ namespace Json{
         void SetMessage(const ConstStringFragment aName);
         ConstStringFragment GetMessage() const;
 
-        void SetCode(const RpcErrorID aID);
-        RpcErrorID GetCode() const;
+        void SetCode(const RpcErrorCode aID);
+        RpcErrorCode GetCode() const;
 
         void SetData(std::shared_ptr<Value> aParams);
         std::shared_ptr<const Value> GetData() const;
@@ -80,6 +81,8 @@ namespace Solaire{ namespace Json{
         RpcErrorException(std::shared_ptr<RpcError> aError):
             mError(aError)
         {}
+
+        RpcErrorCode GetErrorCode() const;
 
         std::shared_ptr<const Value> GetData() const;
 

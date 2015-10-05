@@ -46,11 +46,12 @@ namespace Solaire{ namespace Json{
     protected:
         virtual void SendResponse(const RpcResponse& aResponse) = 0;
 
-        void SendError(const RpcRequestID aID, const RpcErrorID aCode, std::shared_ptr<RpcError> aError);
-        void SendError(const RpcRequestID aID, const RpcErrorID aCode, ConstStringFragment aMessage, std::shared_ptr<Value> aErrorData);
-        void SendError(const RpcRequestID aID, const RpcErrorID aCode, ConstStringFragment aMessage);
+        void SendError(const RpcRequestID aID, std::shared_ptr<RpcError> aError);
+        void SendError(const RpcRequestID aID, const RpcErrorCode aCode, ConstStringFragment aMessage, std::shared_ptr<Value> aErrorData);
+        void SendError(const RpcRequestID aID, const RpcErrorCode aCode, ConstStringFragment aMessage);
 
         void SendResponse(const RpcRequestID aID, std::shared_ptr<Value> aData);
+        void SendResponse(const RpcRequestID aID);
 
         template<class T>
         void SendAndSerialiseResponse(const RpcRequestID aID, T aValue){
@@ -71,7 +72,7 @@ namespace Solaire{ namespace Json{
 
         void Execute(const RpcRequest& aRequest);
 
-        void MapFunction(String aString, const RpcFunction);
+        void MapFunction(String aString, const RpcFunction aFn);
         void MapFunction(String aString, const std::function<void(const std::shared_ptr<const Value>)> aFn);
         void MapFunction(String aString, const std::function<void()> aFn);
 
@@ -79,6 +80,11 @@ namespace Solaire{ namespace Json{
         void MapAutoSerialiseFunction(String aString, const std::function<R(const RpcRequestID, const std::shared_ptr<const Value>)> aFn){
             const RpcFunction wrapper = [=](const RpcRequest& aRequest){
                 Allocator& allocator = GetAllocator();
+
+                if(aRequest.IsNotification()){
+                    throw std::runtime_error("Json::RpcServer : Expected request, received notification instead");
+                }
+
                 const RpcRequestID id = aRequest.GetRequestID();
                 try{
                     SendAndSerialiseResponse<R>(aFn(id, aRequest.GetParams()));
@@ -93,6 +99,11 @@ namespace Solaire{ namespace Json{
         template<class R>
         void MapAutoSerialiseFunction(String aString, const std::function<R(const RpcRequestID)> aFn){
             const RpcFunction wrapper = [=](const RpcRequest& aRequest){
+
+                if(aRequest.IsNotification()){
+                    throw std::runtime_error("Json::RpcServer : Expected request, received notification instead");
+                }
+
                 Allocator& allocator = GetAllocator();
                 const RpcRequestID id = aRequest.GetRequestID();
                 try{
@@ -109,6 +120,6 @@ namespace Solaire{ namespace Json{
     };
 }}
 
-//#include "RpcServer.inl"
+#include "RpcServer.inl"
 
 #endif
