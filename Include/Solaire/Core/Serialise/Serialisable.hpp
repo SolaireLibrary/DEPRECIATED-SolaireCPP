@@ -85,12 +85,27 @@ namespace Solaire{
     public:
         typedef T DeserialiseType;
 
-        void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot){
+        static void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot){
             aRoot->Write<T>(aTag, aValue);
         }
 
-        std::shared_ptr<T> Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot){
+        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot){
             return aRoot->Read<T>(aTag);
+        }
+    };
+
+    template<class T>
+    class Serialisable<std::shared_ptr<T>, typename Serialisable<T>::DeserialiseType, typename std::enable_if<IsSerialPrimative<T>>::type>
+    {
+    public:
+        typedef typename Serialisable<T>::DeserialiseType DeserialiseType;
+
+        static void Serialise(std::shared_ptr<T> aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot){
+            Serialisable<T>::Serialise(*aValue, aSystem, aTag, aRoot);
+        }
+
+        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot){
+            return Serialisable<T>::DeserialiseType(aSystem, aTag, aRoot);
         }
     };
 }
