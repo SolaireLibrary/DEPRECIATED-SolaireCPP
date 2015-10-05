@@ -422,6 +422,10 @@ namespace Solaire{ namespace Json{
     bool Value::InternalSerialise(const std::function<void(char)>& aSetFn, const std::function<void(void)>& aForwardFn, const std::function<void(void)>& aBackwardFn, const Value& aValue){
         const auto WriteString = [&](ConstStringFragment aString)->void{
             for(const char c : aString){
+                if(c == '"'){
+                    aSetFn('\\');
+                    aForwardFn();
+                }
                 aSetFn(c);
                 aForwardFn();
             }
@@ -721,7 +725,6 @@ namespace Solaire{ namespace Json{
                 aForwardFn();
                 goto STATE_OBJECT_NAME_PARSE;
             case '"':
-                isEscaped = ! isEscaped;
                 if(isEscaped){
                     *nameEnd = '"';
                     ++nameEnd;
