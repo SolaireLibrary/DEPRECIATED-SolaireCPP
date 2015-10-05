@@ -224,7 +224,7 @@ namespace Solaire{ namespace Json{
         };
     private:
         static bool Serialise(const std::function<void(char)>& aSetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, const Value& aValue);
-        static std::shared_ptr<Value> Deserialise(const std::function<char(void)>& aGetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, const Value& aValue);
+        static std::shared_ptr<Value> Deserialise(const std::function<char(void)>& aGetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, Allocator& aParseAllocator, Allocator& aDataAllocator);
     public:
         static size_t EstimateSerialLength(const Value& aValue);
 

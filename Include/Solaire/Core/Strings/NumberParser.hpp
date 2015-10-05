@@ -345,6 +345,31 @@ namespace Solaire{
     template<> struct NumericParser<float>{typedef NumericParserF Type;};
     template<> struct NumericParser<double>{typedef NumericParserD Type;};
 
+    template<class T, class Iterator>
+    T ParseNumber(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd){
+        typename NumericParser<T>::Type templatedParser;
+        ResultByteParser<T>& parser = templatedParser;
+
+        aParseEnd = aBegin;
+        while(aParseEnd != aEnd){
+            switch(parser.Accept(*aParseEnd)){
+            case ByteParser::STATUS_SUCCESS:
+                ++aParseEnd;
+                break;
+            case ByteParser::STATUS_COMPLETE:
+                goto PARSE;
+            case ByteParser::STATUS_FAIL:
+                aParseEnd = aBegin;
+                goto PARSE;
+            }
+        }
+
+        PARSE:
+        if(aParseEnd == aBegin) return static_cast<T>(0);
+        Allocator& allocator = GetDefaultAllocator();
+        return parser.Get(allocator, allocator);
+    }
+
 }
 
 

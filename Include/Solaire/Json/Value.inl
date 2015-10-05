@@ -484,7 +484,7 @@ namespace Solaire{ namespace Json{
         }
     }
 
-    std::shared_ptr<Value> Value::Deserialise(const std::function<char(void)>& aGetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, const Value& aValue){
+    std::shared_ptr<Value> Value::Deserialise(const std::function<char(void)>& aGetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, Allocator& aParseAllocator, Allocator& aDataAllocator){
         goto STATE_ID;
 
         STATE_ID:
@@ -493,7 +493,6 @@ namespace Solaire{ namespace Json{
             case ' ':
             case '\t':
             case '\n':
-                aForwardFn();
                 goto STATE_ID;
             case 'n':
                 goto STATE_NULL;
@@ -524,12 +523,80 @@ namespace Solaire{ namespace Json{
         }
 
         STATE_NULL:
+        {
+            aForwardFn();
+            if(aGetFn() != 'u') goto STATE_FAIL;
+            aForwardFn();
+            if(aGetFn() != 'l') goto STATE_FAIL;
+            aForwardFn();
+            if(aGetFn() != 'l') goto STATE_FAIL;
+            return aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_NULL);
+        }
         goto STATE_FAIL;
 
         STATE_BOOL:
+        {
+            if(aGetFn() == 't'){
+                aForwardFn();
+                if(aGetFn() != 't') goto STATE_FAIL;
+                aForwardFn();
+                if(aGetFn() != 'u') goto STATE_FAIL;
+                aForwardFn();
+                if(aGetFn() != 'e') goto STATE_FAIL;
+                return aDataAllocator.SharedAllocate<Value>(aDataAllocator, true);
+            }else{
+                aForwardFn();
+                if(aGetFn() != 'a') goto STATE_FAIL;
+                aForwardFn();
+                if(aGetFn() != 'l') goto STATE_FAIL;
+                aForwardFn();
+                if(aGetFn() != 's') goto STATE_FAIL;
+                aForwardFn();
+                if(aGetFn() != 'e') goto STATE_FAIL;
+                return aDataAllocator.SharedAllocate<Value>(aDataAllocator, false);
+            }
+        }
         goto STATE_FAIL;
 
         STATE_NUMBER:
+        {
+            char buf[16];
+            char* bufEnd = buf;
+
+            STATE_NUMBER_BUF:
+            *bufEnd = aGetFn();
+            switch(*bufEnd){
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case '-':
+            case '+':
+            case 'E':
+            case 'e':
+            case '.':
+                ++bufEnd;
+                goto STATE_NUMBER_BUF;
+            default:
+                {
+                    *bufEnd = '\0';
+                    char* it = buf;
+                    double num = ParseNumber<double>(buf, bufEnd, it);
+                    if(it == buf){
+                        goto STATE_FAIL;
+                    }else{
+                        return aDataAllocator.SharedAllocate<Value>(aDataAllocator, num);
+                    }
+                }
+                break;
+            }
+        }
         goto STATE_FAIL;
 
         STATE_STRING:
@@ -539,9 +606,6 @@ namespace Solaire{ namespace Json{
         goto STATE_FAIL;
 
         STATE_OBJECT:
-        goto STATE_FAIL;
-
-        STATE_SUCCESS:
         goto STATE_FAIL;
 
         STATE_FAIL:
