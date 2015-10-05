@@ -62,11 +62,12 @@ namespace Solaire{ namespace Json{
         template<class R>
         void MapFunction(String aString, const std::function<R(const RpcRequestID, const std::shared_ptr<const Value>)> aFn){
             const RpcFunction wrapper = [=](const RpcRequest& aRequest){
+                Allocator& allocator = GetAllocator();
                 const RpcRequestID id = aRequest.GetRequestID();
                 try{
-                    aFn(id, aRequest.GetParams());
+                    SendResponse(id, JsonSerialise<R>(allocator, allocator, aFn(id, aRequest.GetParams())));
                 }catch(std::exception& e){
-                    SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what()));
+                    SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what(), allocator));
                 }
             };
         }
@@ -74,15 +75,17 @@ namespace Solaire{ namespace Json{
         template<class R>
         void MapFunction(String aString, const std::function<R(const RpcRequestID)> aFn){
             const RpcFunction wrapper = [=](const RpcRequest& aRequest){
+                Allocator& allocator = GetAllocator();
                 const RpcRequestID id = aRequest.GetRequestID();
                 try{
-                    aFn(id);
+                    SendResponse(id, JsonSerialise<R>(allocator, allocator, aFn(id)));
                 }catch(std::exception& e){
-                    SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what()));
+                    SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what(), allocator));
                 }
             };
         }
     public:
+        virtual Allocator& GetAllocator() const = 0;
     };
 }}
 

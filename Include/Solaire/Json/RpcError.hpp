@@ -39,6 +39,9 @@ namespace Solaire{ namespace Json{
     typedef int64_t RpcErrorID;
 
     enum : RpcErrorID{
+        RPC_EXCEPTION_THROWN_ON_SERVER = 1,
+
+        // Defined by JsonRpc 2.0
         RPC_PARSE_ERROR         = -32700,
         RPC_INVALID_REQUEST     = -32600,
         RPC_METHOD_NOT_FOUND    = -32601,
