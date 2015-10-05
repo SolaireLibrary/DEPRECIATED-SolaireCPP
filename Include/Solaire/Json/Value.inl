@@ -485,7 +485,67 @@ namespace Solaire{ namespace Json{
     }
 
     std::shared_ptr<Value> Value::Deserialise(const std::function<char(void)>& aGetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, const Value& aValue){
-        throw 0;
+        goto STATE_ID;
+
+        STATE_ID:
+        {
+            switch(aGetFn()){
+            case ' ':
+            case '\t':
+            case '\n':
+                aForwardFn();
+                goto STATE_ID;
+            case 'n':
+                goto STATE_NULL;
+            case 't':
+            case 'f':
+                goto STATE_BOOL;
+            case '-':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                goto STATE_NUMBER;
+            case '"':
+                goto STATE_STRING;
+            case '[':
+                goto STATE_ARRAY;
+            case '{':
+                goto STATE_OBJECT;
+            default:
+                goto STATE_FAIL;
+            }
+        }
+
+        STATE_NULL:
+        goto STATE_FAIL;
+
+        STATE_BOOL:
+        goto STATE_FAIL;
+
+        STATE_NUMBER:
+        goto STATE_FAIL;
+
+        STATE_STRING:
+        goto STATE_FAIL;
+
+        STATE_ARRAY:
+        goto STATE_FAIL;
+
+        STATE_OBJECT:
+        goto STATE_FAIL;
+
+        STATE_SUCCESS:
+        goto STATE_FAIL;
+
+        STATE_FAIL:
+        return std::shared_ptr<Value>();
     }
 
     size_t Value::EstimateSerialLength(const Value& aValue){
