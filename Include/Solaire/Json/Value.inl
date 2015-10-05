@@ -539,11 +539,12 @@ namespace Solaire{ namespace Json{
         {
             if(aGetFn() == 't'){
                 aForwardFn();
-                if(aGetFn() != 't') goto STATE_FAIL;
+                if(aGetFn() != 'r') goto STATE_FAIL;
                 aForwardFn();
                 if(aGetFn() != 'u') goto STATE_FAIL;
                 aForwardFn();
                 if(aGetFn() != 'e') goto STATE_FAIL;
+                aForwardFn();
                 return aDataAllocator.SharedAllocate<Value>(aDataAllocator, true);
             }else{
                 aForwardFn();
@@ -554,6 +555,7 @@ namespace Solaire{ namespace Json{
                 if(aGetFn() != 's') goto STATE_FAIL;
                 aForwardFn();
                 if(aGetFn() != 'e') goto STATE_FAIL;
+                aForwardFn();
                 return aDataAllocator.SharedAllocate<Value>(aDataAllocator, false);
             }
         }
