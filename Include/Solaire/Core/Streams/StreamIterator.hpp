@@ -31,7 +31,8 @@
 	Last Modified	: 4th October 2015
 */
 
-#include <istream>
+#include <iostream>
+#include <fstream>
 
 namespace Solaire{
 

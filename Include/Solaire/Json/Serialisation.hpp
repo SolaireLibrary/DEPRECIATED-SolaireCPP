@@ -32,7 +32,9 @@
 */
 
 #include "Value.hpp"
+#include "..\Core\Serialise\Serialisable.hpp"
 #include "..\Core\Serialise\SerialisationInterface.hpp"
+#include "..\Core\Streams\StreamIterator.hpp"
 
 namespace Solaire{ namespace Json{
 
@@ -435,10 +437,25 @@ namespace Solaire{ namespace Json{
         LookupOrCreateIndex(aIndex, TYPE_OBJECT) = std::move(*std::static_pointer_cast<JsonSerialObject>(aObject)->mValue);
     }
 
-    /*class JsonSerialSystem : public SerialSystem{
+    class JsonSerialSystem : public SerialSystem{
     private:
         Allocator& mParseAllocator;
         Allocator& mDataAllocator;
+
+        void WriteValue(std::ostream& aStream, const std::shared_ptr<Value> aElement) const{
+            const size_t size = Value::EstimateSerialLength(*aElement);
+            String string(mParseAllocator);
+            for(size_t i = 0; i < size; ++i) string.PushBack('\0');
+            String::Iterator it = string.begin();
+            Value::Serialise(it, string.end(), it, *aElement);
+            aStream << string;
+        }
+
+        std::shared_ptr<Value> ReadValue(std::istream& aStream) const{
+            IStreamIterator begin(aStream);
+            IStreamIterator end;
+            return Value::Deserialise<IStreamIterator>(begin, end, begin, mParseAllocator, mDataAllocator);
+        }
     public:
         JsonSerialSystem(Allocator& aParseAllocator, Allocator& aDataAllocator) :
             mParseAllocator(aParseAllocator),
@@ -452,36 +469,27 @@ namespace Solaire{ namespace Json{
         // Inherited from SerialSystem
 
         SerialArrayPtr CreateA() const override{
-            return mParseAllocator.SharedAllocate<JsonSerialArray>(mParseAllocator.SharedAllocate<Value>(TYPE_ARRAY, mParseAllocator));
+            return mParseAllocator.SharedAllocate<JsonSerialArray>(mParseAllocator.SharedAllocate<Value>(mParseAllocator, TYPE_ARRAY));
         }
 
         SerialObjectPtr CreateO() const override{
-            return mParseAllocator.SharedAllocate<JsonSerialObject>(mParseAllocator.SharedAllocate<Value>(TYPE_OBJECT, mParseAllocator));
+            return mParseAllocator.SharedAllocate<JsonSerialObject>(mParseAllocator.SharedAllocate<Value>(mParseAllocator, TYPE_OBJECT));
         }
 
         void WriteA(std::ostream& aStream, const ConstSerialArrayPtr aArray) const override{
-            Allocator::SharedPointer<Value> ptr = std::static_pointer_cast<const JsonSerialArray>(aArray)->mValue;
-            aStream << ptr->Parse(mParseAllocator);
+            WriteValue(aStream, std::static_pointer_cast<const JsonSerialArray>(aArray)->mValue);
         }
 
         void WriteO(std::ostream& aStream, const ConstSerialObjectPtr aObject) const override{
-            Allocator::SharedPointer<Value> ptr = std::static_pointer_cast<const JsonSerialObject>(aObject)->mValue;
-            aStream << ptr->Parse(mParseAllocator);
+            WriteValue(aStream, std::static_pointer_cast<const JsonSerialObject>(aObject)->mValue);
         }
 
         SerialArrayPtr ReadA(std::istream& aStream) const override{
-            ArrayParser parser(mParseAllocator);
-            aStream >> parser;
-            Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
-            return mParseAllocator.SharedAllocate<JsonSerialArray>(valuePtr);
-
+             return GetParseAllocator().SharedAllocate<JsonSerialArray>(ReadValue(aStream));
         }
 
         SerialObjectPtr ReadO(std::istream& aStream) const override{
-            ObjectParser parser(mParseAllocator);
-            aStream >> parser;
-            Allocator::SharedPointer<Value> valuePtr = parser.Get(mParseAllocator, mParseAllocator);
-            return mParseAllocator.SharedAllocate<JsonSerialObject>(valuePtr);
+            return GetParseAllocator().SharedAllocate<JsonSerialObject>(ReadValue(aStream));
         }
 
         Allocator& GetParseAllocator() const override{
@@ -494,14 +502,13 @@ namespace Solaire{ namespace Json{
 
     };
 
-
     template<class T>
     std::shared_ptr<Value> JsonSerialise(Allocator& aParseAllocator, Allocator& aDataAllocator, T aValue){
         JsonSerialSystem system(aParseAllocator, aDataAllocator);
         std::shared_ptr<JsonSerialObject> object = system.CreateO();
 
-        Serialisable<T>::Serialise(aValue, system, "rpcSerialise", object);
-        return object->mValue->GetObject()["rpcSerialise"];
+        Serialisable<T>::Serialise(aValue, system, "jsonSerialise", object);
+        return object->mValue->AsObject()["jsonSerialise"];
     }
 
     template<class T>
@@ -509,9 +516,9 @@ namespace Solaire{ namespace Json{
         JsonSerialSystem system(aParseAllocator, aDataAllocator);
         std::shared_ptr<JsonSerialObject> object = system.CreateO();
 
-        return object->mValue->GetObject().emplace("rpcDeserialise", aValue);
-        return Serialisable<T>::Deserialise(object, "rpcDeserialise", aValue);
-    }*/
+        return object->mValue->AsObject().Add("jsonDeserialise", aValue);
+        return Serialisable<T>::Deserialise(object, "jsonDeserialise", aValue);
+    }
 }}
 
 
