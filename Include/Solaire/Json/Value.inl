@@ -600,7 +600,31 @@ namespace Solaire{ namespace Json{
         goto STATE_FAIL;
 
         STATE_STRING:
-        goto STATE_FAIL;
+        {
+            aForwardFn();
+            String string(aParseAllocator);
+            bool isEscaped = false;
+            char c;
+
+            STATE_STRING_GET:
+            c = aGetFn();
+            switch(c){
+            case '\\':
+                isEscaped = ! isEscaped;
+                if(! isEscaped) string += '\\';
+                goto STATE_STRING_GET;
+            case '"':
+                isEscaped = ! isEscaped;
+                if(isEscaped) string += '"';
+                goto STATE_STRING_RETURN;
+            default:
+                string += c;
+                goto STATE_STRING_RETURN;
+            }
+
+            STATE_STRING_RETURN:
+            return aDataAllocator.SharedAllocate<Value>(aDataAllocator, string);
+        }
 
         STATE_ARRAY:
         goto STATE_FAIL;
