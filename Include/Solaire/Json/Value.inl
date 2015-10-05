@@ -446,6 +446,7 @@ namespace Solaire{ namespace Json{
             WriteString(*aValue.mDataString);
             aSetFn('"');
             aForwardFn();
+
             return true;
         case TYPE_ARRAY:
             {
@@ -701,6 +702,7 @@ namespace Solaire{ namespace Json{
                 goto STATE_OBJECT_NAME;
             case '"':
                 isEscaped = false;
+                aForwardFn();
                 goto STATE_OBJECT_NAME_PARSE;
             default:
                 goto STATE_FAIL;
@@ -719,6 +721,8 @@ namespace Solaire{ namespace Json{
                 if(isEscaped) name += '"';
                 aForwardFn();
                 goto STATE_OBJECT_SEPERATE_NAME;
+            case '}':
+                goto STATE_OBJECT_RETURN;
             default:
                 name += c;
                 aForwardFn();
@@ -752,6 +756,7 @@ namespace Solaire{ namespace Json{
                 std::shared_ptr<Value> member = InternalDeserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
                 if(! member) goto STATE_FAIL;
                 object.Add(name, member);
+                name.Clear();
                 goto STATE_OBJECT_SEPERATE_MEMEBER;
             }
 
@@ -764,7 +769,7 @@ namespace Solaire{ namespace Json{
                 goto STATE_OBJECT_SEPERATE_MEMEBER;
             case ',':
                 aForwardFn();
-                goto STATE_OBJECT_MEMEBER;
+                goto STATE_OBJECT_NAME;
             case '}':
                 goto STATE_OBJECT_RETURN;
             default:
