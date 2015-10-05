@@ -47,34 +47,39 @@ namespace Solaire{ namespace Json{
     };
 
     class RpcError{
-    /*private:
-        String mMethodName;
-        std::shared_ptr<Value> mParams;
-        RpcRequestID mID;
-    protected:
-        enum : RpcRequestID{
-            RPC_NOTIFICATION_ID = INT64_MAX
-        };
+    private:
+        String mMessage;
+        std::shared_ptr<Value> mData;
+        RpcErrorID mCode;
     public:
-        static std::shared_ptr<Value> Serialise(const RpcRequest& aRequest);
+        static std::shared_ptr<Value> Serialise(const RpcError& aError);
     public:
-        RpcRequest(Allocator& aAllocator);
-        ~RpcRequest();
+        RpcError(Allocator& aAllocator);
+        ~RpcError();
 
-        void SetMethodName(const ConstStringFragment aName);
-        ConstStringFragment GetMethodName() const;
+        void SetMessage(const ConstStringFragment aName);
+        ConstStringFragment GetMessage() const;
 
-        bool IsRequest() const;
-        bool IsNotification() const;
+        void SetCode(const RpcErrorID aID);
+        RpcErrorID GetCode() const;
 
-        void SetNotification();
-        void SetRequestID(const RpcRequestID aID);
-        RpcRequestID GetRequestID() const;
+        void SetData(std::shared_ptr<Value> aParams);
+        std::shared_ptr<const Value> GetData() const;
 
-        void SetParams(std::shared_ptr<Value> aParams);
-        std::shared_ptr<const Value> GetParams() const;
+        Allocator& GetAllocator() const;
+    };
 
-        Allocator& GetAllocator() const;*/
+    class RpcErrorException : public std::exception{
+    private:
+        std::shared_ptr<RpcError> mError;
+    public:
+        RpcErrorException(std::shared_ptr<RpcError> aError):
+            mError(aError)
+        {}
+
+        std::shared_ptr<const Value> GetData() const;
+
+        const char* what() throw();
     };
 
 }}

@@ -37,9 +37,9 @@ Last Modified	: 5th October 2015
 namespace Solaire{ namespace Json{
 
     class RpcResponse{
-    /*private:
-        String mMethodName;
-        std::shared_ptr<Value> mParams;
+    private:
+        std::shared_ptr<RpcError> mError;
+        std::shared_ptr<Value> mResult;
         RpcRequestID mID;
     protected:
         enum : RpcRequestID{
@@ -48,23 +48,21 @@ namespace Solaire{ namespace Json{
     public:
         static std::shared_ptr<Value> Serialise(const RpcRequest& aRequest);
     public:
-        RpcRequest(Allocator& aAllocator);
-        ~RpcRequest();
+        RpcResponse(Allocator& aAllocator);
+        ~RpcResponse();
 
-        void SetMethodName(const ConstStringFragment aName);
-        ConstStringFragment GetMethodName() const;
-
-        bool IsRequest() const;
-        bool IsNotification() const;
-
-        void SetNotification();
         void SetRequestID(const RpcRequestID aID);
         RpcRequestID GetRequestID() const;
 
-        void SetParams(std::shared_ptr<Value> aParams);
-        std::shared_ptr<const Value> GetParams() const;
+        bool HasResult() const;
+        void SetResult(std::shared_ptr<Value> aResult);
+        std::shared_ptr<const Value> GetResult() const;
 
-        Allocator& GetAllocator() const;*/
+        bool HasError() const;
+        void SetError(std::shared_ptr<RpcError> aError);
+        std::shared_ptr<const RpcError> GetError() const;
+
+        Allocator& GetAllocator() const;
     };
 
 }}

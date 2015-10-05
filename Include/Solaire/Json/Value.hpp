@@ -205,7 +205,6 @@ namespace Solaire{ namespace Json{
         Value& operator=(const Value&) = delete;
     private:
         Allocator* mAllocator;
-        TypeID mType;
         union{
             bool mDataBool;
             double mDataNumber;
@@ -222,6 +221,7 @@ namespace Solaire{ namespace Json{
             ArrayValue mValueArray;
             ObjectValue mValueObject;
         };
+        TypeID mType;
     private:
         static bool InternalSerialise(const std::function<void(char)>& aSetFn, const std::function<void(void)>& aForwardFn, const std::function<void(void)>& aBackwardFn, const Value& aValue);
         static std::shared_ptr<Value> InternalDeserialise(const std::function<char(void)>& aGetFn, const std::function<void(void)>& aForwardFn, const std::function<void(void)>& aBackwardFn, Allocator& aParseAllocator, Allocator& aDataAllocator);
