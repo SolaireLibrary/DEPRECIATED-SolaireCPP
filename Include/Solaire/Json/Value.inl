@@ -440,6 +440,13 @@ namespace Solaire{ namespace Json{
                 WriteString(ConstStringFragment(buf, NumericParse::ToString(buf, aValue.mDataNumber)));
             }
             return true;
+        case TYPE_STRING:
+            aSetFn('"');
+            aForwardFn();
+            WriteString(*aValue.mDataString);
+            aSetFn('"');
+            aForwardFn();
+            return true;
         case TYPE_ARRAY:
             {
                 aSetFn('[');
@@ -563,7 +570,7 @@ namespace Solaire{ namespace Json{
 
         STATE_NUMBER:
         {
-            char buf[16];
+            char buf[24];
             char* bufEnd = buf;
 
             STATE_NUMBER_BUF:
@@ -619,7 +626,6 @@ namespace Solaire{ namespace Json{
                 aForwardFn();
                 goto STATE_STRING_GET;
             case '"':
-                isEscaped = ! isEscaped;
                 if(isEscaped) string += '"';
                 goto STATE_STRING_RETURN;
             default:
@@ -652,6 +658,7 @@ namespace Solaire{ namespace Json{
                 std::shared_ptr<Value> member = InternalDeserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
                 if(! member) goto STATE_FAIL;
                 array_.PushBack(member);
+                aForwardFn();
                 goto STATE_ARRAY_SEPERATE_MEMEBER;
             }
 
@@ -789,6 +796,10 @@ namespace Solaire{ namespace Json{
         case TYPE_NUMBER:
             count += 16;
             return count;
+        case TYPE_STRING:
+            count += 2;
+            count += aValue.mDataString->Size();
+            return count;
         case TYPE_ARRAY:
             {
                 ++count;
@@ -847,97 +858,87 @@ namespace Solaire{ namespace Json{
     Value::Value(Allocator& aAllocator, const bool aValue):
         mAllocator(&aAllocator),
         mType(TYPE_BOOL),
-        mValueNull(this)
-    {
-        mValueBool = aValue;
-    }
+        mValueNull(this),
+        mDataBool(aValue)
+    {}
 
     Value::Value(Allocator& aAllocator, const uint8_t aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NUMBER),
-        mValueNull(this)
-    {
-        mValueNumber = static_cast<double>(aValue);
-    }
+        mValueNull(this),
+        mDataNumber(static_cast<double>(aValue))
+    {}
 
     Value::Value(Allocator& aAllocator, const uint16_t aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NUMBER),
-        mValueNull(this)
-    {
-        mValueNumber = static_cast<double>(aValue);
-    }
+        mValueNull(this),
+        mDataNumber(static_cast<double>(aValue))
+    {}
 
     Value::Value(Allocator& aAllocator, const uint32_t aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NUMBER),
-        mValueNull(this)
-    {
-        mValueNumber = static_cast<double>(aValue);
-    }
+        mValueNull(this),
+        mDataNumber(static_cast<double>(aValue))
+    {}
 
     Value::Value(Allocator& aAllocator, const uint64_t aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NUMBER),
-        mValueNull(this)
-    {
-        mValueNumber = static_cast<double>(aValue);
-    }
+        mValueNull(this),
+        mDataNumber(static_cast<double>(aValue))
+    {}
 
     Value::Value(Allocator& aAllocator, const int8_t aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NUMBER),
-        mValueNull(this)
-    {
-        mValueNumber = static_cast<double>(aValue);
-    }
+        mValueNull(this),
+        mDataNumber(static_cast<double>(aValue))
+    {}
 
     Value::Value(Allocator& aAllocator, const int16_t aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NUMBER),
-        mValueNull(this)
-    {
-        mValueNumber = static_cast<double>(aValue);
-    }
+        mValueNull(this),
+        mDataNumber(static_cast<double>(aValue))
+    {}
 
     Value::Value(Allocator& aAllocator, const int32_t aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NUMBER),
-        mValueNull(this)
-    {
-        mValueNumber = static_cast<double>(aValue);
-    }
+        mValueNull(this),
+        mDataNumber(static_cast<double>(aValue))
+    {}
 
     Value::Value(Allocator& aAllocator, const int64_t aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NUMBER),
-        mValueNull(this)
-    {
-        mValueNumber = static_cast<double>(aValue);
-    }
+        mValueNull(this),
+        mDataNumber(static_cast<double>(aValue))
+    {}
 
     Value::Value(Allocator& aAllocator, const float aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NUMBER),
-        mValueNull(this)
-    {
-        mValueNumber = static_cast<double>(aValue);
-    }
+        mValueNull(this),
+        mDataNumber(static_cast<double>(aValue))
+    {}
 
     Value::Value(Allocator& aAllocator, const double aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NUMBER),
-        mValueNull(this)
-    {
-        mValueNumber = aValue;
-    }
+        mValueNull(this),
+        mDataNumber(aValue)
+    {}
 
     Value::Value(Allocator& aAllocator, const ConstStringFragment aValue):
         mAllocator(&aAllocator),
         mType(TYPE_NULL),
         mValueNull(this)
     {
-        mValueString = aValue;
+        operator=(TYPE_STRING);
+        *mDataString = aValue;
     }
 
     Value& Value::operator=(Value&& aOther){
