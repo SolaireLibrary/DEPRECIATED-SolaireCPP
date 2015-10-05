@@ -62,10 +62,10 @@ namespace Solaire{ namespace Json{
         RpcError(Allocator& aAllocator);
         ~RpcError();
 
-        void SetMessage(const ConstStringFragment aName);
+        void SetMessage(const ConstStringFragment aMessage);
         ConstStringFragment GetMessage() const;
 
-        void SetCode(const RpcErrorCode aID);
+        void SetCode(const RpcErrorCode aCode);
         RpcErrorCode GetCode() const;
 
         void SetData(std::shared_ptr<Value> aParams);
@@ -78,12 +78,9 @@ namespace Solaire{ namespace Json{
     private:
         std::shared_ptr<RpcError> mError;
     public:
-        RpcErrorException(std::shared_ptr<RpcError> aError):
-            mError(aError)
-        {}
+        RpcErrorException(std::shared_ptr<RpcError> aError);
 
         RpcErrorCode GetErrorCode() const;
-
         std::shared_ptr<const Value> GetData() const;
 
         const char* what() throw();
@@ -91,6 +88,6 @@ namespace Solaire{ namespace Json{
 
 }}
 
-//#include "RpcRequest.inl"
+#include "RpcError.inl"
 
 #endif

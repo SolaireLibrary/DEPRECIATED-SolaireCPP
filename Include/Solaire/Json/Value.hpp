@@ -159,6 +159,11 @@ namespace Solaire{ namespace Json{
         Value& PushBack(std::shared_ptr<Value> aValue);
         void Erase(const size_t aIndex);
         void Erase(const Value& aValue);
+
+        template<class T, typename Enable = typename std::enable_if<! std::is_same<T, std::shared_ptr<Value>>::value>::type>
+        Value& PushBack(Allocator& aAllocator, const ConstStringFragment aName, T aValue){
+            return PushBack(aName, aAllocator.SharedAllocate<Value>(aAllocator, aValue));
+        }
     };
 
     class ObjectValue{
@@ -187,6 +192,11 @@ namespace Solaire{ namespace Json{
 
         void Erase(const ConstStringFragment aName);
         void Erase(const Value& aValue);
+
+        template<class ...Params>
+        Value& Add(Allocator& aAllocator, const ConstStringFragment aName, Params... aParams){
+            return Add(aName, aAllocator.SharedAllocate<Value>(aAllocator, aParams...));
+        }
     };
 
     class Value : public std::enable_shared_from_this<Value>{
