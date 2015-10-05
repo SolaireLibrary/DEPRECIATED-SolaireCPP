@@ -485,7 +485,7 @@ namespace Solaire{ namespace Json{
                 }
                 aSetFn('}');
                 aForwardFn();
-                return false;
+                return true;
             }
         default:
             return false;
