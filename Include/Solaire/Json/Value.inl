@@ -687,7 +687,8 @@ namespace Solaire{ namespace Json{
         {
             char c;
             bool isEscaped;
-            String name(aParseAllocator);
+            char nameBuf[64];
+            char* nameEnd  = nameBuf;
             std::shared_ptr<Value> value = aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_OBJECT);
             ObjectValue& object = value->AsObject();
             aForwardFn();
@@ -713,18 +714,25 @@ namespace Solaire{ namespace Json{
             switch(c){
             case '\\':
                 isEscaped = ! isEscaped;
-                if(! isEscaped) name += '\\';
+                if(! isEscaped){
+                    *nameEnd = '\\';
+                    ++nameEnd;
+                }
                 aForwardFn();
                 goto STATE_OBJECT_NAME_PARSE;
             case '"':
                 isEscaped = ! isEscaped;
-                if(isEscaped) name += '"';
+                if(isEscaped){
+                    *nameEnd = '"';
+                    ++nameEnd;
+                }
                 aForwardFn();
                 goto STATE_OBJECT_SEPERATE_NAME;
             case '}':
                 goto STATE_OBJECT_RETURN;
             default:
-                name += c;
+                *nameEnd = c;
+                ++nameEnd;
                 aForwardFn();
                 goto STATE_OBJECT_NAME_PARSE;
             }
@@ -755,8 +763,8 @@ namespace Solaire{ namespace Json{
             default:
                 std::shared_ptr<Value> member = InternalDeserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
                 if(! member) goto STATE_FAIL;
-                object.Add(name, member);
-                name.Clear();
+                object.Add(ConstStringFragment(nameBuf, nameEnd), member);
+                nameEnd = nameBuf;
                 goto STATE_OBJECT_SEPERATE_MEMEBER;
             }
 
