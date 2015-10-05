@@ -419,7 +419,7 @@ namespace Solaire{ namespace Json{
 
     // Value
 
-    bool Value::Serialise(const std::function<void(char)>& aSetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, const Value& aValue){
+    bool Value::InternalSerialise(const std::function<void(char)>& aSetFn, const std::function<void(void)>& aForwardFn, const std::function<void(void)>& aBackwardFn, const Value& aValue){
         const auto WriteString = [&](ConstStringFragment aString)->void{
             for(const char c : aString){
                 aSetFn(c);
@@ -446,8 +446,8 @@ namespace Solaire{ namespace Json{
                 aForwardFn();
                 ArrayType::Iterator end = aValue.mDataArray->end();
                 for(ArrayType::Iterator i = aValue.mDataArray->begin(); i != end; ++i){
-                    if(! Serialise(aSetFn, aForwardFn, aBackwardFn, **i)) return false;
-                    if((i - 1) != end){
+                    if(! InternalSerialise(aSetFn, aForwardFn, aBackwardFn, **i)) return false;
+                    if((i + 1) != end){
                         aSetFn(',');
                         aForwardFn();
                     }
@@ -469,8 +469,8 @@ namespace Solaire{ namespace Json{
                     aForwardFn();
                     aSetFn(':');
                     aForwardFn();
-                    if(! Serialise(aSetFn, aForwardFn, aBackwardFn, *i->second)) return false;
-                    if((i - 1) != end){
+                    if(! InternalSerialise(aSetFn, aForwardFn, aBackwardFn, *i->second)) return false;
+                    if((i + 1) != end){
                         aSetFn(',');
                         aForwardFn();
                     }
@@ -484,7 +484,7 @@ namespace Solaire{ namespace Json{
         }
     }
 
-    std::shared_ptr<Value> Value::Deserialise(const std::function<char(void)>& aGetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, Allocator& aParseAllocator, Allocator& aDataAllocator){
+    std::shared_ptr<Value> Value::InternalDeserialise(const std::function<char(void)>& aGetFn, const std::function<void(void)>& aForwardFn, const std::function<void(void)>& aBackwardFn, Allocator& aParseAllocator, Allocator& aDataAllocator){
         goto STATE_ID;
 
         STATE_ID:
@@ -530,6 +530,7 @@ namespace Solaire{ namespace Json{
             if(aGetFn() != 'l') goto STATE_FAIL;
             aForwardFn();
             if(aGetFn() != 'l') goto STATE_FAIL;
+            aForwardFn();
             return aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_NULL);
         }
         goto STATE_FAIL;
@@ -582,6 +583,7 @@ namespace Solaire{ namespace Json{
             case 'e':
             case '.':
                 ++bufEnd;
+                aForwardFn();
                 goto STATE_NUMBER_BUF;
             default:
                 {
@@ -645,7 +647,7 @@ namespace Solaire{ namespace Json{
             case ']':
                 goto STATE_ARRAY_RETURN;
             default:
-                std::shared_ptr<Value> member = Deserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
+                std::shared_ptr<Value> member = InternalDeserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
                 if(! member) goto STATE_FAIL;
                 array_.PushBack(member);
                 goto STATE_ARRAY_SEPERATE_MEMEBER;
@@ -738,7 +740,7 @@ namespace Solaire{ namespace Json{
             case '}':
                 goto STATE_OBJECT_RETURN;
             default:
-                std::shared_ptr<Value> member = Deserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
+                std::shared_ptr<Value> member = InternalDeserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
                 if(! member) goto STATE_FAIL;
                 object.Add(name, member);
                 goto STATE_OBJECT_SEPERATE_MEMEBER;

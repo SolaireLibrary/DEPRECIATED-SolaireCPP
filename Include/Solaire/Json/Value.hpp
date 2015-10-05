@@ -223,18 +223,21 @@ namespace Solaire{ namespace Json{
             ObjectValue mValueObject;
         };
     private:
-        static bool Serialise(const std::function<void(char)>& aSetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, const Value& aValue);
-        static std::shared_ptr<Value> Deserialise(const std::function<char(void)>& aGetFn, std::function<void(void)>& aForwardFn, std::function<void(void)>& aBackwardFn, Allocator& aParseAllocator, Allocator& aDataAllocator);
+        static bool InternalSerialise(const std::function<void(char)>& aSetFn, const std::function<void(void)>& aForwardFn, const std::function<void(void)>& aBackwardFn, const Value& aValue);
+        static std::shared_ptr<Value> InternalDeserialise(const std::function<char(void)>& aGetFn, const std::function<void(void)>& aForwardFn, const std::function<void(void)>& aBackwardFn, Allocator& aParseAllocator, Allocator& aDataAllocator);
     public:
         static size_t EstimateSerialLength(const Value& aValue);
 
         template<class Iterator>
         static bool Serialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, const Value& aValue){
             aParseEnd = aBegin;
-            return Serialise(
-                [&](char aChar)->void{*aParseEnd = aChar;},
-                [&]()->void{++aParseEnd;},
-                [&]()->void{--aParseEnd;},
+            const std::function<void(char)> setFn = [&](char aChar)->void{*aParseEnd = aChar;};
+            const std::function<void(void)> forwardFn = [&]()->void{++aParseEnd;};
+            const std::function<void(void)> backwardFn = [&]()->void{--aParseEnd;};
+            return InternalSerialise(
+                setFn,
+                forwardFn,
+                backwardFn,
                 aValue
             );
         }
@@ -242,10 +245,13 @@ namespace Solaire{ namespace Json{
         template<class Iterator>
         static std::shared_ptr<Value> Deserialise(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd, Allocator& aParseAllocator, Allocator& aDataAllocator){
             aParseEnd = aBegin;
-            return Serialise(
-                [&]()->char{return *aParseEnd;},
-                [&]()->void{++aParseEnd;},
-                [&]()->void{--aParseEnd;},
+            const std::function<char(void)> getFn = [&]()->char{return *aParseEnd;};
+            const std::function<void(void)> forwardFn = [&]()->void{++aParseEnd;};
+            const std::function<void(void)> backwardFn = [&]()->void{--aParseEnd;};
+            return InternalDeserialise(
+                getFn,
+                forwardFn,
+                backwardFn,
                 aParseAllocator,
                 aDataAllocator
             );
