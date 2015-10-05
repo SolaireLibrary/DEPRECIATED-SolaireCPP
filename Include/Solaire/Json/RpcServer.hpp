@@ -51,7 +51,23 @@ namespace Solaire{ namespace Json{
         void SendError(const RpcRequestID aID, const RpcErrorID aCode, ConstStringFragment aMessage);
 
         void SendResponse(const RpcRequestID aID, std::shared_ptr<Value> aData);
-        void SendResponse(const RpcRequestID aID);
+
+        template<class T>
+        void SendAndSerialiseResponse(const RpcRequestID aID, T aValue){
+            Allocator& allocator = GetAllocator();
+            SendResponse(aID, JsonSerialise<T>(allocator, allocator, aValue));
+        }
+
+        template<class ...Params>
+        void SendAndSerialiseResponse(const RpcRequestID aID, Params&& ...aParams){
+            Allocator& allocator = GetAllocator();
+
+            std::shared_ptr<Value> results = allocator.SharedAllocate<Value>(allocator, TYPE_ARRAY);
+            ArrayValue& array_ = results->AsArray();
+            array_.PushBack(JsonSerialise(allocator, allocator, aParams...));
+
+            SendResponse(aID, results);
+        }
 
         void Execute(const RpcRequest& aRequest);
 
@@ -60,12 +76,12 @@ namespace Solaire{ namespace Json{
         void MapFunction(String aString, const std::function<void()> aFn);
 
         template<class R>
-        void MapFunction(String aString, const std::function<R(const RpcRequestID, const std::shared_ptr<const Value>)> aFn){
+        void MapAutoSerialiseFunction(String aString, const std::function<R(const RpcRequestID, const std::shared_ptr<const Value>)> aFn){
             const RpcFunction wrapper = [=](const RpcRequest& aRequest){
                 Allocator& allocator = GetAllocator();
                 const RpcRequestID id = aRequest.GetRequestID();
                 try{
-                    SendResponse(id, JsonSerialise<R>(allocator, allocator, aFn(id, aRequest.GetParams())));
+                    SendAndSerialiseResponse<R>(aFn(id, aRequest.GetParams()));
                 }catch(std::exception& e){
                     SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what(), allocator));
                 }
@@ -75,12 +91,12 @@ namespace Solaire{ namespace Json{
         }
 
         template<class R>
-        void MapFunction(String aString, const std::function<R(const RpcRequestID)> aFn){
+        void MapAutoSerialiseFunction(String aString, const std::function<R(const RpcRequestID)> aFn){
             const RpcFunction wrapper = [=](const RpcRequest& aRequest){
                 Allocator& allocator = GetAllocator();
                 const RpcRequestID id = aRequest.GetRequestID();
                 try{
-                    SendResponse(id, JsonSerialise<R>(allocator, allocator, aFn(id)));
+                    SendAndSerialiseResponse<R>(aFn(id));
                 }catch(std::exception& e){
                     SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what(), allocator));
                 }
