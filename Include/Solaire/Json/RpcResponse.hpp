@@ -40,6 +40,7 @@ namespace Solaire{ namespace Json{
     private:
         std::shared_ptr<RpcError> mError;
         std::shared_ptr<Value> mResult;
+        Allocator* mAllocator;
         RpcRequestID mID;
     protected:
         enum : RpcRequestID{
@@ -67,6 +68,6 @@ namespace Solaire{ namespace Json{
 
 }}
 
-//#include "RpcRequest.inl"
+#include "RpcResponse.inl"
 
 #endif
