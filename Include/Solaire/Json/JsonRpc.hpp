@@ -25,10 +25,10 @@
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
-\version 1.0
+\version 2.0
 \date
 Created			: 4th October 2015
-Last Modified	: 4th October 2015
+Last Modified	: 5th October 2015
 */
 
 #include "Value.hpp"
@@ -47,88 +47,35 @@ namespace Solaire{ namespace Json{
         RPC_INTERNAL_ERROR      = -32603
     };
 
-    class RpcRequestBase{
+    class RpcRequest{
     private:
         String mMethodName;
         std::shared_ptr<Value> mParams;
+        RpcRequestID mID;
     protected:
         enum : RpcRequestID{
             RPC_NOTIFICATION_ID = INT64_MAX
         };
     public:
-        static std::shared_ptr<Value> Serialise(const RpcRequestBase& aRequest){
-            if(aRequest.mMethodName.Size() == 0) return std::shared_ptr<Value>();
-
-            Allocator& allocator = aRequest.GetAllocator();
-
-            std::shared_ptr<Value> ptr = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
-            ObjectValue& request = ptr->AsObject();
-
-            request.Add("jsonrpc", allocator.SharedAllocate<Value>(allocator, "2.0"));
-            request.Add("method", allocator.SharedAllocate<Value>(allocator, aRequest.mMethodName));
-            if(aRequest.mParams){
-                request.Add("params", aRequest.mParams);
-            }else{
-                request.Add("params", allocator.SharedAllocate<Value>(allocator, TYPE_NULL));
-            }
-
-            const RpcRequestID id = aRequest.GetRequestID();
-
-            if(id == RPC_NOTIFICATION_ID){
-                request.Add("id", allocator.SharedAllocate<Value>(allocator, TYPE_NULL));
-            }else{
-                request.Add("id", allocator.SharedAllocate<Value>(allocator, id));
-            }
-
-            return ptr;
-        }
-    protected:
-        virtual RpcRequestID GetRequestID() const = 0;
+        static std::shared_ptr<Value> Serialise(const RpcRequest& aRequest);
     public:
-        RpcRequestBase(Allocator& aAllocator):
-            mMethodName(aAllocator)
-        {}
+        RpcRequest(Allocator& aAllocator);
+        ~RpcRequest();
 
-        virtual ~RpcRequestBase(){
+        void SetMethodName(const ConstStringFragment aName);
+        ConstStringFragment GetMethodName() const;
 
-        }
+        bool IsRequest() const;
+        bool IsNotification() const;
 
-        void SetMethodName(const ConstStringFragment aName){
-            mMethodName = aName;
-        }
+        void SetNotification();
+        void SetRequestID(const RpcRequestID aID);
+        RpcRequestID GetRequestID() const;
 
-        ConstStringFragment GetMethodName() const{
-            return mMethodName;
-        }
+        void SetParams(std::shared_ptr<Value> aParams);
+        std::shared_ptr<const Value> GetParams() const;
 
-        void SetParams(std::shared_ptr<Value> aParams){
-            mParams.swap(aParams);
-        }
-
-        template<class ...Params>
-        void SerialiseAndSetParams(Params&& ...aParams){
-            Allocator& allocator = GetAllocator();
-            std::shared_ptr<Value> value = allocator.SharedAllocate<Value>(allocator, TYPE_ARRAY);
-            ArrayValue& array_ = value->AsArray();
-            array_.PushBack(JsonSerialise(aParams...));
-            SetParams(value);
-        }
-
-        std::shared_ptr<const Value> GetParams() const{
-            return mParams;
-        }
-
-        Allocator& GetAllocator() const{
-            return mMethodName.GetAllocator();
-        }
-    };
-
-    class RpcRequest : public RpcRequestBase{
-
-    };
-
-    class RpcNotification : public RpcRequestBase{
-
+        Allocator& GetAllocator() const;
     };
 
     /*typedef std::shared_ptr<Value> RpcRequest;
@@ -266,5 +213,7 @@ namespace Solaire{ namespace Json{
         }
     };*/
 }}
+
+#include "JsonRpc.inl"
 
 #endif
