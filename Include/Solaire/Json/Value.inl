@@ -612,6 +612,7 @@ namespace Solaire{ namespace Json{
             case '\\':
                 isEscaped = ! isEscaped;
                 if(! isEscaped) string += '\\';
+                aForwardFn();
                 goto STATE_STRING_GET;
             case '"':
                 isEscaped = ! isEscaped;
@@ -619,7 +620,8 @@ namespace Solaire{ namespace Json{
                 goto STATE_STRING_RETURN;
             default:
                 string += c;
-                goto STATE_STRING_RETURN;
+                aForwardFn();
+                goto STATE_STRING_GET;
             }
 
             STATE_STRING_RETURN:
@@ -631,6 +633,7 @@ namespace Solaire{ namespace Json{
             std::shared_ptr<Value> value = aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_ARRAY);
             ArrayValue& array_ = value->AsArray();
             aForwardFn();
+            goto STATE_ARRAY_MEMEBER;
 
             STATE_ARRAY_MEMEBER:
             switch(aGetFn()){
@@ -669,7 +672,97 @@ namespace Solaire{ namespace Json{
         }
 
         STATE_OBJECT:
-        goto STATE_FAIL;
+        {
+            char c;
+            bool isEscaped;
+            String name(aParseAllocator);
+            std::shared_ptr<Value> value = aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_OBJECT);
+            ObjectValue& object = value->AsObject();
+            aForwardFn();
+            goto STATE_OBJECT_NAME;
+
+            STATE_OBJECT_NAME:
+            switch(aGetFn()){
+            case ' ':
+            case '\t':
+            case '\n':
+                aForwardFn();
+                goto STATE_OBJECT_NAME;
+            case '"':
+                isEscaped = false;
+                goto STATE_OBJECT_NAME_PARSE;
+            default:
+                goto STATE_FAIL;
+            }
+
+            STATE_OBJECT_NAME_PARSE:
+            c = aGetFn();
+            switch(c){
+            case '\\':
+                isEscaped = ! isEscaped;
+                if(! isEscaped) name += '\\';
+                aForwardFn();
+                goto STATE_OBJECT_NAME_PARSE;
+            case '"':
+                isEscaped = ! isEscaped;
+                if(isEscaped) name += '"';
+                aForwardFn();
+                goto STATE_OBJECT_SEPERATE_NAME;
+            default:
+                name += c;
+                aForwardFn();
+                goto STATE_OBJECT_NAME_PARSE;
+            }
+
+            STATE_OBJECT_SEPERATE_NAME:
+            switch(aGetFn()){
+            case ' ':
+            case '\t':
+            case '\n':
+                aForwardFn();
+                goto STATE_OBJECT_SEPERATE_NAME;
+            case ':':
+                aForwardFn();
+                goto STATE_OBJECT_MEMEBER;
+            default:
+                goto STATE_FAIL;
+            }
+
+            STATE_OBJECT_MEMEBER:
+            switch(aGetFn()){
+            case ' ':
+            case '\t':
+            case '\n':
+                aForwardFn();
+                goto STATE_OBJECT_MEMEBER;
+            case '}':
+                goto STATE_OBJECT_RETURN;
+            default:
+                std::shared_ptr<Value> member = Deserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
+                if(! member) goto STATE_FAIL;
+                object.Add(name, member);
+                goto STATE_OBJECT_SEPERATE_MEMEBER;
+            }
+
+            STATE_OBJECT_SEPERATE_MEMEBER:
+            switch(aGetFn()){
+            case ' ':
+            case '\t':
+            case '\n':
+                aForwardFn();
+                goto STATE_OBJECT_SEPERATE_MEMEBER;
+            case ',':
+                aForwardFn();
+                goto STATE_OBJECT_MEMEBER;
+            case '}':
+                goto STATE_OBJECT_RETURN;
+            default:
+                goto STATE_FAIL;
+            }
+
+            STATE_OBJECT_RETURN:
+            return value;
+        }
 
         STATE_FAIL:
         return std::shared_ptr<Value>();
