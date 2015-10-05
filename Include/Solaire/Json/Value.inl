@@ -627,7 +627,46 @@ namespace Solaire{ namespace Json{
         }
 
         STATE_ARRAY:
-        goto STATE_FAIL;
+        {
+            std::shared_ptr<Value> value = aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_ARRAY);
+            ArrayValue& array_ = value->AsArray();
+            aForwardFn();
+
+            STATE_ARRAY_MEMEBER:
+            switch(aGetFn()){
+            case ' ':
+            case '\t':
+            case '\n':
+                aForwardFn();
+                goto STATE_ARRAY_MEMEBER;
+            case ']':
+                goto STATE_ARRAY_RETURN;
+            default:
+                std::shared_ptr<Value> member = Deserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
+                if(! member) goto STATE_FAIL;
+                array_.PushBack(member);
+                goto STATE_ARRAY_SEPERATE_MEMEBER;
+            }
+
+            STATE_ARRAY_SEPERATE_MEMEBER:
+            switch(aGetFn()){
+            case ' ':
+            case '\t':
+            case '\n':
+                aForwardFn();
+                goto STATE_ARRAY_SEPERATE_MEMEBER;
+            case ',':
+                aForwardFn();
+                goto STATE_ARRAY_MEMEBER;
+            case ']':
+                goto STATE_ARRAY_RETURN;
+            default:
+                goto STATE_FAIL;
+            }
+
+            STATE_ARRAY_RETURN:
+            return value;
+        }
 
         STATE_OBJECT:
         goto STATE_FAIL;
