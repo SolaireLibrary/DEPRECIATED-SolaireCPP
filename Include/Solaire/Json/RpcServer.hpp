@@ -53,9 +53,35 @@ namespace Solaire{ namespace Json{
         void SendResponse(const RpcRequestID aID, std::shared_ptr<Value> aData);
         void SendResponse(const RpcRequestID aID);
 
-        void MapFunction(String aString, const RpcFunction);
-
         void Execute(const RpcRequest& aRequest);
+
+        void MapFunction(String aString, const RpcFunction);
+        void MapFunction(String aString, const std::function<void(const std::shared_ptr<const Value>)> aFn);
+        void MapFunction(String aString, const std::function<void()> aFn);
+
+        template<class R>
+        void MapFunction(String aString, const std::function<R(const RpcRequestID, const std::shared_ptr<const Value>)> aFn){
+            const RpcFunction wrapper = [=](const RpcRequest& aRequest){
+                const RpcRequestID id = aRequest.GetRequestID();
+                try{
+                    aFn(id, aRequest.GetParams());
+                }catch(std::exception& e){
+                    SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what()));
+                }
+            };
+        }
+
+        template<class R>
+        void MapFunction(String aString, const std::function<R(const RpcRequestID)> aFn){
+            const RpcFunction wrapper = [=](const RpcRequest& aRequest){
+                const RpcRequestID id = aRequest.GetRequestID();
+                try{
+                    aFn(id);
+                }catch(std::exception& e){
+                    SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what()));
+                }
+            };
+        }
     public:
     };
 }}
