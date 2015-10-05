@@ -519,6 +519,14 @@ namespace Solaire{ namespace Json{
         return object->mValue->AsObject().Add("jsonDeserialise", aValue);
         return Serialisable<T>::Deserialise(object, "jsonDeserialise", aValue);
     }
+
+    template<class ...Params>
+    std::shared_ptr<Value> JsonSerialiseMany(Allocator& aParseAllocator, Allocator& aDataAllocator,  Params&& ...aParams){
+        std::shared_ptr<Value> value = aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_ARRAY);
+        ArrayValue& array_ = value->AsArray();
+        array_.PushBack(JsonSerialise(aParseAllocator, aDataAllocator, aParams...));
+        return value;
+    }
 }}
 
 

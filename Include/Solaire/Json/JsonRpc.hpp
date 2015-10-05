@@ -34,6 +34,7 @@ Last Modified	: 5th October 2015
 #include "RpcRequest.hpp"
 #include "RpcError.hpp"
 #include "RpcResponse.hpp"
+#include "RpcClient.hpp"
 
 namespace Solaire{ namespace Json{
 
