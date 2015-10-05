@@ -33,7 +33,17 @@
 
 namespace Solaire{
 
-    class Packet;
+    class Socket;
+
+    class Packet{
+    public:
+        friend Socket;
+    protected:
+        virtual void OnPreSend() = 0;
+        virtual void OnPostSend() = 0;
+        virtual void OnPostRecieve() = 0;
+    public:
+    };
 }
 
 

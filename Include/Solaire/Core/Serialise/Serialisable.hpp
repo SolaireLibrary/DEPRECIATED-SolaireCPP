@@ -42,7 +42,7 @@ namespace Solaire{
         typedef R DeserialiseType;
 
         static void Serialise(T aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot) = delete;
-        static R Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot) = delete;
+        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot) = delete;
     };
 
 

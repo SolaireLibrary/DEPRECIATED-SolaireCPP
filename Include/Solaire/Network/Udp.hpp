@@ -33,6 +33,8 @@
 
 namespace Solaire{
 
+    typedef uint16_t UdpSocket;
+
     class UdpSocket;
 }
 
