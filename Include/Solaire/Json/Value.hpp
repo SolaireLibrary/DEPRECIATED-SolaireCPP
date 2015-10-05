@@ -161,7 +161,7 @@ namespace Solaire{ namespace Json{
         void Erase(const Value& aValue);
 
         template<class T, typename Enable = typename std::enable_if<! std::is_same<T, std::shared_ptr<Value>>::value>::type>
-        Value& PushBack(Allocator& aAllocator, const ConstStringFragment aName, T aValue){
+        Value& PushBack(const ConstStringFragment aName, Allocator& aAllocator, T aValue){
             return PushBack(aName, aAllocator.SharedAllocate<Value>(aAllocator, aValue));
         }
     };
@@ -194,7 +194,7 @@ namespace Solaire{ namespace Json{
         void Erase(const Value& aValue);
 
         template<class ...Params>
-        Value& Add(Allocator& aAllocator, const ConstStringFragment aName, Params... aParams){
+        Value& Add(const ConstStringFragment aName, Allocator& aAllocator, Params... aParams){
             return Add(aName, aAllocator.SharedAllocate<Value>(aAllocator, aParams...));
         }
     };

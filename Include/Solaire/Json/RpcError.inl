@@ -41,17 +41,17 @@ namespace Solaire{ namespace Json{
         std::shared_ptr<Value> value = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
         ObjectValue& object = value->AsObject();
 
-        object.Add(allocator, "code", aError.mCode);
-        if(mMessage.Size() > 0){
-            object.Add(allocator, "message", aError.mMessage);
+        object.Add("code", allocator, aError.mCode);
+        if(aError.mMessage.Size() > 0){
+            object.Add("message", allocator, aError.mMessage);
         }else{
-            object.Add(allocator, "message", aError.TYPE_NULL);
+            object.Add("message",allocator, TYPE_NULL);
         }
 
         if(aError.mData){
             object.Add("data", aError.mData);
         }else{
-            object.Add(allocator, "message", aError.TYPE_NULL);
+            object.Add("message", allocator, TYPE_NULL);
         }
 
         return value;

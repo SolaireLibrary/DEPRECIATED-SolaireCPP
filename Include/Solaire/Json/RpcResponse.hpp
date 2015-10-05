@@ -47,7 +47,7 @@ namespace Solaire{ namespace Json{
             RPC_NOTIFICATION_ID = INT64_MAX
         };
     public:
-        static std::shared_ptr<Value> Serialise(const RpcRequest& aRequest);
+        static std::shared_ptr<Value> Serialise(const RpcResponse& aResponse);
     public:
         RpcResponse(Allocator& aAllocator);
         ~RpcResponse();
