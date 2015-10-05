@@ -505,19 +505,19 @@ namespace Solaire{ namespace Json{
     template<class T>
     std::shared_ptr<Value> JsonSerialise(Allocator& aParseAllocator, Allocator& aDataAllocator, T aValue){
         JsonSerialSystem system(aParseAllocator, aDataAllocator);
-        std::shared_ptr<JsonSerialObject> object = system.CreateO();
+        std::shared_ptr<JsonSerialArray> array = system.CreateA();
 
-        Serialisable<T>::Serialise(aValue, system, "jsonSerialise", object);
-        return object->mValue->AsObject()["jsonSerialise"];
+        Serialisable<T>::Serialise(aValue, system, 0, array);
+        return array->mValue->AsArray()[0];
     }
 
     template<class T>
     typename Serialisable<T>::DeserialiseType JsonDeserialise(Allocator& aParseAllocator, Allocator& aDataAllocator, std::shared_ptr<Value> aValue){
         JsonSerialSystem system(aParseAllocator, aDataAllocator);
-        std::shared_ptr<JsonSerialObject> object = system.CreateO();
+        std::shared_ptr<JsonSerialArray> array = system.CreateA();
 
-        return object->mValue->AsObject().Add("jsonDeserialise", aValue);
-        return Serialisable<T>::Deserialise(object, "jsonDeserialise", aValue);
+        return array->mValue->AsArray().PushBack(aValue);
+        return Serialisable<T>::Deserialise(system, 0, array);
     }
 
     template<class ...Params>
