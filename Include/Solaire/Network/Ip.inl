@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include "..\Core\Strings\NumberParser.hpp"
+#include "..\Core\Maths.hpp"
 
 namespace Solaire{
 
@@ -82,53 +83,92 @@ namespace Solaire{
     }
 
     Serialisable<IPv4>::DeserialiseType Serialisable<IPv4>::Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
-        char buf[16];
-        uint8_t length;
-        char* byte0 = buf;
-        char* byte1 = buf;
-        char* byte2 = buf;
-        char* byte3 = buf;
+        ConstStringFragment str = aRoot.Read<ConstStringFragment>(aIndex);
+        const char* const end = str.end();
+        const char* byte0 = str.begin();
+        const char* byte1 = end;
+        const char* byte2 = end;
+        const char* byte3 = end;
 
-        {
-            ConstStringFragment str = aRoot.Read<ConstStringFragment>(aIndex);
-            length = std::min<uint8_t>(16, str.Size());
-            std::memcpy(buf, str.begin(), length);
-        }
-
-        char* const end = buf + length;
-
-        for(char* i = byte0; i != end; ++i) if(*i == '.'){
+        for(const char* i = byte0; i != end; ++i) if(*i == '.'){
             byte1 = i + 1;
             break;
         }
 
-        for(char* i = byte1; i != end; ++i) if(*i == '.'){
+        for(const char* i = byte1; i != end; ++i) if(*i == '.'){
             byte2 = i + 1;
             break;
         }
 
-        for(char* i = byte2; i != end; ++i) if(*i == '.'){
+        for(const char* i = byte2; i != end; ++i) if(*i == '.'){
             byte3 = i + 1;
             break;
         }
 
-        char* it = byte0;
+        const char* it = byte0;
         IPv4 ip;
-        ip.bytes[0] = ParseNumber<uint8_t, char*>(byte0, byte1 - 1, it);
-        ip.bytes[1] = ParseNumber<uint8_t, char*>(byte1, byte2 - 1, it);
-        ip.bytes[2] = ParseNumber<uint8_t, char*>(byte2, byte3 - 1, it);
-        ip.bytes[3] = ParseNumber<uint8_t, char*>(byte3, end, it);
+        ip.bytes[0] = ParseNumber<uint8_t>(byte0, byte1 - 1, it);
+        ip.bytes[1] = ParseNumber<uint8_t>(byte1, byte2 - 1, it);
+        ip.bytes[2] = ParseNumber<uint8_t>(byte2, byte3 - 1, it);
+        ip.bytes[3] = ParseNumber<uint8_t>(byte3, end, it);
         return ip;
     }
 
     // Serialisable<IPv6>
 
     void Serialisable<IPv6>::Serialise(IPv6 aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
+        char buf[39];
+        char* head = buf;
 
+        head = Maths::ToHex<uint8_t>(aValue.bytes[0], head);
+        *head = ':';
+        ++head;
+        head = Maths::ToHex<uint8_t>(aValue.bytes[1], head);
+        *head = ':';
+        ++head;
+        head = Maths::ToHex<uint8_t>(aValue.bytes[2], head);
+        *head = ':';
+        ++head;
+        head = Maths::ToHex<uint8_t>(aValue.bytes[3], head);
+        *head = ':';
+        ++head;
+        head = Maths::ToHex<uint8_t>(aValue.bytes[4], head);
+        *head = ':';
+        ++head;
+        head = Maths::ToHex<uint8_t>(aValue.bytes[5], head);
+        *head = ':';
+        ++head;
+        head = Maths::ToHex<uint8_t>(aValue.bytes[6], head);
+        *head = ':';
+        ++head;
+        head = Maths::ToHex<uint8_t>(aValue.bytes[7], head);
+
+        aRoot.Write<ConstStringFragment>(aIndex, ConstStringFragment(buf, head));
     }
 
     Serialisable<IPv6>::DeserialiseType Serialisable<IPv6>::Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
+        const ConstStringFragment buf = aRoot.Read<ConstStringFragment>(aIndex);
+        const char* head = buf.begin();
 
+        IPv6 tmp;
+
+        head = Maths::FromHex<uint8_t>(tmp.bytes[0], head);
+        ++head;
+        head = Maths::FromHex<uint8_t>(tmp.bytes[1], head);
+        ++head;
+        head = Maths::FromHex<uint8_t>(tmp.bytes[2], head);
+        ++head;
+        head = Maths::FromHex<uint8_t>(tmp.bytes[3], head);
+        ++head;
+        head = Maths::FromHex<uint8_t>(tmp.bytes[4], head);
+        ++head;
+        head = Maths::FromHex<uint8_t>(tmp.bytes[5], head);
+        ++head;
+        head = Maths::FromHex<uint8_t>(tmp.bytes[6], head);
+        ++head;
+        head = Maths::FromHex<uint8_t>(tmp.bytes[7], head);
+
+        return tmp;
     }
 
 
