@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_JSON_RPC_REQUEST_HPP
-#define SOLAIRE_JSON_RPC_REQUEST_HPP
+#ifndef SOLAIRE_JSON_RPC_ERROR_HPP
+#define SOLAIRE_JSON_RPC_ERROR_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,12 +20,12 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file RpcRequest.hpp
+\file RpcError.hpp
 \brief
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
-\version 2.0
+\version 1.0
 \date
 Created			: 4th October 2015
 Last Modified	: 5th October 2015
@@ -36,10 +36,18 @@ Last Modified	: 5th October 2015
 
 namespace Solaire{ namespace Json{
 
-    typedef int64_t RpcRequestID;
+    typedef int64_t RpcErrorID;
 
-    class RpcRequest{
-    private:
+    enum : RpcErrorID{
+        RPC_PARSE_ERROR         = -32700,
+        RPC_INVALID_REQUEST     = -32600,
+        RPC_METHOD_NOT_FOUND    = -32601,
+        RPC_INVALID_PARAMS      = -32602,
+        RPC_INTERNAL_ERROR      = -32603
+    };
+
+    class RpcError{
+    /*private:
         String mMethodName;
         std::shared_ptr<Value> mParams;
         RpcRequestID mID;
@@ -66,11 +74,11 @@ namespace Solaire{ namespace Json{
         void SetParams(std::shared_ptr<Value> aParams);
         std::shared_ptr<const Value> GetParams() const;
 
-        Allocator& GetAllocator() const;
+        Allocator& GetAllocator() const;*/
     };
 
 }}
 
-#include "RpcRequest.inl"
+//#include "RpcRequest.inl"
 
 #endif
