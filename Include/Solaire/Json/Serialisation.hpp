@@ -420,23 +420,22 @@ namespace Solaire{ namespace Json{
             LookupOrCreateTag(aTag, TYPE_OBJECT) = std::move(*std::static_pointer_cast<JsonSerialObject>(aObject)->mValue);
         }
     };
-    /*
+
     SerialObjectPtr JsonSerialArray::ReadO(const SerialIndex aIndex){
         Allocator& allocator = mValue->GetAllocator();
-        return allocator.SharedAllocate<JsonSerialObject>(mValue->GetArray()[aIndex]);
+        return allocator.SharedAllocate<JsonSerialObject>(LookupIndex(aIndex).AsArray()[aIndex].shared_from_this());
     }
 
     ConstSerialObjectPtr JsonSerialArray::ReadO(const SerialIndex aIndex) const{
         Allocator& allocator = mValue->GetAllocator();
-        return allocator.SharedAllocate<JsonSerialObject>((mValue->GetArray())[aIndex]);
+        return allocator.SharedAllocate<JsonSerialObject>(LookupIndex(aIndex).AsArray()[aIndex].shared_from_this());
     }
 
     void JsonSerialArray::WriteO(const SerialIndex aIndex, SerialObjectPtr aObject){
-        Allocator::SharedPointer<JsonSerialObject> ptr = std::static_pointer_cast<JsonSerialObject>(aObject);
-        WriteMove<Object&&>(aIndex, std::move(ptr->mValue->GetObject()), &Value::SetObject);
+        LookupOrCreateIndex(aIndex, TYPE_OBJECT) = std::move(*std::static_pointer_cast<JsonSerialObject>(aObject)->mValue);
     }
 
-    class JsonSerialSystem : public SerialSystem{
+    /*class JsonSerialSystem : public SerialSystem{
     private:
         Allocator& mParseAllocator;
         Allocator& mDataAllocator;
