@@ -390,7 +390,7 @@ namespace Solaire{
     template<class T, class Iterator>
     T ParseNumber(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd){
         typename NumericParser<T>::Type templatedParser;
-        ResultByteParser<T>& parser = templatedParser;
+        ResultByteParser<typename NumericParser<T>::Type::NumericType>& parser = templatedParser;
 
         aParseEnd = aBegin;
         while(aParseEnd != aEnd){

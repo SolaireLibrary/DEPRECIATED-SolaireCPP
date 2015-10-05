@@ -31,7 +31,7 @@
 	Last Modified	: 5th September 2015
 */
 
-#include "..\Core\Serial\Serialisable.hpp"
+#include "..\Core\Serialise\Serialisable.hpp"
 
 namespace Solaire{
 
@@ -40,12 +40,18 @@ namespace Solaire{
             uint8_t bytes[4];
             uint32_t address;
         };
+
+        constexpr IPv4();
+        constexpr IPv4(const uint8_t, const uint8_t, const uint8_t, const uint8_t);
+        constexpr IPv4(const uint32_t);
     };
 
     struct IPv6{
         union{
             uint8_t bytes[8];
-        }
+        };
+
+        IPv6();
     };
 
     template<>

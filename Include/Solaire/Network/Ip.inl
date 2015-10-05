@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_NETWORK_IP_HPP
-#define SOLAIRE_NETWORK_IP_HPP
+#ifndef SOLAIRE_NETWORK_IP_INL
+#define SOLAIRE_NETWORK_IP_INL
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file Ip.hpp
+	\file Ip.inl
 	\brief
 	\author
 	Created			: Adam Smith
@@ -31,38 +31,106 @@
 	Last Modified	: 5th September 2015
 */
 
-#include "..\Core\Serial\Serialisable.hpp"
+#include <algorithm>
+#include "..\Core\Strings\NumberParser.hpp"
 
 namespace Solaire{
 
-    struct IPv4{
-        union{
-            uint8_t bytes[4];
-            uint32_t address;
-        };
-    };
+    // IPv4
+    constexpr IPv4::IPv4() :
+        address(0)
+    {}
 
-    struct IPv6{
-        union{
-            uint8_t bytes[8];
+    constexpr IPv4::IPv4(const uint8_t aByte0, const uint8_t aByte1, const uint8_t aByte2, const uint8_t aByte3):
+        address((aByte0 << 24) | (aByte1 << 16) | (aByte2 << 8) | aByte3)
+    {}
+
+    constexpr IPv4::IPv4(const uint32_t aAddress):
+        address(aAddress)
+    {}
+
+    // IPv6
+    IPv6::IPv6(){
+        bytes[0] = 0;
+        bytes[1] = 0;
+        bytes[2] = 0;
+        bytes[3] = 0;
+        bytes[4] = 0;
+        bytes[5] = 0;
+        bytes[6] = 0;
+        bytes[7] = 0;
+    }
+
+    // Serialisable<IPv4>
+
+    void Serialisable<IPv4>::Serialise(IPv4 aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
+        char buf[16];
+        char* head = buf;
+
+        head = NumericParse::ToString(head, aValue.bytes[0]);
+        *head = '.';
+        ++head;
+        head = NumericParse::ToString(head, aValue.bytes[1]);
+        *head = '.';
+        ++head;
+        head = NumericParse::ToString(head, aValue.bytes[2]);
+        *head = '.';
+        ++head;
+        head = NumericParse::ToString(head, aValue.bytes[3]);
+
+        aRoot.Write<ConstStringFragment>(aIndex, ConstStringFragment(buf, head));
+    }
+
+    Serialisable<IPv4>::DeserialiseType Serialisable<IPv4>::Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
+        char buf[16];
+        uint8_t length;
+        char* byte0 = buf;
+        char* byte1 = buf;
+        char* byte2 = buf;
+        char* byte3 = buf;
+
+        {
+            ConstStringFragment str = aRoot.Read<ConstStringFragment>(aIndex);
+            length = std::min<uint8_t>(16, str.Size());
+            std::memcpy(buf, str.begin(), length);
         }
-    };
 
-    template<>
-    class Serialisable<IPv4>{
-        typedef IPv4 DeserialiseType;
+        char* const end = buf + length;
 
-        static void Serialise(IPv4 aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot);
-        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot);
-    };
+        for(char* i = byte0; i != end; ++i) if(*i == '.'){
+            byte1 = i + 1;
+            break;
+        }
 
-    template<>
-    class Serialisable<IPv6>{
-        typedef IPv6 DeserialiseType;
+        for(char* i = byte1; i != end; ++i) if(*i == '.'){
+            byte2 = i + 1;
+            break;
+        }
 
-        static void Serialise(IPv6 aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot);
-        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot);
-    };
+        for(char* i = byte2; i != end; ++i) if(*i == '.'){
+            byte3 = i + 1;
+            break;
+        }
+
+        char* it = byte0;
+        IPv4 ip;
+        ip.bytes[0] = ParseNumber<uint8_t, char*>(byte0, byte1 - 1, it);
+        ip.bytes[1] = ParseNumber<uint8_t, char*>(byte1, byte2 - 1, it);
+        ip.bytes[2] = ParseNumber<uint8_t, char*>(byte2, byte3 - 1, it);
+        ip.bytes[3] = ParseNumber<uint8_t, char*>(byte3, end, it);
+        return ip;
+    }
+
+    // Serialisable<IPv6>
+
+    void Serialisable<IPv6>::Serialise(IPv6 aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
+
+    }
+
+    Serialisable<IPv6>::DeserialiseType Serialisable<IPv6>::Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
+
+    }
+
 
 }
 
