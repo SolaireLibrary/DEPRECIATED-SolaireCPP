@@ -70,6 +70,8 @@ namespace Solaire{ namespace Json{
                     SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what(), allocator));
                 }
             };
+
+            MapFunction(aString, wrapper);
         }
 
         template<class R>
@@ -83,6 +85,8 @@ namespace Solaire{ namespace Json{
                     SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what(), allocator));
                 }
             };
+
+            MapFunction(aString, wrapper);
         }
     public:
         virtual Allocator& GetAllocator() const = 0;
