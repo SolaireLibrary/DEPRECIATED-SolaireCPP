@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_JSON_RPC_HPP
-#define SOLAIRE_JSON_RPC_HPP
+#ifndef SOLAIRE_NETWORK_UDP_HPP
+#define SOLAIRE_NETWORK_UDP_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,24 +20,23 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file JsonRpc.hpp
-\brief
-\author
-Created			: Adam Smith
-Last modified	: Adam Smith
-\version 2.0
-\date
-Created			: 4th October 2015
-Last Modified	: 5th October 2015
+	\file Udp.hpp
+	\brief
+	\author
+	Created			: Adam Smith
+	Last modified	: Adam Smith
+	\version 1.0
+	\date
+	Created			: 5th September 2015
+	Last Modified	: 5th September 2015
 */
 
-#include "RpcRequest.hpp"
-#include "RpcError.hpp"
-#include "RpcResponse.hpp"
-#include "RpcClient.hpp"
-#include "RpcServer.hpp"
+namespace Solaire{
 
+    typedef uint16_t UdpSocket;
 
-#include "JsonRpc.inl"
+    class UdpSocket;
+}
+
 
 #endif

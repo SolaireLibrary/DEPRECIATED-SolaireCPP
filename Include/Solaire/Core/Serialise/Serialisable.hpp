@@ -41,8 +41,8 @@ namespace Solaire{
     class Serialisable{
         typedef R DeserialiseType;
 
-        static void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot) = delete;
-        static R Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot) = delete;
+        static void Serialise(T aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot) = delete;
+        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot) = delete;
     };
 
 
@@ -85,12 +85,27 @@ namespace Solaire{
     public:
         typedef T DeserialiseType;
 
-        void Serialise(T aValue, const SerialSystem& aSystem, const SerialTag aTag, const SerialObjectPtr aRoot){
-            aRoot->Write<T>(aTag, aValue);
+        static void Serialise(T aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
+            aRoot.Write<T>(aIndex, aValue);
         }
 
-        std::shared_ptr<T> Deserialise(const SerialSystem& aSystem, const SerialTag aTag, const ConstSerialObjectPtr aRoot){
-            return aRoot->Read<T>(aTag);
+        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
+            return aRoot.Read<T>(aIndex);
+        }
+    };
+
+    template<class T>
+    class Serialisable<std::shared_ptr<T>, typename Serialisable<T>::DeserialiseType, typename std::enable_if<IsSerialPrimative<T>>::type>
+    {
+    public:
+        typedef typename Serialisable<T>::DeserialiseType DeserialiseType;
+
+        static void Serialise(std::shared_ptr<T> aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
+            Serialisable<T>::Serialise(*aValue, aSystem, aIndex, aRoot);
+        }
+
+        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
+            return Serialisable<T>::DeserialiseType(aSystem, aIndex, aRoot);
         }
     };
 }

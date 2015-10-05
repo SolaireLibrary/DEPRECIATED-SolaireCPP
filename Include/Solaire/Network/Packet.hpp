@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_JSON_RPC_HPP
-#define SOLAIRE_JSON_RPC_HPP
+#ifndef SOLAIRE_NETWORK_PACKET_HPP
+#define SOLAIRE_NETWORK_PACKET_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,24 +20,31 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file JsonRpc.hpp
-\brief
-\author
-Created			: Adam Smith
-Last modified	: Adam Smith
-\version 2.0
-\date
-Created			: 4th October 2015
-Last Modified	: 5th October 2015
+	\file Packet.hpp
+	\brief
+	\author
+	Created			: Adam Smith
+	Last modified	: Adam Smith
+	\version 1.0
+	\date
+	Created			: 5th September 2015
+	Last Modified	: 5th September 2015
 */
 
-#include "RpcRequest.hpp"
-#include "RpcError.hpp"
-#include "RpcResponse.hpp"
-#include "RpcClient.hpp"
-#include "RpcServer.hpp"
+namespace Solaire{
 
+    class Socket;
 
-#include "JsonRpc.inl"
+    class Packet{
+    public:
+        friend Socket;
+    protected:
+        virtual void OnPreSend() = 0;
+        virtual void OnPostSend() = 0;
+        virtual void OnPostRecieve() = 0;
+    public:
+    };
+}
+
 
 #endif

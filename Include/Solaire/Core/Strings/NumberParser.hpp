@@ -31,6 +31,8 @@
 	Last Modified	: 28th September 2015
 */
 
+#include <algorithm>
+#include <cmath>
 #include "..\Streams\StringParser.hpp"
 #include "..\Strings\StringFragment.hpp"
 #include "..\DataStructures\DynamicArray.hpp"
@@ -274,31 +276,74 @@ namespace Solaire{
         };
 
         StringFragment::Pointer ToString(StringFragment::Pointer aBegin, double aValue){
-            // Separate aValue into components
-            double body = std::floor(aValue);
+            const auto ParseUint = [](char* const aBegin, uint32_t aValue)->char*{
+                uint8_t digit;
+                uint8_t count = 0;
+
+                if(aValue == 0){
+                    aBegin[count++] = '0';
+                }else{
+                    while(aValue > 0){
+                        digit = (aValue % 10);
+                        aBegin[count++] = '0' + digit;
+                        aValue /= 10;
+                    }
+                }
+
+                std::reverse(aBegin, aBegin + count);
+
+                return aBegin + count;
+            };
+
+            int32_t body = static_cast<int32_t>(aValue);
             const bool negative = body < 0.0;
             double decimal = aValue - body;
-            if(negative) body *= -1.0;
-
-            // Shift the body down
-            while(body < 0.0 && body != 0.0) body /= 10.0;
 
             if(negative){
+                body *= -1;
                 *aBegin = '-';
                 ++aBegin;
             }
 
-            if(body == 0.0){
-                *aBegin = '0';
+            aBegin = ParseUint(aBegin, static_cast<uint32_t>(body));
+
+            if(decimal != 0.0){
+                for(uint8_t i = 0; i < 8; ++i){
+                    if(decimal - std::floor(decimal) > 0.01){
+                         decimal *= 10.0;
+                    }else{
+                        break;
+                    }
+                }
+                *aBegin = '.';
                 ++aBegin;
+                aBegin = ParseUint(aBegin, static_cast<uint32_t>(decimal));
             }
 
-            while(body != 0.0){
-                body *= 10;
-                const double digit = std::floor(body);
-                body -= digit;
-                *aBegin = '0' + digit;
+            return aBegin;
+
+            // Shift the body down
+
+            /*if(body == 0.0){
+                *aBegin = '0';
                 ++aBegin;
+            }else{
+                while(body >= 1.0){
+                     body /= 10.0;
+                }
+
+                if(negative){
+                    *aBegin = '-';
+                    ++aBegin;
+                }
+
+                while(body != 0.0){
+                    body *= 10;
+                    const double digit = std::floor(body);
+                    body -= digit;
+                    *aBegin = '0' + digit;
+                    ++aBegin;
+                }
             }
 
             if(decimal != 0.0){
@@ -312,9 +357,7 @@ namespace Solaire{
                 decimal -= digit;
                 *aBegin = '0' + digit;
                 ++aBegin;
-            }
-
-            return aBegin;
+            }*/
         }
 
 
@@ -343,6 +386,31 @@ namespace Solaire{
     template<> struct NumericParser<int64_t>{typedef NumericParserI64 Type;};
     template<> struct NumericParser<float>{typedef NumericParserF Type;};
     template<> struct NumericParser<double>{typedef NumericParserD Type;};
+
+    template<class T, class Iterator>
+    T ParseNumber(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd){
+        typename NumericParser<T>::Type templatedParser;
+        ResultByteParser<T>& parser = templatedParser;
+
+        aParseEnd = aBegin;
+        while(aParseEnd != aEnd){
+            switch(parser.Accept(*aParseEnd)){
+            case ByteParser::STATUS_SUCCESS:
+                ++aParseEnd;
+                break;
+            case ByteParser::STATUS_COMPLETE:
+                goto PARSE;
+            case ByteParser::STATUS_FAIL:
+                aParseEnd = aBegin;
+                goto PARSE;
+            }
+        }
+
+        PARSE:
+        if(aParseEnd == aBegin) return static_cast<T>(0);
+        Allocator& allocator = GetDefaultAllocator();
+        return parser.Get(allocator, allocator);
+    }
 
 }
 

@@ -31,6 +31,8 @@ Created			: 18th September 2015
 Last Modified	: 28th September 2015
 */
 
+#include <cstring>
+
 namespace Solaire {
 
     // StringComparison
