@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file Value.inl
+\file JsonRpc.inl
 \brief
 \author
 Created			: Adam Smith
@@ -33,82 +33,6 @@ Last Modified	: 5th October 2015
 
 namespace Solaire{ namespace Json{
 
-    // RpcRequest
-
-    std::shared_ptr<Value> RpcRequest::Serialise(const RpcRequest& aRequest){
-        if(aRequest.mMethodName.Size() == 0) return std::shared_ptr<Value>();
-
-        Allocator& allocator = aRequest.GetAllocator();
-
-        std::shared_ptr<Value> ptr = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
-        ObjectValue& request = ptr->AsObject();
-
-        request.Add("jsonrpc", allocator.SharedAllocate<Value>(allocator, "2.0"));
-        request.Add("method", allocator.SharedAllocate<Value>(allocator, aRequest.mMethodName));
-        if(aRequest.mParams){
-            request.Add("params", aRequest.mParams);
-        }else{
-            request.Add("params", allocator.SharedAllocate<Value>(allocator, TYPE_NULL));
-        }
-
-        if(aRequest.mID == RPC_NOTIFICATION_ID){
-            request.Add("id", allocator.SharedAllocate<Value>(allocator, TYPE_NULL));
-        }else{
-            request.Add("id", allocator.SharedAllocate<Value>(allocator, aRequest.mID));
-        }
-
-        return ptr;
-    }
-
-    RpcRequest::RpcRequest(Allocator& aAllocator):
-        mMethodName(aAllocator),
-        mID(RPC_NOTIFICATION_ID)
-    {}
-
-    RpcRequest::~RpcRequest(){
-
-    }
-
-    void RpcRequest::SetMethodName(const ConstStringFragment aName){
-        mMethodName = aName;
-    }
-
-    ConstStringFragment RpcRequest::GetMethodName() const{
-        return mMethodName;
-    }
-
-    bool RpcRequest::IsRequest() const{
-        return mID != RPC_NOTIFICATION_ID;
-    }
-
-    bool RpcRequest::IsNotification() const{
-        return mID != RPC_NOTIFICATION_ID;
-    }
-
-    void RpcRequest::SetRequestID(const RpcRequestID aID){
-        mID = aID;
-    }
-
-    void RpcRequest::SetNotification(){
-        mID = RPC_NOTIFICATION_ID;
-    }
-
-    RpcRequestID RpcRequest::GetRequestID() const{
-        if(mID == RPC_NOTIFICATION_ID) throw std::runtime_error("Json::RpcRequest : Request is a notification with now RequestID");
-        return mID;
-    }
-
-    void RpcRequest::SetParams(std::shared_ptr<Value> aParams){
-        mParams.swap(aParams);
-    }
-
-    std::shared_ptr<const Value> RpcRequest::GetParams() const{
-        return mParams;
-    }
-
-    Allocator& RpcRequest::GetAllocator() const{
-        return mMethodName.GetAllocator();
-    }
 }}
 
 #endif

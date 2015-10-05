@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file Value.hpp
+\file JsonRpc.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -31,52 +31,9 @@ Created			: 4th October 2015
 Last Modified	: 5th October 2015
 */
 
-#include "Value.hpp"
-#include "Serialisation.hpp"
+#include "RpcRequest.hpp"
 
 namespace Solaire{ namespace Json{
-
-    typedef int64_t RpcRequestID;
-    typedef int64_t RpcErrorID;
-
-    enum : RpcErrorID{
-        RPC_PARSE_ERROR         = -32700,
-        RPC_INVALID_REQUEST     = -32600,
-        RPC_METHOD_NOT_FOUND    = -32601,
-        RPC_INVALID_PARAMS      = -32602,
-        RPC_INTERNAL_ERROR      = -32603
-    };
-
-    class RpcRequest{
-    private:
-        String mMethodName;
-        std::shared_ptr<Value> mParams;
-        RpcRequestID mID;
-    protected:
-        enum : RpcRequestID{
-            RPC_NOTIFICATION_ID = INT64_MAX
-        };
-    public:
-        static std::shared_ptr<Value> Serialise(const RpcRequest& aRequest);
-    public:
-        RpcRequest(Allocator& aAllocator);
-        ~RpcRequest();
-
-        void SetMethodName(const ConstStringFragment aName);
-        ConstStringFragment GetMethodName() const;
-
-        bool IsRequest() const;
-        bool IsNotification() const;
-
-        void SetNotification();
-        void SetRequestID(const RpcRequestID aID);
-        RpcRequestID GetRequestID() const;
-
-        void SetParams(std::shared_ptr<Value> aParams);
-        std::shared_ptr<const Value> GetParams() const;
-
-        Allocator& GetAllocator() const;
-    };
 
     /*typedef std::shared_ptr<Value> RpcRequest;
     typedef std::shared_ptr<Value> RpcNotification;
