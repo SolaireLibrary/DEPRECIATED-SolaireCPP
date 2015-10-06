@@ -84,7 +84,7 @@ namespace Solaire{
         }
 
         inline const Type* operator->() const{
-            return &mParent.*Member;
+            return &(mParent.*Member);
         }
     };
 
@@ -110,7 +110,7 @@ namespace Solaire{
         }
 
         inline Type* operator->(){
-            return &mParent.*Member;
+            return &(mParent.*Member);
         }
 
         inline ConstReturnType operator*() const{
@@ -118,7 +118,7 @@ namespace Solaire{
         }
 
         inline const Type* operator->() const{
-            return &mParent.*Member;
+            return &(mParent.*Member);
         }
     };
 

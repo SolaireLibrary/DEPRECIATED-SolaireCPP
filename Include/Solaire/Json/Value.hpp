@@ -223,6 +223,14 @@ namespace Solaire{ namespace Json{
             ArrayType* mDataArray;
             ObjectType* mDataObject;
         };
+        union{
+            NullValue mNull;
+            BoolValue mBool;
+            NumberValue mNumber;
+            StringValue mString;
+            ArrayValue mArray;
+            ObjectValue mObject;
+        };
         TypeID mType;
     private:
         static bool InternalSerialise(const std::function<void(char)>& aSetFn, const std::function<void(void)>& aForwardFn, const std::function<void(void)>& aBackwardFn, const Value& aValue);
@@ -280,12 +288,12 @@ namespace Solaire{ namespace Json{
         Value& operator=(const TypeID);
 
         union{
-            NullValue pNull;
-            BoolValue pBool;
-            NumberValue pNumber;
-            StringValue pString;
-            ArrayValue pArray;
-            ObjectValue pObject;
+            WriteValueProperty<Value, NullValue, PropertyReturn::REFERENCE, &Value::mNull> pNull;
+            WriteValueProperty<Value, BoolValue, PropertyReturn::REFERENCE, &Value::mBool> pBool;
+            WriteValueProperty<Value, NumberValue, PropertyReturn::REFERENCE, &Value::mNumber> pNumber;
+            WriteValueProperty<Value, StringValue, PropertyReturn::REFERENCE, &Value::mString> pString;
+            WriteValueProperty<Value, ArrayValue, PropertyReturn::REFERENCE, &Value::mArray> pArray;
+            WriteValueProperty<Value, ObjectValue, PropertyReturn::REFERENCE, &Value::mObject> pObject;
             ReadValueProperty<Value, TypeID, PropertyReturn::COPY, &Value::mType> pType;
             WriteDereferenceValueProperty<Value, Allocator, PropertyReturn::REFERENCE, &Value::mAllocator> pAllocator;
         };

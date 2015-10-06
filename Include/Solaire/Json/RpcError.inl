@@ -40,17 +40,17 @@ namespace Solaire{ namespace Json{
 
         std::shared_ptr<Value> error = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
 
-        error->pObject.Add("code", allocator, aError.mCode);
+        error->pObject->Add("code", allocator, aError.mCode);
         if(aError.mMessage.Size() > 0){
-            error->pObject.Add("message", allocator, aError.mMessage);
+            error->pObject->Add("message", allocator, aError.mMessage);
         }else{
-            error->pObject.Add("message",allocator, TYPE_NULL);
+            error->pObject->Add("message",allocator, TYPE_NULL);
         }
 
         if(aError.mData){
-            error->pObject.Add("data", aError.mData);
+            error->pObject->Add("data", aError.mData);
         }else{
-            error->pObject.Add("message", allocator, TYPE_NULL);
+            error->pObject->Add("message", allocator, TYPE_NULL);
         }
 
         return error;
@@ -90,7 +90,7 @@ namespace Solaire{ namespace Json{
     }
 
     Allocator& RpcError::GetAllocator() const{
-        mMessage.GetAllocator();
+        return mMessage.GetAllocator();
     }
 
 
