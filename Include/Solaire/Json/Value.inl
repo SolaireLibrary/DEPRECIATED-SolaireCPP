@@ -386,7 +386,7 @@ namespace Solaire{ namespace Json{
         switch(mParent->mType){
         case TYPE_OBJECT:
             if(SearchByObjectName(aName) != mParent->mDataObject->end())  throw std::runtime_error("Json::ObjectValue : Already contains named value with this name");
-            return *mParent->mDataObject->PushBack(std::pair<String, std::shared_ptr<Value>>(String(aName, mParent->GetAllocator()), aValue)).second;
+            return *mParent->mDataObject->PushBack(std::pair<String, std::shared_ptr<Value>>(String(aName, *mParent->pAllocator), aValue)).second;
             break;
         default:
             throw std::runtime_error("Json::ObjectValue : Cannot add named value to this type");
@@ -1030,14 +1030,6 @@ namespace Solaire{ namespace Json{
 
     Value::~Value(){
         operator=(TYPE_NULL);
-    }
-
-    TypeID Value::GetType() const{
-        return mType;
-    }
-
-    Allocator& Value::GetAllocator() const{
-        return *mAllocator;
     }
 
 }}

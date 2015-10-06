@@ -279,8 +279,6 @@ namespace Solaire{ namespace Json{
         Value& operator=(Value&& aOther);
         Value& operator=(const TypeID);
 
-        TypeID GetType() const;
-
         union{
             NullValue pNull;
             BoolValue pBool;
@@ -288,9 +286,9 @@ namespace Solaire{ namespace Json{
             StringValue pString;
             ArrayValue pArray;
             ObjectValue pObject;
+            ReadValueProperty<Value, TypeID, PropertyReturn::COPY, &Value::mType> pType;
+            WriteDereferenceValueProperty<Value, Allocator, PropertyReturn::REFERENCE, &Value::mAllocator> pAllocator;
         };
-
-        Allocator& GetAllocator() const;
     };
 }}
 

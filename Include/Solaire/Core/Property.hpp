@@ -32,8 +32,41 @@
 */
 
 namespace Solaire{
-    template<class Type, class ConstReturnType, class Parent, Type Parent::* const Member>
+
+    enum class PropertyReturn{
+        COPY,
+        REFERENCE,
+        MOVE
+    };
+
+    template<class T, const PropertyReturn ReturnMode>
+    struct PropertyReturnType{
+        typedef void Type;
+        typedef void ConstType;
+    };
+
+    template<class T>
+    struct PropertyReturnType<T, PropertyReturn::COPY>{
+        typedef T Type;
+        typedef const T ConstType;
+    };
+
+    template<class T>
+    struct PropertyReturnType<T, PropertyReturn::REFERENCE>{
+        typedef T& Type;
+        typedef const T& ConstType;
+    };
+
+    template<class T>
+    struct PropertyReturnType<T, PropertyReturn::MOVE>{
+        typedef T&& Type;
+        typedef const T&& ConstType;
+    };
+
+    template<class Parent, class Type, const PropertyReturn ReturnMode, Type Parent::* const Member>
     class ReadValueProperty{
+    public:
+        typedef typename PropertyReturnType<Type, ReturnMode>::ConstType ConstReturnType;
     private:
         ReadValueProperty(const ReadValueProperty&) = delete;
         ReadValueProperty(ReadValueProperty&&) = delete;
@@ -42,17 +75,24 @@ namespace Solaire{
     private:
         Parent& mParent;
     public:
-        ReadValueProperty(Parent& aParent):
+        constexpr ReadValueProperty(Parent& aParent):
             mParent(aParent)
         {}
 
-        operator ConstReturnType() const{
+        inline ConstReturnType operator*() const{
             return mParent.*Member;
+        }
+
+        inline const Type* operator->() const{
+            return &mParent.*Member;
         }
     };
 
-    template<class Type, class ReturnType, class Parent, Type Parent::* const Member>
+    template<class Parent, class Type, const PropertyReturn ReturnMode, Type Parent::* const Member>
     class WriteValueProperty{
+    public:
+        typedef typename PropertyReturnType<Type, ReturnMode>::Type ReturnType;
+        typedef typename PropertyReturnType<Type, ReturnMode>::ConstType ConstReturnType;
     private:
         WriteValueProperty(const WriteValueProperty&) = delete;
         WriteValueProperty(WriteValueProperty&&) = delete;
@@ -61,38 +101,87 @@ namespace Solaire{
     private:
         Parent& mParent;
     public:
-        WriteValueProperty(Parent& aParent):
+        constexpr WriteValueProperty(Parent& aParent):
             mParent(aParent)
         {}
 
-        operator ReturnType(){
+        inline ReturnType operator*(){
             return mParent.*Member;
+        }
+
+        inline Type* operator->(){
+            return &mParent.*Member;
+        }
+
+        inline ConstReturnType operator*() const{
+            return mParent.*Member;
+        }
+
+        inline const Type* operator->() const{
+            return &mParent.*Member;
         }
     };
 
-    template<class Type, class ReturnType, class ConstReturnType, class Parent, Type Parent::* const Member>
-    class ReadWriteValueProperty{
+    //
+
+    template<class Parent, class Type, const PropertyReturn ReturnMode, Type* Parent::* const Member>
+    class ReadDereferenceValueProperty{
+    public:
+        typedef typename PropertyReturnType<Type, ReturnMode>::ConstType ConstReturnType;
     private:
-        ReadWriteValueProperty(const ReadWriteValueProperty&) = delete;
-        ReadWriteValueProperty(ReadWriteValueProperty&&) = delete;
-        ReadWriteValueProperty& operator=(const ReadWriteValueProperty&) = delete;
-        ReadWriteValueProperty& operator=(ReadWriteValueProperty&&) = delete;
+        ReadDereferenceValueProperty(const ReadDereferenceValueProperty&) = delete;
+        ReadDereferenceValueProperty(ReadDereferenceValueProperty&&) = delete;
+        ReadDereferenceValueProperty& operator=(const ReadDereferenceValueProperty&) = delete;
+        ReadDereferenceValueProperty& operator=(ReadDereferenceValueProperty&&) = delete;
     private:
         Parent& mParent;
     public:
-        ReadWriteValueProperty(Parent& aParent):
+        constexpr ReadDereferenceValueProperty(Parent& aParent):
             mParent(aParent)
         {}
 
-        operator ReturnType(){
+        inline const Type* operator->() const{
             return mParent.*Member;
         }
 
-        operator ConstReturnType() const{
-            return mParent.*Member;
+        inline ConstReturnType operator*() const{
+            return *(mParent.*Member);
         }
     };
 
+    template<class Parent, class Type, const PropertyReturn ReturnMode, Type* Parent::* const Member>
+    class WriteDereferenceValueProperty{
+    public:
+        typedef typename PropertyReturnType<Type, ReturnMode>::Type ReturnType;
+        typedef typename PropertyReturnType<Type, ReturnMode>::ConstType ConstReturnType;
+    private:
+        WriteDereferenceValueProperty(const WriteDereferenceValueProperty&) = delete;
+        WriteDereferenceValueProperty(WriteDereferenceValueProperty&&) = delete;
+        WriteDereferenceValueProperty& operator=(const WriteDereferenceValueProperty&) = delete;
+        WriteDereferenceValueProperty& operator=(WriteDereferenceValueProperty&&) = delete;
+    private:
+        Parent& mParent;
+    public:
+        constexpr WriteDereferenceValueProperty(Parent& aParent):
+            mParent(aParent)
+        {}
+
+        inline Type* operator->(){
+            return mParent.*Member;
+        }
+
+        inline ReturnType operator*(){
+            return *(mParent.*Member);
+        }
+
+        inline const Type* operator->() const{
+            return mParent.*Member;
+        }
+
+        inline ConstReturnType operator*() const{
+            return *(mParent.*Member);
+        }
+    };
 }
 
 

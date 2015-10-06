@@ -51,7 +51,7 @@ namespace Solaire{ namespace Json{
 
         template<class T>
         Value& LookupOrCreateIndex(const SerialIndex aIndex, const T aValue){
-            Allocator& allocator = mValue->GetAllocator();
+            Allocator& allocator = *mValue->pAllocator;
             const SerialIndex size = mValue->pArray.Size();
 
             if(aIndex == size){
@@ -85,7 +85,7 @@ namespace Solaire{ namespace Json{
         }
 
         SerialType TypeOf(const SerialIndex aIndex) const override{
-            switch(LookupIndex(aIndex).GetType()){
+            switch(*LookupIndex(aIndex).pType){
             case TYPE_NULL:
                 return SERIAL_TYPE_N;
             case TYPE_BOOL:
@@ -158,15 +158,13 @@ namespace Solaire{ namespace Json{
         }
 
         SerialArrayPtr ReadA(const SerialIndex aIndex) override{
-            Allocator& allocator = mValue->GetAllocator();
-            return allocator.SharedAllocate<JsonSerialArray>(LookupIndex(aIndex).pArray[aIndex].shared_from_this());
+            return mValue->pAllocator->SharedAllocate<JsonSerialArray>(LookupIndex(aIndex).pArray[aIndex].shared_from_this());
         }
 
         SerialObjectPtr ReadO(const SerialIndex aIndex) override;
 
         ConstSerialArrayPtr ReadA(const SerialIndex aIndex) const override{
-            Allocator& allocator = mValue->GetAllocator();
-            return allocator.SharedAllocate<JsonSerialArray>(LookupIndex(aIndex).pArray[aIndex].shared_from_this());
+            return mValue->pAllocator->SharedAllocate<JsonSerialArray>(LookupIndex(aIndex).pArray[aIndex].shared_from_this());
         }
 
         ConstSerialObjectPtr ReadO(const SerialIndex aIndex) const override;
@@ -247,7 +245,7 @@ namespace Solaire{ namespace Json{
             if(mValue->pObject.Contains(aTag)){
                 return mValue->pObject[aTag];
             }else{
-                Allocator& allocator = mValue->GetAllocator();
+                Allocator& allocator = *mValue->pAllocator;
                 return mValue->pObject.Add(aTag, allocator.SharedAllocate<Value>(allocator, aValue));
             }
         }
@@ -267,7 +265,7 @@ namespace Solaire{ namespace Json{
         // Inherited from SerialObject
 
         SerialType TypeOf(const SerialTag aTag) const override{
-            switch(LookupTag(aTag).GetType()){
+            switch(*LookupTag(aTag).pType){
             case TYPE_NULL:
                 return SERIAL_TYPE_N;
             case TYPE_BOOL:
@@ -340,19 +338,19 @@ namespace Solaire{ namespace Json{
         }
 
         SerialArrayPtr ReadA(const SerialTag aTag) override{
-            return mValue->GetAllocator().SharedAllocate<JsonSerialArray>(LookupTag(aTag).shared_from_this());
+            return mValue->pAllocator->SharedAllocate<JsonSerialArray>(LookupTag(aTag).shared_from_this());
         }
 
         SerialObjectPtr ReadO(const SerialTag aTag) override{
-            return mValue->GetAllocator().SharedAllocate<JsonSerialObject>(LookupTag(aTag).shared_from_this());
+            return mValue->pAllocator->SharedAllocate<JsonSerialObject>(LookupTag(aTag).shared_from_this());
         }
 
         ConstSerialArrayPtr ReadA(const SerialTag aTag) const override{
-            return mValue->GetAllocator().SharedAllocate<JsonSerialArray>(LookupTag(aTag).shared_from_this());
+            return mValue->pAllocator->SharedAllocate<JsonSerialArray>(LookupTag(aTag).shared_from_this());
         }
 
         ConstSerialObjectPtr ReadO(const SerialTag aTag) const override{
-            return mValue->GetAllocator().SharedAllocate<JsonSerialObject>(LookupTag(aTag).shared_from_this());
+            return mValue->pAllocator->SharedAllocate<JsonSerialObject>(LookupTag(aTag).shared_from_this());
         }
 
         void WriteN(const SerialTag aTag) override{
@@ -421,13 +419,11 @@ namespace Solaire{ namespace Json{
     };
 
     SerialObjectPtr JsonSerialArray::ReadO(const SerialIndex aIndex){
-        Allocator& allocator = mValue->GetAllocator();
-        return allocator.SharedAllocate<JsonSerialObject>(LookupIndex(aIndex).pArray[aIndex].shared_from_this());
+        return mValue->pAllocator->SharedAllocate<JsonSerialObject>(LookupIndex(aIndex).pArray[aIndex].shared_from_this());
     }
 
     ConstSerialObjectPtr JsonSerialArray::ReadO(const SerialIndex aIndex) const{
-        Allocator& allocator = mValue->GetAllocator();
-        return allocator.SharedAllocate<JsonSerialObject>(LookupIndex(aIndex).pArray[aIndex].shared_from_this());
+        return mValue->pAllocator->SharedAllocate<JsonSerialObject>(LookupIndex(aIndex).pArray[aIndex].shared_from_this());
     }
 
     void JsonSerialArray::WriteO(const SerialIndex aIndex, SerialObjectPtr aObject){
