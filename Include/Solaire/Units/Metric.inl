@@ -21,7 +21,7 @@
 
 #include <stdexcept>
 
-namespace Solaire{ namespace Units{ namespace MetricInl{
+namespace Solaire{ namespace MetricInl{
 
 	enum class MetricPrefix{
 		// SI
@@ -92,7 +92,7 @@ namespace Solaire{ namespace Units{ namespace MetricInl{
 			aUnit == MetricPrefix::YOBI		? 2e+80 :
 			0.0;
 	}
-}}}
+}}
 
 
 #endif
