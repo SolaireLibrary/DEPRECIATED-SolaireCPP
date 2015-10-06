@@ -31,11 +31,35 @@
 	Last Modified	: 5th September 2015
 */
 
+#include "Ip.hpp"
+#include "Socket.hpp"
+
 namespace Solaire{
 
-    typedef uint16_t UdpSocket;
+    typedef uint16_t UdpPort;
 
-    class UdpSocket;
+    template<class IP>
+    using UdpSession = std::pair<IP, UdpPort>;
+
+    typedef UdpSession<IPv4> UdpSessionIPv4;
+    typedef UdpSession<IPv6> UdpSessionIPv6;
+
+    class UdpSocket : public Socket{
+    private:
+        UdpPort mListenPort;
+    public:
+        UdpSocket();
+        UdpSocket(const UdpPort aListenPort);
+        ~UdpSocket();
+
+        void SetListenPort(const UdpPort aListenPort);
+
+        Status Send(const UdpSessionIPv4 aDestination, const void* const aData, const size_t aBytes);
+        Status Send(const UdpSessionIPv4 aDestination, const Packet& aPacket);
+
+        Status Receive(UdpSessionIPv4& aSource, size_t& aBytesRead, void* const aData, const size_t aDataSize);
+        Status Receive(UdpSessionIPv4& aSource, Packet& aPacket);
+    };
 }
 
 

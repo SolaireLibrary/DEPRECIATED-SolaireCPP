@@ -33,7 +33,32 @@
 
 namespace Solaire{
 
-    class Socket;
+    class Packet;
+
+    class Socket{
+    public:
+        enum BlockingMode : uint8_t{
+            BLOCKING_NEVER,
+            BLOCKING_ALWAYS
+        };
+
+        enum Status : uint8_t{
+            STATUS_DATA_SENT,
+            STATUS_DATA_NOT_SENT,
+            STATUS_DATA_SENDING
+        };
+    private:
+        BlockingMode mBlockingMode;
+    protected:
+        virtual bool IsOpen() const = 0;
+        virtual bool Close() = 0;
+    public:
+        virtual ~Socket();
+
+        virtual size_t MaximumPacketSize() = 0;
+        virtual void SetBlockingMode(const BlockingMode aMode);
+        virtual BlockingMode GetBlockingMode() const;
+    };
 }
 
 
