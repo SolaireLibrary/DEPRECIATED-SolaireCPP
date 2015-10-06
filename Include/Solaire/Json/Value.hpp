@@ -282,12 +282,12 @@ namespace Solaire{ namespace Json{
         TypeID GetType() const;
 
         union{
-            NullValue Null;
-            BoolValue Bool;
-            NumberValue Number;
-            StringValue String_;
-            ArrayValue Array;
-            ObjectValue Object;
+            NullValue pNull;
+            BoolValue pBool;
+            NumberValue pNumber;
+            StringValue pString;
+            ArrayValue pArray;
+            ObjectValue pObject;
         };
 
         Allocator& GetAllocator() const;

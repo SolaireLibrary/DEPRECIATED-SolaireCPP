@@ -51,7 +51,7 @@ namespace Solaire{ namespace Json{
             Allocator& allocator = GetAllocator();
 
             std::shared_ptr<Value> params = allocator.SharedAllocate<Value>(allocator, TYPE_ARRAY);
-            params->Array.PushBack(JsonSerialise(allocator, allocator, aParams...));
+            params->pArray.PushBack(JsonSerialise(allocator, allocator, aParams...));
 
             RpcRequest request(allocator);
             request.SetNotification();
@@ -66,7 +66,7 @@ namespace Solaire{ namespace Json{
             Allocator& allocator = GetAllocator();
 
             std::shared_ptr<Value> params = allocator.SharedAllocate<Value>(allocator, TYPE_ARRAY);
-            params->Array.PushBack(JsonSerialise(allocator, allocator, aParams...));
+            params->pArray.PushBack(JsonSerialise(allocator, allocator, aParams...));
 
             RpcRequest request(allocator);
             request.SetMethodName(aMethodName);

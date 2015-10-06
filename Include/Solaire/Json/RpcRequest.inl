@@ -42,18 +42,18 @@ namespace Solaire{ namespace Json{
 
         std::shared_ptr<Value> request = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
 
-        request->Object.Add("jsonrpc", allocator, "2.0");
-        request->Object.Add("method", allocator, aRequest.mMethodName);
+        request->pObject.Add("jsonrpc", allocator, "2.0");
+        request->pObject.Add("method", allocator, aRequest.mMethodName);
         if(aRequest.mParams){
-            request->Object.Add("params", aRequest.mParams);
+            request->pObject.Add("params", aRequest.mParams);
         }else{
-            request->Object.Add("params", allocator, TYPE_NULL);
+            request->pObject.Add("params", allocator, TYPE_NULL);
         }
 
         if(aRequest.mID == RPC_NOTIFICATION_ID){
-            request->Object.Add("id", allocator, TYPE_NULL);
+            request->pObject.Add("id", allocator, TYPE_NULL);
         }else{
-            request->Object.Add("id", allocator, aRequest.mID);
+            request->pObject.Add("id", allocator, aRequest.mID);
         }
 
         return request;
