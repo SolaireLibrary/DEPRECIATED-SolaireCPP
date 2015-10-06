@@ -76,12 +76,11 @@ namespace Solaire{
         }
 
         inline CONVERTER& operator+=(const ValueType aValue){
-
-            return mParent += mParent.ConvertToIntermediateUnit(CONVERSION, PrefixConverterType::StaticConvertToIntermediateUnit(PREFIX, aValue));
+            return mParent += CONVERTER::StaticConvertToIntermediateUnit(CONVERSION, PrefixConverterType::StaticConvertToIntermediateUnit(PREFIX, aValue));
         }
 
         inline CONVERTER& operator-=(const ValueType aValue){
-            return mParent -= mParent.ConvertToIntermediateUnit(CONVERSION, PrefixConverterType::StaticConvertToIntermediateUnit(PREFIX, aValue));
+            return mParent -= CONVERTER::StaticConvertToIntermediateUnit(CONVERSION, PrefixConverterType::StaticConvertToIntermediateUnit(PREFIX, aValue));
         }
     };
 
