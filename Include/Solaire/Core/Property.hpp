@@ -122,6 +122,24 @@ namespace Solaire{
         }
     };
 
+    template<class Parent, class Type, Type Parent::* const Member>
+    using ReadOnlyCopyProperty = ReadValueProperty<Parent, Type, PropertyReturn::COPY, Member>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using ReadOnlyReferenceProperty = ReadValueProperty<Parent, Type, PropertyReturn::REFERENCE, Member>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using ReadOnlyMoveProperty = ReadValueProperty<Parent, Type, PropertyReturn::MOVE, Member>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using CopyProperty = WriteValueProperty<Parent, Type, PropertyReturn::COPY, Member>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using ReferenceProperty = WriteValueProperty<Parent, Type, PropertyReturn::REFERENCE, Member>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using MoveProperty = WriteValueProperty<Parent, Type, PropertyReturn::MOVE, Member>;
+
     //
 
     template<class Parent, class Type, const PropertyReturn ReturnMode, Type* Parent::* const Member>
@@ -182,6 +200,25 @@ namespace Solaire{
             return *(mParent.*Member);
         }
     };
+
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using ReadOnlyCopyDreferenceProperty = ReadDereferenceValueProperty<Parent, Type, PropertyReturn::COPY, Member>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using ReadOnlyReferenceDreferenceProperty = ReadDereferenceValueProperty<Parent, Type, PropertyReturn::REFERENCE, Member>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using ReadOnlyMoveDereferenceProperty = ReadDereferenceValueProperty<Parent, Type, PropertyReturn::MOVE, Member>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using CopyDereferenceProperty = WriteDereferenceValueProperty<Parent, Type, PropertyReturn::COPY, Member>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using ReferenceDereferenceProperty = WriteDereferenceValueProperty<Parent, Type, PropertyReturn::REFERENCE, Member>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using MoveDereferenceProperty = WriteDereferenceValueProperty<Parent, Type, PropertyReturn::MOVE, Member>;
 }
 
 

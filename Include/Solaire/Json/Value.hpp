@@ -288,14 +288,14 @@ namespace Solaire{ namespace Json{
         Value& operator=(const TypeID);
 
         union{
-            WriteValueProperty<Value, NullValue, PropertyReturn::REFERENCE, &Value::mNull> pNull;
-            WriteValueProperty<Value, BoolValue, PropertyReturn::REFERENCE, &Value::mBool> pBool;
-            WriteValueProperty<Value, NumberValue, PropertyReturn::REFERENCE, &Value::mNumber> pNumber;
-            WriteValueProperty<Value, StringValue, PropertyReturn::REFERENCE, &Value::mString> pString;
-            WriteValueProperty<Value, ArrayValue, PropertyReturn::REFERENCE, &Value::mArray> pArray;
-            WriteValueProperty<Value, ObjectValue, PropertyReturn::REFERENCE, &Value::mObject> pObject;
-            ReadValueProperty<Value, TypeID, PropertyReturn::COPY, &Value::mType> pType;
-            WriteDereferenceValueProperty<Value, Allocator, PropertyReturn::REFERENCE, &Value::mAllocator> pAllocator;
+            ReferenceProperty<Value, NullValue, &Value::mNull> pNull;
+            ReferenceProperty<Value, BoolValue, &Value::mBool> pBool;
+            ReferenceProperty<Value, NumberValue, &Value::mNumber> pNumber;
+            ReferenceProperty<Value, StringValue, &Value::mString> pString;
+            ReferenceProperty<Value, ArrayValue, &Value::mArray> pArray;
+            ReferenceProperty<Value, ObjectValue, &Value::mObject> pObject;
+            ReadOnlyCopyProperty<Value, TypeID, &Value::mType> pType;
+            ReferenceDereferenceProperty<Value, Allocator, &Value::mAllocator> pAllocator;
         };
     };
 }}
