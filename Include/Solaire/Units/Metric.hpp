@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include "BaseConverter.hpp"
+#include "PrefixConverter.hpp"
 #include "Metric.inl"
 
 namespace Solaire{
@@ -30,6 +31,7 @@ namespace Solaire{
     public:
         typedef typename UnitConverter<MetricInl::MetricPrefix, VALUE, MetricInl::INTERMEDIARY_UNIT>::UnitType UnitType;
         typedef typename UnitConverter<MetricInl::MetricPrefix, VALUE, MetricInl::INTERMEDIARY_UNIT>::ValueType ValueType;
+        typedef UnitConverter<MetricInl::MetricPrefix, VALUE, MetricInl::INTERMEDIARY_UNIT> ParentClass;
 
 	    template<const UnitType CONVERSION>
 	    using MetricProperty = UnitConverterProperty<UnitType, ValueType, MetricInl::INTERMEDIARY_UNIT, CONVERSION>;
@@ -42,6 +44,10 @@ namespace Solaire{
 			return static_cast<ValueType>(static_cast<double>(aValue) / MetricInl::GetScale(aUnit));
 		}
     public:
+        MetricConverter():
+            ParentClass(static_cast<UnitType>(0))
+        {}
+
         // Inherited from UnitConverter
 
         ValueType ConvertToIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
@@ -90,6 +96,12 @@ namespace Solaire{
 	typedef MetricConverter<float> MetricConverterF;	//!< A Metric value that is a float.
 	typedef MetricConverter<int32_t> MetricConverterI;	//!< A Metric value that is a signed 32 bit integer.
 	typedef MetricConverter<uint32_t> MetricConverterU;	//!< A Metric value that is a unsigned 32 bit integer.
+
+    template<class UNIT, class VALUE, const UNIT INTERMEDIATE>
+    using MetricPrefixConverter = PrefixConverter<UNIT, VALUE, INTERMEDIATE, MetricConverter<VALUE>>;
+
+    //template<class UNIT, class VALUE, const UNIT INTERMEDIATE, const typename MetricConverter<VALUE>::UnitType CONVERSION_PREFIX, const UNIT CONVERSION>
+    //using MetricPrefixProperty = PrefixConverterProperty<UNIT, VALUE, INTERMEDIATE, MetricConverter<VALUE>, CONVERSION_PREFIX, UNIT>;
 }
 
 
