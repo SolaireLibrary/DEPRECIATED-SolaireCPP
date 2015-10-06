@@ -38,7 +38,7 @@ namespace Solaire{
     public:
         typedef UNIT UnitType;
         typedef VALUE ValueType;
-    protected:
+    private:
         ValueType mIntermediateValue;
     public:
         virtual ValueType ConvertToIntermediateUnit(const UnitType aUnit, const ValueType aValue) const = 0;
@@ -171,24 +171,26 @@ namespace Solaire{
         }
     };
 
-    template<class UNIT, class VALUE, const UNIT INTERMEDIATE, const UNIT CONVERSION>
+    template<class CONVERTER, const typename CONVERTER::UnitType CONVERSION>
     class UnitConverterProperty{
-    private:
-        UnitConverter<UNIT, VALUE, INTERMEDIATE>& mParent;
     public:
-        constexpr UnitConverterProperty(UnitConverter<UNIT, VALUE, INTERMEDIATE>& aParent):
+        typedef typename CONVERTER::ValueType ValueType;
+    private:
+        CONVERTER& mParent;
+    public:
+        constexpr UnitConverterProperty(CONVERTER& aParent):
             mParent(aParent)
         {}
 
-        inline operator VALUE() const{
+        inline operator ValueType() const{
             return mParent.Get(CONVERSION);
         }
 
-        inline UnitConverter<UNIT, VALUE, INTERMEDIATE>& operator+=(const VALUE aValue){
+        inline CONVERTER& operator+=(const ValueType aValue){
             return mParent += mParent.ConvertToIntermediateUnit(CONVERSION, aValue);
         }
 
-        inline UnitConverter<UNIT, VALUE, INTERMEDIATE>& operator-=(const VALUE aValue){
+        inline CONVERTER& operator-=(const ValueType aValue){
             return mParent -= mParent.ConvertToIntermediateUnit(CONVERSION, aValue);
         }
     };

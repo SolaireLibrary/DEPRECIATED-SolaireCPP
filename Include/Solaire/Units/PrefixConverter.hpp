@@ -59,26 +59,29 @@ namespace Solaire{
         }
     };
 
-    template<class UNIT, class VALUE, const UNIT INTERMEDIATE, class PREFIX_CONVERTER, const typename PREFIX_CONVERTER::UnitType CONVERSION_PREFIX, const UNIT CONVERSION>
+    template<class CONVERTER, const typename CONVERTER::PrefixType PREFIX, const typename CONVERTER::UnitType CONVERSION>
     class PrefixConverterProperty{
-    private:
-        PrefixConverter<UNIT, VALUE, INTERMEDIATE, PREFIX_CONVERTER>& mParent;
     public:
-        constexpr PrefixConverterProperty(PrefixConverter<UNIT, VALUE, INTERMEDIATE, PREFIX_CONVERTER>& aParent):
+        typedef typename CONVERTER::ValueType ValueType;
+        typedef typename CONVERTER::PrefixConverterType PrefixConverterType;
+    private:
+        CONVERTER& mParent;
+    public:
+        constexpr PrefixConverterProperty(CONVERTER& aParent):
             mParent(aParent)
         {}
 
-        inline operator VALUE() const{
-            return mParent.GetPrefixed(CONVERSION_PREFIX, CONVERSION);
+        inline operator ValueType() const{
+            return mParent.GetPrefixed(PREFIX, CONVERSION);
         }
 
-        inline UnitConverter<UNIT, VALUE, INTERMEDIATE>& operator+=(const VALUE aValue){
+        inline CONVERTER& operator+=(const ValueType aValue){
 
-            return mParent += mParent.ConvertToIntermediateUnit(CONVERSION, PREFIX_CONVERTER::StaticConvertToIntermediateUnit(CONVERSION_PREFIX, aValue));
+            return mParent += mParent.ConvertToIntermediateUnit(CONVERSION, PrefixConverterType::StaticConvertToIntermediateUnit(PREFIX, aValue));
         }
 
-        inline UnitConverter<UNIT, VALUE, INTERMEDIATE>& operator-=(const VALUE aValue){
-            return mParent -= mParent.ConvertToIntermediateUnit(CONVERSION, PREFIX_CONVERTER::StaticConvertToIntermediateUnit(CONVERSION_PREFIX, aValue));
+        inline CONVERTER& operator-=(const ValueType aValue){
+            return mParent -= mParent.ConvertToIntermediateUnit(CONVERSION, PrefixConverterType::StaticConvertToIntermediateUnit(PREFIX, aValue));
         }
     };
 

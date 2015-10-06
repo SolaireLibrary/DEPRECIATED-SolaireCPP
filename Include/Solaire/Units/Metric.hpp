@@ -34,7 +34,7 @@ namespace Solaire{
         typedef UnitConverter<MetricInl::MetricPrefix, VALUE, MetricInl::INTERMEDIARY_UNIT> ParentClass;
 
 	    template<const UnitType CONVERSION>
-	    using MetricProperty = UnitConverterProperty<UnitType, ValueType, MetricInl::INTERMEDIARY_UNIT, CONVERSION>;
+	    using MetricProperty = UnitConverterProperty<MetricConverter<ValueType>, CONVERSION>;
 	public:
 		static constexpr ValueType StaticConvertToIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
 			return static_cast<ValueType>(static_cast<double>(aValue) * MetricInl::GetScale(aUnit));
@@ -45,7 +45,23 @@ namespace Solaire{
 		}
     public:
         MetricConverter():
-            ParentClass(static_cast<UnitType>(0))
+            ParentClass(static_cast<ValueType>(0)),
+            Value(*this)
+        {}
+
+        MetricConverter(const ValueType aValue):
+            ParentClass(aValue),
+            Value(*this)
+        {}
+
+        MetricConverter(const MetricConverter& aOther):
+            ParentClass(aOther.Get()),
+            Value(*this)
+        {}
+
+        MetricConverter(MetricConverter&& aOther):
+            ParentClass(aOther.Get()),
+            Value(*this)
         {}
 
         // Inherited from UnitConverter
@@ -57,7 +73,6 @@ namespace Solaire{
         ValueType ConvertFromIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
             return ConvertFromIntermediateUnit(aUnit, aValue);
         }
-
 	public:
 		union{
 			MetricProperty<UnitType::NONE>		Value;
@@ -99,9 +114,6 @@ namespace Solaire{
 
     template<class UNIT, class VALUE, const UNIT INTERMEDIATE>
     using MetricPrefixConverter = PrefixConverter<UNIT, VALUE, INTERMEDIATE, MetricConverter<VALUE>>;
-
-    //template<class UNIT, class VALUE, const UNIT INTERMEDIATE, const typename MetricConverter<VALUE>::UnitType CONVERSION_PREFIX, const UNIT CONVERSION>
-    //using MetricPrefixProperty = PrefixConverterProperty<UNIT, VALUE, INTERMEDIATE, MetricConverter<VALUE>, CONVERSION_PREFIX, UNIT>;
 }
 
 

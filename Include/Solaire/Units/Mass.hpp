@@ -19,25 +19,25 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include <cstdint>
 #include "Metric.hpp"
 #include "Mass.inl"
 
 namespace Solaire{ namespace Units{
 	template<class VALUE>
-	class Mass : public MetricPrefixConverter<MassInl::MassUnit, VALUE, MassInl::INTERMEDIARY_UNIT>
+	class MassConveter : public MetricPrefixConverter<MassInl::MassUnit, VALUE, MassInl::INTERMEDIARY_UNIT>
 	{
 	public:
 	    typedef MetricPrefixConverter<MassInl::MassUnit, VALUE, MassInl::INTERMEDIARY_UNIT> ParentClass;
         typedef typename ParentClass::PrefixType PrefixType;
         typedef typename ParentClass::UnitType UnitType;
         typedef typename ParentClass::ValueType ValueType;
+        typedef MetricConverter<ValueType> PrefixConverterType;
 
 	    template<const UnitType CONVERSION>
-	    using MassProperty = UnitConverterProperty<UnitType, ValueType, MassInl::INTERMEDIARY_UNIT, CONVERSION>;
+	    using MassProperty = UnitConverterProperty<MassConveter<ValueType>, CONVERSION>;
 
 	    template<const PrefixType PREFIX, const UnitType CONVERSION>
-        using MassPrefixProperty = PrefixConverterProperty<UnitType, ValueType, MassInl::INTERMEDIARY_UNIT, MetricConverter<VALUE>, PREFIX, CONVERSION>;
+        using MassPrefixProperty = PrefixConverterProperty<MassConveter<ValueType>, PREFIX, CONVERSION>;
 	public:
 		static constexpr ValueType StaticConvertToIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
 			return static_cast<ValueType>(static_cast<double>(aValue) / MassInl::GetScale(aUnit));
@@ -46,6 +46,36 @@ namespace Solaire{ namespace Units{
 		static constexpr ValueType StaticConvertFromIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
 			return static_cast<ValueType>(static_cast<double>(aValue) * MassInl::GetScale(aUnit));
     }
+    public:
+        MassConveter():
+            ParentClass(static_cast<ValueType>(0)),
+            Grams(*this)
+        {}
+
+        MassConveter(const ValueType aValue):
+            ParentClass(aValue),
+            Grams(*this)
+        {}
+
+        MassConveter(const MassConveter& aOther):
+            ParentClass(aOther.Get()),
+            Grams(*this)
+        {}
+
+        MassConveter(MassConveter&& aOther):
+            ParentClass(aOther.Get()),
+            Grams(*this)
+        {}
+
+        // Inherited from UnitConverter
+
+        ValueType ConvertToIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
+            return StaticConvertToIntermediaryUnit(aUnit, aValue);
+        }
+
+        ValueType ConvertFromIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
+            return ConvertFromIntermediateUnit(aUnit, aValue);
+        }
     public:
 		union{
 			MassProperty<UnitType::GRAM>								    Grams;
@@ -65,10 +95,10 @@ namespace Solaire{ namespace Units{
 		};
 	};
 
-	typedef Mass<double> MassD;		//!< A Mass value that is a double.
-	typedef Mass<float> MassF;		//!< A Mass value that is a float.
-	typedef Mass<int32_t> MassI;	//!< A Mass value that is a signed 32 bit integer.
-	typedef Mass<uint32_t> MassU;	//!< A Mass value that is a unsigned 32 bit integer.
+	typedef MassConveter<double> MassConveterD;		//!< A Mass value that is a double.
+	typedef MassConveter<float> MassConveterF;		//!< A Mass value that is a float.
+	typedef MassConveter<int32_t> MassConveterI;	//!< A Mass value that is a signed 32 bit integer.
+	typedef MassConveter<uint32_t> MassConveterU;	//!< A Mass value that is a unsigned 32 bit integer.
 }}
 
 
