@@ -39,20 +39,19 @@ namespace Solaire{ namespace Json{
     std::shared_ptr<Value> RpcResponse::Serialise(const RpcResponse& aResponse){
         Allocator& allocator = aResponse.GetAllocator();
 
-        std::shared_ptr<Value> value = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
-        ObjectValue& object = value->AsObject();
+        std::shared_ptr<Value> response = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
 
-        object.Add("jsonrpc", allocator, "2.0");
+        response->Object.Add("jsonrpc", allocator, "2.0");
         if(aResponse.mResult){
-            object.Add("result", aResponse.mResult);
+            response->Object.Add("result", aResponse.mResult);
         }else if(aResponse.mError){
-            object.Add("error", RpcError::Serialise(*aResponse.mError));
+            response->Object.Add("error", RpcError::Serialise(*aResponse.mError));
         }else{
-            object.Add("result", allocator, TYPE_NULL);
+            response->Object.Add("result", allocator, TYPE_NULL);
         }
-        object.Add("id", allocator, aResponse.mID);
+        response->Object.Add("id", allocator, aResponse.mID);
 
-        return value;
+        return response;
     }
 
     RpcResponse::RpcResponse(Allocator& aAllocator):

@@ -37,6 +37,7 @@ Last Modified	: 4th October 2015
 #include "..\Core\Strings\String.hpp"
 #include "..\Core\Strings\NumberParser.hpp"
 #include "..\Core\Iterators\DereferenceIterator.hpp"
+#include "..\Core\Property.hpp"
 
 namespace Solaire{ namespace Json{
 
@@ -222,15 +223,6 @@ namespace Solaire{ namespace Json{
             ArrayType* mDataArray;
             ObjectType* mDataObject;
         };
-
-        union{
-            NullValue mValueNull;
-            BoolValue mValueBool;
-            NumberValue mValueNumber;
-            StringValue mValueString;
-            ArrayValue mValueArray;
-            ObjectValue mValueObject;
-        };
         TypeID mType;
     private:
         static bool InternalSerialise(const std::function<void(char)>& aSetFn, const std::function<void(void)>& aForwardFn, const std::function<void(void)>& aBackwardFn, const Value& aValue);
@@ -289,19 +281,14 @@ namespace Solaire{ namespace Json{
 
         TypeID GetType() const;
 
-        NullValue& AsNull();
-        BoolValue& AsBool();
-        NumberValue& AsNumber();
-        StringValue& AsString();
-        ArrayValue& AsArray();
-        ObjectValue& AsObject();
-
-        const NullValue& AsNull() const;
-        const BoolValue& AsBool() const;
-        const NumberValue& AsNumber() const;
-        const StringValue& AsString() const;
-        const ArrayValue& AsArray() const;
-        const ObjectValue& AsObject() const;
+        union{
+            NullValue Null;
+            BoolValue Bool;
+            NumberValue Number;
+            StringValue String_;
+            ArrayValue Array;
+            ObjectValue Object;
+        };
 
         Allocator& GetAllocator() const;
     };

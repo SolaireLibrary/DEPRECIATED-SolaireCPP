@@ -38,23 +38,22 @@ namespace Solaire{ namespace Json{
     std::shared_ptr<Value> RpcError::Serialise(const RpcError& aError){
         Allocator& allocator = aError.GetAllocator();
 
-        std::shared_ptr<Value> value = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
-        ObjectValue& object = value->AsObject();
+        std::shared_ptr<Value> error = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
 
-        object.Add("code", allocator, aError.mCode);
+        error->Object.Add("code", allocator, aError.mCode);
         if(aError.mMessage.Size() > 0){
-            object.Add("message", allocator, aError.mMessage);
+            error->Object.Add("message", allocator, aError.mMessage);
         }else{
-            object.Add("message",allocator, TYPE_NULL);
+            error->Object.Add("message",allocator, TYPE_NULL);
         }
 
         if(aError.mData){
-            object.Add("data", aError.mData);
+            error->Object.Add("data", aError.mData);
         }else{
-            object.Add("message", allocator, TYPE_NULL);
+            error->Object.Add("message", allocator, TYPE_NULL);
         }
 
-        return value;
+        return error;
     }
 
 

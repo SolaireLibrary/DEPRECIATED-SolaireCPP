@@ -51,7 +51,7 @@ namespace Solaire{
         }
     };
 
-    template<class Type, class ConstReturnType, class Parent, Type Parent::* const Member>
+    template<class Type, class ReturnType, class Parent, Type Parent::* const Member>
     class WriteValueProperty{
     private:
         WriteValueProperty(const WriteValueProperty&) = delete;
@@ -65,8 +65,8 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        ConstReturnType operator=(ConstReturnType aValue){
-            return mParent.*Member = aValue;
+        operator ReturnType(){
+            return mParent.*Member;
         }
     };
 
@@ -90,10 +90,6 @@ namespace Solaire{
 
         operator ConstReturnType() const{
             return mParent.*Member;
-        }
-
-        ReturnType operator=(ConstReturnType aValue){
-            return mParent.*Member = aValue;
         }
     };
 

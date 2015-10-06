@@ -40,24 +40,23 @@ namespace Solaire{ namespace Json{
 
         Allocator& allocator = aRequest.GetAllocator();
 
-        std::shared_ptr<Value> ptr = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
-        ObjectValue& request = ptr->AsObject();
+        std::shared_ptr<Value> request = allocator.SharedAllocate<Value>(allocator, TYPE_OBJECT);
 
-        request.Add("jsonrpc", allocator, "2.0");
-        request.Add("method", allocator, aRequest.mMethodName);
+        request->Object.Add("jsonrpc", allocator, "2.0");
+        request->Object.Add("method", allocator, aRequest.mMethodName);
         if(aRequest.mParams){
-            request.Add("params", aRequest.mParams);
+            request->Object.Add("params", aRequest.mParams);
         }else{
-            request.Add("params", allocator, TYPE_NULL);
+            request->Object.Add("params", allocator, TYPE_NULL);
         }
 
         if(aRequest.mID == RPC_NOTIFICATION_ID){
-            request.Add("id", allocator, TYPE_NULL);
+            request->Object.Add("id", allocator, TYPE_NULL);
         }else{
-            request.Add("id", allocator, aRequest.mID);
+            request->Object.Add("id", allocator, aRequest.mID);
         }
 
-        return ptr;
+        return request;
     }
 
     RpcRequest::RpcRequest(Allocator& aAllocator):

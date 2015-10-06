@@ -646,7 +646,6 @@ namespace Solaire{ namespace Json{
         STATE_ARRAY:
         {
             std::shared_ptr<Value> value = aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_ARRAY);
-            ArrayValue& array_ = value->AsArray();
             aForwardFn();
             goto STATE_ARRAY_MEMEBER;
 
@@ -662,7 +661,7 @@ namespace Solaire{ namespace Json{
             default:
                 std::shared_ptr<Value> member = InternalDeserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
                 if(! member) goto STATE_FAIL;
-                array_.PushBack(member);
+                value->Array.PushBack(member);
                 aForwardFn();
                 goto STATE_ARRAY_SEPERATE_MEMEBER;
             }
@@ -694,7 +693,6 @@ namespace Solaire{ namespace Json{
             char nameBuf[64];
             char* nameEnd  = nameBuf;
             std::shared_ptr<Value> value = aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_OBJECT);
-            ObjectValue& object = value->AsObject();
             aForwardFn();
             goto STATE_OBJECT_NAME;
 
@@ -766,7 +764,7 @@ namespace Solaire{ namespace Json{
             default:
                 std::shared_ptr<Value> member = InternalDeserialise(aGetFn, aForwardFn, aBackwardFn, aParseAllocator, aDataAllocator);
                 if(! member) goto STATE_FAIL;
-                object.Add(ConstStringFragment(nameBuf, nameEnd), member);
+                value->Object.Add(ConstStringFragment(nameBuf, nameEnd), member);
                 nameEnd = nameBuf;
                 goto STATE_OBJECT_SEPERATE_MEMEBER;
             }
@@ -852,20 +850,20 @@ namespace Solaire{ namespace Json{
     Value::Value(Value&& aOther):
         mAllocator(aOther.mAllocator),
         mType(TYPE_NULL),
-        mValueNull(this)
+        Null(this)
     {
         operator=(std::move(aOther));
     }
 
     Value::Value(Allocator& aAllocator):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mType(TYPE_NULL)
     {}
 
     Value::Value(Allocator& aAllocator, const TypeID aType):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mType(TYPE_NULL)
     {
         operator=(aType);
@@ -873,84 +871,84 @@ namespace Solaire{ namespace Json{
 
     Value::Value(Allocator& aAllocator, const bool aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataBool(aValue),
         mType(TYPE_BOOL)
     {}
 
     Value::Value(Allocator& aAllocator, const uint8_t aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataNumber(static_cast<double>(aValue)),
         mType(TYPE_NUMBER)
     {}
 
     Value::Value(Allocator& aAllocator, const uint16_t aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataNumber(static_cast<double>(aValue)),
         mType(TYPE_NUMBER)
     {}
 
     Value::Value(Allocator& aAllocator, const uint32_t aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataNumber(static_cast<double>(aValue)),
         mType(TYPE_NUMBER)
     {}
 
     Value::Value(Allocator& aAllocator, const uint64_t aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataNumber(static_cast<double>(aValue)),
         mType(TYPE_NUMBER)
     {}
 
     Value::Value(Allocator& aAllocator, const int8_t aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataNumber(static_cast<double>(aValue)),
         mType(TYPE_NUMBER)
     {}
 
     Value::Value(Allocator& aAllocator, const int16_t aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataNumber(static_cast<double>(aValue)),
         mType(TYPE_NUMBER)
     {}
 
     Value::Value(Allocator& aAllocator, const int32_t aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataNumber(static_cast<double>(aValue)),
         mType(TYPE_NUMBER)
     {}
 
     Value::Value(Allocator& aAllocator, const int64_t aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataNumber(static_cast<double>(aValue)),
         mType(TYPE_NUMBER)
     {}
 
     Value::Value(Allocator& aAllocator, const float aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataNumber(static_cast<double>(aValue)),
         mType(TYPE_NUMBER)
     {}
 
     Value::Value(Allocator& aAllocator, const double aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mDataNumber(aValue),
         mType(TYPE_NUMBER)
     {}
 
     Value::Value(Allocator& aAllocator, const ConstStringFragment aValue):
         mAllocator(&aAllocator),
-        mValueNull(this),
+        Null(this),
         mType(TYPE_NULL)
     {
         operator=(TYPE_STRING);
@@ -1036,54 +1034,6 @@ namespace Solaire{ namespace Json{
 
     TypeID Value::GetType() const{
         return mType;
-    }
-
-    NullValue& Value::AsNull(){
-        return mValueNull;
-    }
-
-    BoolValue& Value::AsBool(){
-        return mValueBool;
-    }
-
-    NumberValue& Value::AsNumber(){
-        return mValueNumber;
-    }
-
-    StringValue& Value::AsString(){
-        return mValueString;
-    }
-
-    ArrayValue& Value::AsArray(){
-        return mValueArray;
-    }
-
-    ObjectValue& Value::AsObject(){
-        return mValueObject;
-    }
-
-    const NullValue& Value::AsNull() const{
-        return mValueNull;
-    }
-
-    const BoolValue& Value::AsBool() const{
-        return mValueBool;
-    }
-
-    const NumberValue& Value::AsNumber() const{
-        return mValueNumber;
-    }
-
-    const StringValue& Value::AsString() const{
-        return mValueString;
-    }
-
-    const ArrayValue& Value::AsArray() const{
-        return mValueArray;
-    }
-
-    const ObjectValue& Value::AsObject() const{
-        return mValueObject;
     }
 
     Allocator& Value::GetAllocator() const{

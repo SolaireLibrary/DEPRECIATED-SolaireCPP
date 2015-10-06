@@ -64,8 +64,7 @@ namespace Solaire{ namespace Json{
             Allocator& allocator = GetAllocator();
 
             std::shared_ptr<Value> results = allocator.SharedAllocate<Value>(allocator, TYPE_ARRAY);
-            ArrayValue& array_ = results->AsArray();
-            array_.PushBack(JsonSerialise(allocator, allocator, aParams...));
+            results->Array.PushBack(JsonSerialise(allocator, allocator, aParams...));
 
             SendResponse(aID, results);
         }
