@@ -23,7 +23,7 @@
 #include "Metric.hpp"
 #include "Volume.inl"
 
-namespace Solaire{ namespace Units{
+namespace Solaire{
 
 	template<class VALUE>
 	class VolumeConverter : public MetricPrefixConverter<VolumeInl::VolumeUnit, VALUE, VolumeInl::INTERMEDIARY_UNIT>
@@ -103,6 +103,6 @@ namespace Solaire{ namespace Units{
 	typedef VolumeConverter<float> VolumeConverterF;		//!< A volume value that is a float.
 	typedef VolumeConverter<int32_t> VolumeConverterI;	    //!< A volume value that is a signed 32 bit integer.
 	typedef VolumeConverter<uint32_t> VolumeConverterU;	    //!< A volume value that is a unsigned 32 bit integer.
-}}
+}
 
 #endif

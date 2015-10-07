@@ -21,7 +21,7 @@
 
 #include <stdexcept>
 
-namespace Solaire{ namespace Units{ namespace DigitalInl{
+namespace Solaire{ namespace DigitalInl{
 
 	enum class DigitalUnit{
 		BIT,
@@ -30,7 +30,7 @@ namespace Solaire{ namespace Units{ namespace DigitalInl{
 	};
 
 	static constexpr DigitalUnit INTERMEDIARY_UNIT = DigitalUnit::BYTE;
-	
+
 	static constexpr double SCALE_BYTE	 			= 1.0;
 	static constexpr double SCALE_NYBBLE	 		= SCALE_BYTE * 2.0;
 	static constexpr double SCALE_BIT	 			= SCALE_BYTE * 8.0;
@@ -43,7 +43,7 @@ namespace Solaire{ namespace Units{ namespace DigitalInl{
 			aUnit == DigitalUnit::BYTE		? SCALE_BYTE :
 											0.0;
 	}
-}}}
+}}
 
 
 #endif

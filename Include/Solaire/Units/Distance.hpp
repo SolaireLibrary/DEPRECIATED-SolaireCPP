@@ -23,7 +23,7 @@
 #include "Metric.hpp"
 #include "Distance.inl"
 
-namespace Solaire{ namespace Units{
+namespace Solaire{
 	template<class VALUE>
 	class DistanceConverter : public MetricPrefixConverter<DistanceInl::DistanceUnit, VALUE, DistanceInl::INTERMEDIARY_UNIT>
 	{
@@ -106,7 +106,7 @@ namespace Solaire{ namespace Units{
 	typedef DistanceConverter<float> DistanceConverterF;		//!< A Distance value that is a float.
 	typedef DistanceConverter<int32_t> DistanceConverterI;	    //!< A Distance value that is a signed 32 bit integer.
 	typedef DistanceConverter<uint32_t> DistanceConverterU;	    //!< A Distance value that is a unsigned 32 bit integer.
-}}
+}
 
 
 #endif

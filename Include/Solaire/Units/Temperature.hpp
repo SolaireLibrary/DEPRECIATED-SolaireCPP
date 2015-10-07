@@ -23,7 +23,7 @@
 #include "Metric.hpp"
 #include "Temperature.inl"
 
-namespace Solaire{ namespace Units{
+namespace Solaire{
 
 	template<class VALUE>
 	class TemperatureConverter : public MetricPrefixConverter<TemperatureInl::TemperatureUnit, VALUE, TemperatureInl::INTERMEDIARY_UNIT>
@@ -83,7 +83,7 @@ namespace Solaire{ namespace Units{
 			TemperatureProperty<UnitType::CELCIUS>		    Celcius;
 			TemperatureProperty<UnitType::FAHRENHEIT>		Fahrenheit;
 			TemperatureProperty<UnitType::KELVIN>			Kelvin;
-			TemperatureProperty<UnitType::GAS_MARK>		GasMark;
+			TemperatureProperty<UnitType::GAS_MARK>		    GasMark;
 		};
 	};
 
@@ -91,7 +91,7 @@ namespace Solaire{ namespace Units{
 	typedef TemperatureConverter<float> TemperatureConverterF;		//!< A Temperature value that is a float.
 	typedef TemperatureConverter<int32_t> TemperatureConverterI;	//!< A Temperature value that is a signed 32 bit integer.
 	typedef TemperatureConverter<uint32_t> TemperatureConverterU;	//!< A Temperature value that is a unsigned 32 bit integer.
-}}
+}
 
 
 #endif
