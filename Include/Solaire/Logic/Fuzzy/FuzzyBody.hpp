@@ -44,7 +44,7 @@ namespace Solaire {namespace Fuzzy{
 
     class FInput : public FBody{
     private:
-        String mName;
+        const String mName;
     public:
         FInput(String aName):
             mName(aName)
@@ -53,6 +53,20 @@ namespace Solaire {namespace Fuzzy{
         // Inherited from FBody
         float Execute(const Fuzzifier& aInputs) const override{
             return aInputs.GetInputValue(mName);
+        }
+    };
+
+    class FConstant : public FBody{
+    private:
+        const float mValue;
+    public:
+        FConstant(float aValue):
+            mValue(aValue)
+        {}
+
+        // Inherited from FBody
+        float Execute(const Fuzzifier& aInputs) const override{
+            return mValue;
         }
     };
 

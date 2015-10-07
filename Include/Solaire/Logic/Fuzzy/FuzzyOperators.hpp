@@ -35,42 +35,74 @@ Last Modified	: 7th October 2015
 
 namespace Solaire {namespace Fuzzy{
 
-
-    class FAnd : public FBinary{
+    template<const char Sign>
+    class FUnaryOperator : public FUnary{
     public:
-        FAnd(std::shared_ptr<const FBody> aLeft, std::shared_ptr<const FBody> aRight):
-            FBinary(aLeft, aRight)
-        {}
-
-        // Inherited from FBody
-        float Execute(const Fuzzifier& aInputs) const override{
-            return std::min<float>(mLeft->Execute(aInputs), mRight->Execute(aInputs));
-        }
-    };
-
-    class FOr : public FBinary{
-    public:
-        FOr(std::shared_ptr<const FBody> aLeft, std::shared_ptr<const FBody> aRight):
-            FBinary(aLeft, aRight)
-        {}
-
-        // Inherited from FBody
-        float Execute(const Fuzzifier& aInputs) const override{
-            return std::max<float>(mLeft->Execute(aInputs), mRight->Execute(aInputs));
-        }
-    };
-
-    class FBracket : public FUnary{
-    public:
-        FBracket(std::shared_ptr<const FBody> aChild):
+        FUnaryOperator(std::shared_ptr<const FBody> aChild):
             FUnary(aChild)
         {}
 
+        template<const char S = Sign, typename std::enable_if<S == '!', int>::type = 0>
+        float OperatorExecute(const Fuzzifier& aInputs) const{
+            return 1.f - mChild->Execute(aInputs);
+        }
+
         // Inherited from FBody
         float Execute(const Fuzzifier& aInputs) const override{
-            return mChild->Execute(aInputs);
+            return OperatorExecute<Sign>(aInputs);
         }
     };
+
+    template<const char Sign>
+    class FBinaryOperator : public FBinary{
+    public:
+        FBinaryOperator(std::shared_ptr<const FBody> aLeft, std::shared_ptr<const FBody> aRight):
+            FBinary(aLeft, aRight)
+        {}
+
+        template<const char S = Sign, typename std::enable_if<S == '+', int>::type = 0>
+        float OperatorExecute(const Fuzzifier& aInputs) const{
+            return mLeft->Execute(aInputs) + mRight->Execute(aInputs);
+        }
+
+        template<const char S = Sign, typename std::enable_if<S == '-', int>::type = 0>
+        float OperatorExecute(const Fuzzifier& aInputs) const{
+            return mLeft->Execute(aInputs) - mRight->Execute(aInputs);
+        }
+
+        template<const char S = Sign, typename std::enable_if<S == '*', int>::type = 0>
+        float OperatorExecute(const Fuzzifier& aInputs) const{
+            return mLeft->Execute(aInputs) * mRight->Execute(aInputs);
+        }
+
+        template<const char S = Sign, typename std::enable_if<S == '/', int>::type = 0>
+        float OperatorExecute(const Fuzzifier& aInputs) const{
+            return mLeft->Execute(aInputs) / mRight->Execute(aInputs);
+        }
+
+        template<const char S = Sign, typename std::enable_if<S == '&', int>::type = 0>
+        float OperatorExecute(const Fuzzifier& aInputs) const{
+            return std::min(mLeft->Execute(aInputs), mRight->Execute(aInputs));
+        }
+
+        template<const char S = Sign, typename std::enable_if<S == '|', int>::type = 0>
+        float OperatorExecute(const Fuzzifier& aInputs) const{
+            return std::max(mLeft->Execute(aInputs), mRight->Execute(aInputs));
+        }
+
+        // Inherited from FBody
+        float Execute(const Fuzzifier& aInputs) const override{
+            return OperatorExecute<Sign>(aInputs);
+        }
+    };
+
+    typedef FUnaryOperator<'!'> OperatorNot;
+    typedef FBinaryOperator<'+'> OperatorAdd;
+    typedef FBinaryOperator<'-'> OperatorSubtract;
+    typedef FBinaryOperator<'*'> OperatorMultiply;
+    typedef FBinaryOperator<'/'> OperatorDivide;
+    typedef FBinaryOperator<'&'> OperatorAnd;
+    typedef FBinaryOperator<'|'> OperatorOr;
 }}
 
 #endif
