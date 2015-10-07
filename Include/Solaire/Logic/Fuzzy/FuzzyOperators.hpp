@@ -103,7 +103,7 @@ namespace Solaire {namespace Fuzzy{
 
     template<>
     constexpr int OperatorPrecedence<OPERATOR_NOT>(){
-        return 1;
+        return 2;
     }
 
     template<>
@@ -165,18 +165,6 @@ namespace Solaire {namespace Fuzzy{
     class FBinaryOperator : public FBinary{
     public:
         static constexpr int SIGN = Sign;
-
-        template<class Iterator>
-        static float PreCalculateConstantChain(Iterator aBegin, const Iterator aEnd){
-            float value = *aBegin;
-            ++ aBegin;
-            while(aBegin != aEnd){
-                value = OperatorExecute<Sign>(value, *aBegin);
-                ++aBegin;
-            }
-
-            return value;
-        }
 
         FBinaryOperator(std::shared_ptr<const FBody> aLeft, std::shared_ptr<const FBody> aRight):
             FBinary(aLeft, aRight)
