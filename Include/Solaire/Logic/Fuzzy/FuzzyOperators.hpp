@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_LOGIC_FUZZY_BODY_HPP
-#define SOLAIRE_LOGIC_FUZZY_BODY_HPP
+#ifndef SOLAIRE_LOGIC_FUZZY_OPERATORS_HPP
+#define SOLAIRE_LOGIC_FUZZY_OPERATORS_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file FuzzyBody.hpp
+\file FuzzyOperators.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -31,56 +31,44 @@ Created			: 7th October 2015
 Last Modified	: 7th October 2015
 */
 
-#include "Fuzzifier.hpp"
+#include "FuzzyBody.hpp"
 
 namespace Solaire {namespace Fuzzy{
 
-    class FBody{
-    public:
-        virtual ~FBody(){}
 
-        virtual float Execute(const Fuzzifier& aInputs) const = 0;
-    };
-
-    class FInput : public FBody{
-    private:
-        String mName;
+    class FAnd : public FBinary{
     public:
-        FInput(String aName):
-            mName(aName)
+        FAnd(std::shared_ptr<const FBody> aLeft, std::shared_ptr<const FBody> aRight):
+            FBinary(aLeft, aRight)
         {}
 
         // Inherited from FBody
         float Execute(const Fuzzifier& aInputs) const override{
-            return aInputs.GetInputValue(mName);
+            return std::min<float>(mLeft->Execute(aInputs), mRight->Execute(aInputs));
         }
     };
 
-    class FUnary : public FBody{
-    protected:
-        std::shared_ptr<const FBody> mChild;
+    class FOr : public FBinary{
     public:
-        FUnary(std::shared_ptr<const FBody> aChild):
-            mChild(aChild)
+        FOr(std::shared_ptr<const FBody> aLeft, std::shared_ptr<const FBody> aRight):
+            FBinary(aLeft, aRight)
         {}
 
-        virtual ~FUnary(){
-
+        // Inherited from FBody
+        float Execute(const Fuzzifier& aInputs) const override{
+            return std::max<float>(mLeft->Execute(aInputs), mRight->Execute(aInputs));
         }
     };
 
-    class FBinary : public FBody{
-    protected:
-        std::shared_ptr<const FBody> mLeft;
-        std::shared_ptr<const FBody> mRight;
+    class FBracket : public FUnary{
     public:
-        FBinary(std::shared_ptr<const FBody> aLeft, std::shared_ptr<const FBody> aRight):
-            mLeft(aLeft),
-            mRight(aRight)
+        FBracket(std::shared_ptr<const FBody> aChild):
+            FUnary(aChild)
         {}
 
-        virtual ~FBinary(){
-
+        // Inherited from FBody
+        float Execute(const Fuzzifier& aInputs) const override{
+            return mChild->Execute(aInputs);
         }
     };
 }}

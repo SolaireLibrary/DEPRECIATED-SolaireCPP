@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_LOGIC_FUZZY_BODY_HPP
-#define SOLAIRE_LOGIC_FUZZY_BODY_HPP
+#ifndef SOLAIRE_LOGIC_FUZZY_MEMBERSHIP_HPP
+#define SOLAIRE_LOGIC_FUZZY_MEMBERSHIP_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file FuzzyBody.hpp
+\file FuzzyMembership.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -31,56 +31,29 @@ Created			: 7th October 2015
 Last Modified	: 7th October 2015
 */
 
-#include "Fuzzifier.hpp"
+#include "FuzzyBody.hpp"
 
 namespace Solaire {namespace Fuzzy{
 
-    class FBody{
+    class FMembership{
     public:
-        virtual ~FBody(){}
+        virtual ~FMembership(){}
 
-        virtual float Execute(const Fuzzifier& aInputs) const = 0;
+        virtual float CalculateMembership(float aInput) const = 0;
     };
 
-    class FInput : public FBody{
+    class FMembershipBody : public FUnary{
     private:
-        String mName;
+        std::shared_ptr<const FMembership> mMembership;
     public:
-        FInput(String aName):
-            mName(aName)
+        FMembershipBody(std::shared_ptr<const FMembership> aMembership, std::shared_ptr<const FBody> aChild):
+            FUnary(aChild),
+            mMembership(aMembership)
         {}
 
         // Inherited from FBody
         float Execute(const Fuzzifier& aInputs) const override{
-            return aInputs.GetInputValue(mName);
-        }
-    };
-
-    class FUnary : public FBody{
-    protected:
-        std::shared_ptr<const FBody> mChild;
-    public:
-        FUnary(std::shared_ptr<const FBody> aChild):
-            mChild(aChild)
-        {}
-
-        virtual ~FUnary(){
-
-        }
-    };
-
-    class FBinary : public FBody{
-    protected:
-        std::shared_ptr<const FBody> mLeft;
-        std::shared_ptr<const FBody> mRight;
-    public:
-        FBinary(std::shared_ptr<const FBody> aLeft, std::shared_ptr<const FBody> aRight):
-            mLeft(aLeft),
-            mRight(aRight)
-        {}
-
-        virtual ~FBinary(){
-
+            return mMembership->CalculateMembership(mChild->Execute(aInputs));
         }
     };
 }}
