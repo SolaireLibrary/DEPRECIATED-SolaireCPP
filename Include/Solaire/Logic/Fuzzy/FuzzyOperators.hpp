@@ -34,6 +34,13 @@ Last Modified	: 7th October 2015
 #include "FuzzyBody.hpp"
 
 namespace Solaire {namespace Fuzzy{
+    template<const char Sign>
+    static constexpr float OperatorExecute(const float aValue) = delete;
+
+    template<>
+    constexpr float OperatorExecute<'!'>(const float aValue){
+        return 1.f - aValue;
+    }
 
     template<const char Sign>
     class FUnaryOperator : public FUnary{
@@ -42,16 +49,54 @@ namespace Solaire {namespace Fuzzy{
             FUnary(aChild)
         {}
 
-        template<const char S = Sign, typename std::enable_if<S == '!', int>::type = 0>
-        float OperatorExecute(const Fuzzifier& aInputs) const{
-            return 1.f - mChild->Execute(aInputs);
-        }
-
         // Inherited from FBody
         float Execute(const Fuzzifier& aInputs) const override{
-            return OperatorExecute<Sign>(aInputs);
+            return OperatorExecute<Sign>(mChild->Execute(aInputs));
         }
     };
+
+    template<const char Sign>
+    static constexpr float OperatorExecute(const float aLeft, const float aRight) = delete;
+
+    template<>
+    constexpr float OperatorExecute<'+'>(const float aLeft, const float aRight){
+        return aLeft + aRight;
+    }
+
+    template<>
+    constexpr float OperatorExecute<'-'>(const float aLeft, const float aRight){
+        return aLeft - aRight;
+    }
+
+    template<>
+    constexpr float OperatorExecute<'*'>(const float aLeft, const float aRight){
+        return aLeft * aRight;
+    }
+
+    template<>
+    constexpr float OperatorExecute<'/'>(const float aLeft, const float aRight){
+        return aLeft / aRight;
+    }
+
+    template<>
+    constexpr float OperatorExecute<'&'>(const float aLeft, const float aRight){
+        return aLeft < aRight ? aLeft : aRight;
+    }
+
+    template<>
+    constexpr float OperatorExecute<'|'>(const float aLeft, const float aRight){
+        return aLeft >  aRight ? aLeft : aRight;
+    }
+
+    template<>
+    constexpr float OperatorExecute<'<'>(const float aLeft, const float aRight){
+        return aLeft - aRight;
+    }
+
+    template<>
+    constexpr float OperatorExecute<'>'>(const float aLeft, const float aRight){
+        return aRight - aLeft;
+    }
 
     template<const char Sign>
     class FBinaryOperator : public FBinary{
@@ -60,39 +105,9 @@ namespace Solaire {namespace Fuzzy{
             FBinary(aLeft, aRight)
         {}
 
-        template<const char S = Sign, typename std::enable_if<S == '+', int>::type = 0>
-        float OperatorExecute(const Fuzzifier& aInputs) const{
-            return mLeft->Execute(aInputs) + mRight->Execute(aInputs);
-        }
-
-        template<const char S = Sign, typename std::enable_if<S == '-', int>::type = 0>
-        float OperatorExecute(const Fuzzifier& aInputs) const{
-            return mLeft->Execute(aInputs) - mRight->Execute(aInputs);
-        }
-
-        template<const char S = Sign, typename std::enable_if<S == '*', int>::type = 0>
-        float OperatorExecute(const Fuzzifier& aInputs) const{
-            return mLeft->Execute(aInputs) * mRight->Execute(aInputs);
-        }
-
-        template<const char S = Sign, typename std::enable_if<S == '/', int>::type = 0>
-        float OperatorExecute(const Fuzzifier& aInputs) const{
-            return mLeft->Execute(aInputs) / mRight->Execute(aInputs);
-        }
-
-        template<const char S = Sign, typename std::enable_if<S == '&', int>::type = 0>
-        float OperatorExecute(const Fuzzifier& aInputs) const{
-            return std::min(mLeft->Execute(aInputs), mRight->Execute(aInputs));
-        }
-
-        template<const char S = Sign, typename std::enable_if<S == '|', int>::type = 0>
-        float OperatorExecute(const Fuzzifier& aInputs) const{
-            return std::max(mLeft->Execute(aInputs), mRight->Execute(aInputs));
-        }
-
         // Inherited from FBody
         float Execute(const Fuzzifier& aInputs) const override{
-            return OperatorExecute<Sign>(aInputs);
+            return OperatorExecute<Sign>(mLeft->Execute(aInputs), mRight->Execute(aInputs));
         }
     };
 
@@ -103,6 +118,8 @@ namespace Solaire {namespace Fuzzy{
     typedef FBinaryOperator<'/'> OperatorDivide;
     typedef FBinaryOperator<'&'> OperatorAnd;
     typedef FBinaryOperator<'|'> OperatorOr;
+    typedef FBinaryOperator<'<'> OperatorLessThan;
+    typedef FBinaryOperator<'>'> OperatorGreaterThan;
 }}
 
 #endif
