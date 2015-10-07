@@ -27,103 +27,84 @@
 
 namespace Solaire{ namespace Units{
 
-	template<class CONVERSION = double>
-	class Volume
+	template<class VALUE>
+	class VolumeConverter : public MetricPrefixConverter<VolumeInl::VolumeUnit, VALUE, VolumeInl::INTERMEDIARY_UNIT>
 	{
 	public:
-		typedef VolumeInl::VolumeUnit unit_t;
-		typedef CONVERSION conversion_t;
-		typedef typename MetricD::unit_t prefix_t;
-	private:
-		conversion_t mValue;
+ typedef MetricPrefixConverter<VolumeInl::VolumeUnit, VALUE, VolumeInl::INTERMEDIARY_UNIT> ParentClass;
+        typedef typename ParentClass::PrefixType PrefixType;
+        typedef typename ParentClass::UnitType UnitType;
+        typedef typename ParentClass::ValueType ValueType;
+        typedef MetricConverter<ValueType> PrefixConverterType;
 
-		static constexpr conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
-			return static_cast<conversion_t>(static_cast<double>(aValue) / VolumeInl::GetScale(aUnit));
-		}
+	    template<const UnitType CONVERSION>
+	    using VolumeProperty = UnitConverterProperty<VolumeConverter<ValueType>, CONVERSION>;
 
-		static constexpr conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
-			return static_cast<conversion_t>(static_cast<double>(aValue) * VolumeInl::GetScale(aUnit));
-		}
+	    template<const PrefixType PREFIX, const UnitType CONVERSION>
+        using VolumePrefixProperty = PrefixConverterProperty<VolumeConverter<ValueType>, PREFIX, CONVERSION>;
 	public:
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
+		static constexpr ValueType StaticConvertToIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
+			return static_cast<ValueType>(static_cast<double>(aValue) / VolumeInl::GetScale(aUnit));
+		}
+
+		static constexpr ValueType StaticConvertFromIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
+			return static_cast<ValueType>(static_cast<double>(aValue) * VolumeInl::GetScale(aUnit));
+		}
+    public:
+        VolumeConverter():
+            ParentClass(static_cast<ValueType>(0)),
+            Litres(*this)
+        {}
+
+        VolumeConverter(const ValueType aValue):
+            ParentClass(aValue),
+            Litres(*this)
+        {}
+
+        VolumeConverter(const VolumeConverter& aOther):
+            ParentClass(aOther.Get()),
+            Litres(*this)
+        {}
+
+        VolumeConverter(VolumeConverter&& aOther):
+            ParentClass(aOther.Get()),
+            Litres(*this)
+        {}
+
+        // Inherited from UnitConverter
+
+        ValueType ConvertToIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
+            return StaticConvertToIntermediaryUnit(aUnit, aValue);
+        }
+
+        ValueType ConvertFromIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
+            return ConvertFromIntermediateUnit(aUnit, aValue);
+        }
+	public:
 		union{
-			Volume* const Self;
-			ConverterProperty<Volume, unit_t::LITRE>							Litres;
-			ConverterProperty<Volume, unit_t::PINT_UK>							PintsUK;
-			ConverterProperty<Volume, unit_t::PINT_US>							PintsUS;
-			ConverterProperty<Volume, unit_t::GALLON_UK>						GallonsUK;
-			ConverterProperty<Volume, unit_t::GALLON_US>						GallonsUS;
-			ConverterProperty<Volume, unit_t::CUP_US>							CupsUS;
-			ConverterProperty<Volume, unit_t::OUNCE_UK>							FluidOuncesUK;
-			ConverterProperty<Volume, unit_t::OUNCE_US>							FluidOuncesUS;
-			ConverterProperty<Volume, unit_t::TABLE_SPOON_UK>					TableSpoonsUK;
-			ConverterProperty<Volume, unit_t::TABLE_SPOON_US>					TableSpoonsUS;
-			ConverterProperty<Volume, unit_t::TEA_SPOON_UK>						TeaSpoonsUK;
-			ConverterProperty<Volume, unit_t::TEA_SPOON_US>						TeaSpoonsUS;
-			ConverterProperty<Volume, unit_t::QUART_UK>							QuartsUK;
-			ConverterProperty<Volume, unit_t::QUART_US>							QuartsUS;
-			PrefixConverterProperty<Volume, prefix_t::CENTI, unit_t::LITRE>		Centilitres;
-			PrefixConverterProperty<Volume, prefix_t::MILLI, unit_t::LITRE>		Millilitres;
+			VolumeProperty<UnitType::LITRE>							    Litres;
+			VolumeProperty<UnitType::PINT_UK>							PintsUK;
+			VolumeProperty<UnitType::PINT_US>							PintsUS;
+			VolumeProperty<UnitType::GALLON_UK>						    GallonsUK;
+			VolumeProperty<UnitType::GALLON_US>						    GallonsUS;
+			VolumeProperty<UnitType::CUP_US>							CupsUS;
+			VolumeProperty<UnitType::OUNCE_UK>							FluidOuncesUK;
+			VolumeProperty<UnitType::OUNCE_US>							FluidOuncesUS;
+			VolumeProperty<UnitType::TABLE_SPOON_UK>					TableSpoonsUK;
+			VolumeProperty<UnitType::TABLE_SPOON_US>					TableSpoonsUS;
+			VolumeProperty<UnitType::TEA_SPOON_UK>						TeaSpoonsUK;
+			VolumeProperty<UnitType::TEA_SPOON_US>						TeaSpoonsUS;
+			VolumeProperty<UnitType::QUART_UK>							QuartsUK;
+			VolumeProperty<UnitType::QUART_US>							QuartsUS;
+			VolumePrefixProperty<PrefixType::CENTI, UnitType::LITRE>	Centilitres;
+			VolumePrefixProperty<PrefixType::MILLI, UnitType::LITRE>	Millilitres;
 		};
-#endif
-
-		static constexpr unit_t INTERMEDIARY_UNIT = VolumeInl::INTERMEDIARY_UNIT;
-
-		// Constructors
-
-		constexpr Volume() :
-			mValue(static_cast<conversion_t>(0.0))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Volume(const conversion_t aValue) :
-			mValue(aValue)
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Volume(const unit_t aUnit, const conversion_t aValue) :
-			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Volume(const prefix_t aPrefix, const unit_t aUnit, const conversion_t aValue) :
-			mValue(Convert(aPrefix, aUnit, MetricD::unit_t::NONE, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Volume(const Volume<conversion_t>& aOther) :
-			mValue(aOther.mValue)
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		SOLAIRE_UNITS_CONVERTER_COMMON(Volume<conversion_t>)
-		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Volume<conversion_t>, Metric<conversion_t>)
 	};
 
-	typedef Volume<double> VolumeD;		//!< A volume value that is a double.
-	typedef Volume<float> VolumeF;		//!< A volume value that is a float.
-	typedef Volume<int32_t> VolumeI;	//!< A volume value that is a signed 32 bit integer.
-	typedef Volume<uint32_t> VolumeU;	//!< A volume value that is a unsigned 32 bit integer.
+	typedef VolumeConverter<double> VolumeConverterD;		//!< A volume value that is a double.
+	typedef VolumeConverter<float> VolumeConverterF;		//!< A volume value that is a float.
+	typedef VolumeConverter<int32_t> VolumeConverterI;	    //!< A volume value that is a signed 32 bit integer.
+	typedef VolumeConverter<uint32_t> VolumeConverterU;	    //!< A volume value that is a unsigned 32 bit integer.
 }}
 
 #endif

@@ -24,7 +24,7 @@
 
 namespace Solaire{ namespace Units{
 	template<class VALUE>
-	class MassConveter : public MetricPrefixConverter<MassInl::MassUnit, VALUE, MassInl::INTERMEDIARY_UNIT>
+	class MassConverter : public MetricPrefixConverter<MassInl::MassUnit, VALUE, MassInl::INTERMEDIARY_UNIT>
 	{
 	public:
 	    typedef MetricPrefixConverter<MassInl::MassUnit, VALUE, MassInl::INTERMEDIARY_UNIT> ParentClass;
@@ -34,10 +34,10 @@ namespace Solaire{ namespace Units{
         typedef MetricConverter<ValueType> PrefixConverterType;
 
 	    template<const UnitType CONVERSION>
-	    using MassProperty = UnitConverterProperty<MassConveter<ValueType>, CONVERSION>;
+	    using MassProperty = UnitConverterProperty<MassConverter<ValueType>, CONVERSION>;
 
 	    template<const PrefixType PREFIX, const UnitType CONVERSION>
-        using MassPrefixProperty = PrefixConverterProperty<MassConveter<ValueType>, PREFIX, CONVERSION>;
+        using MassPrefixProperty = PrefixConverterProperty<MassConverter<ValueType>, PREFIX, CONVERSION>;
 	public:
 		static constexpr ValueType StaticConvertToIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
 			return static_cast<ValueType>(static_cast<double>(aValue) / MassInl::GetScale(aUnit));
@@ -47,22 +47,22 @@ namespace Solaire{ namespace Units{
 			return static_cast<ValueType>(static_cast<double>(aValue) * MassInl::GetScale(aUnit));
     }
     public:
-        MassConveter():
+        MassConverter():
             ParentClass(static_cast<ValueType>(0)),
             Grams(*this)
         {}
 
-        MassConveter(const ValueType aValue):
+        MassConverter(const ValueType aValue):
             ParentClass(aValue),
             Grams(*this)
         {}
 
-        MassConveter(const MassConveter& aOther):
+        MassConverter(const MassConverter& aOther):
             ParentClass(aOther.Get()),
             Grams(*this)
         {}
 
-        MassConveter(MassConveter&& aOther):
+        MassConverter(MassConverter&& aOther):
             ParentClass(aOther.Get()),
             Grams(*this)
         {}
@@ -95,10 +95,10 @@ namespace Solaire{ namespace Units{
 		};
 	};
 
-	typedef MassConveter<double> MassConveterD;		//!< A Mass value that is a double.
-	typedef MassConveter<float> MassConveterF;		//!< A Mass value that is a float.
-	typedef MassConveter<int32_t> MassConveterI;	//!< A Mass value that is a signed 32 bit integer.
-	typedef MassConveter<uint32_t> MassConveterU;	//!< A Mass value that is a unsigned 32 bit integer.
+	typedef MassConverter<double> MassConverterD;		//!< A Mass value that is a double.
+	typedef MassConverter<float> MassConverterF;		//!< A Mass value that is a float.
+	typedef MassConverter<int32_t> MassConverterI;	//!< A Mass value that is a signed 32 bit integer.
+	typedef MassConverter<uint32_t> MassConverterU;	//!< A Mass value that is a unsigned 32 bit integer.
 }}
 
 
