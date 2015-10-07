@@ -33,21 +33,11 @@ Last Modified	: 7th October 2015
 
 #include "Fuzzifier.hpp"
 #include "Defuzzifier.hpp"
+#include "FuzzyBody.hpp"
 
 namespace Solaire {namespace Fuzzy{
 
-    typedef std::map<String, float> FInputMap;
-    typedef std::map<String, DynamicArray<float>> FOutputBuffer;
-    typedef std::function<float(const DynamicArray<float>&)> FOutputCombiner;
-
-    class FBody{
-    public:
-        virtual ~FBody(){}
-
-        virtual float Execute(const FInputMap& aInputs) const = 0;
-    };
-
-    class FMembership{
+    /*class FMembership{
     public:
         virtual ~FMembership(){}
 
@@ -206,15 +196,18 @@ namespace Solaire {namespace Fuzzy{
         float Execute(const FInputMap& aInputs) const override{
             return mMembership->CalculateMembership(mChild->Execute(aInputs));
         }
-    };
+    };*/
 
-    class FScript{
+    typedef std::function<float(const float* const, const size_t)> FOutputCombiner;
+
+    class FScript : public Fuzzifier{
     private:
         typedef std::pair<String, std::shared_ptr<const FBody>> FLine;
         DynamicArray<FLine> mLines;
 
-        FInputMap mInputMap;
-        FOutputBuffer mOutputBuffer;
+
+        std::map<String, float> mInputMap;
+        std::map<String, DynamicArray<float>> mOutputBuffer;
 
         std::shared_ptr<const Fuzzifier> mFuzzifier;
         std::shared_ptr<Defuzzifier> mDefuzzifier;
@@ -235,6 +228,7 @@ namespace Solaire {namespace Fuzzy{
             for(size_t i = 0; i < count; ++i){
                 const ConstStringFragment name = mFuzzifier->GetInputName(i);
                 mInputMap.emplace(String(name, *mAllocator), 0.f);
+                mOutputBuffer.emplace(String(name, *mAllocator), DynamicArray<float>(16, *mAllocator));
             }
         }
 
@@ -252,16 +246,34 @@ namespace Solaire {namespace Fuzzy{
             }
 
             for(const FLine& line : mLines){
-                const float output = line.second->Execute(mInputMap);
+                const float output = line.second->Execute(*this);
                 DynamicArray<float>& buffer = mOutputBuffer.find(line.first)->second;
                 buffer.PushBack(output);
             }
 
             for(std::pair<const String, DynamicArray<float>>& buffer : mOutputBuffer){
                 if(buffer.second.IsEmpty()) buffer.second.PushBack(0.f);
-                mDefuzzifier->SetOutputValue(buffer.first, mOutputCombiner(buffer.second));
+                const float output = mOutputCombiner(&buffer.second[0], buffer.second.Size());
+                mDefuzzifier->SetOutputValue(buffer.first, output);
                 buffer.second.Clear();
             }
+        }
+
+        // Inherited from fuzzifier
+
+        size_t GetInputCount() const override{
+            return mInputMap.size();
+        }
+
+        ConstStringFragment GetInputName(const size_t aInput) const override{
+            auto it = mInputMap.begin();
+            for(size_t i = 0; i < aInput; ++i) ++it;
+            return it->first;
+        }
+
+        float GetInputValue(const ConstStringFragment aName) const override{
+            auto it = mInputMap.find(aName);
+            return it == mInputMap.end() ? 0.f : it->second;
         }
     };
 
