@@ -19,10 +19,8 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include <cstdint>
 #include "BaseConverter.hpp"
 #include "Metric.hpp"
-#include "PrefixConverter.hpp"
 #include "Volume.inl"
 
 namespace Solaire{ namespace Units{
