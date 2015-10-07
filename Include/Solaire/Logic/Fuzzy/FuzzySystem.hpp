@@ -31,25 +31,13 @@ Created			: 7th October 2015
 Last Modified	: 7th October 2015
 */
 
+#include "Fuzzifier.hpp"
+#include "Defuzzifier.hpp"
+
 namespace Solaire {namespace Fuzzy{
 
     typedef std::map<String, float> FInputMap;
     typedef std::map<String, DynamicArray<float>> FOutputBuffer;
-
-    class Fuzzifier{
-    public:
-        virtual ~Fuzzifier(){}
-        virtual size_t GetInputCount() const = 0;
-        virtual ConstStringFragment GetInputName(const size_t aInput) const = 0;
-        virtual float GetInputValue(const ConstStringFragment aName) const = 0;
-    };
-
-    class Defuzzifier{
-    public:
-        virtual ~Defuzzifier(){}
-        virtual size_t SetOutputValue(const ConstStringFragment aName, const float aValue) = 0;
-    };
-
     typedef std::function<float(const DynamicArray<float>&)> FOutputCombiner;
 
     class FBody{
