@@ -56,21 +56,6 @@ namespace Solaire {namespace Fuzzy{
     }
 
     template<const int Sign>
-    class FUnaryOperator : public FUnary{
-    public:
-        static constexpr int SIGN = Sign;
-
-        FUnaryOperator(std::shared_ptr<const FBody> aChild):
-            FUnary(aChild)
-        {}
-
-        // Inherited from FBody
-        float Execute(const Fuzzifier& aInputs) const override{
-            return OperatorExecute<Sign>(mChild->Execute(aInputs));
-        }
-    };
-
-    template<const int Sign>
     static constexpr float OperatorExecute(const float aLeft, const float aRight) = delete;
 
     template<>
@@ -114,9 +99,84 @@ namespace Solaire {namespace Fuzzy{
     }
 
     template<const int Sign>
+    static constexpr int OperatorPrecedence() = delete;
+
+    template<>
+    constexpr int OperatorPrecedence<OPERATOR_NOT>(){
+        return 1;
+    }
+
+    template<>
+    constexpr int OperatorPrecedence<OPERATOR_ADD>(){
+        return 0;
+    }
+
+    template<>
+    constexpr int OperatorPrecedence<OPERATOR_SUBTRACT>(){
+        return 0;
+    }
+
+    template<>
+    constexpr int OperatorPrecedence<OPERATOR_MULTIPLY>(){
+        return 1;
+    }
+
+    template<>
+    constexpr int OperatorPrecedence<OPERATOR_DIVIDE>(){
+        return 1;
+    }
+
+    template<>
+    constexpr int OperatorPrecedence<OPERATOR_AND>(){
+        return -2;
+    }
+
+    template<>
+    constexpr int OperatorPrecedence<OPERATOR_OR>(){
+        return -3;
+    }
+
+    template<>
+    constexpr int OperatorPrecedence<OPERATOR_LESS_THAN>(){
+        return -1;
+    }
+
+    template<>
+    constexpr int OperatorPrecedence<OPERATOR_GREATER_THAN>(){
+        return -1;
+    }
+
+    template<const int Sign>
+    class FUnaryOperator : public FUnary{
+    public:
+        static constexpr int SIGN = Sign;
+
+        FUnaryOperator(std::shared_ptr<const FBody> aChild):
+            FUnary(aChild)
+        {}
+
+        // Inherited from FBody
+        float Execute(const Fuzzifier& aInputs) const override{
+            return OperatorExecute<Sign>(mChild->Execute(aInputs));
+        }
+    };
+
+    template<const int Sign>
     class FBinaryOperator : public FBinary{
     public:
         static constexpr int SIGN = Sign;
+
+        template<class Iterator>
+        static float PreCalculateConstantChain(Iterator aBegin, const Iterator aEnd){
+            float value = *aBegin;
+            ++ aBegin;
+            while(aBegin != aEnd){
+                value = OperatorExecute<Sign>(value, *aBegin);
+                ++aBegin;
+            }
+
+            return value;
+        }
 
         FBinaryOperator(std::shared_ptr<const FBody> aLeft, std::shared_ptr<const FBody> aRight):
             FBinary(aLeft, aRight)
