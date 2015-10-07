@@ -34,17 +34,32 @@ Last Modified	: 7th October 2015
 #include "FuzzyBody.hpp"
 
 namespace Solaire {namespace Fuzzy{
-    template<const char Sign>
+
+    enum{
+        OPERATOR_NOT            = '!',
+        OPERATOR_ADD            = '+',
+        OPERATOR_SUBTRACT       = '-',
+        OPERATOR_MULTIPLY       = '*',
+        OPERATOR_DIVIDE         = '/',
+        OPERATOR_AND            = '&',
+        OPERATOR_OR             = '|',
+        OPERATOR_LESS_THAN      = '<',
+        OPERATOR_GREATER_THAN   = '>'
+    };
+
+    template<const int Sign>
     static constexpr float OperatorExecute(const float aValue) = delete;
 
     template<>
-    constexpr float OperatorExecute<'!'>(const float aValue){
+    constexpr float OperatorExecute<OPERATOR_NOT>(const float aValue){
         return 1.f - aValue;
     }
 
-    template<const char Sign>
+    template<const int Sign>
     class FUnaryOperator : public FUnary{
     public:
+        static constexpr int SIGN = Sign;
+
         FUnaryOperator(std::shared_ptr<const FBody> aChild):
             FUnary(aChild)
         {}
@@ -55,52 +70,54 @@ namespace Solaire {namespace Fuzzy{
         }
     };
 
-    template<const char Sign>
+    template<const int Sign>
     static constexpr float OperatorExecute(const float aLeft, const float aRight) = delete;
 
     template<>
-    constexpr float OperatorExecute<'+'>(const float aLeft, const float aRight){
+    constexpr float OperatorExecute<OPERATOR_ADD>(const float aLeft, const float aRight){
         return aLeft + aRight;
     }
 
     template<>
-    constexpr float OperatorExecute<'-'>(const float aLeft, const float aRight){
+    constexpr float OperatorExecute<OPERATOR_SUBTRACT>(const float aLeft, const float aRight){
         return aLeft - aRight;
     }
 
     template<>
-    constexpr float OperatorExecute<'*'>(const float aLeft, const float aRight){
+    constexpr float OperatorExecute<OPERATOR_MULTIPLY>(const float aLeft, const float aRight){
         return aLeft * aRight;
     }
 
     template<>
-    constexpr float OperatorExecute<'/'>(const float aLeft, const float aRight){
+    constexpr float OperatorExecute<OPERATOR_DIVIDE>(const float aLeft, const float aRight){
         return aLeft / aRight;
     }
 
     template<>
-    constexpr float OperatorExecute<'&'>(const float aLeft, const float aRight){
+    constexpr float OperatorExecute<OPERATOR_AND>(const float aLeft, const float aRight){
         return aLeft < aRight ? aLeft : aRight;
     }
 
     template<>
-    constexpr float OperatorExecute<'|'>(const float aLeft, const float aRight){
+    constexpr float OperatorExecute<OPERATOR_OR>(const float aLeft, const float aRight){
         return aLeft >  aRight ? aLeft : aRight;
     }
 
     template<>
-    constexpr float OperatorExecute<'<'>(const float aLeft, const float aRight){
+    constexpr float OperatorExecute<OPERATOR_LESS_THAN>(const float aLeft, const float aRight){
         return aLeft - aRight;
     }
 
     template<>
-    constexpr float OperatorExecute<'>'>(const float aLeft, const float aRight){
+    constexpr float OperatorExecute<OPERATOR_GREATER_THAN>(const float aLeft, const float aRight){
         return aRight - aLeft;
     }
 
-    template<const char Sign>
+    template<const int Sign>
     class FBinaryOperator : public FBinary{
     public:
+        static constexpr int SIGN = Sign;
+
         FBinaryOperator(std::shared_ptr<const FBody> aLeft, std::shared_ptr<const FBody> aRight):
             FBinary(aLeft, aRight)
         {}
@@ -111,15 +128,15 @@ namespace Solaire {namespace Fuzzy{
         }
     };
 
-    typedef FUnaryOperator<'!'> OperatorNot;
-    typedef FBinaryOperator<'+'> OperatorAdd;
-    typedef FBinaryOperator<'-'> OperatorSubtract;
-    typedef FBinaryOperator<'*'> OperatorMultiply;
-    typedef FBinaryOperator<'/'> OperatorDivide;
-    typedef FBinaryOperator<'&'> OperatorAnd;
-    typedef FBinaryOperator<'|'> OperatorOr;
-    typedef FBinaryOperator<'<'> OperatorLessThan;
-    typedef FBinaryOperator<'>'> OperatorGreaterThan;
+    typedef FUnaryOperator<OPERATOR_NOT> OperatorNot;
+    typedef FBinaryOperator<OPERATOR_ADD> OperatorAdd;
+    typedef FBinaryOperator<OPERATOR_SUBTRACT> OperatorSubtract;
+    typedef FBinaryOperator<OPERATOR_MULTIPLY> OperatorMultiply;
+    typedef FBinaryOperator<OPERATOR_DIVIDE> OperatorDivide;
+    typedef FBinaryOperator<OPERATOR_AND> OperatorAnd;
+    typedef FBinaryOperator<OPERATOR_OR> OperatorOr;
+    typedef FBinaryOperator<OPERATOR_LESS_THAN> OperatorLessThan;
+    typedef FBinaryOperator<OPERATOR_GREATER_THAN> OperatorGreaterThan;
 }}
 
 #endif
