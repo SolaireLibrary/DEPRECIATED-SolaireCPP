@@ -21,7 +21,7 @@
 
 #include <stdexcept>
 
-namespace Solaire{ namespace Units{ namespace MassInl{
+namespace Solaire{ namespace MassInl{
 
 	enum class MassUnit{
 		GRAM,
@@ -37,7 +37,7 @@ namespace Solaire{ namespace Units{ namespace MassInl{
 	};
 
 	static constexpr MassUnit INTERMEDIARY_UNIT = MassUnit::METRIC_TON;
-	
+
 	static constexpr double SCALE_METRIC_TON = 1.0;
 	static constexpr double SCALE_GRAM			= SCALE_METRIC_TON * 1e+6;
 	static constexpr double SCALE_OUNCE			= SCALE_GRAM / 28.3495;
@@ -66,7 +66,7 @@ namespace Solaire{ namespace Units{ namespace MassInl{
 			aUnit == MassUnit::SOLAR_MASS ? SCALE_SOLAR_MASS :
 			0.0;
 	}
-}}}
+}}
 
 
 #endif

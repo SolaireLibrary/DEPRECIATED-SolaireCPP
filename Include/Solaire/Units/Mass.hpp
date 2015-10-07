@@ -19,108 +19,86 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include <cstdint>
-#include "BaseConverter.hpp"
 #include "Metric.hpp"
-#include "PrefixConverter.hpp"
 #include "Mass.inl"
 
 namespace Solaire{ namespace Units{
-	template<class CONVERSION = double>
-	class Mass
+	template<class VALUE>
+	class MassConverter : public MetricPrefixConverter<MassInl::MassUnit, VALUE, MassInl::INTERMEDIARY_UNIT>
 	{
 	public:
-		typedef MassInl::MassUnit unit_t;
-		typedef CONVERSION conversion_t;
-		typedef typename MetricD::unit_t prefix_t;
-	private:
-		conversion_t mValue;
+	    typedef MetricPrefixConverter<MassInl::MassUnit, VALUE, MassInl::INTERMEDIARY_UNIT> ParentClass;
+        typedef typename ParentClass::PrefixType PrefixType;
+        typedef typename ParentClass::UnitType UnitType;
+        typedef typename ParentClass::ValueType ValueType;
+        typedef MetricConverter<ValueType> PrefixConverterType;
 
-		static constexpr conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
-			return static_cast<conversion_t>(static_cast<double>(aValue) / MassInl::GetScale(aUnit));
-		}
+	    template<const UnitType CONVERSION>
+	    using MassProperty = UnitConverterProperty<MassConverter<ValueType>, CONVERSION>;
 
-		static constexpr conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
-			return static_cast<conversion_t>(static_cast<double>(aValue) * MassInl::GetScale(aUnit));
-		}
+	    template<const PrefixType PREFIX, const UnitType CONVERSION>
+        using MassPrefixProperty = PrefixConverterProperty<MassConverter<ValueType>, PREFIX, CONVERSION>;
 	public:
+		static constexpr ValueType StaticConvertToIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
+			return static_cast<ValueType>(static_cast<double>(aValue) / MassInl::GetScale(aUnit));
+		}
 
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
+		static constexpr ValueType StaticConvertFromIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
+			return static_cast<ValueType>(static_cast<double>(aValue) * MassInl::GetScale(aUnit));
+    }
+    public:
+        MassConverter():
+            ParentClass(static_cast<ValueType>(0)),
+            Grams(*this)
+        {}
+
+        MassConverter(const ValueType aValue):
+            ParentClass(aValue),
+            Grams(*this)
+        {}
+
+        MassConverter(const MassConverter& aOther):
+            ParentClass(aOther.Get()),
+            Grams(*this)
+        {}
+
+        MassConverter(MassConverter&& aOther):
+            ParentClass(aOther.Get()),
+            Grams(*this)
+        {}
+
+        // Inherited from UnitConverter
+
+        ValueType ConvertToIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
+            return StaticConvertToIntermediaryUnit(aUnit, aValue);
+        }
+
+        ValueType ConvertFromIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
+            return ConvertFromIntermediateUnit(aUnit, aValue);
+        }
+    public:
 		union{
-			Mass* const Self;
-			ConverterProperty<Mass, unit_t::GRAM>								Grams;
-			ConverterProperty<Mass, unit_t::POUND>								Pounds;
-			ConverterProperty<Mass, unit_t::OUNCE>								Ounces;
-			ConverterProperty<Mass, unit_t::STONE>								Stones;
-			ConverterProperty<Mass, unit_t::SHORT_TON>							ShortTons;
-			ConverterProperty<Mass, unit_t::LONG_TON>							LongTons;
-			ConverterProperty<Mass, unit_t::METRIC_TON>							MetricTons;
-			ConverterProperty<Mass, unit_t::SOLAR_MASS>							SolarMasses;
-			ConverterProperty<Mass, unit_t::TROY_OUNCE>							TroyOunces;
-			ConverterProperty<Mass, unit_t::TROY_POUND>							TroyPounds;
-			PrefixConverterProperty<Mass, prefix_t::KILO, unit_t::GRAM>			Kilograms;
-			PrefixConverterProperty<Mass, prefix_t::MILLI, unit_t::GRAM>		Milligrams;
-			PrefixConverterProperty<Mass, prefix_t::KILO, unit_t::METRIC_TON>	Kilotonnes;
-			PrefixConverterProperty<Mass, prefix_t::MEGA, unit_t::METRIC_TON>	Megatonnes;
+			MassProperty<UnitType::GRAM>								    Grams;
+			MassProperty<UnitType::POUND>								    Pounds;
+			MassProperty<UnitType::OUNCE>								    Ounces;
+			MassProperty<UnitType::STONE>								    Stones;
+			MassProperty<UnitType::SHORT_TON>							    ShortTons;
+			MassProperty<UnitType::LONG_TON>							    LongTons;
+			MassProperty<UnitType::METRIC_TON>							    MetricTons;
+			MassProperty<UnitType::SOLAR_MASS>							    SolarMasses;
+			MassProperty<UnitType::TROY_OUNCE>							    TroyOunces;
+			MassProperty<UnitType::TROY_POUND>							    TroyPounds;
+			MassPrefixProperty<PrefixType::KILO,    UnitType::GRAM>			Kilograms;
+			MassPrefixProperty<PrefixType::MILLI,   UnitType::GRAM>		    Milligrams;
+			MassPrefixProperty<PrefixType::KILO,    UnitType::METRIC_TON>	Kilotonnes;
+			MassPrefixProperty<PrefixType::MEGA,    UnitType::METRIC_TON>	Megatonnes;
 		};
-#endif
-
-		static constexpr unit_t INTERMEDIARY_UNIT = MassInl::INTERMEDIARY_UNIT;
-
-		// Constructors
-
-		constexpr Mass() :
-			mValue(static_cast<conversion_t>(0.0))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Mass(const conversion_t aValue) :
-			mValue(aValue)
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Mass(const unit_t aUnit, const conversion_t aValue) :
-			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Mass(const prefix_t aPrefix, const unit_t aUnit, const conversion_t aValue) :
-			mValue(Convert(aPrefix, aUnit, MetricD::unit_t::NONE, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Mass(const Mass<conversion_t>& aOther) :
-			mValue(aOther.mValue)
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-		}
-
-		SOLAIRE_UNITS_CONVERTER_COMMON(Mass<conversion_t>)
-		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Mass<conversion_t>, Metric<conversion_t>)
 	};
 
-	typedef Mass<double> MassD;		//!< A Mass value that is a double.
-	typedef Mass<float> MassF;		//!< A Mass value that is a float.
-	typedef Mass<int32_t> MassI;	//!< A Mass value that is a signed 32 bit integer.
-	typedef Mass<uint32_t> MassU;	//!< A Mass value that is a unsigned 32 bit integer.
+	typedef MassConverter<double> MassConverterD;		//!< A Mass value that is a double.
+	typedef MassConverter<float> MassConverterF;		//!< A Mass value that is a float.
+	typedef MassConverter<int32_t> MassConverterI;	//!< A Mass value that is a signed 32 bit integer.
+	typedef MassConverter<uint32_t> MassConverterU;	//!< A Mass value that is a unsigned 32 bit integer.
 }}
 
 

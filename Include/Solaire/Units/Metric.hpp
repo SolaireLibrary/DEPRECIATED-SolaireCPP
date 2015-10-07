@@ -21,108 +21,100 @@
 
 #include <cstdint>
 #include "BaseConverter.hpp"
+#include "PrefixConverter.hpp"
 #include "Metric.inl"
 
-namespace Solaire{ namespace Units{
-	template<class CONVERSION = double>
-	class Metric
-	{
-	public:
-		typedef MetricInl::MetricPrefix unit_t;
-		typedef CONVERSION conversion_t;
-	private:
-		conversion_t mValue;
+namespace Solaire{
 
-		static constexpr conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
-			return static_cast<conversion_t>(static_cast<double>(aValue) * MetricInl::GetScale(aUnit));
+	template<class VALUE>
+	class MetricConverter : public UnitConverter<MetricInl::MetricPrefix, VALUE, MetricInl::INTERMEDIARY_UNIT>{
+    public:
+        typedef typename UnitConverter<MetricInl::MetricPrefix, VALUE, MetricInl::INTERMEDIARY_UNIT>::UnitType UnitType;
+        typedef typename UnitConverter<MetricInl::MetricPrefix, VALUE, MetricInl::INTERMEDIARY_UNIT>::ValueType ValueType;
+        typedef UnitConverter<MetricInl::MetricPrefix, VALUE, MetricInl::INTERMEDIARY_UNIT> ParentClass;
+
+	    template<const UnitType CONVERSION>
+	    using MetricProperty = UnitConverterProperty<MetricConverter<ValueType>, CONVERSION>;
+	public:
+		static constexpr ValueType StaticConvertToIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
+			return static_cast<ValueType>(static_cast<double>(aValue) * MetricInl::GetScale(aUnit));
 		}
 
-		static constexpr conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
-			return static_cast<conversion_t>(static_cast<double>(aValue) / MetricInl::GetScale(aUnit));
+		static constexpr ValueType StaticConvertFromIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
+			return static_cast<ValueType>(static_cast<double>(aValue) / MetricInl::GetScale(aUnit));
 		}
+    public:
+        MetricConverter():
+            ParentClass(static_cast<ValueType>(0)),
+            Value(*this)
+        {}
+
+        MetricConverter(const ValueType aValue):
+            ParentClass(aValue),
+            Value(*this)
+        {}
+
+        MetricConverter(const MetricConverter& aOther):
+            ParentClass(aOther.Get()),
+            Value(*this)
+        {}
+
+        MetricConverter(MetricConverter&& aOther):
+            ParentClass(aOther.Get()),
+            Value(*this)
+        {}
+
+        // Inherited from UnitConverter
+
+        ValueType ConvertToIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
+            return StaticConvertToIntermediaryUnit(aUnit, aValue);
+        }
+
+        ValueType ConvertFromIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
+            return ConvertFromIntermediateUnit(aUnit, aValue);
+        }
 	public:
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
 		union{
-			Metric* const Self;
-			ConverterProperty<Metric, unit_t::NONE>		Value;
-			ConverterProperty<Metric, unit_t::YOTTA>	Yotta;
-			ConverterProperty<Metric, unit_t::ZETTA>	Zetta;
-			ConverterProperty<Metric, unit_t::EXA>		Exa;
-			ConverterProperty<Metric, unit_t::PETA>		Peta;
-			ConverterProperty<Metric, unit_t::TERA>		Tera;
-			ConverterProperty<Metric, unit_t::GIGA>		Giga;
-			ConverterProperty<Metric, unit_t::MEGA>		Mega;
-			ConverterProperty<Metric, unit_t::KILO>		Kilo;
-			ConverterProperty<Metric, unit_t::HECTO>	Hecto;
-			ConverterProperty<Metric, unit_t::DECA>		Deca;
-			ConverterProperty<Metric, unit_t::DECI>		Deci;
-			ConverterProperty<Metric, unit_t::CENTI>	Centi;
-			ConverterProperty<Metric, unit_t::MILLI>	Milli;
-			ConverterProperty<Metric, unit_t::MICRO>	Micro;
-			ConverterProperty<Metric, unit_t::NANO>		Nano;
-			ConverterProperty<Metric, unit_t::PICO>		Pico;
-			ConverterProperty<Metric, unit_t::FEMTO>	Femto;
-			ConverterProperty<Metric, unit_t::ATTO>		Atto;
-			ConverterProperty<Metric, unit_t::ZEPTO>	Zepto;
-			ConverterProperty<Metric, unit_t::YOCTO>	Yocto;
-			ConverterProperty<Metric, unit_t::KIBI>		Kibi;
-			ConverterProperty<Metric, unit_t::MEBI>		Mebi;
-			ConverterProperty<Metric, unit_t::GIBI>		Gibi;
-			ConverterProperty<Metric, unit_t::TEBI>		Tebi;
-			ConverterProperty<Metric, unit_t::PEBI>		Pebi;
-			ConverterProperty<Metric, unit_t::EXBI>		Exbi;
-			ConverterProperty<Metric, unit_t::ZEBI>		Zebi;
-			ConverterProperty<Metric, unit_t::YOBI>		Yobi;
+			MetricProperty<UnitType::NONE>		Value;
+			MetricProperty<UnitType::YOTTA>	    Yotta;
+			MetricProperty<UnitType::ZETTA>	    Zetta;
+			MetricProperty<UnitType::EXA>		Exa;
+			MetricProperty<UnitType::PETA>		Peta;
+			MetricProperty<UnitType::TERA>		Tera;
+			MetricProperty<UnitType::GIGA>		Giga;
+			MetricProperty<UnitType::MEGA>		Mega;
+			MetricProperty<UnitType::KILO>		Kilo;
+			MetricProperty<UnitType::HECTO>	    Hecto;
+			MetricProperty<UnitType::DECA>		Deca;
+			MetricProperty<UnitType::DECI>		Deci;
+			MetricProperty<UnitType::CENTI>	    Centi;
+			MetricProperty<UnitType::MILLI>	    Milli;
+			MetricProperty<UnitType::MICRO>	    Micro;
+			MetricProperty<UnitType::NANO>		Nano;
+			MetricProperty<UnitType::PICO>		Pico;
+			MetricProperty<UnitType::FEMTO>	    Femto;
+			MetricProperty<UnitType::ATTO>		Atto;
+			MetricProperty<UnitType::ZEPTO>	    Zepto;
+			MetricProperty<UnitType::YOCTO>	    Yocto;
+			MetricProperty<UnitType::KIBI>		Kibi;
+			MetricProperty<UnitType::MEBI>		Mebi;
+			MetricProperty<UnitType::GIBI>		Gibi;
+			MetricProperty<UnitType::TEBI>		Tebi;
+			MetricProperty<UnitType::PEBI>		Pebi;
+			MetricProperty<UnitType::EXBI>		Exbi;
+			MetricProperty<UnitType::ZEBI>		Zebi;
+			MetricProperty<UnitType::YOBI>		Yobi;
 		};
-#endif
-		static constexpr unit_t INTERMEDIARY_UNIT = MetricInl::INTERMEDIARY_UNIT;
-
-		// Constructors
-
-		constexpr Metric() :
-			mValue(static_cast<conversion_t>(0.0))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Metric(const conversion_t aValue) :
-			mValue(aValue)
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Metric(const unit_t aUnit, const conversion_t aValue) :
-			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Metric(const Metric<conversion_t>& aOther) :
-			mValue(aOther.mValue)
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		SOLAIRE_UNITS_CONVERTER_COMMON(Metric<conversion_t>)
 	};
 
-	typedef Metric<double> MetricD;		//!< A Metric value that is a double.
-	typedef Metric<float> MetricF;		//!< A Metric value that is a float.
-	typedef Metric<int32_t> MetricI;	//!< A Metric value that is a signed 32 bit integer.
-	typedef Metric<uint32_t> MetricU;	//!< A Metric value that is a unsigned 32 bit integer.
-}}
+	typedef MetricConverter<double> MetricConverterD;	//!< A Metric value that is a double.
+	typedef MetricConverter<float> MetricConverterF;	//!< A Metric value that is a float.
+	typedef MetricConverter<int32_t> MetricConverterI;	//!< A Metric value that is a signed 32 bit integer.
+	typedef MetricConverter<uint32_t> MetricConverterU;	//!< A Metric value that is a unsigned 32 bit integer.
+
+    template<class UNIT, class VALUE, const UNIT INTERMEDIATE>
+    using MetricPrefixConverter = PrefixConverter<UNIT, VALUE, INTERMEDIATE, MetricConverter<VALUE>>;
+}
 
 
 #endif

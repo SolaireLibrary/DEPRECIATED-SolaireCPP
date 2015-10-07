@@ -1,4 +1,3 @@
-
 #ifndef SOLAIRE_UNITS_PREFIX_CONVERTER_HPP
 #define SOLAIRE_UNITS_PREFIX_CONVERTER_HPP
 
@@ -20,69 +19,71 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include "BaseConverter.hpp"
+/*!
+	\file PrefixConverter.hpp
+	\brief Contains the code for BaseConverter and ConverterProperty
+	\author
+	Created			: Adam Smith
+	Last modified	: Adam Smith
+	\version 3.0
+	\date
+	Created			: 6th September 2015
+	Last Modified	: 6th October 2015
+*/
 
 namespace Solaire{
-	namespace Units{
 
-#define SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(class_name, prefix_converter)\
-\
-	static constexpr conversion_t Convert(const typename prefix_converter::unit_t aInputPrefix, const unit_t aInputUnit, const typename prefix_converter::unit_t aOutputPrefix, const unit_t aOutputUnit, const conversion_t aValue){\
-        return\
-            prefix_converter::Convert(\
-                prefix_converter::unit_t::NONE,\
-                aOutputPrefix,\
-                class_name::Convert(\
-                    aInputUnit,\
-                    aOutputUnit,\
-                    prefix_converter::Convert(\
-                        aInputPrefix,\
-                        prefix_converter::unit_t::NONE,\
-                        aValue\
-                    )\
-                )\
-            );\
-    }\
-\
-	constexpr conversion_t Get(const prefix_t aPrefix, const unit_t aUnit) const{\
-		return prefix_converter::Convert(prefix_converter::INTERMEDIARY_UNIT, aPrefix, Get(aUnit));\
-	}\
-	void Set(const prefix_t aPrefix, unit_t aUnit, const conversion_t aValue){\
-		Set(aUnit, prefix_converter::Convert(aPrefix, prefix_converter::INTERMEDIARY_UNIT, aValue));\
-	}
+    template<class UNIT, class VALUE, const UNIT INTERMEDIATE, class PREFIX_CONVERTER>
+    class PrefixConverter : public UnitConverter<UNIT, VALUE, INTERMEDIATE>{
+    public:
+        typedef typename PREFIX_CONVERTER::UnitType PrefixType;
+        typedef UNIT UnitType;
+        typedef VALUE ValueType;
+        typedef PREFIX_CONVERTER PrefixConverterType;
+        typedef UnitConverter<UNIT, VALUE, INTERMEDIATE> ParentClass;
+    public:
+        PrefixConverter(const ValueType aIntermediateValue):
+            ParentClass(aIntermediateValue)
+        {}
 
-#ifndef SOLAIRE_UNITS_NO_PROPERTIES
-	template<class CONVERTER, typename CONVERTER::prefix_t PREFIX, typename CONVERTER::unit_t UNIT>
-	class PrefixConverterProperty{
-	private:
-		CONVERTER* mParent;
-	public:
-		void operator=(const typename CONVERTER::conversion_t aValue){
-			return mParent->Set(PREFIX, UNIT, aValue);
-		}
+        virtual ~PrefixConverter(){
 
-		constexpr operator typename CONVERTER::conversion_t() const{
-			return mParent->Get(PREFIX, UNIT);
-		}
+        }
 
-		void operator+=(const typename CONVERTER::conversion_t aValue){
-			mParent->Set(PREFIX, UNIT, mParent->PrefixedGet(PREFIX, UNIT) + aValue);
-		}
+        ValueType GetPrefixed(const PrefixType aPrefix, const UnitType aUnit) const{
+            return PREFIX_CONVERTER::StaticConvertFromIntermediateUnit(aPrefix, Get(aUnit));
+        }
 
-		void operator-=(const typename CONVERTER::conversion_t aValue){
-			mParent->Set(PREFIX, UNIT, mParent->PrefixedGetPREFIX, (UNIT) - aValue);
-		}
+        void SetPrefixed(const PrefixType aPrefix, const UnitType aUnit, const ValueType aValue) const{
+            Set(aUnit, PREFIX_CONVERTER::StaticConvertToIntermediateUnit(aPrefix, aValue));
+        }
+    };
 
-		void operator*=(const typename CONVERTER::conversion_t aValue){
-			mParent->Set(PREFIX, UNIT, mParent->PrefixedGetPREFIX, (UNIT) * aValue);
-		}
+    template<class CONVERTER, const typename CONVERTER::PrefixType PREFIX, const typename CONVERTER::UnitType CONVERSION>
+    class PrefixConverterProperty{
+    public:
+        typedef typename CONVERTER::ValueType ValueType;
+        typedef typename CONVERTER::PrefixConverterType PrefixConverterType;
+    private:
+        CONVERTER& mParent;
+    public:
+        constexpr PrefixConverterProperty(CONVERTER& aParent):
+            mParent(aParent)
+        {}
 
-		void operator/=(const typename CONVERTER::conversion_t aValue){
-			mParent->Set(PREFIX, UNIT, mParent->PrefixedGet(PREFIX, UNIT) / aValue);
-		}
-	};
-#endif
-}}
+        inline operator ValueType() const{
+            return mParent.GetPrefixed(PREFIX, CONVERSION);
+        }
 
+        inline CONVERTER& operator+=(const ValueType aValue){
+            return mParent += CONVERTER::StaticConvertToIntermediateUnit(CONVERSION, PrefixConverterType::StaticConvertToIntermediateUnit(PREFIX, aValue));
+        }
+
+        inline CONVERTER& operator-=(const ValueType aValue){
+            return mParent -= CONVERTER::StaticConvertToIntermediateUnit(CONVERSION, PrefixConverterType::StaticConvertToIntermediateUnit(PREFIX, aValue));
+        }
+    };
+
+}
 
 #endif

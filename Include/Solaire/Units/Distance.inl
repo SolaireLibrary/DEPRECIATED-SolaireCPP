@@ -21,7 +21,7 @@
 
 #include <stdexcept>
 
-namespace Solaire{ namespace Units{ namespace DistanceInl{
+namespace Solaire{ namespace DistanceInl{
 
 	enum class DistanceUnit{
 		METRE,
@@ -42,7 +42,7 @@ namespace Solaire{ namespace Units{ namespace DistanceInl{
 	};
 
 	static constexpr DistanceUnit INTERMEDIARY_UNIT = DistanceUnit::METRE;
-	
+
 	static constexpr double SCALE_METRE 			= 1.0;
 	static constexpr double SCALE_MILE 				= SCALE_METRE / 1609.344;
 	static constexpr double SCALE_YARD 				= SCALE_MILE * 1760.0;
@@ -79,7 +79,7 @@ namespace Solaire{ namespace Units{ namespace DistanceInl{
 			aUnit == DistanceUnit::LIGHTYEAR			? SCALE_LIGHTYEAR :
 														0.0;
 	}
-}}}
+}}
 
 
 #endif

@@ -21,7 +21,7 @@
 
 #include <stdexcept>
 
-namespace Solaire{ namespace Units{ namespace TemperatureInl{
+namespace Solaire{ namespace TemperatureInl{
 
 	enum class TemperatureUnit{
 		CELCIUS,
@@ -31,7 +31,7 @@ namespace Solaire{ namespace Units{ namespace TemperatureInl{
 	};
 
 	static const TemperatureUnit INTERMEDIARY_UNIT = TemperatureUnit::CELCIUS;
-	
+
 	static constexpr double ConvertToIntermediary(const TemperatureUnit aUnit, const double aValue){
 		return
 			aUnit == TemperatureUnit::CELCIUS		? aValue :
@@ -49,7 +49,7 @@ namespace Solaire{ namespace Units{ namespace TemperatureInl{
 			aUnit == TemperatureUnit::GAS_MARK		? (aValue - 121.0) / 14.0 :
 													0.0;
 	}
-}}}
+}}
 
 
 #endif

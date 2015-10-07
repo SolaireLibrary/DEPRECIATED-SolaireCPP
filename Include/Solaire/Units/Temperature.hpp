@@ -19,100 +19,79 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include <cstdint>
 #include "BaseConverter.hpp"
 #include "Metric.hpp"
-#include "PrefixConverter.hpp"
 #include "Temperature.inl"
 
-namespace Solaire{ namespace Units{
+namespace Solaire{
 
-	template<class CONVERSION = double>
-	class Temperature
+	template<class VALUE>
+	class TemperatureConverter : public MetricPrefixConverter<TemperatureInl::TemperatureUnit, VALUE, TemperatureInl::INTERMEDIARY_UNIT>
 	{
 	public:
-		typedef TemperatureInl::TemperatureUnit unit_t;
-		typedef CONVERSION conversion_t;
-		typedef typename MetricD::unit_t prefix_t;
-	private:
-		conversion_t mValue;
+		typedef MetricPrefixConverter<TemperatureInl::TemperatureUnit, VALUE, TemperatureInl::INTERMEDIARY_UNIT> ParentClass;
+        typedef typename ParentClass::PrefixType PrefixType;
+        typedef typename ParentClass::UnitType UnitType;
+        typedef typename ParentClass::ValueType ValueType;
+        typedef MetricConverter<ValueType> PrefixConverterType;
 
-		static constexpr conversion_t ConvertToIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
-			return static_cast<conversion_t>(TemperatureInl::ConvertToIntermediary(aUnit, static_cast<double>(aValue)));
-		}
+	    template<const UnitType CONVERSION>
+	    using TemperatureProperty = UnitConverterProperty<TemperatureConverter<ValueType>, CONVERSION>;
 
-		static constexpr conversion_t ConvertFromIntermediaryUnit(const unit_t aUnit, const conversion_t aValue){
-			return static_cast<conversion_t>(TemperatureInl::ConvertFromIntermediary(aUnit, static_cast<double>(aValue)));
-		}
+	    template<const PrefixType PREFIX, const UnitType CONVERSION>
+        using TemperaturePrefixProperty = PrefixConverterProperty<TemperatureConverter<ValueType>, PREFIX, CONVERSION>;
 	public:
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
+		static constexpr ValueType StaticConvertToIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
+			return static_cast<ValueType>(TemperatureInl::ConvertToIntermediary(aUnit, static_cast<double>(aValue)));
+		}
+
+		static constexpr ValueType StaticConvertFromIntermediaryUnit(const UnitType aUnit, const ValueType aValue){
+			return static_cast<ValueType>(TemperatureInl::ConvertFromIntermediary(aUnit, static_cast<double>(aValue)));
+		}
+    public:
+        TemperatureConverter():
+            ParentClass(static_cast<ValueType>(0)),
+            Celcius(*this)
+        {}
+
+        TemperatureConverter(const ValueType aValue):
+            ParentClass(aValue),
+            Celcius(*this)
+        {}
+
+        TemperatureConverter(const TemperatureConverter& aOther):
+            ParentClass(aOther.Get()),
+            Celcius(*this)
+        {}
+
+        TemperatureConverter(TemperatureConverter&& aOther):
+            ParentClass(aOther.Get()),
+            Celcius(*this)
+        {}
+
+        // Inherited from UnitConverter
+
+        ValueType ConvertToIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
+            return StaticConvertToIntermediaryUnit(aUnit, aValue);
+        }
+
+        ValueType ConvertFromIntermediateUnit(const UnitType aUnit, const ValueType aValue) const override{
+            return ConvertFromIntermediateUnit(aUnit, aValue);
+        }
+	public:
 		union{
-			Temperature* const Self;
-			ConverterProperty<Temperature, unit_t::CELCIUS>						Celcius;
-			ConverterProperty<Temperature, unit_t::FAHRENHEIT>					Fahrenheit;
-			ConverterProperty<Temperature, unit_t::KELVIN>						Kelvin;
-			ConverterProperty<Temperature, unit_t::GAS_MARK>					GasMark;
+			TemperatureProperty<UnitType::CELCIUS>		    Celcius;
+			TemperatureProperty<UnitType::FAHRENHEIT>		Fahrenheit;
+			TemperatureProperty<UnitType::KELVIN>			Kelvin;
+			TemperatureProperty<UnitType::GAS_MARK>		    GasMark;
 		};
-#endif
-
-		static constexpr unit_t INTERMEDIARY_UNIT = TemperatureInl::INTERMEDIARY_UNIT;
-
-		// Constructors
-
-		constexpr Temperature() :
-			mValue(static_cast<conversion_t>(0.0))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Temperature(const conversion_t aValue) :
-			mValue(aValue)
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Temperature(const unit_t aUnit, const conversion_t aValue) :
-			mValue(Convert(aUnit, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Temperature(const prefix_t aPrefix, const unit_t aUnit, const conversion_t aValue) :
-			mValue(Convert(aPrefix, aUnit, MetricD::unit_t::NONE, INTERMEDIARY_UNIT, aValue))
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		constexpr Temperature(const Temperature<conversion_t>& aOther) :
-			mValue(aOther.mValue)
-#ifndef SOLAIRE_DISABLE_CONVERTER_PROPERTIES
-			, Self(this)
-#endif
-		{
-
-		}
-
-		SOLAIRE_UNITS_CONVERTER_COMMON(Temperature<conversion_t>)
-		SOLAIRE_UNITS_PREFIXED_CONVERTER_COMMON(Temperature<conversion_t>, Metric<conversion_t>)
 	};
 
-	typedef Temperature<double> TemperatureD;		//!< A Temperature value that is a double.
-	typedef Temperature<float> TemperatureF;		//!< A Temperature value that is a float.
-	typedef Temperature<int32_t> TemperatureI;		//!< A Temperature value that is a signed 32 bit integer.
-	typedef Temperature<uint32_t> TemperatureU;		//!< A Temperature value that is a unsigned 32 bit integer.
-}}
+	typedef TemperatureConverter<double> TemperatureConverterD;		//!< A Temperature value that is a double.
+	typedef TemperatureConverter<float> TemperatureConverterF;		//!< A Temperature value that is a float.
+	typedef TemperatureConverter<int32_t> TemperatureConverterI;	//!< A Temperature value that is a signed 32 bit integer.
+	typedef TemperatureConverter<uint32_t> TemperatureConverterU;	//!< A Temperature value that is a unsigned 32 bit integer.
+}
 
 
 #endif

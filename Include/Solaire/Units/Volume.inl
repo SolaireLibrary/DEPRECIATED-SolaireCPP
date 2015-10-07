@@ -21,7 +21,7 @@
 
 #include <stdexcept>
 
-namespace Solaire{ namespace Units{ namespace VolumeInl{
+namespace Solaire{ namespace VolumeInl{
 
 	enum class VolumeUnit{
 		LITRE,
@@ -41,7 +41,7 @@ namespace Solaire{ namespace Units{ namespace VolumeInl{
 	};
 
 	static constexpr VolumeUnit INTERMEDIARY_UNIT = VolumeUnit::LITRE;
-	
+
 	static constexpr double SCALE_LITRE				= 1.0;
 	static constexpr double SCALE_OUNCE_UK			= SCALE_LITRE * 35.1951;
 	static constexpr double SCALE_OUNCE_US			= SCALE_LITRE * 33.814;
@@ -76,7 +76,7 @@ namespace Solaire{ namespace Units{ namespace VolumeInl{
 			aUnit == VolumeUnit::QUART_US		? SCALE_QUART_US :
 												0.0;
 	}
-}}}
+}}
 
 
 #endif
