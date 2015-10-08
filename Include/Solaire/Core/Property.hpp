@@ -332,6 +332,109 @@ namespace Solaire{
             return mParent.*Function();
         }
     };
+
+    ////
+
+    #define SolaireReadProperty(aName, aParentType, aRefType, aPtrType, aCode)\
+    class aName{\
+    private:\
+        aName(const aName&) = delete;\
+        aName(aName&&) = delete;\
+        aName& operator=(const aName&) = delete;\
+        aName& operator=(aName&&) = delete;\
+    private:\
+        const aParentType& mParent;\
+    public:\
+        constexpr aName(const aParentType& aParent):\
+            mParent(aParent)\
+        {}\
+        \
+        inline aRefType operator*() const{\
+            aCode\
+        }\
+        \
+        inline aPtrType operator->() const{\
+            return &operator*();\
+        }\
+        \
+        inline operator aRefType() const{\
+            return operator*();\
+        }\
+    };
+
+    #define SolaireWriteProperty(aName, aParentType, aRefType, aPtrType, aCode)\
+    class aName{\
+    private:\
+        aName(const aName&) = delete;\
+        aName(aName&&) = delete;\
+        aName& operator=(const aName&) = delete;\
+        aName& operator=(aName&&) = delete;\
+    private:\
+        aParentType& mParent;\
+    public:\
+        constexpr aName(aParentType& aParent):\
+            mParent(aParent)\
+        {}\
+        \
+        inline aRefType operator*(){\
+            aCode\
+        }\
+        \
+        inline aPtrType operator->(){\
+            return &operator*();\
+        }\
+        \
+        inline operator aRefType(){\
+            return operator*();\
+        }\
+        \
+        inline aRefType operator=(aRefType aValue){\
+            return operator*() = aValue;\
+        }\
+    };
+
+    #define SolaireReadWriteProperty(aName, aParentType, aRefType, aPtrType, aCode)\
+    class aName{\
+    private:\
+        aName(const aName&) = delete;\
+        aName(aName&&) = delete;\
+        aName& operator=(const aName&) = delete;\
+        aName& operator=(aName&&) = delete;\
+    private:\
+        aParentType& mParent;\
+    public:\
+        constexpr aName(aParentType& aParent):\
+            mParent(aParent)\
+        {}\
+        \
+        inline aRefType operator*(){\
+            aCode\
+        }\
+        \
+        inline aPtrType operator->(){\
+            return &operator*();\
+        }\
+        \
+        inline operator aRefType(){\
+            return operator*();\
+        }\
+        \
+        inline aRefType operator=(aRefType aValue){\
+            return operator*() = aValue;\
+        }\
+        \
+        inline const aRefType operator*() const{\
+            return const_cast<aName*>(this)->operator*();\
+        }\
+        \
+        inline const aPtrType operator->() const{\
+            return &operator*();\
+        }\
+        \
+        inline operator const aRefType() const{\
+            return operator*();\
+        }\
+    };
 }
 
 

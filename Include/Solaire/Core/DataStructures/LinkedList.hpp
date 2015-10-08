@@ -129,8 +129,15 @@ namespace Solaire{
                 node->~Node();
             });
         }
+    private:
+        SolaireReadWriteProperty(pFrontProp, LinkedList<Type>, Type&, Type*, return *mParent.mFirst->GetObject(););
+        SolaireReadWriteProperty(pBackProp, LinkedList<Type>, Type&, Type*, return *mParent.mLast->GetObject(););
     public:
         union{
+            pFrontProp pFront;
+            pBackProp pBack;
+            //StaticFunctionProperty<LinkedList<Type>, Type&, pFrontFn> pFront;
+            //StaticFunctionProperty<LinkedList<Type>, Type&, pBackFn> pBack;
             ReadOnlyValueProperty<LinkedList<Type>, uint32_t, &LinkedList<Type>::mSize> pSize;
             DereferenceValueProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator> pAllocator;
         };
