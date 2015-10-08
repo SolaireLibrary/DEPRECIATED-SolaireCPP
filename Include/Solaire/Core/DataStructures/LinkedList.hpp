@@ -132,7 +132,7 @@ namespace Solaire{
     public:
         union{
             ReadOnlyValueProperty<LinkedList<Type>, uint32_t, &LinkedList<Type>::mSize> pSize;
-            DereferenceObjectProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator> pAllocator;
+            DereferenceValueProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator> pAllocator;
         };
     public:
         LinkedList(Allocator& aAllocator):

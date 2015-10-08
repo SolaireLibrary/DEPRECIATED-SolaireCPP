@@ -36,154 +36,6 @@
 namespace Solaire{
 
     template<class Parent, class Type, Type Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
-    class ReadOnlyObjectProperty{
-    public:
-        typedef typename PassTypes<Type, PassMode>::Type Return;
-        typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
-    private:
-        ReadOnlyObjectProperty(const ReadOnlyObjectProperty&) = delete;
-        ReadOnlyObjectProperty(ReadOnlyObjectProperty&&) = delete;
-        ReadOnlyObjectProperty& operator=(const ReadOnlyObjectProperty&) = delete;
-        ReadOnlyObjectProperty& operator=(ReadOnlyObjectProperty&&) = delete;
-    private:
-        Parent& mParent;
-    public:
-        constexpr ReadOnlyObjectProperty(Parent& aParent):
-            mParent(aParent)
-        {}
-
-        inline ConstReturn operator*() const{
-            return mParent.*Member;
-        }
-
-        inline const Type* operator->() const{
-            return &(mParent.*Member);
-        }
-    };
-
-    template<class Parent, class Type, Type Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
-    class ObjectProperty{
-    public:
-        typedef typename PassTypes<Type, PassMode>::Type Return;
-        typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
-    private:
-        ObjectProperty(const ObjectProperty&) = delete;
-        ObjectProperty(ObjectProperty&&) = delete;
-        ObjectProperty& operator=(const ObjectProperty&) = delete;
-        ObjectProperty& operator=(ObjectProperty&&) = delete;
-    private:
-        Parent& mParent;
-    public:
-        constexpr ObjectProperty(Parent& aParent):
-            mParent(aParent)
-        {}
-
-        inline Return operator*(){
-            return mParent.*Member;
-        }
-
-        inline Type* operator->(){
-            return &(mParent.*Member);
-        }
-
-        inline ConstReturn operator*() const{
-            return mParent.*Member;
-        }
-
-        inline const Type* operator->() const{
-            return &(mParent.*Member);
-        }
-    };
-
-    template<class Parent, class Type, Type Parent::* const Member>
-    using ReadOnlyCopyObjectProperty = ReadOnlyObjectProperty<Parent, Type, Member, PASS_BY_VALUE>;
-
-    template<class Parent, class Type, Type Parent::* const Member>
-    using ReadOnlyReferenceObjectProperty = ReadOnlyObjectProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
-
-    template<class Parent, class Type, Type Parent::* const Member>
-    using CopyObjectProperty = ObjectProperty<Parent, Type, Member, PASS_BY_VALUE>;
-
-    template<class Parent, class Type, Type Parent::* const Member>
-    using ReferenceObjectProperty = ObjectProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
-
-    ////
-
-    template<class Parent, class Type, Type* Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
-    class ReadOnlyDereferenceObjectProperty{
-    public:
-        typedef typename PassTypes<Type, PassMode>::Type Return;
-        typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
-    private:
-        ReadOnlyDereferenceObjectProperty(const ReadOnlyDereferenceObjectProperty&) = delete;
-        ReadOnlyDereferenceObjectProperty(ReadOnlyDereferenceObjectProperty&&) = delete;
-        ReadOnlyDereferenceObjectProperty& operator=(const ReadOnlyDereferenceObjectProperty&) = delete;
-        ReadOnlyDereferenceObjectProperty& operator=(ReadOnlyDereferenceObjectProperty&&) = delete;
-    private:
-        Parent& mParent;
-    public:
-        constexpr ReadOnlyDereferenceObjectProperty(Parent& aParent):
-            mParent(aParent)
-        {}
-
-        inline ConstReturn operator*() const{
-            return *(mParent.*Member);
-        }
-
-        inline const Type* operator->() const{
-            return mParent.*Member;
-        }
-    };
-
-    template<class Parent, class Type, Type* Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
-    class DereferenceObjectProperty{
-    public:
-        typedef typename PassTypes<Type, PassMode>::Type Return;
-        typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
-    private:
-        DereferenceObjectProperty(const DereferenceObjectProperty&) = delete;
-        DereferenceObjectProperty(DereferenceObjectProperty&&) = delete;
-        DereferenceObjectProperty& operator=(const DereferenceObjectProperty&) = delete;
-        DereferenceObjectProperty& operator=(DereferenceObjectProperty&&) = delete;
-    private:
-        Parent& mParent;
-    public:
-        constexpr DereferenceObjectProperty(Parent& aParent):
-            mParent(aParent)
-        {}
-
-        inline Return operator*(){
-            return *(mParent.*Member);
-        }
-
-        inline Type* operator->(){
-            return mParent.*Member;
-        }
-
-        inline ConstReturn operator*() const{
-            return *(mParent.*Member);
-        }
-
-        inline const Type* operator->() const{
-            return mParent.*Member;
-        }
-    };
-
-    template<class Parent, class Type, Type* Parent::* const Member>
-    using ReadOnlyCopyDereferenceObjectProperty = ReadOnlyDereferenceObjectProperty<Parent, Type, Member, PASS_BY_VALUE>;
-
-    template<class Parent, class Type, Type* Parent::* const Member>
-    using ReadOnlyReferenceDereferenceObjectProperty = ReadOnlyDereferenceObjectProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
-
-    template<class Parent, class Type, Type* Parent::* const Member>
-    using CopyDereferenceObjectProperty = DereferenceObjectProperty<Parent, Type, Member, PASS_BY_VALUE>;
-
-    template<class Parent, class Type, Type* Parent::* const Member>
-    using ReferenceDereferenceObjectProperty = DereferenceObjectProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
-
-    ////
-
-    template<class Parent, class Type, Type Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
     class ReadOnlyValueProperty{
     public:
         typedef typename PassTypes<Type, PassMode>::Type Return;
@@ -200,7 +52,15 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        operator ConstReturn() const{
+        inline ConstReturn operator*() const{
+            return mParent.*Member;
+        }
+
+        inline const Type* operator->() const{
+            return &(mParent.*Member);
+        }
+
+        inline operator ConstReturn() const{
             return mParent.*Member;
         }
     };
@@ -222,15 +82,31 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        operator ConstReturn() const{
+        inline Return operator*(){
             return mParent.*Member;
         }
 
-        operator const Return(){
+        inline Type* operator->(){
+            return &(mParent.*Member);
+        }
+
+        inline ConstReturn operator*() const{
             return mParent.*Member;
         }
 
-        Type& operator=(ConstReturn aValue){
+        inline const Type* operator->() const{
+            return &(mParent.*Member);
+        }
+
+        inline operator Return(){
+            return mParent.*Member;
+        }
+
+        inline operator ConstReturn() const{
+            return mParent.*Member;
+        }
+
+        inline const Type& operator=(ConstReturn aValue) const{
             return mParent.*Member = aValue;
         }
     };
@@ -266,12 +142,20 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        operator ConstReturn() const{
+        inline ConstReturn operator*() const{
+            return *(mParent.*Member);
+        }
+
+        inline const Type* operator->() const{
+            return mParent.*Member;
+        }
+
+        inline operator ConstReturn() const{
             return *mParent.*Member;
         }
     };
 
-    template<class Parent, class Type, Type Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
+    template<class Parent, class Type, Type* Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
     class DereferenceValueProperty{
     public:
         typedef typename PassTypes<Type, PassMode>::Type Return;
@@ -288,15 +172,31 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        operator ConstReturn() const{
+        inline Return operator*(){
+            return *(mParent.*Member);
+        }
+
+        inline Type* operator->(){
+            return mParent.*Member;
+        }
+
+        inline ConstReturn operator*() const{
+            return *(mParent.*Member);
+        }
+
+        inline const Type* operator->() const{
+            return mParent.*Member;
+        }
+
+        inline operator Return(){
             return *mParent.*Member;
         }
 
-        operator const Return(){
+        inline operator ConstReturn() const{
             return *mParent.*Member;
         }
 
-        Type& operator=(ConstReturn aValue){
+        inline const Type& operator=(ConstReturn aValue) const{
             return *mParent.*Member = aValue;
         }
     };
@@ -312,27 +212,6 @@ namespace Solaire{
 
     template<class Parent, class Type, Type* Parent::* const Member>
     using ReferenceDereferenceValueProperty = DereferenceValueProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
-
-    ////
-
-    template<class Parent, class Return, Return(*Funtion)(const Parent&)>
-    class FuntionProperty{
-    private:
-        FuntionProperty(const FuntionProperty&) = delete;
-        FuntionProperty(FuntionProperty&&) = delete;
-        FuntionProperty& operator=(const FuntionProperty&) = delete;
-        FuntionProperty& operator=(FuntionProperty&&) = delete;
-    private:
-        Parent& mParent;
-    public:
-        constexpr FuntionProperty(Parent& aParent):
-            mParent(aParent)
-        {}
-
-        operator Return() const{
-            Function(mParent);
-        }
-    };
 }
 
 

@@ -288,14 +288,14 @@ namespace Solaire{ namespace Json{
         Value& operator=(const TypeID);
 
         union{
-            ObjectProperty<Value, NullValue, &Value::mNull> pNull;
-            ObjectProperty<Value, BoolValue, &Value::mBool> pBool;
-            ObjectProperty<Value, NumberValue, &Value::mNumber> pNumber;
-            ObjectProperty<Value, StringValue, &Value::mString> pString;
-            ObjectProperty<Value, ArrayValue, &Value::mArray> pArray;
-            ObjectProperty<Value, ObjectValue, &Value::mObject> pObject;
+            ValueProperty<Value, NullValue, &Value::mNull> pNull;
+            ValueProperty<Value, BoolValue, &Value::mBool> pBool;
+            ValueProperty<Value, NumberValue, &Value::mNumber> pNumber;
+            ValueProperty<Value, StringValue, &Value::mString> pString;
+            ValueProperty<Value, ArrayValue, &Value::mArray> pArray;
+            ValueProperty<Value, ObjectValue, &Value::mObject> pObject;
             ReadOnlyValueProperty<Value, TypeID, &Value::mType> pType;
-            DereferenceObjectProperty<Value, Allocator, &Value::mAllocator> pAllocator;
+            DereferenceValueProperty<Value, Allocator, &Value::mAllocator> pAllocator;
         };
     };
 }}
