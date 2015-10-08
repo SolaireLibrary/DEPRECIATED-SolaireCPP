@@ -46,9 +46,9 @@ namespace Solaire{
         ReadOnlyValueProperty& operator=(const ReadOnlyValueProperty&) = delete;
         ReadOnlyValueProperty& operator=(ReadOnlyValueProperty&&) = delete;
     private:
-        Parent& mParent;
+        const Parent& mParent;
     public:
-        constexpr ReadOnlyValueProperty(Parent& aParent):
+        constexpr ReadOnlyValueProperty(const Parent& aParent):
             mParent(aParent)
         {}
 
@@ -106,7 +106,7 @@ namespace Solaire{
             return mParent.*Member;
         }
 
-        inline const Type& operator=(ConstReturn aValue) const{
+        inline Type& operator=(ConstReturn aValue){
             return mParent.*Member = aValue;
         }
     };
@@ -136,9 +136,9 @@ namespace Solaire{
         ReadOnlyDereferenceValueProperty& operator=(const ReadOnlyDereferenceValueProperty&) = delete;
         ReadOnlyDereferenceValueProperty& operator=(ReadOnlyDereferenceValueProperty&&) = delete;
     private:
-        Parent& mParent;
+        const Parent& mParent;
     public:
-        constexpr ReadOnlyDereferenceValueProperty(Parent& aParent):
+        constexpr ReadOnlyDereferenceValueProperty(const Parent& aParent):
             mParent(aParent)
         {}
 
@@ -196,7 +196,7 @@ namespace Solaire{
             return *mParent.*Member;
         }
 
-        inline const Type& operator=(ConstReturn aValue) const{
+        inline Type& operator=(ConstReturn aValue){
             return *mParent.*Member = aValue;
         }
     };
@@ -212,6 +212,126 @@ namespace Solaire{
 
     template<class Parent, class Type, Type* Parent::* const Member>
     using ReferenceDereferenceValueProperty = DereferenceValueProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    ////
+
+    template<class Parent, class Return, Return(*Function)(Parent&)>
+    class StaticFunctionProperty{
+    private:
+        StaticFunctionProperty(const StaticFunctionProperty&) = delete;
+        StaticFunctionProperty(StaticFunctionProperty&&) = delete;
+        StaticFunctionProperty& operator=(const StaticFunctionProperty&) = delete;
+        StaticFunctionProperty& operator=(StaticFunctionProperty&&) = delete;
+    private:
+        Parent& mParent;
+    public:
+        constexpr StaticFunctionProperty(Parent& aParent):
+            mParent(aParent)
+        {}
+
+        inline Return operator*(){
+            return Function(mParent);
+        }
+
+        inline Return* operator->(){
+            return &Function(mParent);
+        }
+
+        inline operator Return(){
+            return Function(mParent);
+        }
+
+        inline Return& operator=(Return aValue) const{
+            return Function(mParent) = aValue;
+        }
+    };
+
+    template<class Parent, class Return, Return(*Function)(const Parent&)>
+    class ReadOnlyStaticFunctionProperty{
+    private:
+        ReadOnlyStaticFunctionProperty(const ReadOnlyStaticFunctionProperty&) = delete;
+        ReadOnlyStaticFunctionProperty(ReadOnlyStaticFunctionProperty&&) = delete;
+        ReadOnlyStaticFunctionProperty& operator=(const ReadOnlyStaticFunctionProperty&) = delete;
+        ReadOnlyStaticFunctionProperty& operator=(ReadOnlyStaticFunctionProperty&&) = delete;
+    private:
+        const Parent& mParent;
+    public:
+        constexpr ReadOnlyStaticFunctionProperty(const Parent& aParent):
+            mParent(aParent)
+        {}
+
+        inline Return operator*() const{
+            return Function(mParent);
+        }
+
+        inline Return* operator->() const{
+            return &Function(mParent);
+        }
+
+        inline operator Return() const{
+            return Function(mParent);
+        }
+    };
+
+    ////
+
+    template<class Parent, class Return, Return(Parent::*Function)()>
+    class LocalFunctionProperty{
+    private:
+        LocalFunctionProperty(const LocalFunctionProperty&) = delete;
+        LocalFunctionProperty(LocalFunctionProperty&&) = delete;
+        LocalFunctionProperty& operator=(const LocalFunctionProperty&) = delete;
+        LocalFunctionProperty& operator=(LocalFunctionProperty&&) = delete;
+    private:
+        Parent& mParent;
+    public:
+        constexpr LocalFunctionProperty(Parent& aParent):
+            mParent(aParent)
+        {}
+
+        inline Return operator*(){
+            return mParent.*Function();
+        }
+
+        inline Return* operator->(){
+            return &mParent.*Function();
+        }
+
+        inline operator Return(){
+            return mParent.*Function();
+        }
+
+        inline Return& operator=(Return aValue) const{
+            return mParent.*Function() = aValue;
+        }
+    };
+
+    template<class Parent, class Return, Return(Parent::*Function)() const>
+    class ReadOnlyLocalFunctionProperty{
+    private:
+        ReadOnlyLocalFunctionProperty(const ReadOnlyLocalFunctionProperty&) = delete;
+        ReadOnlyLocalFunctionProperty(ReadOnlyLocalFunctionProperty&&) = delete;
+        ReadOnlyLocalFunctionProperty& operator=(const ReadOnlyLocalFunctionProperty&) = delete;
+        ReadOnlyLocalFunctionProperty& operator=(ReadOnlyLocalFunctionProperty&&) = delete;
+    private:
+        const Parent& mParent;
+    public:
+        constexpr ReadOnlyLocalFunctionProperty(const Parent& aParent):
+            mParent(aParent)
+        {}
+
+        inline Return operator*() const{
+            return mParent.*Function();
+        }
+
+        inline Return* operator->() const{
+            return &mParent.*Function();
+        }
+
+        inline operator Return() const{
+            return mParent.*Function();
+        }
+    };
 }
 
 
