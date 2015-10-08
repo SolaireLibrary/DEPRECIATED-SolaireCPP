@@ -32,6 +32,7 @@
 */
 
 #include <cstdint>
+#include "..\Iterators\IteratorMacros.hpp"
 #include "..\Memory\Allocator.hpp"
 #include "..\Property.hpp"
 
@@ -47,10 +48,9 @@ namespace Solaire{
 		typedef Type&& Move;
 		typedef Type* Pointer;
 		typedef ConstType* ConstPointer;
-		typedef Pointer Iterator;
-		typedef ConstPointer ConstIterator;
-		typedef ReverseIteratorWrapper<Type, Iterator> ReverseIterator;
-		typedef ConstIteratorWrapper<Type, ReverseIterator> ConstReverseIterator;
+		//typedef ConstPointer ConstIterator;
+		//typedef ReverseIteratorWrapper<Type, Iterator> ReverseIterator;
+		//typedef ConstIteratorWrapper<Type, ReverseIterator> ConstReverseIterator;
 		typedef LinkedList<TYPE> Self;
     private:
         struct Node{
@@ -70,54 +70,60 @@ namespace Solaire{
             }
         };
     public:
-        /*class EmptyProperty{
-        private:
-            EmptyProperty(const EmptyProperty&) = delete;
-            EmptyProperty(EmptyProperty&&) = delete;
-            EmptyProperty& operator=(const EmptyProperty&) = delete;
-            EmptyProperty& operator=(EmptyProperty&&) = delete;
-        private:
-            LinkedList<Type>& mParent;
-        public:
-            constexpr EmptyProperty(LinkedList<Type>& aParent):
-                mParent(aParent)
-            {}
+        SOLAIRE_BASIC_ITERATOR(
+            Iterator,
+            Type,
+            Node*,
+            return mData = mData == nullptr ? nullptr : mData->next;,
+            return mData = mData == nullptr ? nullptr : mData->previous;,
+            return *mData->GetObject();
+        );
 
-            inline Type* operator->(){
-                return mParent.*Member;
-            }
+        SOLAIRE_CONST_BASIC_ITERATOR(
+            ConstIterator,
+            Type,
+            Node*,
+            return mData = mData == nullptr ? nullptr : mData->next;,
+            return mData = mData == nullptr ? nullptr : mData->previous;,
+            return *mData->GetObject();
+        );
 
-            inline ReturnType operator*(){
-                return *(mParent.*Member);
-            }
+        SOLAIRE_BASIC_ITERATOR(
+            ReverseIterator,
+            Type,
+            Node*,
+            return mData = mData == nullptr ? nullptr : mData->previous;,
+            return mData = mData == nullptr ? nullptr : mData->next;,
+            return *mData->GetObject();
+        );
 
-            inline const Type* operator->() const{
-                return mParent.*Member;
-            }
-
-            inline ConstReturnType operator*() const{
-                return *(mParent.*Member);
-            }
-        };*/
+        SOLAIRE_CONST_BASIC_ITERATOR(
+            ConstReverseIterator,
+            Type,
+            Node*,
+            return mData = mData == nullptr ? nullptr : mData->previous;,
+            return mData = mData == nullptr ? nullptr : mData->next;,
+            return *mData->GetObject();
+        );
 	private:
         Allocator* mAllocator;
 		Node* mFirst;
 		Node* mLast;
 		uint32_t mSize;
     private:
-        static void LinkLeft(Node* const aLeft, Node* const aMiddle){
+        static void LinkForwards(Node* const aLeft, Node* const aMiddle){
             aLeft->next = aMiddle;
             aMiddle->previous = aLeft;
         }
 
-        static void LinkRight(Node* const aMiddle, Node* const aRight){
+        static void LinkBackwards(Node* const aMiddle, Node* const aRight){
             aMiddle->next = aRight;
             aRight->previous = aMiddle;
         }
 
         static void LinkBoth(Node* const aLeft, Node* const aMiddle, Node* const aRight){
-            if(aLeft) LinkLeft(aLeft, aMiddle);
-            if(aRight) LinkRight(aMiddle, aRight);
+            if(aLeft) LinkForwards(aLeft, aMiddle);
+            if(aRight) LinkBackwards(aMiddle, aRight);
         }
 
         Node* AllocateNode(ConstReference aValue){
@@ -129,15 +135,15 @@ namespace Solaire{
                 node->~Node();
             });
         }
-    private:
-        SolaireReadWriteProperty(pFrontProp, LinkedList<Type>, Type&, Type*, return *mParent.mFirst->GetObject(););
-        SolaireReadWriteProperty(pBackProp, LinkedList<Type>, Type&, Type*, return *mParent.mLast->GetObject(););
     public:
+        SOLAIRE_READ_WRITE_PROPERTY(pFrontProp, LinkedList<Type>, Type&, Type*, return *mParent.mFirst->GetObject(););
+        SOLAIRE_READ_WRITE_PROPERTY(pBackProp, LinkedList<Type>, Type&, Type*, return *mParent.mLast->GetObject(););
+        SOLAIRE_READ_PROPERTY(pEmptyProp, LinkedList<Type>, bool, bool, return mParent.mSize == 0;);
+
         union{
             pFrontProp pFront;
             pBackProp pBack;
-            //StaticFunctionProperty<LinkedList<Type>, Type&, pFrontFn> pFront;
-            //StaticFunctionProperty<LinkedList<Type>, Type&, pBackFn> pBack;
+            pEmptyProp pEmpty;
             ReadOnlyValueProperty<LinkedList<Type>, uint32_t, &LinkedList<Type>::mSize> pSize;
             DereferenceValueProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator> pAllocator;
         };
@@ -157,11 +163,41 @@ namespace Solaire{
             return *mAllocator;
         }
 
+        Reference InsertBefore(const ConstIterator aPosition, ConstReference aValue){
+            Node* const node = &*(aPosition);
+            Node* const newNode = AllocateNode(aValue);
+
+            if(node == mFirst){
+                LinkBackwards(newNode, node);
+                mFirst = newNode;
+            }else{
+                LinkForwards(node->previous, newNode);
+                LinkBackwards(newNode, node);
+            }
+            ++mSize;
+            return *newNode->GetObject();
+        }
+
+        Reference InsertAfter(const ConstIterator aPosition, ConstReference aValue){
+            Node* const node = &*(aPosition);
+            Node* const newNode = AllocateNode(aValue);
+
+            if(node == mLast){
+                LinkForwards(node, newNode);
+                mLast = newNode;
+            }else{
+                LinkForwards(newNode, node->next);
+                LinkForwards(node, newNode);
+            }
+            ++mSize;
+            return *newNode->GetObject();
+        }
+
         Reference PushBack(ConstReference aValue){
             Node* const node = AllocateNode(aValue);
 
             if(mFirst){
-                LinkLeft(mLast, node);
+                LinkForwards(mLast, node);
             }else{
                 mFirst = node;
             }
@@ -174,7 +210,7 @@ namespace Solaire{
             Node* const node = AllocateNode(aValue);
 
             if(mFirst){
-                LinkLeft(node, mFirst);
+                LinkForwards(node, mFirst);
             }else{
                 mLast = node;
             }
@@ -195,6 +231,38 @@ namespace Solaire{
             mSize = 0;
             mFirst = nullptr;
             mLast = nullptr;
+        }
+
+        Iterator begin(){
+            return Iterator(mFirst);
+        }
+
+        ConstIterator begin() const{
+            return Iterator(mFirst);
+        }
+
+        Iterator end(){
+            return Iterator(nullptr);
+        }
+
+        ConstIterator end() const{
+            return Iterator(nullptr);
+        }
+
+        ReverseIterator rbegin(){
+            return ReverseIterator(mLast);
+        }
+
+        ConstReverseIterator rbegin() const{
+            return ConstReverseIterator(mLast);
+        }
+
+        ReverseIterator rend(){
+            return ReverseIterator(nullptr);
+        }
+
+        ConstReverseIterator rend() const{
+            return ConstReverseIterator(nullptr);
         }
 	};
 }

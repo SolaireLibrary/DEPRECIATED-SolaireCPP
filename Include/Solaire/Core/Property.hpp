@@ -52,15 +52,15 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        inline ConstReturn operator*() const{
+        SOLAIRE_INLINE ConstReturn operator*() const{
             return mParent.*Member;
         }
 
-        inline const Type* operator->() const{
+        SOLAIRE_INLINE const Type* operator->() const{
             return &(mParent.*Member);
         }
 
-        inline operator ConstReturn() const{
+        SOLAIRE_INLINE operator ConstReturn() const{
             return mParent.*Member;
         }
     };
@@ -82,31 +82,31 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        inline Return operator*(){
+        SOLAIRE_INLINE Return operator*(){
             return mParent.*Member;
         }
 
-        inline Type* operator->(){
+        SOLAIRE_INLINE Type* operator->(){
             return &(mParent.*Member);
         }
 
-        inline ConstReturn operator*() const{
+        SOLAIRE_INLINE ConstReturn operator*() const{
             return mParent.*Member;
         }
 
-        inline const Type* operator->() const{
+        SOLAIRE_INLINE const Type* operator->() const{
             return &(mParent.*Member);
         }
 
-        inline operator Return(){
+        SOLAIRE_INLINE operator Return(){
             return mParent.*Member;
         }
 
-        inline operator ConstReturn() const{
+        SOLAIRE_INLINE operator ConstReturn() const{
             return mParent.*Member;
         }
 
-        inline Type& operator=(ConstReturn aValue){
+        SOLAIRE_INLINE Type& operator=(ConstReturn aValue){
             return mParent.*Member = aValue;
         }
     };
@@ -142,15 +142,15 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        inline ConstReturn operator*() const{
+        SOLAIRE_INLINE ConstReturn operator*() const{
             return *(mParent.*Member);
         }
 
-        inline const Type* operator->() const{
+        SOLAIRE_INLINE const Type* operator->() const{
             return mParent.*Member;
         }
 
-        inline operator ConstReturn() const{
+        SOLAIRE_INLINE operator ConstReturn() const{
             return *mParent.*Member;
         }
     };
@@ -172,31 +172,31 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        inline Return operator*(){
+        SOLAIRE_INLINE Return operator*(){
             return *(mParent.*Member);
         }
 
-        inline Type* operator->(){
+        SOLAIRE_INLINE Type* operator->(){
             return mParent.*Member;
         }
 
-        inline ConstReturn operator*() const{
+        SOLAIRE_INLINE ConstReturn operator*() const{
             return *(mParent.*Member);
         }
 
-        inline const Type* operator->() const{
+        SOLAIRE_INLINE const Type* operator->() const{
             return mParent.*Member;
         }
 
-        inline operator Return(){
+        SOLAIRE_INLINE operator Return(){
             return *mParent.*Member;
         }
 
-        inline operator ConstReturn() const{
+        SOLAIRE_INLINE operator ConstReturn() const{
             return *mParent.*Member;
         }
 
-        inline Type& operator=(ConstReturn aValue){
+        SOLAIRE_INLINE Type& operator=(ConstReturn aValue){
             return *mParent.*Member = aValue;
         }
     };
@@ -229,19 +229,19 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        inline Return operator*(){
+        SOLAIRE_INLINE Return operator*(){
             return Function(mParent);
         }
 
-        inline Return* operator->(){
+        SOLAIRE_INLINE Return* operator->(){
             return &Function(mParent);
         }
 
-        inline operator Return(){
+        SOLAIRE_INLINE operator Return(){
             return Function(mParent);
         }
 
-        inline Return& operator=(Return aValue) const{
+        SOLAIRE_INLINE Return& operator=(Return aValue) const{
             return Function(mParent) = aValue;
         }
     };
@@ -260,15 +260,15 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        inline Return operator*() const{
+        SOLAIRE_INLINE Return operator*() const{
             return Function(mParent);
         }
 
-        inline Return* operator->() const{
+        SOLAIRE_INLINE Return* operator->() const{
             return &Function(mParent);
         }
 
-        inline operator Return() const{
+        SOLAIRE_INLINE operator Return() const{
             return Function(mParent);
         }
     };
@@ -289,19 +289,19 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        inline Return operator*(){
+        SOLAIRE_INLINE Return operator*(){
             return mParent.*Function();
         }
 
-        inline Return* operator->(){
+        SOLAIRE_INLINE Return* operator->(){
             return &mParent.*Function();
         }
 
-        inline operator Return(){
+        SOLAIRE_INLINE operator Return(){
             return mParent.*Function();
         }
 
-        inline Return& operator=(Return aValue) const{
+        SOLAIRE_INLINE Return& operator=(Return aValue) const{
             return mParent.*Function() = aValue;
         }
     };
@@ -320,22 +320,22 @@ namespace Solaire{
             mParent(aParent)
         {}
 
-        inline Return operator*() const{
+        SOLAIRE_INLINE Return operator*() const{
             return mParent.*Function();
         }
 
-        inline Return* operator->() const{
+        SOLAIRE_INLINE Return* operator->() const{
             return &mParent.*Function();
         }
 
-        inline operator Return() const{
+        SOLAIRE_INLINE operator Return() const{
             return mParent.*Function();
         }
     };
 
     ////
 
-    #define SolaireReadProperty(aName, aParentType, aRefType, aPtrType, aCode)\
+    #define SOLAIRE_READ_PROPERTY(aName, aParentType, aRefType, aPtrType, aCode)\
     class aName{\
     private:\
         aName(const aName&) = delete;\
@@ -349,20 +349,20 @@ namespace Solaire{
             mParent(aParent)\
         {}\
         \
-        inline aRefType operator*() const{\
+        aRefType operator*() const{\
             aCode\
         }\
         \
-        inline aPtrType operator->() const{\
+        SOLAIRE_INLINE aPtrType operator->() const{\
             return &operator*();\
         }\
         \
-        inline operator aRefType() const{\
+        SOLAIRE_INLINE operator aRefType() const{\
             return operator*();\
         }\
     };
 
-    #define SolaireWriteProperty(aName, aParentType, aRefType, aPtrType, aCode)\
+    #define SOLAIRE_WRITE_PROPERTY(aName, aParentType, aRefType, aPtrType, aCode)\
     class aName{\
     private:\
         aName(const aName&) = delete;\
@@ -376,24 +376,24 @@ namespace Solaire{
             mParent(aParent)\
         {}\
         \
-        inline aRefType operator*(){\
+        aRefType operator*(){\
             aCode\
         }\
         \
-        inline aPtrType operator->(){\
+        SOLAIRE_INLINE aPtrType operator->(){\
             return &operator*();\
         }\
         \
-        inline operator aRefType(){\
+        SOLAIRE_INLINE operator aRefType(){\
             return operator*();\
         }\
         \
-        inline aRefType operator=(aRefType aValue){\
+        SOLAIRE_INLINE aRefType operator=(aRefType aValue){\
             return operator*() = aValue;\
         }\
     };
 
-    #define SolaireReadWriteProperty(aName, aParentType, aRefType, aPtrType, aCode)\
+    #define SOLAIRE_READ_WRITE_PROPERTY(aName, aParentType, aRefType, aPtrType, aCode)\
     class aName{\
     private:\
         aName(const aName&) = delete;\
@@ -407,31 +407,31 @@ namespace Solaire{
             mParent(aParent)\
         {}\
         \
-        inline aRefType operator*(){\
+        aRefType operator*(){\
             aCode\
         }\
         \
-        inline aPtrType operator->(){\
+        SOLAIRE_INLINE aPtrType operator->(){\
             return &operator*();\
         }\
         \
-        inline operator aRefType(){\
+        SOLAIRE_INLINE operator aRefType(){\
             return operator*();\
         }\
         \
-        inline aRefType operator=(aRefType aValue){\
+        SOLAIRE_INLINE aRefType operator=(aRefType aValue){\
             return operator*() = aValue;\
         }\
         \
-        inline const aRefType operator*() const{\
+        SOLAIRE_INLINE const aRefType operator*() const{\
             return const_cast<aName*>(this)->operator*();\
         }\
         \
-        inline const aPtrType operator->() const{\
+        SOLAIRE_INLINE const aPtrType operator->() const{\
             return &operator*();\
         }\
         \
-        inline operator const aRefType() const{\
+        SOLAIRE_INLINE operator const aRefType() const{\
             return operator*();\
         }\
     };
