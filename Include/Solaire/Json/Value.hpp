@@ -294,7 +294,7 @@ namespace Solaire{ namespace Json{
             ObjectProperty<Value, StringValue, &Value::mString> pString;
             ObjectProperty<Value, ArrayValue, &Value::mArray> pArray;
             ObjectProperty<Value, ObjectValue, &Value::mObject> pObject;
-            ReadOnlyObjectProperty<Value, TypeID, &Value::mType> pType;
+            ReadOnlyValueProperty<Value, TypeID, &Value::mType> pType;
             DereferenceObjectProperty<Value, Allocator, &Value::mAllocator> pAllocator;
         };
     };

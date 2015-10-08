@@ -169,19 +169,170 @@ namespace Solaire{
         }
     };
 
-    template<class Parent, class Type, Type Parent::* const Member>
+    template<class Parent, class Type, Type* Parent::* const Member>
     using ReadOnlyCopyDereferenceObjectProperty = ReadOnlyDereferenceObjectProperty<Parent, Type, Member, PASS_BY_VALUE>;
 
-    template<class Parent, class Type, Type Parent::* const Member>
+    template<class Parent, class Type, Type* Parent::* const Member>
     using ReadOnlyReferenceDereferenceObjectProperty = ReadOnlyDereferenceObjectProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
 
-    template<class Parent, class Type, Type Parent::* const Member>
+    template<class Parent, class Type, Type* Parent::* const Member>
     using CopyDereferenceObjectProperty = DereferenceObjectProperty<Parent, Type, Member, PASS_BY_VALUE>;
 
-    template<class Parent, class Type, Type Parent::* const Member>
+    template<class Parent, class Type, Type* Parent::* const Member>
     using ReferenceDereferenceObjectProperty = DereferenceObjectProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
 
     ////
+
+    template<class Parent, class Type, Type Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
+    class ReadOnlyValueProperty{
+    public:
+        typedef typename PassTypes<Type, PassMode>::Type Return;
+        typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
+    private:
+        ReadOnlyValueProperty(const ReadOnlyValueProperty&) = delete;
+        ReadOnlyValueProperty(ReadOnlyValueProperty&&) = delete;
+        ReadOnlyValueProperty& operator=(const ReadOnlyValueProperty&) = delete;
+        ReadOnlyValueProperty& operator=(ReadOnlyValueProperty&&) = delete;
+    private:
+        Parent& mParent;
+    public:
+        constexpr ReadOnlyValueProperty(Parent& aParent):
+            mParent(aParent)
+        {}
+
+        operator ConstReturn() const{
+            return mParent.*Member;
+        }
+    };
+
+    template<class Parent, class Type, Type Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
+    class ValueProperty{
+    public:
+        typedef typename PassTypes<Type, PassMode>::Type Return;
+        typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
+    private:
+        ValueProperty(const ValueProperty&) = delete;
+        ValueProperty(ValueProperty&&) = delete;
+        ValueProperty& operator=(const ValueProperty&) = delete;
+        ValueProperty& operator=(ValueProperty&&) = delete;
+    private:
+        Parent& mParent;
+    public:
+        constexpr ValueProperty(Parent& aParent):
+            mParent(aParent)
+        {}
+
+        operator ConstReturn() const{
+            return mParent.*Member;
+        }
+
+        operator const Return(){
+            return mParent.*Member;
+        }
+
+        Type& operator=(ConstReturn aValue){
+            return mParent.*Member = aValue;
+        }
+    };
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using ReadOnlyCopyValueProperty = ReadOnlyValueProperty<Parent, Type, Member, PASS_BY_VALUE>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using ReadOnlyReferenceValueProperty = ReadOnlyValueProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using CopyValueProperty = ValueProperty<Parent, Type, Member, PASS_BY_VALUE>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using ReferenceValueProperty = ValueProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    ////
+
+    template<class Parent, class Type, Type* Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
+    class ReadOnlyDereferenceValueProperty{
+    public:
+        typedef typename PassTypes<Type, PassMode>::Type Return;
+        typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
+    private:
+        ReadOnlyDereferenceValueProperty(const ReadOnlyDereferenceValueProperty&) = delete;
+        ReadOnlyDereferenceValueProperty(ReadOnlyDereferenceValueProperty&&) = delete;
+        ReadOnlyDereferenceValueProperty& operator=(const ReadOnlyDereferenceValueProperty&) = delete;
+        ReadOnlyDereferenceValueProperty& operator=(ReadOnlyDereferenceValueProperty&&) = delete;
+    private:
+        Parent& mParent;
+    public:
+        constexpr ReadOnlyDereferenceValueProperty(Parent& aParent):
+            mParent(aParent)
+        {}
+
+        operator ConstReturn() const{
+            return *mParent.*Member;
+        }
+    };
+
+    template<class Parent, class Type, Type Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
+    class DereferenceValueProperty{
+    public:
+        typedef typename PassTypes<Type, PassMode>::Type Return;
+        typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
+    private:
+        DereferenceValueProperty(const DereferenceValueProperty&) = delete;
+        DereferenceValueProperty(DereferenceValueProperty&&) = delete;
+        DereferenceValueProperty& operator=(const DereferenceValueProperty&) = delete;
+        DereferenceValueProperty& operator=(DereferenceValueProperty&&) = delete;
+    private:
+        Parent& mParent;
+    public:
+        constexpr DereferenceValueProperty(Parent& aParent):
+            mParent(aParent)
+        {}
+
+        operator ConstReturn() const{
+            return *mParent.*Member;
+        }
+
+        operator const Return(){
+            return *mParent.*Member;
+        }
+
+        Type& operator=(ConstReturn aValue){
+            return *mParent.*Member = aValue;
+        }
+    };
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using ReadOnlyCopyDereferenceValueProperty = ReadOnlyDereferenceValueProperty<Parent, Type, Member, PASS_BY_VALUE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using ReadOnlyReferenceDereferenceValueProperty = ReadOnlyDereferenceValueProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using CopyDereferenceValueProperty = DereferenceValueProperty<Parent, Type, Member, PASS_BY_VALUE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using ReferenceDereferenceValueProperty = DereferenceValueProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    ////
+
+    template<class Parent, class Return, Return(*Funtion)(const Parent&)>
+    class FuntionProperty{
+    private:
+        FuntionProperty(const FuntionProperty&) = delete;
+        FuntionProperty(FuntionProperty&&) = delete;
+        FuntionProperty& operator=(const FuntionProperty&) = delete;
+        FuntionProperty& operator=(FuntionProperty&&) = delete;
+    private:
+        Parent& mParent;
+    public:
+        constexpr FuntionProperty(Parent& aParent):
+            mParent(aParent)
+        {}
+
+        operator Return() const{
+            Function(mParent);
+        }
+    };
 }
 
 
