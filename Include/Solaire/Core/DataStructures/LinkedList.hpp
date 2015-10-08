@@ -69,6 +69,36 @@ namespace Solaire{
                 return reinterpret_cast<Type*>(object);
             }
         };
+    public:
+        /*class EmptyProperty{
+        private:
+            EmptyProperty(const EmptyProperty&) = delete;
+            EmptyProperty(EmptyProperty&&) = delete;
+            EmptyProperty& operator=(const EmptyProperty&) = delete;
+            EmptyProperty& operator=(EmptyProperty&&) = delete;
+        private:
+            LinkedList<Type>& mParent;
+        public:
+            constexpr EmptyProperty(LinkedList<Type>& aParent):
+                mParent(aParent)
+            {}
+
+            inline Type* operator->(){
+                return mParent.*Member;
+            }
+
+            inline ReturnType operator*(){
+                return *(mParent.*Member);
+            }
+
+            inline const Type* operator->() const{
+                return mParent.*Member;
+            }
+
+            inline ConstReturnType operator*() const{
+                return *(mParent.*Member);
+            }
+        };*/
 	private:
         Allocator* mAllocator;
 		Node* mFirst;
@@ -101,8 +131,8 @@ namespace Solaire{
         }
     public:
         union{
-            ReadOnlyCopyProperty<LinkedList<Type>, uint32_t, &LinkedList<Type>::mSize> pSize;
-            ReferenceDereferenceProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator> pAllocator;
+            ReadOnlyValueProperty<LinkedList<Type>, uint32_t, &LinkedList<Type>::mSize> pSize;
+            DereferenceProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator> pAllocator;
         };
     public:
         LinkedList(Allocator& aAllocator):

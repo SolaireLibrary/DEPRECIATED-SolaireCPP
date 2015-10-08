@@ -65,15 +65,48 @@ template<class RETURN_TYPE = aReturn>\
 aMods typename std::enable_if<aCondition, RETURN_TYPE>::type
 
 #include <cstdint>
+#include <type_traits>
+
 
 namespace Solaire{
-    typedef uint16_t ErrorCode;
 
-    enum : ErrorCode{
-        ERROR_NO_ERROR = 0,
-        ERROR_INDEX_OUT_OF_BOUNDS = 1,
-        ERROR_NULL_POINTER = 2
+    enum{
+        PASS_BY_VALUE,
+        PASS_BY_REFERENCE
     };
+
+    template<class T, class Enable = void>
+    struct TypeTraits{
+        static constexpr int PassMode = PASS_BY_REFERENCE;
+    };
+
+    template<class T, const int Mode = TypeTraits<T>::PassMode>
+    struct PassTypes{
+        typedef void Type;
+        typedef void ConstType;
+    };
+
+    ////
+
+    template<class T>
+    struct PassTypes<T, PASS_BY_VALUE>{
+        typedef T Type;
+        typedef const T ConstType;
+    };
+
+    template<class T>
+    struct PassTypes<T, PASS_BY_REFERENCE>{
+        typedef T& Type;
+        typedef const T& ConstType;
+    };
+
+    ////
+
+    template<class T>
+    struct TypeTraits<T, typename std::enable_if<is_arithmetic<T>::value>::type>{
+        static constexpr int PassMode = PASS_BY_VALUE;
+    };
+
 }
 
 #endif
