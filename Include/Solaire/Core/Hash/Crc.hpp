@@ -37,7 +37,7 @@ Last Modified	: 1st October 2015
 namespace Solaire{
 
     template<class T, const T POLYNOMIAL, const T INITIAL_REMAINDER, const T FINAL_XOR_VALUE, const bool REFLECT_DATA, const bool REFLECT_REMAINDER>
-    class Crc : public HashFunction<uint32_t>
+    class Crc : public HashFunction<T>
     {
     private:
         enum : T{
@@ -119,7 +119,7 @@ namespace Solaire{
         };
     public:
         // Inherited from HashFunction
-        HashType Hash(const void* const aValue, const size_t aBytes) override{
+        T Hash(const void* const aValue, const size_t aBytes) const override{
 			const uint8_t* ptr = static_cast<const uint8_t*>(aValue);
 			const uint8_t* const end = ptr + aBytes;
 

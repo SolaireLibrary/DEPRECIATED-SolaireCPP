@@ -229,6 +229,13 @@ namespace Solaire{
             return aStream;
         }
     };
+
+    template<class HASH_TYPE>
+    struct HashWrapper<String, HASH_TYPE>{
+        static HASH_TYPE Hash(const HashFunction<HASH_TYPE>& aFunction, const String& aValue){
+            return aFunction.Hash(aValue.begin(), aValue.Size());
+        }
+    };
 }
 
 #include "String.inl"

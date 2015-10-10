@@ -45,11 +45,13 @@ namespace Solaire{
 
         }
 
-        virtual HashType Hash(const void* const aValue, const size_t aBytes) = 0;
+        virtual HashType Hash(const void* const aValue, const size_t aBytes) const = 0;
+    };
 
-        template<class T>
-        HashType Hash(const T& aValue){
-            return Hash(&aValue, sizeof(T));
+    template<class T, class HASH_TYPE>
+    struct HashWrapper{
+        static HASH_TYPE Hash(const HashFunction<HASH_TYPE>& aFunction, typename PassTypes<T>::ConstType aValue){
+            return aFunction.Hash(&aValue, sizeof(T));
         }
     };
 

@@ -34,6 +34,7 @@ Last Modified	: 28th September 2015
 #include <iostream>
 #include "..\Iterators\ReverseIterator.hpp"
 #include "..\Iterators\ConstIterator.hpp"
+#include "../Hash/HashFunction.hpp"
 
 namespace Solaire {
     class ConstStringFragment;
@@ -188,6 +189,30 @@ namespace Solaire {
             return aStream >> aFragment.mFragment;
         }
 	};
+
+    template<>
+    struct TypeTraits<StringFragment>{
+        static constexpr int PassMode = PASS_BY_VALUE;
+    };
+
+    template<class HASH_TYPE>
+    struct HashWrapper<StringFragment, HASH_TYPE>{
+        static HASH_TYPE Hash(const HashFunction<HASH_TYPE>& aFunction, const StringFragment aValue){
+            return aFunction.Hash(aValue.begin(), aValue.Size());
+        }
+    };
+
+    template<>
+    struct TypeTraits<ConstStringFragment>{
+        static constexpr int PassMode = PASS_BY_VALUE;
+    };
+
+    template<class HASH_TYPE>
+    struct HashWrapper<ConstStringFragment, HASH_TYPE>{
+        static HASH_TYPE Hash(const HashFunction<HASH_TYPE>& aFunction, const ConstStringFragment&aValue){
+            return aFunction.Hash(aValue.begin(), aValue.Size());
+        }
+    };
 }
 
 #include "StringFragment.inl"
