@@ -123,14 +123,21 @@ namespace Solaire{
             aOther.mData = nullptr;
         }
 
-		DynamicArray(const Index aCount = 32, Allocator& aAllocator = GetDefaultAllocator()) :
+		DynamicArray(Allocator& aAllocator) :
+		    mAllocator(&aAllocator),
+			mHead(0),
+			mSize(32),
+			mData(mAllocator->Allocate<Type>(mSize))
+		{}
+
+		DynamicArray(Allocator& aAllocator, const Index aCount) :
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aCount),
 			mData(mAllocator->Allocate<Type>(mSize))
 		{}
 
-		DynamicArray(ConstReference aValue, const Index aCount, Allocator& aAllocator = GetDefaultAllocator()) :
+		DynamicArray(Allocator& aAllocator, ConstReference aValue, const Index aCount) :
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aCount),
@@ -141,7 +148,7 @@ namespace Solaire{
 			}
 		}
 
-		DynamicArray(const std::initializer_list<Type> aList, Allocator& aAllocator = GetDefaultAllocator()) :
+		DynamicArray(Allocator& aAllocator, const std::initializer_list<Type> aList) :
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aList.size()),
@@ -151,7 +158,7 @@ namespace Solaire{
 		}
 
         template<class ExternalIterator>
-		DynamicArray(ExternalIterator aBegin, const ExternalIterator aEnd, Allocator& aAllocator = GetDefaultAllocator()) :
+		DynamicArray(Allocator& aAllocator, ExternalIterator aBegin, const ExternalIterator aEnd) :
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aEnd - aBegin),

@@ -55,7 +55,8 @@ namespace Solaire {namespace Fuzzy{
         Allocator* mAllocator;
     public:
         FScript(Allocator& aAllocator):
-            mAllocator(& aAllocator)
+            mLines(aAllocator),
+            mAllocator(&aAllocator)
         {}
 
         void SetFuzzifier(std::shared_ptr<const Fuzzifier> aFuzzifier){
@@ -67,7 +68,7 @@ namespace Solaire {namespace Fuzzy{
             for(size_t i = 0; i < count; ++i){
                 const ConstStringFragment name = mFuzzifier->GetInputName(i);
                 mInputMap.emplace(String(name, *mAllocator), 0.f);
-                mOutputBuffer.emplace(String(name, *mAllocator), DynamicArray<float>(16, *mAllocator));
+                mOutputBuffer.emplace(String(name, *mAllocator), DynamicArray<float>(*mAllocator, 16));
             }
         }
 

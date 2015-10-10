@@ -76,31 +76,31 @@ namespace Solaire{
     {}
 
     String::String(Allocator& aAllocator) :
-        mContainer(256, aAllocator)
+        mContainer(aAllocator, 128)
     {
         mContainer.PushBack('\0');
     }
 
     String::String(const ConstPointer aPointer, Allocator& aAllocator) :
-        mContainer(aPointer, aPointer + std::strlen(aPointer), aAllocator)
+        mContainer(aAllocator, aPointer, aPointer + std::strlen(aPointer))
     {
         mContainer.PushBack('\0');
     }
 
     String::String(const ConstPointer aPointer, const size_t aSize, Allocator& aAllocator) :
-        mContainer(aPointer, aPointer + aSize, aAllocator)
+        mContainer(aAllocator, aPointer, aPointer + aSize)
     {
         mContainer.PushBack('\0');
     }
 
     String::String(const std::basic_string<Type>& aOther, Allocator& aAllocator) :
-        mContainer(aOther.begin(), aOther.end(), aAllocator)
+        mContainer(aAllocator, aOther.begin(), aOther.end())
     {
         mContainer.PushBack('\0');
     }
 
     String::String(const ConstStringFragment aOther, Allocator& aAllocator) :
-        mContainer(aOther.begin(), aOther.end(), aAllocator)
+        mContainer(aAllocator, aOther.begin(), aOther.end())
     {
         mContainer.PushBack('\0');
     }

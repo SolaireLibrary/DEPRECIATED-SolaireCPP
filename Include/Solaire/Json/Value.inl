@@ -1030,10 +1030,10 @@ namespace Solaire{ namespace Json{
             mDataString = new(mAllocator->AllocateAndRegister<String>()) String(*mAllocator);
             break;
         case TYPE_ARRAY:
-            mDataArray = new(mAllocator->AllocateAndRegister<ArrayType>()) ArrayType(8, *mAllocator);
+            mDataArray = new(mAllocator->AllocateAndRegister<ArrayType>()) ArrayType(*mAllocator, 9);
             break;
         case TYPE_OBJECT:
-            mDataObject = new(mAllocator->AllocateAndRegister<ObjectType>()) ObjectType(8, *mAllocator);
+            mDataObject = new(mAllocator->AllocateAndRegister<ObjectType>()) ObjectType(*mAllocator, 8);
             break;
         default:
             break;
