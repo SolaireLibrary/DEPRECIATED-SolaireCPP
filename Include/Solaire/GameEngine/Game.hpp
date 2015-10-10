@@ -38,6 +38,7 @@ Last Modified	: 22nd September 2015
 namespace Solaire{ namespace Game{
 
     class GameListener;
+    class Task;
 
     class Game{
     public:
@@ -65,6 +66,10 @@ namespace Solaire{ namespace Game{
         virtual bool IsLevelLoaded() const = 0;
         virtual Level& CurrentLevel() = 0;
         virtual const Level& CurrentLevel() const = 0;
+
+        virtual void ScheduleTask(Task* aTask) = 0;
+        virtual void ScheduleTaskRepeat(Task* aTask, const size_t aMilliseconds) = 0;
+        virtual void CancelTask(Task* aTask) = 0;
     };
 
     class GameListener{
