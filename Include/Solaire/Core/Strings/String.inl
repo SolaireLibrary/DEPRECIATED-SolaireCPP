@@ -224,7 +224,7 @@ namespace Solaire{
     }
 
     String::ConstPointer String::CString() const{
-        return &mContainer[0];
+        return &const_cast<Container&>(mContainer)[0];
     }
 
     String::operator StringFragment(){

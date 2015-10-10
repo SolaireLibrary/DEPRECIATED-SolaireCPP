@@ -34,6 +34,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <functional>
+#include "..\Init.hpp"
 #include "..\Memory\Allocator.hpp"
 #include "..\Iterators\ReverseIterator.hpp"
 #include "..\Iterators\ConstIterator.hpp"
@@ -56,6 +57,8 @@ namespace Solaire{
 		typedef ConstIteratorWrapper<Type, ReverseIterator> ConstReverseIterator;
 		typedef INDEX Index;
 		typedef DynamicArray<TYPE, CONST_TYPE, INDEX> Self;
+
+		typedef typename PassTypes<Type>::ConstType PassType;
 	private:
         Allocator* mAllocator;
 		Index mHead;
@@ -137,7 +140,7 @@ namespace Solaire{
 			mData(mAllocator->Allocate<Type>(mSize))
 		{}
 
-		DynamicArray(Allocator& aAllocator, ConstReference aValue, const Index aCount) :
+		DynamicArray(Allocator& aAllocator, PassType aValue, const Index aCount) :
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aCount),
@@ -209,21 +212,12 @@ namespace Solaire{
 		    mHead = 0;
 		}
 
-		Reference PushBack(Move aValue){
-		    if(mHead == mSize) IncreaseSize();
-		    return *new(mData + mHead++) Type(std::move(aValue));
-		}
-
-		Reference PushBack(ConstReference aValue){
+		Reference PushBack(PassType aValue){
 		    if(mHead == mSize) IncreaseSize();
 		    return *new(mData + mHead++) Type(aValue);
 		}
 
-		Reference PushFront(Move aValue){
-		    return InsertBefore(begin(), std::move(aValue));
-		}
-
-		Reference PushFront(ConstReference aValue){
+		Reference PushFront(PassType aValue){
 		    return InsertBefore(begin(), aValue);
 		}
 
@@ -245,26 +239,15 @@ namespace Solaire{
 		    ShiftDown(aPosition);
 		}
 
-		Reference InsertBefore(const ConstIterator aPosition, Move aValue){
-		    ShiftUp(aPosition);
-		    const Iterator& pos = const_cast<Iterator&>(aPosition);
-		    *pos = std::move(aValue);
-		    return *pos;
-		}
-
-		Reference InsertBefore(const ConstIterator aPosition, ConstReference aValue){
+		Reference InsertBefore(const ConstIterator aPosition, PassType aValue){
 		    ShiftUp(aPosition);
 		    const Iterator& pos = const_cast<Iterator&>(aPosition);
 		    *pos = aValue;
 		    return *pos;
 		}
 
-		Reference InsertAfter(const ConstIterator aPosition, Move aValue){
-		    return aPosition == end() - 1 ? PushBack(std::move(aValue)) : InsertBefore(aPosition + 1, std::move(aValue));
-		}
-
-		Reference InsertAfter(const ConstIterator aPosition, ConstReference aValue){
-		   return aPosition == end() - 1 ? PushBack(std::move(aValue)) : InsertBefore(aPosition + 1, aValue);
+		Reference InsertAfter(const ConstIterator aPosition, PassType aValue){
+		   return aPosition == end() - 1 ? PushBack(aValue) : InsertBefore(aPosition + 1, aValue);
 		}
 
 		bool IsEmpty() const{
@@ -284,7 +267,7 @@ namespace Solaire{
 		    return mData[aIndex];
 		}
 
-		ConstReference operator[](const Index aIndex) const{
+		PassType operator[](const Index aIndex) const{
 		    if(aIndex < 0 || aIndex >= mHead) throw std::runtime_error("DynamicArray : Index is out of bounds");
 		    return mData[aIndex];
 		}
@@ -379,11 +362,11 @@ namespace Solaire{
 		    return *begin();
 		}
 
-		ConstReference Back() const{
+		PassType Back() const{
 		    return *(end() - 1);
 		}
 
-		ConstReference Front() const{
+		PassType Front() const{
 		    return *begin();
 		}
 

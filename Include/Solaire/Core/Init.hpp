@@ -107,6 +107,16 @@ namespace Solaire{
         static constexpr int PassMode = PASS_BY_VALUE;
     };
 
+    template<>
+    struct TypeTraits<bool>{
+        static constexpr int PassMode = PASS_BY_VALUE;
+    };
+
+    template<>
+    struct TypeTraits<char>{
+        static constexpr int PassMode = PASS_BY_VALUE;
+    };
+
 }
 
 #endif
