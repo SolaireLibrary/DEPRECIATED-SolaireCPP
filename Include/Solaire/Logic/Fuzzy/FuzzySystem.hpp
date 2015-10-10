@@ -67,8 +67,8 @@ namespace Solaire {namespace Fuzzy{
             const size_t count = mFuzzifier->GetInputCount();
             for(size_t i = 0; i < count; ++i){
                 const ConstStringFragment name = mFuzzifier->GetInputName(i);
-                mInputMap.emplace(String(name, *mAllocator), 0.f);
-                mOutputBuffer.emplace(String(name, *mAllocator), DynamicArray<float>(*mAllocator, 16));
+                mInputMap.emplace(String(*mAllocator, name), 0.f);
+                mOutputBuffer.emplace(String(*mAllocator, name), DynamicArray<float>(*mAllocator, 16));
             }
         }
 
@@ -112,7 +112,7 @@ namespace Solaire {namespace Fuzzy{
         }
 
         float GetInputValue(const ConstStringFragment aName) const override{
-            auto it = mInputMap.find(aName);
+            auto it = mInputMap.find(String(mLines.GetAllocator(), aName));
             return it == mInputMap.end() ? 0.f : it->second;
         }
     };

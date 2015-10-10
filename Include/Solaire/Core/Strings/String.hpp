@@ -66,14 +66,15 @@ namespace Solaire{
         // Constructors
         String(const String& aOther);
         String(String&& aOther);
-        String(Allocator& aAllocator = GetDefaultAllocator());
-        String(const ConstStringFragment aOther, Allocator& aAllocator = GetDefaultAllocator());
-        String(const std::basic_string<Type>& aOther, Allocator& aAllocator = GetDefaultAllocator());
-        String(const ConstPointer aPointer, Allocator& aAllocator = GetDefaultAllocator());
-        String(const ConstPointer aPointer, const size_t aSize, Allocator& aAllocator = GetDefaultAllocator());
+        String(Allocator& aAllocator);
+        String(Allocator& aAllocator, const ConstStringFragment aOther);
+        String(Allocator& aAllocator, const std::basic_string<Type>& aOther);
+        String(Allocator& aAllocator, const ConstPointer aPointer);
+        String(Allocator& aAllocator, const ConstPointer aPointer, const size_t aSize);
+        String(Allocator& aAllocator, const Type aChar, const size_t aCount);
 
         template<class ExternalIterator>
-        String(const ExternalIterator aBegin, const ExternalIterator aEnd, Allocator& aAllocator = GetDefaultAllocator()) :
+        String(Allocator& aAllocator, const ExternalIterator aBegin, const ExternalIterator aEnd) :
             mContainer(aBegin, aEnd, aAllocator)
         {
             if(mContainer.Back() != '\0') mContainer.PushBack('\0');
@@ -158,6 +159,12 @@ namespace Solaire{
         bool operator>(const String& aOther) const;
         bool operator<=(const String& aOther) const;
         bool operator>=(const String& aOther) const;
+        bool operator==(const ConstStringFragment aOther) const;
+        bool operator!=(const ConstStringFragment aOther) const;
+        bool operator<(const ConstStringFragment aOther) const;
+        bool operator>(const ConstStringFragment aOther) const;
+        bool operator<=(const ConstStringFragment aOther) const;
+        bool operator>=(const ConstStringFragment aOther) const;
 
         // Find
         Iterator FindFirst(const Type aChar);

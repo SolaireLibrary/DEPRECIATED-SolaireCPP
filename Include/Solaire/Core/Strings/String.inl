@@ -81,26 +81,32 @@ namespace Solaire{
         mContainer.PushBack('\0');
     }
 
-    String::String(const ConstPointer aPointer, Allocator& aAllocator) :
+    String::String(Allocator& aAllocator, const ConstPointer aPointer) :
         mContainer(aAllocator, aPointer, aPointer + std::strlen(aPointer))
     {
         mContainer.PushBack('\0');
     }
 
-    String::String(const ConstPointer aPointer, const size_t aSize, Allocator& aAllocator) :
+    String::String(Allocator& aAllocator, const ConstPointer aPointer, const size_t aSize) :
         mContainer(aAllocator, aPointer, aPointer + aSize)
     {
         mContainer.PushBack('\0');
     }
 
-    String::String(const std::basic_string<Type>& aOther, Allocator& aAllocator) :
+    String::String(Allocator& aAllocator, const std::basic_string<Type>& aOther) :
         mContainer(aAllocator, aOther.begin(), aOther.end())
     {
         mContainer.PushBack('\0');
     }
 
-    String::String(const ConstStringFragment aOther, Allocator& aAllocator) :
+    String::String(Allocator& aAllocator, const ConstStringFragment aOther) :
         mContainer(aAllocator, aOther.begin(), aOther.end())
+    {
+        mContainer.PushBack('\0');
+    }
+
+    String::String(Allocator& aAllocator, const Type aChar, const size_t aCount) :
+        mContainer(aAllocator, aChar, aCount)
     {
         mContainer.PushBack('\0');
     }
@@ -253,6 +259,30 @@ namespace Solaire{
 
     bool String::operator>=(const String& aOther) const{
         return std::memcmp(CString(), aOther.CString(), sizeof(Type) * std::min(Size(), aOther.Size())) >= 0;
+    }
+
+    bool String::operator==(const ConstStringFragment aOther) const{
+        return static_cast<ConstStringFragment>(*this) == aOther;
+    }
+
+    bool String::operator!=(const ConstStringFragment aOther) const{
+        return static_cast<ConstStringFragment>(*this) != aOther;
+    }
+
+    bool String::operator<(const ConstStringFragment aOther) const{
+        return static_cast<ConstStringFragment>(*this) < aOther;
+    }
+
+    bool String::operator>(const ConstStringFragment aOther) const{
+        return static_cast<ConstStringFragment>(*this) > aOther;
+    }
+
+    bool String::operator<=(const ConstStringFragment aOther) const{
+        return static_cast<ConstStringFragment>(*this) <= aOther;
+    }
+
+    bool String::operator>=(const ConstStringFragment aOther) const{
+        return static_cast<ConstStringFragment>(*this) >= aOther;
     }
 
     String::Iterator String::begin(){
