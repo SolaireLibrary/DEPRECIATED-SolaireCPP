@@ -38,7 +38,7 @@
 #include "..\Core\Init.hpp"
 #include "..\Core\Maths.hpp"
 
-namespace Solaire{ namespace Maths{
+namespace Solaire{
 
     template<class T, const uint32_t LENGTH>
     struct VectorLogic{
@@ -322,7 +322,7 @@ namespace Solaire{ namespace Maths{
             return aFirst;
         }
     };
-}}
+}
 
 
 #endif

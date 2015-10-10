@@ -37,7 +37,7 @@
 #include "VectorLogic.inl"
 #include "..\Core\Serialise\Serialisable.hpp"
 
-namespace Solaire{ namespace Maths{
+namespace Solaire{
 
 	/*!
 		\class Vector
@@ -514,25 +514,24 @@ namespace Solaire{ namespace Maths{
 	typedef Vector3<uint8_t> Vector3UB;
 	typedef Vector4<uint8_t> Vector4UB;
 
-}
     template<typename TYPE, const uint32_t LENGTH>
-    class Serialisable<Solaire::Maths::Vector<TYPE, LENGTH>, Solaire::Maths::Vector<TYPE, LENGTH>>
+    class Serialisable<Vector<TYPE, LENGTH>, Vector<TYPE, LENGTH>>
     {
     public:
-        typedef Solaire::Maths::Vector<TYPE, LENGTH> Vector;
+        typedef Vector<TYPE, LENGTH> VectorType;
 
-        void Serialise(Vector aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
+        void Serialise(VectorType aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
             SerialArrayPtr array_ = aSystem.CreateA();
             for(uint32_t i = 0; i < LENGTH; ++i){
-                array_.Write<TYPE>(i, aValue[i]);
+                array_->Write<TYPE>(i, aValue[i]);
             }
-            aRoot.Write<SerialArrayPtr>(aTag, array_);
+            aRoot.Write<SerialArrayPtr>(aIndex, array_);
         }
 
-        std::shared_ptr<Vector> Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
-            Vector vector;
+        VectorType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
+            VectorType vector;
 
-            SerialArrayPtr array_ = aRoot.Read<SerialArrayPtr>(aTag);
+            SerialArrayPtr array_ = aRoot.Read<SerialArrayPtr>(aIndex);
             for(uint32_t i = 0; i < LENGTH; ++i){
                 vector[i] = array_->Read<TYPE>(i);
             }
