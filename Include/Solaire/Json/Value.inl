@@ -316,7 +316,7 @@ namespace Solaire{ namespace Json{
         case TYPE_ARRAY:
             mParent->mDataArray->Erase(mParent->mDataArray->FindFirst(value));
         case TYPE_OBJECT:
-            mParent->mDataObject->Erase(mParent->mDataObject->FindFirst([=](const std::pair<String, std::shared_ptr<Value>>& i){
+            mParent->mDataObject->Erase(mParent->mDataObject->FindFirstIf([=](const std::pair<String, std::shared_ptr<Value>>& i){
                 return i.second == value;
             }));
             break;
@@ -333,14 +333,14 @@ namespace Solaire{ namespace Json{
     {}
 
     DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator ObjectValue::SearchByObjectName(const ConstStringFragment aName) const{
-        return mParent->mDataObject->FindFirst([=](const std::pair<String, std::shared_ptr<Value>>& i){
+        return mParent->mDataObject->FindFirstIf([=](const std::pair<String, std::shared_ptr<Value>>& i){
             return i.first == aName;
         });
     }
 
     DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator ObjectValue::SearchByObjectValue(const Value& aValue) const{
         std::shared_ptr<Value> value = const_cast<Value&>(aValue).shared_from_this();
-        return mParent->mDataObject->FindFirst([=](const std::pair<String, std::shared_ptr<Value>>& i){
+        return mParent->mDataObject->FindFirstIf([=](const std::pair<String, std::shared_ptr<Value>>& i){
             return i.second == value;
         });
     }

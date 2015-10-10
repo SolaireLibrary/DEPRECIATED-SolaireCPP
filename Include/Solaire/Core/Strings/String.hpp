@@ -181,6 +181,19 @@ namespace Solaire{
         ConstStringFragment FindNext(const Iterator aPos, ConstStringFragment aFragment) const;
         ConstStringFragment FindLast(const ConstStringFragment aFragment) const;
 
+        template<class F>
+        Iterator FindFirstIf(const F aCondition){return mContainer.FindFirstIf<F>(aCondition);}
+        template<class F>
+        Iterator FindNextIf(const ConstIterator aPos, const F aCondition){return mContainer.FindNextIf<F>(aPos, aCondition);}
+        template<class F>
+        Iterator FindLastIf(const F aCondition){return mContainer.FindLastIf<F>(aCondition);}
+        template<class F>
+        ConstIterator FindFirstIf(const F aCondition) const{return mContainer.FindFirstIf<F>(aCondition);}
+        template<class F>
+        ConstIterator FindNextIf(const ConstIterator aPos, const F aCondition) const{return mContainer.FindNextIf<F>(aPos, aCondition);}
+        template<class F>
+        ConstIterator FindLastIf(const F aCondition) const{return mContainer.FindLastIf<F>(aCondition);}
+
         // Replace
 		String& ReplaceFirst(const Type aTarget, const Type aReplacement);
         String& ReplaceNext(const ConstIterator aPos, const Type aTarget, const Type aReplacement);

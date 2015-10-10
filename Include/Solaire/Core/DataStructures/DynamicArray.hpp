@@ -316,24 +316,12 @@ namespace Solaire{
 		}
 
 		template<class F>
-		static constexpr bool CheckIfCondition(){
-		    return ! (
-                std::is_same<Type, F>::value ||
-                std::is_same<ConstType, F>::value ||
-                std::is_same<Reference, F>::value ||
-                std::is_same<ConstReference, F>::value
-            );
+		ConstIterator FindFirstIf(const F aCondition) const{
+            return FindNextIf<F>(begin(), aCondition);
 		}
 
 		template<class F>
-		typename std::enable_if<CheckIfCondition<F>(), ConstIterator>::type
-        FindFirst(const F aCondition) const{
-            return FindNext<F>(begin(), aCondition);
-		}
-
-		template<class F>
-		typename std::enable_if<CheckIfCondition<F>(), ConstIterator>::type
-		FindNext(ConstIterator aPos, const F aCondition) const{
+		ConstIterator FindNextIf(ConstIterator aPos, const F aCondition) const{
             const ConstIterator end = this->end();
             while(aPos != end){
                 if(aCondition(*aPos)) return aPos;
@@ -343,15 +331,14 @@ namespace Solaire{
 		}
 
 		template<class F>
-		typename std::enable_if<CheckIfCondition<F>(), ConstIterator>::type
-		FindLast(const F aCondition) const{
+		ConstIterator FindLast(const F aCondition) const{
             const ConstIterator end = this->end();
-            ConstIterator it = FindFirst<F>(aCondition);
+            ConstIterator it = FindFirstIf<F>(aCondition);
             ConstIterator prev = end;
 
             while(it != end){
                 prev = it;
-                it = FindNext<F>(it + 1, aCondition);
+                it = FindNextIf<F>(it + 1, aCondition);
             }
 
             return prev;
@@ -370,21 +357,18 @@ namespace Solaire{
 		}
 
 		template<class F>
-		typename std::enable_if<CheckIfCondition<F>(), Iterator>::type
-		FindFirst(const F aCondition){
-            return const_cast<Iterator>(const_cast<const Self*>(this)->FindFirst(aCondition));
+		Iterator FindFirstIf(const F aCondition){
+            return const_cast<Iterator>(const_cast<const Self*>(this)->FindFirstIf(aCondition));
 		}
 
 		template<class F>
-		typename std::enable_if<CheckIfCondition<F>(), Iterator>::type
-		FindNext(ConstIterator aPos, const F aCondition){
-            return const_cast<Iterator>(const_cast<const Self*>(this)->FindNext(aPos, aCondition));
+		Iterator FindNextIf(ConstIterator aPos, const F aCondition){
+            return const_cast<Iterator>(const_cast<const Self*>(this)->FindNextIf(aPos, aCondition));
 		}
 
 		template<class F>
-		typename std::enable_if<CheckIfCondition<F>(), Iterator>::type
-		FindLast(const F aCondition){
-            return const_cast<Iterator>(const_cast<const Self*>(this)->FindLast(aCondition));
+		Iterator FindLastIf(const F aCondition){
+            return const_cast<Iterator>(const_cast<const Self*>(this)->FindLastIf(aCondition));
 		}
 
 		Reference Back(){
