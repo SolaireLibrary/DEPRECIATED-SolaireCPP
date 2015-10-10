@@ -111,20 +111,20 @@ namespace Solaire{
     };
 
     template<class Parent, class Type, Type* Parent::* const Member, const int PassMode, const int ConstMode>
-    class DrefMemberProperty
+    class DerefProperty
     {
     public:
         typedef typename PassTypes<Type, PassMode>::Type Return;
         typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
     private:
-        DrefMemberProperty(const DrefMemberProperty&) = delete;
-        DrefMemberProperty(DrefMemberProperty&&) = delete;
-        DrefMemberProperty& operator=(const DrefMemberProperty&) = delete;
-        DrefMemberProperty& operator=(DrefMemberProperty&&) = delete;
+        DerefProperty(const DerefProperty&) = delete;
+        DerefProperty(DerefProperty&&) = delete;
+        DerefProperty& operator=(const DerefProperty&) = delete;
+        DerefProperty& operator=(DerefProperty&&) = delete;
     private:
         Parent& mParent;
     public:
-        constexpr DrefMemberProperty(Parent& aParent):
+        constexpr DerefProperty(Parent& aParent):
             mParent(aParent)
         {}
 
@@ -176,6 +176,78 @@ namespace Solaire{
             return mParent.*Member;
         }
     };
+
+    template<class Parent, class Type, Type Parent::* const Member, const int PassMode>
+    using R_MemberProperty = MemberProperty<Parent, Type, Member, PassMode, PROPERTY_READ>;
+
+    template<class Parent, class Type, Type Parent::* const Member, const int PassMode>
+    using W_MemberProperty = MemberProperty<Parent, Type, Member, PassMode, PROPERTY_WRITE>;
+
+    template<class Parent, class Type, Type Parent::* const Member, const int PassMode>
+    using RW_MemberProperty = MemberProperty<Parent, Type, Member, PassMode, PROPERTY_READ_WRITE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member, const int PassMode>
+    using R_DerefProperty = DerefProperty<Parent, Type, Member, PassMode, PROPERTY_READ>;
+
+    template<class Parent, class Type, Type* Parent::* const Member, const int PassMode>
+    using W_DerefProperty = DerefProperty<Parent, Type, Member, PassMode, PROPERTY_WRITE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member, const int PassMode>
+    using RW_DerefProperty = DerefProperty<Parent, Type, Member, PassMode, PROPERTY_READ_WRITE>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using R_Val_MemberProperty = R_MemberProperty<Parent, Type, Member, PASS_BY_VALUE>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using W_Val_MemberProperty = W_MemberProperty<Parent, Type, Member, PASS_BY_VALUE>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using RW_Val_MemberProperty = RW_MemberProperty<Parent, Type, Member, PASS_BY_VALUE>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using R_Ref_MemberProperty = R_MemberProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using W_Ref_MemberProperty = W_MemberProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using RW_Ref_MemberProperty = RW_MemberProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using R_Auto_MemberProperty = R_MemberProperty<Parent, Type, Member, TypeTraits<Type>::PassMode>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using W_Auto_MemberProperty = W_MemberProperty<Parent, Type, Member, TypeTraits<Type>::PassMode>;
+
+    template<class Parent, class Type, Type Parent::* const Member>
+    using RW_Auto_MemberProperty = RW_MemberProperty<Parent, Type, Member, TypeTraits<Type>::PassMode>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using R_Val_DerefProperty = R_DerefProperty<Parent, Type, Member, PASS_BY_VALUE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using W_Val_DerefProperty = W_DerefProperty<Parent, Type, Member, PASS_BY_VALUE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using RW_Val_DerefProperty = RW_DerefProperty<Parent, Type, Member, PASS_BY_VALUE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using R_Ref_DerefProperty = R_DerefProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using W_Ref_DerefProperty = W_DerefProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using RW_Ref_DerefProperty = RW_DerefProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using R_Auto_DerefProperty = R_DerefProperty<Parent, Type, Member, TypeTraits<Type>::PassMode>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using W_Auto_DerefProperty = W_DerefProperty<Parent, Type, Member, TypeTraits<Type>::PassMode>;
+
+    template<class Parent, class Type, Type* Parent::* const Member>
+    using RW_Auto_DerefProperty = RW_DerefProperty<Parent, Type, Member, TypeTraits<Type>::PassMode>;
 
     // Pointer to local function
 

@@ -147,7 +147,7 @@ namespace Solaire{
             RefFunctionProperty<LinkedList<Type>, Type, &LinkedList<Type>::pFrontConstFn, &LinkedList<Type>::pFrontFn> pFront;
             RefFunctionProperty<LinkedList<Type>, Type, &LinkedList<Type>::pBackConstFn, &LinkedList<Type>::pBackFn> pBack;
             MemberProperty<LinkedList<Type>, uint32_t, &LinkedList<Type>::mSize, PASS_BY_VALUE, PROPERTY_READ> pSize;
-            DrefMemberProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator, PASS_BY_REFERENCE, PROPERTY_READ> pAllocator;
+            DerefProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator, PASS_BY_REFERENCE, PROPERTY_READ> pAllocator;
         };
     public:
         LinkedList(Allocator& aAllocator):

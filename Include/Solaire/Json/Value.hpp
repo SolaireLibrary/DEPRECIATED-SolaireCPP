@@ -288,14 +288,14 @@ namespace Solaire{ namespace Json{
         Value& operator=(const TypeID);
 
         union{
-            MemberProperty<Value, NullValue, &Value::mNull, PASS_BY_REFERENCE, PROPERTY_READ_WRITE> pNull;
-            MemberProperty<Value, BoolValue, &Value::mBool, PASS_BY_REFERENCE, PROPERTY_READ_WRITE> pBool;
-            MemberProperty<Value, NumberValue, &Value::mNumber, PASS_BY_REFERENCE, PROPERTY_READ_WRITE> pNumber;
-            MemberProperty<Value, StringValue, &Value::mString, PASS_BY_REFERENCE, PROPERTY_READ_WRITE> pString;
-            MemberProperty<Value, ArrayValue, &Value::mArray, PASS_BY_REFERENCE, PROPERTY_READ_WRITE> pArray;
-            MemberProperty<Value, ObjectValue, &Value::mObject, PASS_BY_REFERENCE, PROPERTY_READ_WRITE> pObject;
-            MemberProperty<Value, TypeID, &Value::mType, PASS_BY_VALUE, PROPERTY_READ> pType;
-            DrefMemberProperty<Value, Allocator, &Value::mAllocator, PASS_BY_REFERENCE, PROPERTY_READ_WRITE> pAllocator;
+            RW_Ref_MemberProperty<Value, NullValue, &Value::mNull> pNull;
+            RW_Ref_MemberProperty<Value, BoolValue, &Value::mBool> pBool;
+            RW_Ref_MemberProperty<Value, NumberValue, &Value::mNumber> pNumber;
+            RW_Ref_MemberProperty<Value, StringValue, &Value::mString> pString;
+            RW_Ref_MemberProperty<Value, ArrayValue, &Value::mArray> pArray;
+            RW_Ref_MemberProperty<Value, ObjectValue, &Value::mObject> pObject;
+            R_Val_MemberProperty<Value, TypeID, &Value::mType> pType;
+            RW_Ref_DerefProperty<Value, Allocator, &Value::mAllocator> pAllocator;
         };
     };
 }}
