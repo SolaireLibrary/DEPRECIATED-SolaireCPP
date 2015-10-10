@@ -371,6 +371,24 @@ namespace Solaire{
             return mParent.*ConstGet();
         }
     };
+
+    template<class Parent, class Type, const Type&(Parent::*ConstGet)() const>
+    using R_Ref_FunctionProperty = RefFunctionProperty<Parent, Type, ConstGet, nullptr>;
+
+    template<class Parent, class Type, Type&(Parent::*Get)()>
+    using W_Ref_FunctionProperty = RefFunctionProperty<Parent, Type, nullptr, Get>;
+
+    template<class Parent, class Type, const Type&(Parent::*ConstGet)() const, Type&(Parent::*Get)()>
+    using RW_Ref_FunctionProperty = RefFunctionProperty<Parent, Type, ConstGet, Get>;
+
+    template<class Parent, class Type, Type(Parent::*ConstGet)() const>
+    using R_Val_FunctionProperty = ValFunctionProperty<Parent, Type, ConstGet, nullptr>;
+
+    template<class Parent, class Type, Type&(Parent::*Get)()>
+    using W_Val_FunctionProperty = ValFunctionProperty<Parent, Type, nullptr, Get>;
+
+    template<class Parent, class Type, Type(Parent::*ConstGet)() const, Type&(Parent::*Get)()>
+    using RW_Val_FunctionProperty = ValFunctionProperty<Parent, Type, ConstGet, Get>;
 }
 
 

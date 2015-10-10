@@ -143,11 +143,11 @@ namespace Solaire{
         const Type& pBackConstFn() const{return *mLast->GetObject();}
     public:
         union{
-            ValFunctionProperty<LinkedList<Type>, bool, &LinkedList<Type>::pEmptyFn, nullptr> pEmpty;
-            RefFunctionProperty<LinkedList<Type>, Type, &LinkedList<Type>::pFrontConstFn, &LinkedList<Type>::pFrontFn> pFront;
-            RefFunctionProperty<LinkedList<Type>, Type, &LinkedList<Type>::pBackConstFn, &LinkedList<Type>::pBackFn> pBack;
-            MemberProperty<LinkedList<Type>, uint32_t, &LinkedList<Type>::mSize, PASS_BY_VALUE, PROPERTY_READ> pSize;
-            DerefProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator, PASS_BY_REFERENCE, PROPERTY_READ> pAllocator;
+            R_Val_FunctionProperty<LinkedList<Type>, bool, &LinkedList<Type>::pEmptyFn> pEmpty;
+            RW_Ref_FunctionProperty<LinkedList<Type>, Type, &LinkedList<Type>::pFrontConstFn, &LinkedList<Type>::pFrontFn> pFront;
+            RW_Ref_FunctionProperty<LinkedList<Type>, Type, &LinkedList<Type>::pBackConstFn, &LinkedList<Type>::pBackFn> pBack;
+            R_Val_MemberProperty<LinkedList<Type>, uint32_t, &LinkedList<Type>::mSize> pSize;
+            RW_Ref_MemberProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator> pAllocator;
         };
     public:
         LinkedList(Allocator& aAllocator):
