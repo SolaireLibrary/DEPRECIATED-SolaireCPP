@@ -33,7 +33,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include "..\Streams\StringParser.hpp"
 #include "..\Strings\StringFragment.hpp"
 #include "..\DataStructures\DynamicArray.hpp"
 
@@ -41,7 +40,7 @@ namespace Solaire{
 
     namespace NumericParse{
 
-        class UnsignedValue : public StringParser<uint32_t>{
+        class UnsignedValue{
         public:
             typedef uint32_t NumericType;
         private:
@@ -66,20 +65,18 @@ namespace Solaire{
 
             // Inherited from value
 
-            void Reset() override{
-                mStatus = STATUS_FAIL;
-                StringParser::Reset();
+            void Reset(){
                 mCount = 0;
             }
 
-            Status Accept(const Flags aFlags, const char aChar) override{
-                if(aChar < '0' || aChar > '9') return (mCount > 0 ? ByteParser::STATUS_COMPLETE : ByteParser::STATUS_FAIL);
+            bool Accept(const char aChar){
+                if(aChar < '0' || aChar > '9') return false;
                 mChars[mCount++] = aChar;
-                return ByteParser::STATUS_SUCCESS;
+                return true;
             }
 
-            NumericType Get(Allocator& aParseAllocator, Allocator& aDataAllocator) const override{
-                if(GetStatus() == ByteParser::STATUS_FAIL) throw std::runtime_error("NumericParser : Failed to parse unsigned value");
+            NumericType Get() const{
+                if(mCount == 0) throw std::runtime_error("NumericParse::UnsignedValue : Cannot parse 0 length value");
                 double val = 0;
 
                 uint32_t index = 0;
@@ -93,22 +90,20 @@ namespace Solaire{
 
                 return static_cast<NumericType>(val);
             }
-
-            Status GetStatus() const override{
-                return mStatus;
-            }
         };
 
-        class SignedValue : public StringParser<int32_t>{
+        class SignedValue{
         public:
             typedef int32_t NumericType;
         private:
             UnsignedValue mValue;
             int8_t mSign;
+            bool mIsFirst;
         public:
             SignedValue():
                 mValue(),
-                mSign(1)
+                mSign(1),
+                mIsFirst(true)
             {}
 
             uint8_t PrecedingZeros() const{
@@ -117,35 +112,32 @@ namespace Solaire{
 
             // Inherited from Value
 
-            void Reset() override{
-                StringParser::Reset();
+            void Reset(){
                 mValue.Reset();
+                mIsFirst = true;
             }
 
-            Status Accept(const Flags aFlags, const char aChar) override{
-                if(aFlags & FLAG_IS_FIRST_CHAR){
+            bool Accept(const char aChar){
+                if(mIsFirst){
                      if(aChar == '-'){
                         mSign = -1;
-                        return ByteParser::STATUS_SUCCESS;
+                        mIsFirst = false;
+                        return true;
                     }else{
                         mSign = 1;
                     }
                 }
-                return static_cast<ByteParser&>(mValue).Accept(static_cast<uint8_t>(aChar));
+                mIsFirst = false;
+                return mValue.Accept(aChar);
             }
 
-            NumericType Get(Allocator& aParseAllocator, Allocator& aDataAllocator) const override{
-                if(GetStatus() == ByteParser::STATUS_FAIL) throw std::runtime_error("NumericParser : Failed to parse signed value");
-                return static_cast<NumericType>(mValue.Get(aParseAllocator, aDataAllocator)) * static_cast<NumericType>(mSign);
-            }
-
-            Status GetStatus() const override{
-                return mValue.GetStatus();
+            NumericType Get() const{
+                return static_cast<NumericType>(mValue.Get()) * static_cast<NumericType>(mSign);
             }
         };
 
         template<class Body, class Decimal>
-        class DecimalValue : public StringParser<double>{
+        class DecimalValue{
         public:
             typedef double NumericType;
         private:
@@ -165,27 +157,24 @@ namespace Solaire{
 
             // Inherited from Value
 
-            void Reset() override{
-                StringParser::Reset();
+            void Reset(){
                 mBody.Reset();
                 mDecimal.Reset();
                 mDecimalFlag = false;
             }
 
-            Status Accept(const Flags aFlags, const char aChar) override{
+            bool Accept(const char aChar){
                 if(aChar == '.' && ! mDecimalFlag){
                     mDecimalFlag = true;
-                    return ByteParser::STATUS_SUCCESS;
+                    return true;
                 }
 
-                return mDecimalFlag ?
-                    static_cast<ByteParser&>(mDecimal).Accept(static_cast<uint8_t>(aChar)) :
-                    static_cast<ByteParser&>(mBody).Accept(static_cast<uint8_t>(aChar));
+                return mDecimalFlag ? mDecimal.Accept(aChar) : mBody.Accept(aChar);
             }
 
-            NumericType Get(Allocator& aParseAllocator, Allocator& aDataAllocator) const override{
+            NumericType Get() const{
                 if(mDecimalFlag){
-                    double decimal = mDecimal.Get(aParseAllocator, aDataAllocator);
+                    double decimal = mDecimal.Get();
                     while(decimal >= 1.0 && decimal != 0.0){
                         decimal /= 10.0;
                     }
@@ -194,23 +183,15 @@ namespace Solaire{
                         decimal /= 10.0;
                         --zeros;
                     }
-                    return mBody.Get(aParseAllocator, aDataAllocator) + decimal;
+                    return mBody.Get() + decimal;
                 }else{
-                    return mBody.Get(aParseAllocator, aDataAllocator);
-                }
-            }
-
-            Status GetStatus() const override{
-                if(mDecimalFlag){
-                    return mBody.GetStatus() == ByteParser::STATUS_FAIL ? ByteParser::STATUS_FAIL : mDecimal.GetStatus();
-                }else{
-                    return mBody.GetStatus();
+                    return mBody.Get();
                 }
             }
         };
 
         template<class Body, class Exponent>
-        class ExponentValue : public StringParser<typename Body::NumericType>{
+        class ExponentValue{
         public:
             typedef typename Body::NumericType NumericType;
         private:
@@ -234,43 +215,32 @@ namespace Solaire{
 
             // Inherited from Value
 
-            void Reset() override{
-                StringParser<typename Body::NumericType>::Reset();
+            void Reset(){
                 mBody.Reset();
                 mExponent.Reset();
                 mExponentFlag = 0;
                 mExponentLastFlag = 0;
             }
 
-            ByteParser::Status Accept(const uint16_t aFlags, const char aChar) override{
+            bool Accept(const char aChar){
                 if((aChar == 'e' || aChar == 'E') && ! mExponentFlag){
                     mExponentFlag = 1;
                     mExponentLastFlag = 1;
-                    return ByteParser::STATUS_SUCCESS;
+                    return true;
                 }else if(aChar == '+' && mExponentLastFlag){
                     mExponentLastFlag = 0;
-                    return ByteParser::STATUS_SUCCESS;
+                    return true;
                 }
                 mExponentLastFlag = 0;
 
-                return mExponentFlag ?
-                    static_cast<ByteParser&>(mExponent).Accept(static_cast<uint8_t>(aChar)) :
-                    static_cast<ByteParser&>(mBody).Accept(static_cast<uint8_t>(aChar));
+                return mExponentFlag ? mExponent.Accept(aChar) : mBody.Accept(aChar);
             }
 
-            NumericType Get(Allocator& aParseAllocator, Allocator& aDataAllocator) const override{
+            NumericType Get() const{
                 if(mExponentFlag){
-                    return mBody.Get(aParseAllocator, aDataAllocator) * static_cast<NumericType>(std::pow(10.0, mExponent.Get(aParseAllocator, aDataAllocator)));
+                    return mBody.Get() * static_cast<NumericType>(std::pow(10.0, mExponent.Get()));
                 }else{
-                    return mBody.Get(aParseAllocator, aDataAllocator);
-                }
-            }
-
-            ByteParser::Status GetStatus() const override{
-                if(mExponentFlag){
-                    return mBody.GetStatus() == ByteParser::STATUS_FAIL ? ByteParser::STATUS_FAIL : mExponent.GetStatus();
-                }else{
-                    return mBody.GetStatus();
+                    return mBody.Get();
                 }
             }
         };
@@ -389,27 +359,23 @@ namespace Solaire{
 
     template<class T, class Iterator>
     T ParseNumber(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd){
-        typename NumericParser<T>::Type templatedParser;
-        ResultByteParser<typename NumericParser<T>::Type::NumericType>& parser = templatedParser;
+        typename NumericParser<T>::Type parser;
 
         aParseEnd = aBegin;
         while(aParseEnd != aEnd){
-            switch(parser.Accept(*aParseEnd)){
-            case ByteParser::STATUS_SUCCESS:
-                ++aParseEnd;
+
+            if(! parser.Accept(*aParseEnd)){
                 break;
-            case ByteParser::STATUS_COMPLETE:
-                goto PARSE;
-            case ByteParser::STATUS_FAIL:
-                aParseEnd = aBegin;
-                goto PARSE;
             }
         }
 
-        PARSE:
-        if(aParseEnd == aBegin) return static_cast<T>(0);
-        Allocator& allocator = GetDefaultAllocator();
-        return parser.Get(allocator, allocator);
+        try{
+            const T tmp = parser.Get();
+            return tmp;
+        }catch(...){
+            aParseEnd = aBegin;
+            return static_cast<T>(0);
+        }
     }
 
 }
