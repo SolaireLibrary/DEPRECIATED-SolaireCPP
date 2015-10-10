@@ -35,405 +35,269 @@
 
 namespace Solaire{
 
-    template<class Parent, class Type, Type Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
-    class ReadOnlyValueProperty{
-    public:
-        typedef typename PassTypes<Type, PassMode>::Type Return;
-        typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
-    private:
-        ReadOnlyValueProperty(const ReadOnlyValueProperty&) = delete;
-        ReadOnlyValueProperty(ReadOnlyValueProperty&&) = delete;
-        ReadOnlyValueProperty& operator=(const ReadOnlyValueProperty&) = delete;
-        ReadOnlyValueProperty& operator=(ReadOnlyValueProperty&&) = delete;
-    private:
-        const Parent& mParent;
-    public:
-        constexpr ReadOnlyValueProperty(const Parent& aParent):
-            mParent(aParent)
-        {}
-
-        SOLAIRE_INLINE ConstReturn operator*() const{
-            return mParent.*Member;
-        }
-
-        SOLAIRE_INLINE const Type* operator->() const{
-            return &(mParent.*Member);
-        }
-
-        SOLAIRE_INLINE operator ConstReturn() const{
-            return mParent.*Member;
-        }
+    enum{
+        PROPERTY_READ = 0x1,
+        PROPERTY_WRITE = 0x2,
+        PROPERTY_READ_WRITE = PROPERTY_READ | PROPERTY_WRITE
     };
 
-    template<class Parent, class Type, Type Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
-    class ValueProperty{
+    // Pointer to member
+
+    template<class Parent, class Type, Type Parent::* const Member, const int PassMode, const int ConstMode>
+    class MemberProperty
+    {
     public:
         typedef typename PassTypes<Type, PassMode>::Type Return;
         typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
     private:
-        ValueProperty(const ValueProperty&) = delete;
-        ValueProperty(ValueProperty&&) = delete;
-        ValueProperty& operator=(const ValueProperty&) = delete;
-        ValueProperty& operator=(ValueProperty&&) = delete;
+        MemberProperty(const MemberProperty&) = delete;
+        MemberProperty(MemberProperty&&) = delete;
+        MemberProperty& operator=(const MemberProperty&) = delete;
+        MemberProperty& operator=(MemberProperty&&) = delete;
     private:
         Parent& mParent;
     public:
-        constexpr ValueProperty(Parent& aParent):
+        constexpr MemberProperty(Parent& aParent):
             mParent(aParent)
         {}
 
-        SOLAIRE_INLINE Return operator*(){
+        // Write
+
+        template<const int Mode = ConstMode>
+        SOLAIRE_INLINE typename std::enable_if<Mode & PROPERTY_WRITE, Return>::type
+        operator*(){
             return mParent.*Member;
         }
 
-        SOLAIRE_INLINE Type* operator->(){
+
+        template<const int Mode = ConstMode>
+        SOLAIRE_INLINE typename std::enable_if<Mode & PROPERTY_WRITE, Type*>::type
+        operator->(){
             return &(mParent.*Member);
         }
 
-        SOLAIRE_INLINE ConstReturn operator*() const{
-            return mParent.*Member;
-        }
-
-        SOLAIRE_INLINE const Type* operator->() const{
-            return &(mParent.*Member);
-        }
-
+        template<const int Mode = ConstMode, typename = typename std::enable_if<Mode & PROPERTY_WRITE>::type>
         SOLAIRE_INLINE operator Return(){
             return mParent.*Member;
         }
 
-        SOLAIRE_INLINE operator ConstReturn() const{
-            return mParent.*Member;
-        }
 
-        SOLAIRE_INLINE Type& operator=(ConstReturn aValue){
+        template<const int Mode = ConstMode>
+        SOLAIRE_INLINE typename std::enable_if<Mode & PROPERTY_WRITE, Type&>::type
+        operator=(ConstReturn aValue){
             return mParent.*Member = aValue;
         }
+
+        // Read
+
+        template<const int Mode = ConstMode, typename = typename std::enable_if<Mode & PROPERTY_READ>::type>
+        SOLAIRE_INLINE operator ConstReturn() const{
+           return mParent.*Member;
+        }
+
+
+        template<const int Mode = ConstMode>
+        SOLAIRE_INLINE typename std::enable_if<Mode & PROPERTY_READ, ConstReturn>::type
+        operator*() const{
+            return mParent.*Member;
+        }
+
+
+        template<const int Mode = ConstMode>
+        SOLAIRE_INLINE typename std::enable_if<Mode & PROPERTY_READ, const Type*>::type
+        operator->() const{
+            return &(mParent.*Member);
+        }
     };
 
-    template<class Parent, class Type, Type Parent::* const Member>
-    using ReadOnlyCopyValueProperty = ReadOnlyValueProperty<Parent, Type, Member, PASS_BY_VALUE>;
-
-    template<class Parent, class Type, Type Parent::* const Member>
-    using ReadOnlyReferenceValueProperty = ReadOnlyValueProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
-
-    template<class Parent, class Type, Type Parent::* const Member>
-    using CopyValueProperty = ValueProperty<Parent, Type, Member, PASS_BY_VALUE>;
-
-    template<class Parent, class Type, Type Parent::* const Member>
-    using ReferenceValueProperty = ValueProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
-
-    ////
-
-    template<class Parent, class Type, Type* Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
-    class ReadOnlyDereferenceValueProperty{
+    template<class Parent, class Type, Type* Parent::* const Member, const int PassMode, const int ConstMode>
+    class DrefMemberProperty
+    {
     public:
         typedef typename PassTypes<Type, PassMode>::Type Return;
         typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
     private:
-        ReadOnlyDereferenceValueProperty(const ReadOnlyDereferenceValueProperty&) = delete;
-        ReadOnlyDereferenceValueProperty(ReadOnlyDereferenceValueProperty&&) = delete;
-        ReadOnlyDereferenceValueProperty& operator=(const ReadOnlyDereferenceValueProperty&) = delete;
-        ReadOnlyDereferenceValueProperty& operator=(ReadOnlyDereferenceValueProperty&&) = delete;
+        DrefMemberProperty(const DrefMemberProperty&) = delete;
+        DrefMemberProperty(DrefMemberProperty&&) = delete;
+        DrefMemberProperty& operator=(const DrefMemberProperty&) = delete;
+        DrefMemberProperty& operator=(DrefMemberProperty&&) = delete;
     private:
-        const Parent& mParent;
+        Parent& mParent;
     public:
-        constexpr ReadOnlyDereferenceValueProperty(const Parent& aParent):
+        constexpr DrefMemberProperty(Parent& aParent):
             mParent(aParent)
         {}
 
-        SOLAIRE_INLINE ConstReturn operator*() const{
+        // Write
+
+        template<const int Mode = ConstMode>
+        SOLAIRE_INLINE typename std::enable_if<Mode & PROPERTY_WRITE, Return>::type
+        operator*(){
             return *(mParent.*Member);
         }
 
-        SOLAIRE_INLINE const Type* operator->() const{
+
+        template<const int Mode = ConstMode>
+        SOLAIRE_INLINE typename std::enable_if<Mode & PROPERTY_WRITE, Type*>::type
+        operator->(){
             return mParent.*Member;
         }
 
+        template<const int Mode = ConstMode, typename = typename std::enable_if<Mode & PROPERTY_WRITE>::type>
+        SOLAIRE_INLINE operator Return(){
+            return (mParent.*Member);
+        }
+
+
+        template<const int Mode = ConstMode>
+        SOLAIRE_INLINE typename std::enable_if<Mode & PROPERTY_WRITE, Type&>::type
+        operator=(ConstReturn aValue){
+            return *(mParent.*Member) = aValue;
+        }
+
+        // Read
+
+        template<const int Mode = ConstMode, typename = typename std::enable_if<Mode & PROPERTY_READ>::type>
         SOLAIRE_INLINE operator ConstReturn() const{
-            return *mParent.*Member;
-        }
-    };
-
-    template<class Parent, class Type, Type* Parent::* const Member, const int PassMode = TypeTraits<Type>::PassMode>
-    class DereferenceValueProperty{
-    public:
-        typedef typename PassTypes<Type, PassMode>::Type Return;
-        typedef typename PassTypes<Type, PassMode>::ConstType ConstReturn;
-    private:
-        DereferenceValueProperty(const DereferenceValueProperty&) = delete;
-        DereferenceValueProperty(DereferenceValueProperty&&) = delete;
-        DereferenceValueProperty& operator=(const DereferenceValueProperty&) = delete;
-        DereferenceValueProperty& operator=(DereferenceValueProperty&&) = delete;
-    private:
-        Parent& mParent;
-    public:
-        constexpr DereferenceValueProperty(Parent& aParent):
-            mParent(aParent)
-        {}
-
-        SOLAIRE_INLINE Return operator*(){
             return *(mParent.*Member);
         }
 
-        SOLAIRE_INLINE Type* operator->(){
-            return mParent.*Member;
-        }
 
-        SOLAIRE_INLINE ConstReturn operator*() const{
+        template<const int Mode = ConstMode>
+        SOLAIRE_INLINE typename std::enable_if<Mode & PROPERTY_READ, ConstReturn>::type
+        operator*() const{
             return *(mParent.*Member);
         }
 
-        SOLAIRE_INLINE const Type* operator->() const{
+
+        template<const int Mode = ConstMode>
+        SOLAIRE_INLINE typename std::enable_if<Mode & PROPERTY_READ, const Type*>::type
+        operator->() const{
             return mParent.*Member;
         }
-
-        SOLAIRE_INLINE operator Return(){
-            return *mParent.*Member;
-        }
-
-        SOLAIRE_INLINE operator ConstReturn() const{
-            return *mParent.*Member;
-        }
-
-        SOLAIRE_INLINE Type& operator=(ConstReturn aValue){
-            return *mParent.*Member = aValue;
-        }
     };
 
-    template<class Parent, class Type, Type* Parent::* const Member>
-    using ReadOnlyCopyDereferenceValueProperty = ReadOnlyDereferenceValueProperty<Parent, Type, Member, PASS_BY_VALUE>;
+    // Pointer to local function
 
-    template<class Parent, class Type, Type* Parent::* const Member>
-    using ReadOnlyReferenceDereferenceValueProperty = ReadOnlyDereferenceValueProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
-
-    template<class Parent, class Type, Type* Parent::* const Member>
-    using CopyDereferenceValueProperty = DereferenceValueProperty<Parent, Type, Member, PASS_BY_VALUE>;
-
-    template<class Parent, class Type, Type* Parent::* const Member>
-    using ReferenceDereferenceValueProperty = DereferenceValueProperty<Parent, Type, Member, PASS_BY_REFERENCE>;
-
-    ////
-
-    template<class Parent, class Return, Return(*Function)(Parent&)>
-    class StaticFunctionProperty{
+    template<class Parent, class Type, const Type&(Parent::*ConstGet)() const, Type&(Parent::*Get)()>
+    class RefFunctionProperty
+    {
     private:
-        StaticFunctionProperty(const StaticFunctionProperty&) = delete;
-        StaticFunctionProperty(StaticFunctionProperty&&) = delete;
-        StaticFunctionProperty& operator=(const StaticFunctionProperty&) = delete;
-        StaticFunctionProperty& operator=(StaticFunctionProperty&&) = delete;
+        RefFunctionProperty(const RefFunctionProperty&) = delete;
+        RefFunctionProperty(RefFunctionProperty&&) = delete;
+        RefFunctionProperty& operator=(const RefFunctionProperty&) = delete;
+        RefFunctionProperty& operator=(RefFunctionProperty&&) = delete;
     private:
         Parent& mParent;
     public:
-        constexpr StaticFunctionProperty(Parent& aParent):
+        constexpr RefFunctionProperty(Parent& aParent):
             mParent(aParent)
         {}
 
-        SOLAIRE_INLINE Return operator*(){
-            return Function(mParent);
+        // Write
+
+        template<Type&(Parent::*Fn)() = Get>
+        SOLAIRE_INLINE typename std::enable_if<Fn != nullptr, Type&>::type
+        operator*(){
+            return mParent.*Get();
         }
 
-        SOLAIRE_INLINE Return* operator->(){
-            return &Function(mParent);
+
+        template<Type&(Parent::*Fn)() = Get>
+        SOLAIRE_INLINE typename std::enable_if<Fn != nullptr, Type*>::type
+        operator->(){
+            return &mParent.*Get();
         }
 
-        SOLAIRE_INLINE operator Return(){
-            return Function(mParent);
+        template<Type&(Parent::*Fn)() = Get, typename = typename std::enable_if<Fn != nullptr>::type>
+        SOLAIRE_INLINE operator Type&(){
+            return mParent.*Get();
         }
 
-        SOLAIRE_INLINE Return& operator=(Return aValue) const{
-            return Function(mParent) = aValue;
+
+        template<Type&(Parent::*Fn)() = Get>
+        SOLAIRE_INLINE typename std::enable_if<Fn != nullptr, Type&>::type
+        operator=(const Type& aValue){
+            return mParent.*Get() = aValue;
+        }
+
+        // Read
+
+        template<const Type&(Parent::*Fn)() const = ConstGet, typename = typename std::enable_if<Fn != nullptr>::type>
+        SOLAIRE_INLINE operator const Type&() const{
+           return mParent.*ConstGet();
+        }
+
+
+        template<const Type&(Parent::*Fn)() const = ConstGet>
+        SOLAIRE_INLINE typename std::enable_if<Fn != nullptr, const Type&>::type
+        operator*() const{
+            return mParent.*ConstGet();
+        }
+
+
+        template<const Type&(Parent::*Fn)() const = ConstGet>
+        SOLAIRE_INLINE typename std::enable_if<Fn != nullptr, const Type*>::type
+        operator->() const{
+            return &mParent.*ConstGet();
         }
     };
 
-    template<class Parent, class Return, Return(*Function)(const Parent&)>
-    class ReadOnlyStaticFunctionProperty{
+    template<class Parent, class Type, Type(Parent::*ConstGet)() const, Type&(Parent::*Get)()>
+    class ValFunctionProperty
+    {
     private:
-        ReadOnlyStaticFunctionProperty(const ReadOnlyStaticFunctionProperty&) = delete;
-        ReadOnlyStaticFunctionProperty(ReadOnlyStaticFunctionProperty&&) = delete;
-        ReadOnlyStaticFunctionProperty& operator=(const ReadOnlyStaticFunctionProperty&) = delete;
-        ReadOnlyStaticFunctionProperty& operator=(ReadOnlyStaticFunctionProperty&&) = delete;
-    private:
-        const Parent& mParent;
-    public:
-        constexpr ReadOnlyStaticFunctionProperty(const Parent& aParent):
-            mParent(aParent)
-        {}
-
-        SOLAIRE_INLINE Return operator*() const{
-            return Function(mParent);
-        }
-
-        SOLAIRE_INLINE Return* operator->() const{
-            return &Function(mParent);
-        }
-
-        SOLAIRE_INLINE operator Return() const{
-            return Function(mParent);
-        }
-    };
-
-    ////
-
-    template<class Parent, class Return, Return(Parent::*Function)()>
-    class LocalFunctionProperty{
-    private:
-        LocalFunctionProperty(const LocalFunctionProperty&) = delete;
-        LocalFunctionProperty(LocalFunctionProperty&&) = delete;
-        LocalFunctionProperty& operator=(const LocalFunctionProperty&) = delete;
-        LocalFunctionProperty& operator=(LocalFunctionProperty&&) = delete;
+        ValFunctionProperty(const ValFunctionProperty&) = delete;
+        ValFunctionProperty(ValFunctionProperty&&) = delete;
+        ValFunctionProperty& operator=(const ValFunctionProperty&) = delete;
+        ValFunctionProperty& operator=(ValFunctionProperty&&) = delete;
     private:
         Parent& mParent;
     public:
-        constexpr LocalFunctionProperty(Parent& aParent):
+        constexpr ValFunctionProperty(Parent& aParent):
             mParent(aParent)
         {}
 
-        SOLAIRE_INLINE Return operator*(){
-            return mParent.*Function();
+        // Write
+
+        template<Type&(Parent::*Fn)() = Get>
+        SOLAIRE_INLINE typename std::enable_if<Fn != nullptr, Type&>::type
+        operator*(){
+            return mParent.*Get();
         }
 
-        SOLAIRE_INLINE Return* operator->(){
-            return &mParent.*Function();
+
+        template<Type&(Parent::*Fn)() = Get>
+        SOLAIRE_INLINE typename std::enable_if<Fn != nullptr, Type*>::type
+        operator->(){
+            return &mParent.*Get();
         }
 
-        SOLAIRE_INLINE operator Return(){
-            return mParent.*Function();
+        template<Type&(Parent::*Fn)() = Get, typename = typename std::enable_if<Fn != nullptr>::type>
+        SOLAIRE_INLINE operator Type&(){
+            return mParent.*Get();
         }
 
-        SOLAIRE_INLINE Return& operator=(Return aValue) const{
-            return mParent.*Function() = aValue;
-        }
-    };
 
-    template<class Parent, class Return, Return(Parent::*Function)() const>
-    class ReadOnlyLocalFunctionProperty{
-    private:
-        ReadOnlyLocalFunctionProperty(const ReadOnlyLocalFunctionProperty&) = delete;
-        ReadOnlyLocalFunctionProperty(ReadOnlyLocalFunctionProperty&&) = delete;
-        ReadOnlyLocalFunctionProperty& operator=(const ReadOnlyLocalFunctionProperty&) = delete;
-        ReadOnlyLocalFunctionProperty& operator=(ReadOnlyLocalFunctionProperty&&) = delete;
-    private:
-        const Parent& mParent;
-    public:
-        constexpr ReadOnlyLocalFunctionProperty(const Parent& aParent):
-            mParent(aParent)
-        {}
-
-        SOLAIRE_INLINE Return operator*() const{
-            return mParent.*Function();
+        template<Type&(Parent::*Fn)() = Get>
+        SOLAIRE_INLINE typename std::enable_if<Fn != nullptr, Type&>::type
+        operator=(const Type& aValue){
+            return mParent.*Get() = aValue;
         }
 
-        SOLAIRE_INLINE Return* operator->() const{
-            return &mParent.*Function();
+        // Read
+
+        template<Type(Parent::*Fn)() const = ConstGet, typename = typename std::enable_if<Fn != nullptr>::type>
+        SOLAIRE_INLINE operator Type() const{
+           return mParent.*ConstGet();
         }
 
-        SOLAIRE_INLINE operator Return() const{
-            return mParent.*Function();
+
+        template<Type(Parent::*Fn)() const = ConstGet>
+        SOLAIRE_INLINE typename std::enable_if<Fn != nullptr, Type>::type
+        operator*() const{
+            return mParent.*ConstGet();
         }
-    };
-
-    ////
-
-    #define SOLAIRE_READ_PROPERTY(aName, aParentType, aRefType, aPtrType, aCode)\
-    class aName{\
-    private:\
-        aName(const aName&) = delete;\
-        aName(aName&&) = delete;\
-        aName& operator=(const aName&) = delete;\
-        aName& operator=(aName&&) = delete;\
-    private:\
-        const aParentType& mParent;\
-    public:\
-        constexpr aName(const aParentType& aParent):\
-            mParent(aParent)\
-        {}\
-        \
-        aRefType operator*() const{\
-            aCode\
-        }\
-        \
-        SOLAIRE_INLINE aPtrType operator->() const{\
-            return &operator*();\
-        }\
-        \
-        SOLAIRE_INLINE operator aRefType() const{\
-            return operator*();\
-        }\
-    };
-
-    #define SOLAIRE_WRITE_PROPERTY(aName, aParentType, aRefType, aPtrType, aCode)\
-    class aName{\
-    private:\
-        aName(const aName&) = delete;\
-        aName(aName&&) = delete;\
-        aName& operator=(const aName&) = delete;\
-        aName& operator=(aName&&) = delete;\
-    private:\
-        aParentType& mParent;\
-    public:\
-        constexpr aName(aParentType& aParent):\
-            mParent(aParent)\
-        {}\
-        \
-        aRefType operator*(){\
-            aCode\
-        }\
-        \
-        SOLAIRE_INLINE aPtrType operator->(){\
-            return &operator*();\
-        }\
-        \
-        SOLAIRE_INLINE operator aRefType(){\
-            return operator*();\
-        }\
-        \
-        SOLAIRE_INLINE aRefType operator=(aRefType aValue){\
-            return operator*() = aValue;\
-        }\
-    };
-
-    #define SOLAIRE_READ_WRITE_PROPERTY(aName, aParentType, aRefType, aPtrType, aCode)\
-    class aName{\
-    private:\
-        aName(const aName&) = delete;\
-        aName(aName&&) = delete;\
-        aName& operator=(const aName&) = delete;\
-        aName& operator=(aName&&) = delete;\
-    private:\
-        aParentType& mParent;\
-    public:\
-        constexpr aName(aParentType& aParent):\
-            mParent(aParent)\
-        {}\
-        \
-        aRefType operator*(){\
-            aCode\
-        }\
-        \
-        SOLAIRE_INLINE aPtrType operator->(){\
-            return &operator*();\
-        }\
-        \
-        SOLAIRE_INLINE operator aRefType(){\
-            return operator*();\
-        }\
-        \
-        SOLAIRE_INLINE aRefType operator=(aRefType aValue){\
-            return operator*() = aValue;\
-        }\
-        \
-        SOLAIRE_INLINE const aRefType operator*() const{\
-            return const_cast<aName*>(this)->operator*();\
-        }\
-        \
-        SOLAIRE_INLINE const aPtrType operator->() const{\
-            return &operator*();\
-        }\
-        \
-        SOLAIRE_INLINE operator const aRefType() const{\
-            return operator*();\
-        }\
     };
 }
 

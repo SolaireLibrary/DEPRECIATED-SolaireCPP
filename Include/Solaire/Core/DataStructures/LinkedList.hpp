@@ -135,17 +135,19 @@ namespace Solaire{
                 node->~Node();
             });
         }
+    private:
+        bool pEmptyFn() const{return mSize == 0;}
+        Type& pFrontFn(){return *mFirst->GetObject();}
+        const Type& pFrontConstFn() const{return *mFirst->GetObject();}
+        Type& pBackFn(){return *mLast->GetObject();}
+        const Type& pBackConstFn() const{return *mLast->GetObject();}
     public:
-        SOLAIRE_READ_WRITE_PROPERTY(pFrontProp, LinkedList<Type>, Type&, Type*, return *mParent.mFirst->GetObject(););
-        SOLAIRE_READ_WRITE_PROPERTY(pBackProp, LinkedList<Type>, Type&, Type*, return *mParent.mLast->GetObject(););
-        SOLAIRE_READ_PROPERTY(pEmptyProp, LinkedList<Type>, bool, bool, return mParent.mSize == 0;);
-
         union{
-            pFrontProp pFront;
-            pBackProp pBack;
-            pEmptyProp pEmpty;
-            ReadOnlyValueProperty<LinkedList<Type>, uint32_t, &LinkedList<Type>::mSize> pSize;
-            DereferenceValueProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator> pAllocator;
+            ValFunctionProperty<LinkedList<Type>, bool, &LinkedList<Type>::pEmptyFn, nullptr> pEmpty;
+            RefFunctionProperty<LinkedList<Type>, Type, &LinkedList<Type>::pFrontConstFn, &LinkedList<Type>::pFrontFn> pFront;
+            RefFunctionProperty<LinkedList<Type>, Type, &LinkedList<Type>::pBackConstFn, &LinkedList<Type>::pBackFn> pBack;
+            MemberProperty<LinkedList<Type>, uint32_t, &LinkedList<Type>::mSize, PASS_BY_VALUE, PROPERTY_READ> pSize;
+            DrefMemberProperty<LinkedList<Type>, Allocator, &LinkedList<Type>::mAllocator, PASS_BY_REFERENCE, PROPERTY_READ> pAllocator;
         };
     public:
         LinkedList(Allocator& aAllocator):
