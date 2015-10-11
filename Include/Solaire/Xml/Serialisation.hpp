@@ -67,9 +67,27 @@ namespace Solaire{
             {
                 const auto end = aValue.pObject->end();
                 for(auto i = aValue.pObject->begin(); i != end; ++i){
-                    std::shared_ptr<Xml::Element> tmp = JsonToXml(*i->second);
-                    tmp->SetName(i->first);
-                    element->AddChild(tmp);
+                    switch(*i->second->pType){
+                        case Json::TYPE_NULL:
+                            element->AddAttribute(allocator.SharedAllocate<Xml::Attribute>(i->first, String(allocator, "null")));
+                            break;
+                        case Json::TYPE_BOOL:
+                            element->AddAttribute(allocator.SharedAllocate<Xml::Attribute>(i->first, *i->second->pBool));
+                            break;
+                        case Json::TYPE_NUMBER:
+                            element->AddAttribute(allocator.SharedAllocate<Xml::Attribute>(i->first, static_cast<double>(*i->second->pNumber)));
+                            break;
+                        case Json::TYPE_STRING:
+                            element->AddAttribute(allocator.SharedAllocate<Xml::Attribute>(i->first, static_cast<ConstStringFragment>(*i->second->pString)));
+                            break;
+                        default:
+                            {
+                                std::shared_ptr<Xml::Element> tmp = JsonToXml(*i->second);
+                                tmp->SetName(i->first);
+                                element->AddChild(tmp);
+                            }
+                            break;
+                    }
                 }
             }
             break;
