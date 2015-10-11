@@ -66,7 +66,7 @@ namespace Solaire{ namespace Json{
             Allocator& allocator = GetAllocator();
 
             std::shared_ptr<Value> params = allocator.SharedAllocate<Value>(allocator, TYPE_ARRAY);
-            params->pArray->PushBack(JsonSerialise(allocator, allocator, aParams...));
+            params->pArray->PushBack(Serialise(allocator, aParams...));
 
             RpcRequest request(allocator);
             request.SetMethodName(aMethodName);
@@ -75,7 +75,7 @@ namespace Solaire{ namespace Json{
 
             RpcResponse response = SendSerialisedRequest(request);
             if(response.HasError()) throw RpcErrorException(response.GetError());
-            return JsonDeserialise<R>(allocator, allocator, response.GetResult());
+            return Deserialise<R>(allocator, response.GetResult());
         }
     };
 }}

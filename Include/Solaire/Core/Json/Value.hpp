@@ -170,6 +170,8 @@ namespace Solaire{ namespace Json{
     class ObjectValue{
     public:
         friend Value;
+
+        typedef DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator ConstIterator;
     private:
         ObjectValue(const ObjectValue&) = delete;
         ObjectValue(ObjectValue&&) = delete;
@@ -180,8 +182,8 @@ namespace Solaire{ namespace Json{
     private:
         Value* mParent;
     private:
-        DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator SearchByObjectName(const ConstStringFragment aName) const;
-        DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator SearchByObjectValue(const Value& aValue) const;
+        ConstIterator SearchByObjectName(const ConstStringFragment aName) const;
+        ConstIterator SearchByObjectValue(const Value& aValue) const;
     public:
         size_t Size() const;
 
@@ -193,6 +195,9 @@ namespace Solaire{ namespace Json{
 
         void Erase(const ConstStringFragment aName);
         void Erase(const Value& aValue);
+
+        ConstIterator begin() const;
+        ConstIterator end() const;
 
         template<class ...Params>
         Value& Add(const ConstStringFragment aName, Allocator& aAllocator, Params... aParams){

@@ -78,7 +78,7 @@ namespace Solaire{ namespace Json{
     }
 
     void RpcServer::Execute(const RpcRequest& aRequest){
-        auto it = mFunctions.find(aRequest.GetMethodName());
+        auto it = mFunctions.find(String(GetAllocator(), aRequest.GetMethodName()));
         if(it == mFunctions.end()){
             if(aRequest.IsRequest()){
                 SendError(aRequest.GetRequestID(), RPC_METHOD_NOT_FOUND, "Could not find requested method on server mapping");
@@ -114,7 +114,7 @@ namespace Solaire{ namespace Json{
                     aFn();
                     SendResponse(id);
                 }catch(std::exception& e){
-                    SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(e.what(), allocator));
+                    SendError(id, RPC_EXCEPTION_THROWN_ON_SERVER, String(allocator, e.what()));
                 }
             }else{
                 aFn();

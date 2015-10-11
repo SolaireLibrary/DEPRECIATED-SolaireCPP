@@ -416,6 +416,13 @@ namespace Solaire{ namespace Json{
         }
     }
 
+    ObjectValue::ConstIterator ObjectValue::begin() const{
+        return mParent->mDataObject->begin();
+    }
+
+    ObjectValue::ConstIterator ObjectValue::end() const{
+        return mParent->mDataObject->end();
+    }
 
     // Value
 

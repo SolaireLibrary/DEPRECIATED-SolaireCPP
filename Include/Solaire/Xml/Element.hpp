@@ -329,7 +329,7 @@ namespace Solaire{ namespace Xml{
             if(mType == TYPE_STRING){
                 *mString = aValue;
             }else{
-                mString = new(GetAllocator().AllocateAndRegister<String>()) String(aValue);
+                mString = new(GetAllocator().AllocateAndRegister<String>()) String(GetAllocator(), aValue);
                 mType = TYPE_STRING;
             }
         }
@@ -827,7 +827,7 @@ namespace Solaire{ namespace Xml{
 
         Element(String aName):
             mName(aName),
-            mAttributes(8, aName.GetAllocator()),
+            mAttributes(aName.GetAllocator(), 8),
             mChildren(nullptr),
             mType(TYPE_EMPTY)
         {}
@@ -872,7 +872,7 @@ namespace Solaire{ namespace Xml{
         void SetBool(const bool aValue){
             if(mType != TYPE_BODY){
                 SetNull();
-                mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute("", aValue);
+                mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute(String(GetAllocator(), ""), aValue);
                 mType = TYPE_BODY;
             }else{
                 mValue->SetBool(aValue);
@@ -882,7 +882,7 @@ namespace Solaire{ namespace Xml{
         void SetNumber(const double aValue){
             if(mType != TYPE_BODY){
                 SetNull();
-                mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute("", aValue);
+                mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute(String(GetAllocator(), ""), aValue);
                 mType = TYPE_BODY;
             }else{
                 mValue->SetNumber(aValue);
@@ -894,7 +894,7 @@ namespace Solaire{ namespace Xml{
                 SetNull();
             }else if(mType != TYPE_BODY){
                 SetNull();
-                mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute("", aValue);
+                mValue = new(GetAllocator().AllocateAndRegister<Attribute>()) Attribute(String(GetAllocator(), ""), aValue);
                 mType = TYPE_BODY;
             }else{
                 mValue->SetString(aValue);
@@ -941,13 +941,13 @@ namespace Solaire{ namespace Xml{
         ConstReverseAttributeIterator AttributeREnd() const{return mAttributes.rend();}
 
         ConstAttributeIterator FindAttribute(const ConstStringFragment aName) const{
-            return mAttributes.FindFirst([&](const ConstAttributePointer aPtr){
+            return mAttributes.FindFirstIf([&](const ConstAttributePointer aPtr){
                 return aPtr->GetName() == aName;
             });
         }
 
         AttributeIterator FindAttribute(const ConstStringFragment aName){
-            return mAttributes.FindFirst([&](const ConstAttributePointer aPtr){
+            return mAttributes.FindFirstIf([&](const ConstAttributePointer aPtr){
                 return aPtr->GetName() == aName;
             });
         }
@@ -1013,21 +1013,21 @@ namespace Solaire{ namespace Xml{
 
         ConstElementIterator FindFirstChild(const ConstStringFragment aName) const{
             if(mType != TYPE_CHILDREN) return ConstElementIterator();
-            return mChildren->FindFirst([&](const ConstElementPointer aPtr){
+            return mChildren->FindFirstIf([&](const ConstElementPointer aPtr){
                 return aPtr->GetName() == aName;
             });
         }
 
         ConstElementIterator FindNextChild(const ConstElementIterator aPos, const ConstStringFragment aName) const{
             if(mType != TYPE_CHILDREN) return ConstElementIterator();
-            return mChildren->FindNext(aPos, [&](const ConstElementPointer aPtr){
+            return mChildren->FindNextIf(aPos, [&](const ConstElementPointer aPtr){
                 return aPtr->GetName() == aName;
             });
         }
 
         ConstElementIterator FindLastChildChild(const ConstStringFragment aName) const{
             if(mType != TYPE_CHILDREN) return ConstElementIterator();
-            return mChildren->FindFirst([&](const ConstElementPointer aPtr){
+            return mChildren->FindFirstIf([&](const ConstElementPointer aPtr){
                 return aPtr->GetName() == aName;
             });
         }
@@ -1035,7 +1035,7 @@ namespace Solaire{ namespace Xml{
         bool AddChild(const ElementPointer aPtr){
             if(mType != TYPE_CHILDREN){
                 SetNull();
-                mChildren = new(GetAllocator().AllocateAndRegister<DynamicArray<ElementPointer>>()) DynamicArray<ElementPointer>(8, GetAllocator());
+                mChildren = new(GetAllocator().AllocateAndRegister<DynamicArray<ElementPointer>>()) DynamicArray<ElementPointer>(GetAllocator(), 8);
                 mType = TYPE_CHILDREN;
             }else if(mChildren->FindFirst(aPtr) != ChildEnd()){
                 return false;

@@ -56,7 +56,7 @@ namespace Solaire{ namespace Json{
         template<class T>
         void SendAndSerialiseResponse(const RpcRequestID aID, T aValue){
             Allocator& allocator = GetAllocator();
-            SendResponse(aID, JsonSerialise<T>(allocator, allocator, aValue));
+            SendResponse(aID, Serialise<T>(allocator, aValue));
         }
 
         template<class ...Params>
