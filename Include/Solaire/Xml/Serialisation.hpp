@@ -139,15 +139,20 @@ namespace Solaire{
             return elementValue;
         };
 
-        //! \TODO check for attribute / element name collisions
-
-        if(attributeCount > 0){
+        if(attributeCount > 0 && elementCount == 0){
              goto PARSE_OBJECT;
         }else{
-            const auto begin = aElement.ChildBegin();
-            const auto end = aElement.ChildEnd();
-            for(auto i = begin; i != end; ++i){
-                for(auto j = begin; j != end; ++j){
+            const auto attributeBegin = aElement.AttributeBegin();
+            const auto attributeEnd = aElement.AttributeEnd();
+            const auto elementBegin = aElement.ChildBegin();
+            const auto elementEnd = aElement.ChildEnd();
+
+            for(auto i = elementEnd; i != elementEnd; ++i){
+                for(auto j = attributeBegin; j != attributeEnd; ++j){
+                    if((**i).GetName() == (**j).GetName()) goto PARSE_ARRAY;
+                }
+
+                for(auto j = elementEnd; j != elementEnd; ++j){
                     if(i != j){
                         if((**i).GetName() == (**j).GetName()) goto PARSE_ARRAY;
                     }
