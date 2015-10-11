@@ -280,9 +280,9 @@ namespace Solaire{ namespace Json{
     const Value& ArrayValue::operator[](const size_t aIndex) const{
         switch(mParent->mType){
         case TYPE_ARRAY:
-            return *(*mParent->mDataArray)[0];
+            return *(*mParent->mDataArray)[aIndex];
         case TYPE_OBJECT:
-            return *(*mParent->mDataObject)[0].second;
+            return *(*mParent->mDataObject)[aIndex].second;
             break;
         default:
             throw std::runtime_error("Json::ArrayValue : Cannot access this type by index");

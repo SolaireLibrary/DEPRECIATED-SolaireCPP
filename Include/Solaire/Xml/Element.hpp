@@ -571,7 +571,7 @@ namespace Solaire{ namespace Xml{
                 }else if(aElement.mValue->IsNumber()){
                     aParseEnd = SerialHelper::CopyNumber(aParseEnd, aElement.mValue->GetNumber());
                 }else if(aElement.mValue->IsString()){
-                    String value = aElement.mValue->GetString();
+                    String value(aElement.GetAllocator(), aElement.mValue->GetString());
                     SerialHelper::SerialiseXmlGlyphs(value);
                     aParseEnd = SerialHelper::CopyString(aParseEnd, value);
                 }else{

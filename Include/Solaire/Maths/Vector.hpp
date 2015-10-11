@@ -515,7 +515,7 @@ namespace Solaire{
 	typedef Vector4<uint8_t> Vector4UB;
 
     template<typename TYPE, const uint32_t LENGTH>
-    class Serialisable<Vector<TYPE, LENGTH>, Vector<TYPE, LENGTH>>
+    class Serialisable<Vector<TYPE, LENGTH>>
     {
     public:
         typedef Vector<TYPE, LENGTH> VectorType;
@@ -531,7 +531,7 @@ namespace Solaire{
         static VectorType Deserialise(Allocator& aDataAllocator, const Json::Value& aValue){
             VectorType vector;
             for(uint32_t i = 0; i < LENGTH; ++i){
-                vector[i] = (*aValue.pArray)[i].pNumber;
+                vector[i] = *(*aValue.pArray)[i].pNumber;
             }
 
             return vector;

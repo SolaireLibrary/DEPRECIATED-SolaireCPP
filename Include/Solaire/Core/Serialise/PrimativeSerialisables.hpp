@@ -36,23 +36,8 @@
 
 namespace Solaire{
 
-    template<class T>
-    class Serialisable<T, T, typename std::enable_if<std::is_arithmetic<T>::value>::type>
-    {
-    public:
-        typedef T DeserialiseType;
-
-        static std::shared_ptr<Json::Value> Serialise(Allocator& aParseAllocator, const T aValue){
-            return aParseAllocator.SharedAllocate<Json::Value>(aParseAllocator, aValue);
-        }
-
-        static DeserialiseType Deserialise(Allocator& aDataAllocator, const Json::Value& aValue){
-            return static_cast<T>(aValue.pNumber);
-        }
-    };
-
     template<>
-    class Serialisable<bool, bool>
+    class Serialisable<bool>
     {
     public:
         typedef bool DeserialiseType;
@@ -67,7 +52,7 @@ namespace Solaire{
     };
 
     template<>
-    class Serialisable<char, char>
+    class Serialisable<char>
     {
     public:
         typedef char DeserialiseType;
@@ -82,7 +67,7 @@ namespace Solaire{
     };
 
     template<class T>
-    class Serialisable<std::shared_ptr<T>, typename Serialisable<T>::DeserialiseType>
+    class Serialisable<std::shared_ptr<T>>
     {
     public:
         typedef typename Serialisable<T>::DeserialiseType DeserialiseType;

@@ -57,6 +57,7 @@ namespace Solaire{
             break;
         case Json::TYPE_ARRAY:
             {
+                element->SetName("Array");
                 const size_t size = aValue.pArray->Size();
                 for(size_t i = 0; i < size; ++i){
                     element->AddChild(JsonToXml((*aValue.pArray)[i]));
@@ -65,6 +66,7 @@ namespace Solaire{
             break;
         case Json::TYPE_OBJECT:
             {
+                element->SetName("Object");
                 const auto end = aValue.pObject->end();
                 for(auto i = aValue.pObject->begin(); i != end; ++i){
                     switch(*i->second->pType){

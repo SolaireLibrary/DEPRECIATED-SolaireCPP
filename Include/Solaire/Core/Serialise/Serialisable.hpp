@@ -39,9 +39,9 @@ namespace Solaire{
         class Value;
     }
 
-    template<class T, class R = std::shared_ptr<T>, class Enable = void>
+    template<class T>
     class Serialisable{
-        typedef R DeserialiseType;
+        typedef std::shared_ptr<T> DeserialiseType;
 
         static std::shared_ptr<Json::Value> Serialise(Allocator& aParseAllocator, typename PassTypes<T>::ConstType aValue) = delete;
         static DeserialiseType Deserialise(Allocator& aDataAllocator, const Json::Value& aValue) = delete;
