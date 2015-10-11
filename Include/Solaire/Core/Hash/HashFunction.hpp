@@ -32,6 +32,7 @@ Last Modified	: 1st October 2015
 */
 
 #include <cstdint>
+#include "..\Init.hpp"
 
 namespace Solaire{
 

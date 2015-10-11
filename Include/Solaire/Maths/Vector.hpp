@@ -520,20 +520,18 @@ namespace Solaire{
     public:
         typedef Vector<TYPE, LENGTH> VectorType;
 
-        void Serialise(VectorType aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
-            SerialArrayPtr array_ = aSystem.CreateA();
+        static std::shared_ptr<Json::Value> Serialise(Allocator& aParseAllocator, const VectorType aValue){
+            std::shared_ptr<Json::Value> value = aParseAllocator.SharedAllocate<Json::Value>(aParseAllocator, Json::TYPE_ARRAY);
             for(uint32_t i = 0; i < LENGTH; ++i){
-                array_->Write<TYPE>(i, aValue[i]);
+                value->pArray->PushBack(aParseAllocator, aValue[i]);
             }
-            aRoot.Write<SerialArrayPtr>(aIndex, array_);
+            return value;
         }
 
-        VectorType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
+        static VectorType Deserialise(Allocator& aDataAllocator, const Json::Value& aValue){
             VectorType vector;
-
-            SerialArrayPtr array_ = aRoot.Read<SerialArrayPtr>(aIndex);
             for(uint32_t i = 0; i < LENGTH; ++i){
-                vector[i] = array_->Read<TYPE>(i);
+                vector[i] = (*aValue.pArray)[i].pNumber;
             }
 
             return vector;

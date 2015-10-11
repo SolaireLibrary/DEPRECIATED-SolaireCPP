@@ -34,10 +34,10 @@ Last Modified	: 4th October 2015
 #include <Type_traits>
 #include <map>
 #include <list>
-#include "..\Core\Strings\String.hpp"
-#include "..\Core\Strings\NumberParser.hpp"
-#include "..\Core\Iterators\DereferenceIterator.hpp"
-#include "..\Core\Property.hpp"
+#include "..\Strings\String.hpp"
+#include "..\Strings\NumberParser.hpp"
+#include "..\Iterators\DereferenceIterator.hpp"
+#include "..\Property.hpp"
 
 namespace Solaire{ namespace Json{
 
