@@ -101,6 +101,11 @@ namespace Solaire{
 
         const size_t attributeCount = aElement.GetAttributeCount();
         const size_t elementCount = aElement.GetChildCount();
+        const auto attributeBegin = aElement.AttributeBegin();
+        const auto attributeEnd = aElement.AttributeEnd();
+        const auto elementBegin = aElement.ChildBegin();
+        const auto elementEnd = aElement.ChildEnd();
+
 
         const auto AttributeToValue = [&](const Xml::Attribute& aAttribute)->std::shared_ptr<Json::Value>{
             std::shared_ptr<Json::Value> attributeValue = allocator.SharedAllocate<Json::Value>(allocator, Json::TYPE_NULL);
@@ -142,11 +147,6 @@ namespace Solaire{
         if(attributeCount > 0 && elementCount == 0){
              goto PARSE_OBJECT;
         }else{
-            const auto attributeBegin = aElement.AttributeBegin();
-            const auto attributeEnd = aElement.AttributeEnd();
-            const auto elementBegin = aElement.ChildBegin();
-            const auto elementEnd = aElement.ChildEnd();
-
             for(auto i = elementEnd; i != elementEnd; ++i){
                 for(auto j = attributeBegin; j != attributeEnd; ++j){
                     if((**i).GetName() == (**j).GetName()) goto PARSE_ARRAY;
@@ -164,10 +164,6 @@ namespace Solaire{
         PARSE_OBJECT:
         {
             *value = Json::TYPE_OBJECT;
-            const auto attributeBegin = aElement.AttributeBegin();
-            const auto attributeEnd = aElement.AttributeEnd();
-            const auto elementBegin = aElement.ChildBegin();
-            const auto elementEnd = aElement.ChildEnd();
 
             for(auto i = attributeBegin; i != attributeEnd; ++i){
                 const Xml::Attribute& attribute = **i;
@@ -184,10 +180,6 @@ namespace Solaire{
         PARSE_ARRAY:
         {
             *value = Json::TYPE_ARRAY;
-            const auto attributeBegin = aElement.AttributeBegin();
-            const auto attributeEnd = aElement.AttributeEnd();
-            const auto elementBegin = aElement.ChildBegin();
-            const auto elementEnd = aElement.ChildEnd();
 
             for(auto i = attributeBegin; i != attributeEnd; ++i){
                 value->pArray->PushBack(AttributeToValue(**i));
