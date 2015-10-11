@@ -96,7 +96,103 @@ namespace Solaire{
     }
 
     static std::shared_ptr<Json::Value> XmlToJson(const Xml::Element& aElement){
+        Allocator& allocator = aElement.GetAllocator();
+        std::shared_ptr<Json::Value> value = allocator.SharedAllocate<Json::Value>(allocator, Json::TYPE_NULL);
 
+        const size_t attributeCount = aElement.GetAttributeCount();
+        const size_t elementCount = aElement.GetChildCount();
+
+        const auto AttributeToValue = [&](const Xml::Attribute& aAttribute)->std::shared_ptr<Json::Value>{
+            std::shared_ptr<Json::Value> attributeValue = allocator.SharedAllocate<Json::Value>(allocator, Json::TYPE_NULL);
+
+            if(aAttribute.IsBool()){
+                *attributeValue->pBool = aAttribute.GetBool();
+            }else if(aAttribute.IsNumber()){
+                *attributeValue->pNumber = aAttribute.GetNumber();
+            }else if(aAttribute.IsString()){
+                *attributeValue->pString = aAttribute.GetString();
+            }
+
+            return attributeValue;
+        };
+
+        const auto ElementToValue = [&](const Xml::Element& aElement)->std::shared_ptr<Json::Value>{
+            std::shared_ptr<Json::Value> elementValue;
+
+            if(! aElement.IsNull()){
+                if(aElement.GetAttributeCount() > 0 || aElement.GetChildCount() > 0){
+                    elementValue = XmlToJson(aElement);
+                }else{
+                    elementValue = allocator.SharedAllocate<Json::Value>(allocator, Json::TYPE_NULL);
+                    if(aElement.IsBool()){
+                        *elementValue->pBool = aElement.GetBool();
+                    }else if(aElement.IsNumber()){
+                        *elementValue->pNumber = aElement.GetNumber();
+                    }else if(aElement.IsString()){
+                        *elementValue->pString = aElement.GetString();
+                    }
+                }
+            }else{
+                 elementValue = allocator.SharedAllocate<Json::Value>(allocator, Json::TYPE_NULL);
+            }
+
+            return elementValue;
+        };
+
+        //! \TODO check for attribute / element name collisions
+
+        if(attributeCount > 0){
+             goto PARSE_OBJECT;
+        }else{
+            const auto begin = aElement.ChildBegin();
+            const auto end = aElement.ChildEnd();
+            for(auto i = begin; i != end; ++i){
+                for(auto j = begin; j != end; ++j){
+                    if(i != j){
+                        if((**i).GetName() == (**j).GetName()) goto PARSE_ARRAY;
+                    }
+                }
+            }
+            goto PARSE_OBJECT;
+        }
+
+        PARSE_OBJECT:
+        {
+            *value = Json::TYPE_OBJECT;
+            const auto attributeBegin = aElement.AttributeBegin();
+            const auto attributeEnd = aElement.AttributeEnd();
+            const auto elementBegin = aElement.ChildBegin();
+            const auto elementEnd = aElement.ChildEnd();
+
+            for(auto i = attributeBegin; i != attributeEnd; ++i){
+                const Xml::Attribute& attribute = **i;
+                value->pObject->Add(attribute.GetName(), AttributeToValue(attribute));
+            }
+
+            for(auto i = elementBegin; i != elementEnd; ++i){
+                const Xml::Element& element = **i;
+                value->pObject->Add(element.GetName(), ElementToValue(element));
+            }
+        }
+        return value;
+
+        PARSE_ARRAY:
+        {
+            *value = Json::TYPE_ARRAY;
+            const auto attributeBegin = aElement.AttributeBegin();
+            const auto attributeEnd = aElement.AttributeEnd();
+            const auto elementBegin = aElement.ChildBegin();
+            const auto elementEnd = aElement.ChildEnd();
+
+            for(auto i = attributeBegin; i != attributeEnd; ++i){
+                value->pArray->PushBack(AttributeToValue(**i));
+            }
+
+            for(auto i = elementBegin; i != elementEnd; ++i){
+                value->pArray->PushBack(ElementToValue(**i));
+            }
+        }
+        return value;
     }
 
 }
