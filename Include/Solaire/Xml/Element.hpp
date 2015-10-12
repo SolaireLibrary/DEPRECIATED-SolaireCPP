@@ -516,8 +516,9 @@ namespace Solaire{ namespace Xml{
 
             const auto FormatStartTag = [&]()->void{
                 if(
-                   aMode.lineMode == ParseMode::LINE_ALWAYS ||
-                   aMode.lineMode == ParseMode::LINE_ONLY_CHILDREN
+                   (aMode.lineMode == ParseMode::LINE_ALWAYS ||
+                   aMode.lineMode == ParseMode::LINE_ONLY_CHILDREN) &&
+                   aMode.depth > 0
                 ){
                     NewLine();
                     Indent();
