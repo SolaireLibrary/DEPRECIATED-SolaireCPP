@@ -32,7 +32,8 @@ Last Modified	: 5th October 2015
 */
 
 #include "Value.hpp"
-#include "Serialisation.hpp"
+#include "..\Serialise\Serialisable.hpp"
+#include "..\Serialise\PrimativeSerialisables.hpp"
 
 namespace Solaire{ namespace Json{
 

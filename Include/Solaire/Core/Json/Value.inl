@@ -34,9 +34,9 @@ Last Modified	: 4th October 2015
 #include <Type_traits>
 #include <map>
 #include <list>
-#include "..\Core\Strings\String.hpp"
-#include "..\Core\Strings\NumberParser.hpp"
-#include "..\Core\Iterators\DereferenceIterator.hpp"
+#include "..\Strings\String.hpp"
+#include "..\Strings\NumberParser.hpp"
+#include "..\Iterators\DereferenceIterator.hpp"
 
 namespace Solaire{ namespace Json{
 
@@ -280,9 +280,9 @@ namespace Solaire{ namespace Json{
     const Value& ArrayValue::operator[](const size_t aIndex) const{
         switch(mParent->mType){
         case TYPE_ARRAY:
-            return *(*mParent->mDataArray)[0];
+            return *(*mParent->mDataArray)[aIndex];
         case TYPE_OBJECT:
-            return *(*mParent->mDataObject)[0].second;
+            return *(*mParent->mDataObject)[aIndex].second;
             break;
         default:
             throw std::runtime_error("Json::ArrayValue : Cannot access this type by index");
@@ -416,6 +416,13 @@ namespace Solaire{ namespace Json{
         }
     }
 
+    ObjectValue::ConstIterator ObjectValue::begin() const{
+        return mParent->mDataObject->begin();
+    }
+
+    ObjectValue::ConstIterator ObjectValue::end() const{
+        return mParent->mDataObject->end();
+    }
 
     // Value
 

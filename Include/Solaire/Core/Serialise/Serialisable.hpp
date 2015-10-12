@@ -25,33 +25,44 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 1.0
+	\version 3.0
 	\date
 	Created			: 30th September 2015
 	Last Modified	: 30th September 2015
 */
 
-#include <sstream>
-#include "SerialisationInterface.hpp"
 #include "..\Strings\NumberParser.hpp"
 
 namespace Solaire{
 
-    template<class T, class R = std::shared_ptr<T>, class Enable = void>
-    class Serialisable{
-        typedef R DeserialiseType;
+    namespace Json{
+        class Value;
+    }
 
-        static void Serialise(T aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot) = delete;
-        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot) = delete;
+    template<class T>
+    class Serialisable{
+        typedef std::shared_ptr<T> DeserialiseType;
+
+        static std::shared_ptr<Json::Value> Serialise(Allocator& aParseAllocator, typename PassTypes<T>::ConstType aValue) = delete;
+        static DeserialiseType Deserialise(Allocator& aDataAllocator, const Json::Value& aValue) = delete;
     };
 
+    template<class T>
+    static std::shared_ptr<Json::Value> Serialise(Allocator& aParseAllocator, typename PassTypes<T>::ConstType aValue){
+        return Serialisable<T>::Serialise(aParseAllocator, aValue);
+    }
 
-    /*template<class A, class B>
-    static Allocator::SharedPointer<A> serial_cast(Allocator::SharedPointer<B> aPointer, const SerialSystem& aSystem){
-        std::stringstream ss;
-        Serialise<B>(*aPointer, aSystem, ss);
-        return Deserialise<A>(aSystem, ss);
-    }*/
+    template<class T>
+    static typename Serialisable<T>::DeserialiseType Deserialise(Allocator& aDataAllocator, const Json::Value& aValue){
+        return Serialisable<T>::DeserialiseType(aDataAllocator, aValue);
+    }
+
+
+    template<class A, class B>
+    static typename Serialisable<A>::DeserialiseType serial_cast(Allocator& aAllocator, typename Serialisable<B>::DeserialiseType aObject){
+        const std::shared_ptr<const Json::Value> tmp = Serialise<B>((aAllocator, aObject));
+        return Deserialise<B>(aAllocator, *tmp);
+    }
 
     namespace SerialHelper{
         template<class Iterator>
@@ -75,39 +86,6 @@ namespace Solaire{
             return CopyString(aBegin, aBool ? "true" : "false");
         }
     }
-
-
-    // Primatives
-
-    template<class T>
-    class Serialisable<T, T, typename std::enable_if<IsSerialPrimative<T>>::type>
-    {
-    public:
-        typedef T DeserialiseType;
-
-        static void Serialise(T aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
-            aRoot.Write<T>(aIndex, aValue);
-        }
-
-        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
-            return aRoot.Read<T>(aIndex);
-        }
-    };
-
-    template<class T>
-    class Serialisable<std::shared_ptr<T>, typename Serialisable<T>::DeserialiseType, typename std::enable_if<IsSerialPrimative<T>>::type>
-    {
-    public:
-        typedef typename Serialisable<T>::DeserialiseType DeserialiseType;
-
-        static void Serialise(std::shared_ptr<T> aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
-            Serialisable<T>::Serialise(*aValue, aSystem, aIndex, aRoot);
-        }
-
-        static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot){
-            return Serialisable<T>::DeserialiseType(aSystem, aIndex, aRoot);
-        }
-    };
 }
 
 

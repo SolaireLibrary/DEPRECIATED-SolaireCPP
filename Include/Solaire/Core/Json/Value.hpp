@@ -34,10 +34,10 @@ Last Modified	: 4th October 2015
 #include <Type_traits>
 #include <map>
 #include <list>
-#include "..\Core\Strings\String.hpp"
-#include "..\Core\Strings\NumberParser.hpp"
-#include "..\Core\Iterators\DereferenceIterator.hpp"
-#include "..\Core\Property.hpp"
+#include "..\Strings\String.hpp"
+#include "..\Strings\NumberParser.hpp"
+#include "..\Iterators\DereferenceIterator.hpp"
+#include "..\Property.hpp"
 
 namespace Solaire{ namespace Json{
 
@@ -162,14 +162,16 @@ namespace Solaire{ namespace Json{
         void Erase(const Value& aValue);
 
         template<class T, typename Enable = typename std::enable_if<! std::is_same<T, std::shared_ptr<Value>>::value>::type>
-        Value& PushBack(const ConstStringFragment aName, Allocator& aAllocator, T aValue){
-            return PushBack(aName, aAllocator.SharedAllocate<Value>(aAllocator, aValue));
+        Value& PushBack(Allocator& aAllocator, T aValue){
+            return PushBack(aAllocator.SharedAllocate<Value>(aAllocator, aValue));
         }
     };
 
     class ObjectValue{
     public:
         friend Value;
+
+        typedef DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator ConstIterator;
     private:
         ObjectValue(const ObjectValue&) = delete;
         ObjectValue(ObjectValue&&) = delete;
@@ -180,8 +182,8 @@ namespace Solaire{ namespace Json{
     private:
         Value* mParent;
     private:
-        DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator SearchByObjectName(const ConstStringFragment aName) const;
-        DynamicArray<std::pair<String, std::shared_ptr<Value>>>::ConstIterator SearchByObjectValue(const Value& aValue) const;
+        ConstIterator SearchByObjectName(const ConstStringFragment aName) const;
+        ConstIterator SearchByObjectValue(const Value& aValue) const;
     public:
         size_t Size() const;
 
@@ -193,6 +195,9 @@ namespace Solaire{ namespace Json{
 
         void Erase(const ConstStringFragment aName);
         void Erase(const Value& aValue);
+
+        ConstIterator begin() const;
+        ConstIterator end() const;
 
         template<class ...Params>
         Value& Add(const ConstStringFragment aName, Allocator& aAllocator, Params... aParams){
