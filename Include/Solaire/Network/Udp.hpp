@@ -45,14 +45,19 @@ namespace Solaire{
     typedef UdpSession<IPv6> UdpSessionIPv6;
 
     class UdpSocket : public Socket{
+    public:
+        enum{
+            MAX_DATAGRAM_SIZE = 65507
+        };
     private:
         UdpPort mListenPort;
+        void* const mImplementationData;
     public:
         UdpSocket();
         UdpSocket(const UdpPort aListenPort);
         ~UdpSocket();
 
-        void SetListenPort(const UdpPort aListenPort);
+        void ListenToPort(const UdpPort aListenPort);
 
         Status Send(const UdpSessionIPv4 aDestination, const void* const aData, const size_t aBytes);
         Status Send(const UdpSessionIPv4 aDestination, const Packet& aPacket);
@@ -61,6 +66,12 @@ namespace Solaire{
         Status Receive(UdpSessionIPv4& aSource, Packet& aPacket);
     };
 }
+
+#if SOLAIRE_OS = SOLAIRE_WINDOWS
+    #include "UdpWindows.inl"
+#else
+    #error SolaireCpp : Could not find UdpSocket implementation for current OS
+#endif
 
 
 #endif
