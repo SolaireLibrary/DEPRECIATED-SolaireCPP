@@ -85,6 +85,7 @@ namespace Solaire{ namespace Game{
             // Pull tasks to run this frame
             DynamicArray<PriorityTask> tasks(GetFrameAllocator());
 
+            //! \todo Thread safety
             for(RepeatedTaskList& list : mTasks){
                 const uint64_t timeDifference = frameBegin - list.timeLastRun;
                 if(timeDifference > list.repeatInterval){
@@ -137,6 +138,31 @@ namespace Solaire{ namespace Game{
 
         Allocator& GetFrameAllocator() const{
             return mFrameAllocator;
+        }
+
+        void ScheduleRepeatedTask(const TaskPriority aPriority, Task& aTask, const uint64_t aRepeatInterval){
+            //! \todo Thread safety
+            const PriorityTask task(aPriority, &aTask);
+
+            for(RepeatedTaskList& list : mTasks){
+                if(list.repeatInterval == aRepeatInterval){
+                    list.taskList.PushBack(task);
+                    return;
+                }
+            }
+
+            RepeatedTaskList& list = mTasks.PushBack(RepeatedTaskList(mGameAllocator, aRepeatInterval));
+            list.taskList.PushBack(task);
+        }
+
+        void UnscheduleRepeatedTask(Task& aTask){
+            //! \todo Thread safety
+
+            for(RepeatedTaskList& list : mTasks){
+                list.taskList.Erase(list.taskList.FindFirstIf([&](const PriorityTask aPriorityTask){
+                    return &aTask == aPriorityTask.task;
+                }));
+            }
         }
 
         /*virtual uint64_t GetElapsedTime() const = 0;
