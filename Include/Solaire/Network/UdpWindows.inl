@@ -31,14 +31,49 @@
 	Last Modified	: 12th October 2015
 */
 
+#include "..\Core\Init.hpp"
 #include<stdio.h>
 #include<winsock2.h>
 
 namespace Solaire{
 
-    namespace UdpWindows{
-        struct Data{
+    namespace UdpImplementation{
 
+        enum{
+            BUFFER_SIZE = 512
+        };
+
+        static bool InitialiseWinsock(WSADATA& aWsa){
+            return WSAStartup(MAKEWORD(2,2), &aWsa) != 0;
+        }
+
+        static bool CreateSocket(SOCKET& aSocket){
+            return (aSocket = socket(AF_INET, SOCK_DGRAM, 0 )) == INVALID_SOCKET;
+        }
+
+        struct Data{
+            SOCKET socketStruct;
+            sockaddr_in addressThis;
+            sockaddr_in addressOther;
+            int slen , recv_len;
+            char buf[BUFFER_SIZE];
+            WSADATA wsa;
+
+            Data(){
+                InitialiseWinsock(wsa);
+                CreateSocket(socketStruct);
+            }
+
+            ~Data(){
+                closesocket(socketStruct);
+            }
+
+            bool Bind(const UdpPort aPort){
+                addressThis.sin_family = AF_INET;
+                addressThis.sin_addr.s_addr = INADDR_ANY;
+                addressThis.sin_port = htons(aPort);
+                return bind(socketStruct, reinterpret_cast<sockaddr*>(&addressThis), sizeof(sockaddr_in)) == SOCKET_ERROR;
+            }
         };
     }
 
@@ -46,39 +81,39 @@ namespace Solaire{
 
     UdpSocket::UdpSocket():
         mListenPort(0),
-        mImplementationData(new UdpWindows::Data())
+        mImplementationData(new UdpImplementation::Data())
     {
 
     }
 
     UdpSocket::UdpSocket(const UdpPort aListenPort):
         mListenPort(0),
-        mImplementationData(new UdpWindows::Data())
+        mImplementationData(new UdpImplementation::Data())
     {
         ListenToPort(aListenPort);
     }
 
     UdpSocket::~UdpSocket(){
-
+        delete mImplementationData;
     }
 
     void UdpSocket::ListenToPort(const UdpPort aListenPort){
+        mImplementationData->Bind(aListenPort);
+    }
+
+    UdpSocket::Status UdpSocket::Send(const UdpSessionIPv4 aDestination, const void* const aData, const size_t aBytes){
 
     }
 
-    Status UdpSocket::Send(const UdpSessionIPv4 aDestination, const void* const aData, const size_t aBytes){
+    UdpSocket::Status UdpSocket::Send(const UdpSessionIPv4 aDestination, const Packet& aPacket){
 
     }
 
-    Status UdpSocket::Send(const UdpSessionIPv4 aDestination, const Packet& aPacket){
+    UdpSocket::Status UdpSocket::Receive(UdpSessionIPv4& aSource, size_t& aBytesRead, void* const aData, const size_t aDataSize){
 
     }
 
-    Status UdpSocket::Receive(UdpSessionIPv4& aSource, size_t& aBytesRead, void* const aData, const size_t aDataSize){
-
-    }
-
-    Status UdpSocket::Receive(UdpSessionIPv4& aSource, Packet& aPacket){
+    UdpSocket::Status UdpSocket::Receive(UdpSessionIPv4& aSource, Packet& aPacket){
 
     }
 

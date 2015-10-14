@@ -92,7 +92,7 @@ namespace Solaire{
 
         bool Pause(const uint16_t aLocation);
     public:
-        Task();
+        Task(Allocator& aAllocator);
 
         virtual ~Task();
 

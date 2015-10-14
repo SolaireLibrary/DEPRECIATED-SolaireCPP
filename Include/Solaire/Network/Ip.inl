@@ -64,7 +64,7 @@ namespace Solaire{
 
     // Serialisable<IPv4>
 
-    void Serialisable<IPv4>::Serialise(IPv4 aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
+    /*void Serialisable<IPv4>::Serialise(IPv4 aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot){
         char buf[16];
         char* head = buf;
 
@@ -169,7 +169,7 @@ namespace Solaire{
         head = Maths::FromHex<uint8_t>(tmp.bytes[7], head);
 
         return tmp;
-    }
+    }*/
 
 
 }

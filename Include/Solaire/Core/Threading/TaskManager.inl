@@ -113,10 +113,10 @@ namespace Solaire{
     }
 
     TaskManager::TaskManager(Allocator& aAllocator) :
-        mInitialiseTasks(128, aAllocator),
-        mPreExecuteTasks(128, aAllocator),
-        mPostExecuteTasks(128, aAllocator),
-        mCancelTasks(128, aAllocator)
+        mInitialiseTasks(aAllocator, 128),
+        mPreExecuteTasks(aAllocator, 128),
+        mPostExecuteTasks(aAllocator, 128),
+        mCancelTasks(aAllocator, 128)
     {}
 
     TaskManager::~TaskManager(){

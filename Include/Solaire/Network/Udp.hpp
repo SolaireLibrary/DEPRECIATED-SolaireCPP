@@ -44,14 +44,19 @@ namespace Solaire{
     typedef UdpSession<IPv4> UdpSessionIPv4;
     typedef UdpSession<IPv6> UdpSessionIPv6;
 
+    namespace UdpImplementation{
+        class Data;
+    }
+
     class UdpSocket : public Socket{
     public:
+        friend UdpImplementation::Data;
         enum{
             MAX_DATAGRAM_SIZE = 65507
         };
     private:
         UdpPort mListenPort;
-        void* const mImplementationData;
+        UdpImplementation::Data* const mImplementationData;
     public:
         UdpSocket();
         UdpSocket(const UdpPort aListenPort);
@@ -67,7 +72,7 @@ namespace Solaire{
     };
 }
 
-#if SOLAIRE_OS = SOLAIRE_WINDOWS
+#if SOLAIRE_OS == SOLAIRE_WINDOWS
     #include "UdpWindows.inl"
 #else
     #error SolaireCpp : Could not find UdpSocket implementation for current OS

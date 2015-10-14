@@ -54,7 +54,7 @@ namespace Solaire{
         IPv6();
     };
 
-    template<>
+    /*template<>
     class Serialisable<IPv4>{
         typedef IPv4 DeserialiseType;
 
@@ -68,7 +68,7 @@ namespace Solaire{
 
         static void Serialise(IPv6 aValue, const SerialSystem& aSystem, const SerialIndex aIndex, SerialArray& aRoot);
         static DeserialiseType Deserialise(const SerialSystem& aSystem, const SerialIndex aIndex, const SerialArray& aRoot);
-    };
+    };*/
 
 }
 

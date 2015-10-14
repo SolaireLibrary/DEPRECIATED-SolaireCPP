@@ -107,8 +107,8 @@ namespace Solaire{
     public:
         MemoryArena(const size_t aSize, Allocator& aAllocator = GetDefaultAllocator()) :
             mAllocator(aAllocator),
-            mDestructorList(128, aAllocator),
-            mFreeRegions(128, aAllocator),
+            mDestructorList(aAllocator, 128),
+            mFreeRegions(aAllocator, 128),
             mArenaBegin(static_cast<uint8_t*>(mAllocator.Allocate(aSize))),
             mArenaEnd(mArenaBegin + aSize),
             mArenaHead(mArenaBegin),

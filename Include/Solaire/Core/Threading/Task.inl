@@ -214,7 +214,8 @@ namespace Solaire{
         );
     }
 
-    Task::Task() :
+    Task::Task(Allocator& aAllocator) :
+        mProgressList(aAllocator, 8),
         mManager(nullptr),
         mPauseLocation(0)
     {}
