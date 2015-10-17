@@ -28,32 +28,18 @@
 	\version 1.0
 	\date
 	Created			: 20th September 2015
-	Last Modified	: 27th September 2015
+	Last Modified	: 17th October 2015
 */
 
-#ifndef SOLAIRE_DISABLE_MULTITHREADING
-    #include <atomic>
-#endif
 #include <cstdint>
+#include "Resource.hpp"
 
 namespace Solaire{
 
-    class Resource{
-    public:
-        virtual ~Resource(){
-
-        }
-
-        virtual void Reload() = 0;
-    };
-
     class ResourceFactory{
     private:
-#ifdef SOLAIRE_DISABLE_MULTITHREADING
         uint16_t mUsers;
-#else
-        std::atomic_uint16_t mUsers;
-#endif
+    private:
         ResourceFactory& operator=(const ResourceFactory& aOther) = delete;
         ResourceFactory& operator=(ResourceFactory&& aOther) = delete;
     protected:

@@ -36,6 +36,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include "..\Threading\ThreadTypes.hpp"
 
 namespace Solaire{
 
@@ -129,15 +130,18 @@ namespace Solaire{
         //! \bug DestructorMapAllocator does not check mDestructorList in own constructor
         //! \bug DestructorMapAllocator is not type safe
         std::map<void*, std::vector<DestructorFn>> mDestructorList;
+        Mutex mLock;
     protected:
         void OnDeallocate(void* const aObject){
-            auto it = mDestructorList.find(aObject);
-            if(it == mDestructorList.end()) return;
-            const std::vector<DestructorFn>& list = it->second;
-            for(DestructorFn i : list){
-                i(aObject);
-            }
-            mDestructorList.erase(it);
+            mLock.lock();
+                auto it = mDestructorList.find(aObject);
+                if(it == mDestructorList.end()) return;
+                const std::vector<DestructorFn>& list = it->second;
+                for(DestructorFn i : list){
+                    i(aObject);
+                }
+                mDestructorList.erase(it);
+            mLock.unlock();
         }
     public:
         virtual ~DestructorMapAllocator(){
@@ -145,9 +149,11 @@ namespace Solaire{
         }
 
         virtual void OnDestroyed(void* const aObject, const DestructorFn aFn) override{
-            auto it = mDestructorList.find(aObject);
-            if(it == mDestructorList.end()) it = mDestructorList.emplace(aObject, std::vector<DestructorFn>()).first;
-            it->second.push_back(aFn);
+            mLock.lock();
+                auto it = mDestructorList.find(aObject);
+                if(it == mDestructorList.end()) it = mDestructorList.emplace(aObject, std::vector<DestructorFn>()).first;
+                it->second.push_back(aFn);
+            mLock.unlock();
         }
     };
 
