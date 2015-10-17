@@ -75,7 +75,7 @@ namespace Solaire{
 
         template<class ExternalIterator>
         String(Allocator& aAllocator, const ExternalIterator aBegin, const ExternalIterator aEnd) :
-            mContainer(aBegin, aEnd, aAllocator)
+            mContainer(aAllocator, aBegin, aEnd)
         {
             if(mContainer.Back() != '\0') mContainer.PushBack('\0');
         }

@@ -42,11 +42,15 @@ namespace Solaire{
     typedef std::shared_ptr<Resource> ResourcePtr;
     typedef std::shared_ptr<const Resource> ConstResourcePtr;
 
-    class Resource : std::enable_shared_from_this<Resource>{
+    class Resource : public std::enable_shared_from_this<Resource>{
     private:
         ResourceID mID;
     public:
         friend ResourceManager;
+
+        Resource(const ResourceID aID = UINT16_MAX):
+            mID(aID)
+        {}
 
         virtual ~Resource(){
 
@@ -56,14 +60,14 @@ namespace Solaire{
             return mID;
         }
 
-        virtual ResourcePtr Reload() const = 0;
+        virtual void Reload() = 0;
 
         bool operator==(const Resource& aOther) const{
-            return mID == aOther->mID;
+            return mID == aOther.mID;
         }
 
         bool operator!=(const Resource& aOther) const{
-            return mID != aOther->mID;
+            return mID != aOther.mID;
         }
     };
 }

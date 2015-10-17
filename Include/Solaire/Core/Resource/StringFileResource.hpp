@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_STRING_FACTORY_HPP
-#define SOLAIRE_STRING_FACTORY_HPP
+#ifndef SOLAIRE_STRING_FILE_FACTORY_HPP
+#define SOLAIRE_STRING_FILE_FACTORY_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file StringFactory.hpp
+	\file StringFileResource.hpp
 	\brief
 	\author
 	Created			: Adam Smith
@@ -28,34 +28,38 @@
 	\version 1.0
 	\date
 	Created			: 27th September 2015
-	Last Modified	: 27th September 2015
+	Last Modified	: 17th October 2015
 */
 
-#include <string>
-#include "ResourceFactory.hpp"
+#include <fstream>
+#include "StringFactory.hpp"
 
 namespace Solaire{
 
-    class StringFactory : public ResourceFactory{
-    private:
+
+    class StringFileResource : public StringResource{
+    protected:
+        String mFilename;
     public:
-        StringFactory() :
-            ResourceFactory()
+        StringFileResource(const String& aFilename):
+            StringResource(aFilename.GetAllocator()),
+            mFilename(aFilename)
         {}
 
-        StringFactory(const StringFactory& aOther) :
-            ResourceFactory(aOther)
-        {}
+        // Inherited from resource
 
-        StringFactory(StringFactory&& aOther) :
-            ResourceFactory(std::move(aOther))
-        {}
+        void Reload() override{
+            std::ifstream file(mFile.CString());
+            if(! file.is_open()) throw std::runtime_error("StringFileResource : Could not open requested file for reading");
 
-        virtual ~StringFactory(){
+            char c;
+            while(! file.eof()){
+                file >> c;
+                mString += c;
+            }
 
+            file.close();
         }
-
-        virtual const std::string& GetString() const = 0;
     };
 
 }
