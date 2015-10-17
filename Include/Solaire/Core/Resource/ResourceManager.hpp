@@ -47,7 +47,7 @@ namespace Solaire{
         {}
 
         template<class T, class ...PARAMS, typename Enable = typename std::enable_if<std::is_base_of<Resource, T>::value>::type>
-        std::shared_ptr<T> GenerateResource(PARAMS ...aParams){
+        std::shared_ptr<T> Generate(PARAMS ...aParams){
             std::shared_ptr<T> tmp = mResources.GetAllocator().SharedAllocate<T>(mIDGenerator, aParams...);
             const ResourceID id = tmp->GetID();
 
@@ -59,6 +59,23 @@ namespace Solaire{
 
             return tmp;
         }
+
+        void Delete(const ConstResourcePtr aResource){
+            const ResourceID id = aResource->GetID();
+            ResourcePtr tmp;
+            mResources[id].swap(tmp);
+        }
+
+        template<class T, class ...PARAMS, typename Enable = typename std::enable_if<std::is_base_of<Resource, T>::value>::type>
+        std::shared_ptr<T> Get(const ResourceID aID){
+            if(aID < mResources.Size()){
+                return std::shared_ptr<T>();
+            }else{
+                //! \bug Resource return is not typechecked
+                return std::static_pointer_cast<T>(mResources[aID]);
+            }
+        }
+
     };
 
 }
