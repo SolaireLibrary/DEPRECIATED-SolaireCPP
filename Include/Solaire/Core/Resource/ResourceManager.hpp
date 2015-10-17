@@ -47,7 +47,7 @@ namespace Solaire{
         {}
 
         template<class T, class ...PARAMS, typename Enable = typename std::enable_if<std::is_base_of<Resource, T>::value>::type>
-        std::shared_ptr<T> Generate(PARAMS ...aParams){
+        std::shared_ptr<T> Create(PARAMS ...aParams){
             std::shared_ptr<T> tmp = mResources.GetAllocator().SharedAllocate<T>(mIDGenerator, aParams...);
             const ResourceID id = tmp->GetID();
 
