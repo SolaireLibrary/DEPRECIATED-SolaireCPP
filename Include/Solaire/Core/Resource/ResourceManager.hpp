@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_RESOURCE_HPP
-#define SOLAIRE_RESOURCE_HPP
+#ifndef SOLAIRE_RESOURCE_MANAGER_HPP
+#define SOLAIRE_RESOURCE_MANAGER_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file Resource.hpp
+	\file ResourceManager.hpp
 	\brief
 	\author
 	Created			: Adam Smith
@@ -31,28 +31,18 @@
 	Last Modified	: 17th October 2015
 */
 
+#include "Resource.hpp"
 #include "IDGenerator.hpp"
 
 namespace Solaire{
 
-    class Resource;
-    class ResourceManager;
-
-    typedef uint16_t ResourceID;
-    typedef std::shared_ptr<Resource> ResourcePtr;
-    typedef std::shared_ptr<const Resource> ConstResourcePtr;
-
-    class Resource : public IDHolder<ResourceID, true>, public std::enable_shared_from_this<Resource>{
+    class ResourceManager{
     public:
-        friend ResourceManager;
-    public:
-        Resource(ResourceManager& aManager);
-        virtual ~Resource();
-
-        virtual void Reload() = 0;
+        friend Resource;
+    private:
+        IDGenerator<ResourceID, true> mIDGenerator;
     };
-}
 
-#include "Resource.inl"
+}
 
 #endif

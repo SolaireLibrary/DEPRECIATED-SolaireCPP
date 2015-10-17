@@ -41,11 +41,13 @@ namespace Solaire{
     protected:
         String mString;
 
-        StringResource(const String& aString):
+        StringResource(ResourceManager& aManager, const String& aString):
+            Resource(aManager),
             mString(aString)
         {}
     public:
-        StringResource(Allocator& aAllocator):
+        StringResource(ResourceManager& aManager, Allocator& aAllocator):
+            Resource(aManager),
             mString(aAllocator)
         {}
 
@@ -56,8 +58,8 @@ namespace Solaire{
 
     class StringConstantResource : public StringResource{
     public:
-        StringConstantResource(const String& aString):
-            StringResource(aString)
+        StringConstantResource(ResourceManager& aManager, const String& aString):
+            StringResource(aManager, aString)
         {}
 
         // Inherited from resource

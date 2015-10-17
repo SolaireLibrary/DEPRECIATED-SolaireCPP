@@ -32,7 +32,7 @@
 */
 
 #include <fstream>
-#include "StringFactory.hpp"
+#include "StringResource.hpp"
 
 namespace Solaire{
 
@@ -41,15 +41,15 @@ namespace Solaire{
     protected:
         String mFilename;
     public:
-        StringFileResource(const String& aFilename):
-            StringResource(aFilename.GetAllocator()),
+        StringFileResource(ResourceManager& aManager, const String& aFilename):
+            StringResource(aManager, aFilename.GetAllocator()),
             mFilename(aFilename)
         {}
 
         // Inherited from resource
 
         void Reload() override{
-            std::ifstream file(mFile.CString());
+            std::ifstream file(mFilename.CString());
             if(! file.is_open()) throw std::runtime_error("StringFileResource : Could not open requested file for reading");
 
             char c;
