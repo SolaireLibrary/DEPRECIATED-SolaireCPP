@@ -36,13 +36,12 @@
 
 namespace Solaire{
 
-
     class StringFileResource : public StringResource{
     protected:
         String mFilename;
     public:
-        StringFileResource(ResourceManager& aManager, const String& aFilename):
-            StringResource(aManager, aFilename.GetAllocator()),
+        StringFileResource(ResourceIDGenerator& aGenerator, const String& aFilename):
+            StringResource(aGenerator, aFilename.GetAllocator()),
             mFilename(aFilename)
         {}
 

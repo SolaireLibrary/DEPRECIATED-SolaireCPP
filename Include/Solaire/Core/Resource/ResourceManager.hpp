@@ -37,10 +37,28 @@
 namespace Solaire{
 
     class ResourceManager{
-    public:
-        friend Resource;
     private:
         IDGenerator<ResourceID, true> mIDGenerator;
+        DynamicArray<ResourcePtr> mResources;
+    public:
+        ResourceManager(Allocator& aAllocator):
+            mIDGenerator(aAllocator),
+            mResources(aAllocator)
+        {}
+
+        template<class T, class ...PARAMS, typename Enable = typename std::enable_if<std::is_base_of<Resource, T>::value>::type>
+        std::shared_ptr<T> GenerateResource(PARAMS ...aParams){
+            std::shared_ptr<T> tmp = mResources.GetAllocator().SharedAllocate<T>(mIDGenerator, aParams...);
+            const ResourceID id = tmp->GetID();
+
+            if(id < mResources.Size()){
+                mResources.PushBack(tmp);
+            }else{
+                mResources[id].swap(tmp);
+            }
+
+            return tmp;
+        }
     };
 
 }

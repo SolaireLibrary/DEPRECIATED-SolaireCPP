@@ -31,14 +31,12 @@
 	Last Modified	: 17th October 2015
 */
 
-#include "ResourceManager.hpp"
-
 namespace Solaire{
 
     // Resource
 
-    Resource::Resource(ResourceManager& aGenerator):
-        IDHolder(aGenerator.mIDGenerator)
+    Resource::Resource(ResourceIDGenerator& aGenerator):
+        IDHolder(aGenerator)
     {}
 
     Resource::~Resource(){

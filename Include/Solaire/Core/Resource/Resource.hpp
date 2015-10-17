@@ -42,11 +42,13 @@ namespace Solaire{
     typedef std::shared_ptr<Resource> ResourcePtr;
     typedef std::shared_ptr<const Resource> ConstResourcePtr;
 
+    typedef IDGenerator<ResourceID, true> ResourceIDGenerator;
+
     class Resource : public IDHolder<ResourceID, true>, public std::enable_shared_from_this<Resource>{
     public:
         friend ResourceManager;
     public:
-        Resource(ResourceManager& aManager);
+        Resource(ResourceIDGenerator& aGenerator);
         virtual ~Resource();
 
         virtual void Reload() = 0;
