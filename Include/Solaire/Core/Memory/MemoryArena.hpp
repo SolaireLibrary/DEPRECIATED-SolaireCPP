@@ -77,6 +77,12 @@ namespace Solaire{
                         i->second += sizeB;
                         i = begin;
                         j = begin;
+                    }else if(ptrB + sizeB == ptrA){
+                        mBlocks.Erase(j);
+                        i->first = ptrB;
+                        i->second += sizeB;
+                        i = begin;
+                        j = begin;
                     }
                 }
             }
