@@ -43,7 +43,44 @@ namespace Solaire{
         \detail
         Use different MemoryArenas for different object lifetimes (eg. objects that are destroyed at the end of a frame)
     */
+
     class MemoryArena : public Allocator{
+    private:
+        Allocator& mAllocator;
+        uint32_t mAllocatedBytes;
+    public:
+        MemoryArena(Allocator& aAllocator, const uint32_t aInitialSize):
+            mAllocator(aAllocator),
+            mAllocatedBytes(0)
+        {}
+
+        void Clear(){
+
+        }
+
+        // Inherited from Allocator
+
+        uint32_t GetAllocatedBytes() const override{
+            return mAllocatedBytes;
+        }
+
+        uint32_t GetFreeBytes() const override{
+            return UINT32_MAX - mAllocatedBytes;
+        }
+
+        void* Allocate(const size_t aBytes) override{
+            void* const tmp = operator new(aBytes);
+            mAllocatedBytes += aBytes;
+            return tmp;
+        }
+
+        void Deallocate(void* const aObject, const size_t aBytes) override{
+            operator delete(aObject);
+            mAllocatedBytes -= aBytes;
+        }
+    };
+
+    /*class MemoryArena : public Allocator{
     public:
         typedef void(*DestructorFn)(void*);
     private:
@@ -243,7 +280,7 @@ namespace Solaire{
         void OnDestroyed(void* const aObject, DestructorFn aCallback) override{
              mDestructorList.PushBack(DestructorCall(aObject, aCallback));
         }
-    };
+    };*/
 
 
 }

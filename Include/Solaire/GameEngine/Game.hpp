@@ -117,7 +117,7 @@ namespace Solaire{ namespace Game{
         virtual void OnEndFrame(const uint64_t aEndTime) = 0;
     public:
         Game():
-            mFrameArena(1000000),
+            mFrameArena(GetDefaultAllocator(), 1000000),
             mGameAllocator(GetDefaultAllocator()),
             mLevelAllocator(GetDefaultAllocator()),
             mFrameAllocator(mFrameArena),

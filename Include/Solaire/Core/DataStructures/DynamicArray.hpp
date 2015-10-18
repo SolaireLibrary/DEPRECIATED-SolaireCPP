@@ -67,7 +67,7 @@ namespace Solaire{
     private:
         void IncreaseSize(){
             const Index newSize = mSize * 2;
-            Type* newData = mAllocator->Allocate<Type>(newSize);
+            Type* newData = static_cast<Type*>(mAllocator->Allocate(sizeof(Type) * newSize));
 
             for(Index i = 0; i < mHead; ++i){
                 Type* const address = mData + i;
@@ -75,7 +75,7 @@ namespace Solaire{
                 address->~Type();
 		    }
 
-            mAllocator->Deallocate<Type>(mData, mSize);
+            mAllocator->Deallocate(mData, sizeof(Type) * mSize);
             mSize = newSize;
             mData = newData;
         }
@@ -110,7 +110,7 @@ namespace Solaire{
 		    mAllocator(aOther.mAllocator),
 			mHead(0),
 			mSize(aOther.mSize),
-			mData(mAllocator->Allocate<Type>(mSize))
+			mData(static_cast<Type*>(mAllocator->Allocate(sizeof(Type) * mSize)))
         {
             for(ConstReference i : aOther) PushBack(i);
         }
@@ -130,21 +130,21 @@ namespace Solaire{
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(32),
-			mData(mAllocator->Allocate<Type>(mSize))
+			mData(static_cast<Type*>(mAllocator->Allocate(sizeof(Type) * mSize)))
 		{}
 
 		DynamicArray(Allocator& aAllocator, const Index aCount) :
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aCount),
-			mData(mAllocator->Allocate<Type>(mSize))
+			mData(static_cast<Type*>(mAllocator->Allocate(sizeof(Type) * mSize)))
 		{}
 
 		DynamicArray(Allocator& aAllocator, PassType aValue, const Index aCount) :
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aCount),
-			mData(mAllocator->Allocate<Type>(mSize))
+			mData(static_cast<Type*>(mAllocator->Allocate(sizeof(Type) * mSize)))
 		{
 			for(Index i = 0; i < aCount; ++i){
 				PushBack(aValue);
@@ -155,7 +155,7 @@ namespace Solaire{
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aList.size()),
-			mData(mAllocator->Allocate<Type>(mSize))
+			mData(static_cast<Type*>(mAllocator->Allocate(sizeof(Type) * mSize)))
 		{
 			for(ConstReference i : aList) PushBack(i);
 		}
@@ -165,7 +165,7 @@ namespace Solaire{
 		    mAllocator(&aAllocator),
 			mHead(0),
 			mSize(aEnd - aBegin),
-			mData(mAllocator->Allocate<Type>(mSize))
+			mData(static_cast<Type*>(mAllocator->Allocate(sizeof(Type) * mSize)))
 		{
 			while(aBegin != aEnd){
                 PushBack(*aBegin);
@@ -176,7 +176,7 @@ namespace Solaire{
 		~DynamicArray(){
 		    if(mData != nullptr){
                 Clear();
-                mAllocator->Deallocate<Type>(mData, mSize);
+                mAllocator->Deallocate(mData, sizeof(Type) * mSize);
 		    }
 		}
 
@@ -184,9 +184,9 @@ namespace Solaire{
             Clear();
 
             if(mSize < aOther.mSize){
-                mAllocator->Deallocate<Type>(mData, mSize);
-                mSize= aOther.mSize;
-                mData = mAllocator->Allocate<Type>(mSize);
+                mAllocator->Deallocate(mData, sizeof(Type) * mSize);
+                mSize = aOther.mSize;
+                mData = static_cast<Type*>(mAllocator->Allocate(sizeof(Type) * mSize));
             }
 
             for(ConstReference i : aOther) PushBack(i);

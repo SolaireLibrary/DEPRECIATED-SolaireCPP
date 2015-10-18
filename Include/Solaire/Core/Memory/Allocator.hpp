@@ -33,141 +33,75 @@
 
 #include <limits>
 #include <type_traits>
-#include <map>
-#include <vector>
 #include <memory>
-#include "..\Threading\ThreadTypes.hpp"
 
 namespace Solaire{
+    template<class T>
+    using SharedPointer = std::shared_ptr<T>;
+
+    template<class T>
+    using UniquePointer = std::unique_ptr<T, std::function<void(void*)>>;
 
     class Allocator{
     public:
-        typedef void(*DestructorFn)(void*);
-
         virtual ~Allocator(){}
+
+        virtual uint32_t GetAllocatedBytes() const = 0;
+        virtual uint32_t GetFreeBytes() const = 0;
 
         virtual void* Allocate(const size_t aBytes) = 0;
         virtual void Deallocate(void* const aObject, const size_t aBytes) = 0;
-        virtual void OnDestroyed(void* const aObject, const DestructorFn aFn) = 0;
+    };
 
-        template<class T>
-        typename std::enable_if<! std::is_fundamental<T>::value, void>::type
-        RegisterDestructor(T* const aObject){
-            OnDestroyed(aObject, [](void* const aObject){static_cast<T*>(aObject)->~T();});
-        }
-
-        template<class T>
-        T* Allocate(){
-            void*(Allocator::*RawAllocate)(const size_t) = &Allocator::Allocate;
-            return static_cast<T*>((this->*RawAllocate)(sizeof(T)));
-        }
-
-        template<class T>
-        T* Allocate(const size_t aCount){
-            void*(Allocator::*RawAllocate)(const size_t) = &Allocator::Allocate;
-            return static_cast<T*>((this->*RawAllocate)(sizeof(T) * aCount));
-        }
-
-        template<class T>
-        void Deallocate(T* const aObject){
-            void(Allocator::*RawDeallocate)(void* const, const size_t) = &Allocator::Deallocate;
-            (this->*RawDeallocate)(aObject, sizeof(T));
-        }
-
-        template<class T>
-        void Deallocate(T* const aObject, const size_t aCount){
-            void(Allocator::*RawDeallocate)(void* const, const size_t) = &Allocator::Deallocate;
-            (this->*RawDeallocate)(aObject, sizeof(T) * aCount);
-        }
-
-        template<class T>
-        T* AllocateAndRegister(){
-            T* const tmp = Allocate<T>();
-            RegisterDestructor<T>(tmp);
-            return tmp;
-        }
-
-        template<class T>
-        T* AllocateAndRegister(const size_t aCount){
-            T* const tmp = Allocate<T>(aCount);
-            for(size_t i = 0; i < aCount; ++i){
-                RegisterDestructor<T>(tmp + i);
+    template<class T, class ...PARAMS>
+    static SharedPointer<T> SharedAllocate(Allocator& aAllocator, PARAMS&&... aParams){
+        return SharedPointer<T>(
+            new(aAllocator.Allocate(sizeof(T))) T(aParams...),
+            [&](T* const aObject){
+                aAllocator.Deallocate(aObject, sizeof(T));
+                aObject->~T();
             }
-            return tmp;
-        }
+        );
+    }
 
-        typedef std::function<void(void*)> UniqueDeleter;
+    template<class T, class ...PARAMS>
+    static UniquePointer<T> UniqueAllocate(Allocator& aAllocator, PARAMS&&... aParams){
+        return UniquePointer<T>(
+            new(aAllocator.Allocate(sizeof(T))) T(aParams...),
+            [&](void* aObject){
+                aAllocator.Deallocate(aObject, sizeof(T));
+                static_cast<T*>(aObject)->~T();
+            }
+        );
+    }
 
-        template<class T>
-        using SharedPointer = std::shared_ptr<T>;
-
-        template<class T>
-        using UniquePointer = std::unique_ptr<T, UniqueDeleter>;
-
-        template<class T, class ...PARAMS>
-        SharedPointer<T> SharedAllocate(PARAMS&&... aParams){
-            return SharedPointer<T>(
-                new(AllocateAndRegister<T>()) T(aParams...),
-                [&](T* const aObject){
-                    Deallocate<T>(aObject);
-                }
-            );
-        }
-
-        template<class T, class ...PARAMS>
-        UniquePointer<T> UniqueAllocate(PARAMS&&... aParams){
-            return UniquePointer<T>(
-                new(AllocateAndRegister<T>()) T(aParams...),
-                UniqueDeleter([&](void* aObject){
-                    Deallocate<T>(static_cast<T*>(aObject));
-                })
-            );
-        }
-    };
-
-    class DestructorMapAllocator : public Allocator{
-    private:
-        //! \bug DestructorMapAllocator does not check mDestructorList in own constructor
-        //! \bug DestructorMapAllocator is not type safe
-        std::map<void*, std::vector<DestructorFn>> mDestructorList;
-        Mutex mLock;
-    protected:
-        void OnDeallocate(void* const aObject){
-            mLock.lock();
-                auto it = mDestructorList.find(aObject);
-                if(it == mDestructorList.end()) return;
-                const std::vector<DestructorFn>& list = it->second;
-                for(DestructorFn i : list){
-                    i(aObject);
-                }
-                mDestructorList.erase(it);
-            mLock.unlock();
-        }
-    public:
-        virtual ~DestructorMapAllocator(){
-
-        }
-
-        virtual void OnDestroyed(void* const aObject, const DestructorFn aFn) override{
-            mLock.lock();
-                auto it = mDestructorList.find(aObject);
-                if(it == mDestructorList.end()) it = mDestructorList.emplace(aObject, std::vector<DestructorFn>()).first;
-                it->second.push_back(aFn);
-            mLock.unlock();
-        }
-    };
 
     Allocator& GetDefaultAllocator(){
-        class DefaultAllocator : public DestructorMapAllocator{
+        class DefaultAllocator : public Allocator{
+        private:
+            uint32_t mAllocatedBytes;
         public:
+            DefaultAllocator():
+                mAllocatedBytes(0)
+            {}
+
+            uint32_t GetAllocatedBytes() const override{
+                return mAllocatedBytes;
+            }
+
+            uint32_t GetFreeBytes() const override{
+                return UINT32_MAX - mAllocatedBytes;
+            }
+
             void* Allocate(const size_t aBytes) override{
                 void* const tmp = operator new(aBytes);
+                mAllocatedBytes += aBytes;
                 return tmp;
             }
 
             void Deallocate(void* const aObject, const size_t aBytes) override{
-                OnDeallocate(aObject);
                 operator delete(aObject);
+                mAllocatedBytes -= aBytes;
             }
         };
 
@@ -221,7 +155,7 @@ namespace Solaire{
         }
 
         pointer allocate(size_type aCount, const void* = 0){
-            return ALLOCATOR.Allocate<T>(aCount);
+            return ALLOCATOR.Allocate(sizeof(T) * aCount);
         }
 
         void construct(pointer aAddress, const T& aValue){
@@ -233,7 +167,7 @@ namespace Solaire{
         }
 
         void deallocate(pointer aAddress, size_type aCount){
-            ALLOCATOR.Deallocate<T>(aAddress, aCount);
+            ALLOCATOR.Deallocate(aAddress, sizeof(T) * aCount);
         }
     };
 
