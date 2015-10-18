@@ -53,15 +53,15 @@ namespace Solaire{
         DynamicArray<Block> mBlocks;
         uint32_t mAllocatedBytes;
     private:
-        void SortBlocks(){
-            std::sort(mBlocks.begin(), mBlocks.end(), [](const Block aFirst, const Block aSecond)->bool{
+        static void SortBlocks(DynamicArray<Block>& aBlocks){
+            std::sort(aBlocks.begin(), aBlocks.end(), [](const Block aFirst, const Block aSecond)->bool{
                 return aFirst.second < aSecond.second;
             });
         }
 
-        void MergeBlocks(){
-            auto begin = mBlocks.begin();
-            auto end = mBlocks.end();
+        static void MergeBlocks(DynamicArray<Block>& aBlocks){
+            auto begin = aBlocks.begin();
+            auto end = aBlocks.end();
 
             for(auto i = begin; i != end; ++i){
                 for(auto j = begin; j != end; ++j){
@@ -73,12 +73,12 @@ namespace Solaire{
                     const uint32_t sizeB = j->second;
 
                     if(ptrA + sizeA == ptrB){
-                        mBlocks.Erase(j);
+                        aBlocks.Erase(j);
                         i->second += sizeB;
                         i = begin;
                         j = begin;
                     }else if(ptrB + sizeB == ptrA){
-                        mBlocks.Erase(j);
+                        aBlocks.Erase(j);
                         i->first = ptrB;
                         i->second += sizeB;
                         i = begin;
@@ -100,7 +100,7 @@ namespace Solaire{
                             static_cast<uint8_t*>(block.first) + aSize,
                             block.second - aSize
                         ));
-                        SortBlocks();
+                        SortBlocks(mBlocks);
                     }
 
                     return block.first;
@@ -129,6 +129,8 @@ namespace Solaire{
 
         void Clear(){
             mBlocks.Clear();
+            MergeBlocks(mMainBlocks);
+            SortBlocks(mMainBlocks);
             for(Block i : mMainBlocks){
                 mBlocks.PushBack(i);
             }
@@ -151,8 +153,8 @@ namespace Solaire{
             void* address = AllocateFromBlocks(aBytes);
 
             if(! address){
-                MergeBlocks();
-                SortBlocks();
+                MergeBlocks(mBlocks);
+                SortBlocks(mBlocks);
                 address = AllocateFromBlocks(aBytes);
             }
 
@@ -168,7 +170,7 @@ namespace Solaire{
 
         void Deallocate(void* const aObject, const size_t aBytes) override{
             mBlocks.PushBack(Block(aObject, aBytes));
-            SortBlocks();
+            SortBlocks(mBlocks);
             mAllocatedBytes -= aBytes;
         }
     };
