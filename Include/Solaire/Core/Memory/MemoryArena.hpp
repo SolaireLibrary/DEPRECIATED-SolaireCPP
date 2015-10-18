@@ -46,16 +46,67 @@ namespace Solaire{
 
     class MemoryArena : public Allocator{
     private:
+        typedef std::pair<void*, uint32_t> Block;
+    private:
         Allocator& mAllocator;
+        DynamicArray<Block> mMainBlocks;
+        DynamicArray<Block> mBlocks;
         uint32_t mAllocatedBytes;
+    private:
+        void SortBlocks(){
+            std::sort(mBlocks.begin(), mBlocks.end(), [](const Block aFirst, const Block aSecond)->bool{
+                return aFirst.second < aSecond.second;
+            });
+        }
+
+        void MergeBlocks(){
+
+        }
+
+        void* AllocateFromBlocks(const uint32_t aSize){
+            const auto end = mBlocks.end();
+            for(auto i = mBlocks.begin(); i != mBlocks.end(); ++i){
+                if(i->second >= aSize){
+                    const Block block = *i;
+                    mBlocks.Erase(i);
+
+                    if(block.second > aSize){
+                        mBlocks.PushBack(Block(
+                            static_cast<uint8_t*>(block.first) + aSize,
+                            block.second - aSize
+                        ));
+                        SortBlocks();
+                    }
+
+                    return block.first;
+                }
+            }
+
+            return nullptr;
+        }
     public:
         MemoryArena(Allocator& aAllocator, const uint32_t aInitialSize):
             mAllocator(aAllocator),
+            mMainBlocks(aAllocator),
+            mBlocks(aAllocator),
             mAllocatedBytes(0)
-        {}
+        {
+            const Block block(mAllocator.Allocate(aInitialSize), aInitialSize);
+            mMainBlocks.PushBack(block);
+            mBlocks.PushBack(block);
+        }
+
+        ~MemoryArena(){
+            for(Block i : mBlocks){
+                mAllocator.Deallocate(i.first, i.second);
+            }
+        }
 
         void Clear(){
-
+            mBlocks.Clear();
+            for(Block i : mMainBlocks){
+                mBlocks.PushBack(i);
+            }
         }
 
         // Inherited from Allocator
@@ -65,17 +116,33 @@ namespace Solaire{
         }
 
         uint32_t GetFreeBytes() const override{
-            return UINT32_MAX - mAllocatedBytes;
+            uint32_t count = 0;
+            for(const Block i : mBlocks) count += i.second;
+
+            return count - mAllocatedBytes;
         }
 
         void* Allocate(const size_t aBytes) override{
-            void* const tmp = operator new(aBytes);
-            mAllocatedBytes += aBytes;
-            return tmp;
+            void* address = AllocateFromBlocks(aBytes);
+
+            if(! address){
+                MergeBlocks();
+                SortBlocks();
+                address = AllocateFromBlocks(aBytes);
+            }
+
+            if(! address){
+                const Block block(mAllocator.Allocate(aBytes), aBytes);
+                mMainBlocks.PushBack(block);
+                address = block.first;
+            }
+
+            return address;
         }
 
         void Deallocate(void* const aObject, const size_t aBytes) override{
-            operator delete(aObject);
+            mBlocks.PushBack(Block(aObject, aBytes));
+            SortBlocks();
             mAllocatedBytes -= aBytes;
         }
     };
