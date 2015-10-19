@@ -111,34 +111,30 @@ namespace Solaire{ namespace Components{
 
 		// Component-typed find
 
-		template<class T>
-		ConstIterator FindFirst() const{return mComponents.FindFirst(CheckComponentType<T>);}
+		template<class COMPONENT>
+		std::shared_ptr<const COMPONENT> Get() const{
+		    ConstIterator it = mComponents.FindFirst(CheckComponentType<COMPONENT>);
+		    return it == end() ? std::shared_ptr<const COMPONENT>() : *it;
+        }
 
-		template<class T>
-		ConstIterator FindNext(const ConstIterator aPos) const{return mComponents.FindNext(aPos, CheckComponentType<T>);}
-
-		template<class T>
-		ConstIterator FindLast() const{return mComponents.FindLast(CheckComponentType<T>);}
-
-		template<class T>
-		Iterator FindFirst(){return mComponents.FindFirst(CheckComponentType<T>);}
-
-		template<class T>
-		Iterator FindNext(const ConstIterator aPos){return mComponents.FindNext(aPos, CheckComponentType<T>);}
-
-		template<class T>
-		Iterator FindLast(){return mComponents.FindLast(CheckComponentType<T>);}
+		template<class COMPONENT>
+		std::shared_ptr<COMPONENT> Get(){
+            Iterator it = mComponents.FindFirst(CheckComponentType<COMPONENT>);
+		    return it == end() ? std::shared_ptr<COMPONENT>() : *it;
+        }
 
 		// Component Attach
 
 		template<class COMPONENT, class ...PARAMS>
 		std::shared_ptr<COMPONENT> Attach(PARAMS... aParams){
-		    Iterator it = FindFirst<COMPONENT>();
-		    if(it != end()) return *it;
+		    std::shared_ptr<COMPONENT> component = Get<COMPONENT>();
 
-		    std::shared_ptr<COMPONENT> component = SharedAllocate<COMPONENT>(*this, aParams...);
-			mComponents.PushBack(component);
-			component->OnAttach(*this);
+		    if(! component){
+                component = SharedAllocate<COMPONENT>(*this, aParams...);
+                mComponents.PushBack(component);
+                component->OnAttach(*this);
+		    }
+
 			return component;
 		}
 	};
