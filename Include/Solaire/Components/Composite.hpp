@@ -133,9 +133,10 @@ namespace Solaire{ namespace Components{
                 component = SharedAllocate<COMPONENT>(*this, aParams...);
                 mComponents.PushBack(component);
                 component->OnAttach(*this);
+                return component;
 		    }
 
-			return component;
+			return std::shared_ptr<COMPONENT>();
 		}
 	};
 
