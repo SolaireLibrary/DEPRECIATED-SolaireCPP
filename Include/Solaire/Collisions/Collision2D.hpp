@@ -27,13 +27,20 @@
 	\version 3.0
 	\date
 	Created			: 10th October 2015
-	Last Modified	: 10th October 2015
+	Last Modified	: 19th October 2015
 */
 
 #include "..\Maths\Vector.hpp"
 
 namespace Solaire{
-    class Collidable2D;
+
+    typedef Vector2F CollisionPoint2D;
+    class CollisionLine2D;
+    class CollisionCircle;
+    class CollisionAabb;
+    class CollisionObb;
+    class CollisionTriangle;
+
 
     struct CollisionData2D{
         bool Collides;
@@ -44,23 +51,13 @@ namespace Solaire{
     public:
         virtual ~Collidable2D(){}
 
-        virtual CollisionData2D CollisionWithPoint(const Vector2F aCentre) const = 0;
-        virtual CollisionData2D CollisionWithCircle(const Vector2F aCentre, const float aRadius) const = 0;
-        virtual CollisionData2D CollisionWithAABB(const Vector2F aCentre, const Vector2F aExtents) const = 0;
-        virtual CollisionData2D CollisionWithOBB(const Vector2F aCentre, const Vector2F aExtents, const float aRotation) const = 0;
-        virtual CollisionData2D CollisionWithTriangle(const Vector2F aPoint0, const Vector2F aPoint1, const Vector2F aPoint2) const = 0;
+        virtual CollisionData2D CollisionWith(const CollisionPoint2D aShape) const = 0;
+        virtual CollisionData2D CollisionWith(const CollisionLine2D aShape) const = 0;
+        virtual CollisionData2D CollisionWith(const CollisionCircle aShape) const = 0;
+        virtual CollisionData2D CollisionWith(const CollisionAabb aShape) const = 0;
+        virtual CollisionData2D CollisionWith(const CollisionObb aShape) const = 0;
+        virtual CollisionData2D CollisionWith(const Collisiontriangle aShape) const = 0;
     };
-
-    static CollisionData2D CircleVsCircle(const Vector2F aCentre0, const float aRadius0, const Vector2F aCentre1, const float aRadius1){
-        CollisionData2D tmp;
-
-        //tmp.PenitrationDepth = aCentre1 - aCentre0;
-       // const float radiusSum = aRadius0 + aRadius1;
-        //tmp.Collides = tmp.PenitrationDepth.MagnitudeSquared() < (radiusSum * radiusSum);
-        //tmp.PenitrationDepth -= aRadius1;
-
-        return tmp;
-    }
 }
 
 
