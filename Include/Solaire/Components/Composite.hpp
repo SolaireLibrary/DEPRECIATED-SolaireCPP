@@ -25,113 +25,51 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 3.0
+	\version 4.0
 	\date
 	Created			: 7th September 2015
-	Last Modified	: 1st October 2015
+	Last Modified	: 19th October 2015
 */
 
-#include <vector>
 #include "Component.hpp"
 
 namespace Solaire{ namespace Components{
 
+    class Composite;
+
+    typedef SharedPointer<Composite> CompositePtr;
+    typedef SharedPointer<const Composite> ConstCompositePtr;
+
     class Composite : public std::enable_shared_from_this<Composite>
 	{
+    private:
+		DynamicArray<ComponentPtr> mComponents;
 	private:
 		Composite(Composite&&) = delete;
 		Composite(const Composite&) = delete;
 		Composite& operator=(Composite&&) = delete;
 		Composite& operator=(const Composite&) = delete;
-
-		DynamicArray<ComponentPointer> mComponents;
-		bool mInDestructor;
 	protected:
-		virtual bool PreAttach(const ConstComponentPointer aComponent) const = 0;
-		virtual void PostAttach(const ComponentPointer aComponent) = 0;
-
-		virtual bool PreDetach(const ComponentPointer aComponent) const = 0;
-		virtual void PostDetach(const ConstComponentPointer aComponent) = 0;
+		virtual void OnAttach(Component& aComponent) = 0;
 	public:
-		template<class T>
-		static bool CheckType(const ConstCompositePointer aComposite){
-			static_assert(std::is_base_of<Composite, T>::value, "Composite::CheckType() template must derive from Composite");
-			return dynamic_cast<const T*>(&aComposite) != nullptr;
-		}
-
 		Composite(Allocator& aAllocator):
-		    mComponents(32, aAllocator),
-            mInDestructor(false)
+		    mComponents(aAllocator, 16)
         {}
 
 		virtual ~Composite(){
-		    mInDestructor = true;
-            for(ComponentPointer component : mComponents){
-                Detach(component);
-            }
+
 		}
 
 		Allocator& GetAllocator() const{
 		    return mComponents.GetAllocator();
 		}
 
-		// Component management
-
-		bool Attach(const ComponentPointer aComponent){
-			// Check if the component is already attached to another component
-			const CompositePointer parent = aComponent->mParent;
-			if(parent.get() == this) {
-				return true;
-			}else if(parent){
-				if(! parent->Detach(aComponent)) return false;
-			}
-
-			const CompositePointer thisPtr = shared_from_this();
-
-			// Perform pre-checks
-			if(! (PreAttach(aComponent) && aComponent->PreAttach(thisPtr))) return false;
-
-			// Attach the component
-			mComponents.PushBack(aComponent);
-			aComponent->mParent = thisPtr;
-
-			// Perform post-notifications
-			PostAttach(aComponent);
-			aComponent->PostAttach();
-			return true;
-		}
-
-		bool Detach(const ComponentPointer aComponent){
-			// Check if the component is attached to a component
-			if(aComponent->mParent.get() != this) {
-				return false;
-			}
-
-			const CompositePointer thisPtr = shared_from_this();
-
-			// Perform pre-checks
-			if(! mInDestructor){
-                if(! (PreDetach(aComponent) && aComponent->PreDetach())) return false;
-
-                // Detach the component
-                mComponents.Erase(mComponents.FindFirst(aComponent));
-			}
-
-			// Remove composite's parent
-			aComponent->mParent.reset();
-
-			// Perform post-notifications
-			PostDetach(aComponent);
-			aComponent->PostDetach(thisPtr);
-			return true;
-		}
-
 		// Iterators
 
-		typedef typename DynamicArray<ComponentPointer>::Iterator Iterator;
-		typedef typename DynamicArray<ComponentPointer>::ConstIterator ConstIterator;
-		typedef typename DynamicArray<ComponentPointer>::ReverseIterator ReverseIterator;
-		typedef typename DynamicArray<ComponentPointer>::ConstReverseIterator ConstReverseIterator;
+		typedef typename DynamicArray<ComponentPtr>::Iterator Iterator;
+		typedef typename DynamicArray<ComponentPtr>::ConstIterator ConstIterator;
+		typedef typename DynamicArray<ComponentPtr>::ReverseIterator ReverseIterator;
+		typedef typename DynamicArray<ComponentPtr>::ConstReverseIterator ConstReverseIterator;
 
 		Iterator begin(){return mComponents.begin();}
 		ConstIterator begin() const{return mComponents.begin();}
@@ -144,59 +82,72 @@ namespace Solaire{ namespace Components{
 
 		// Value Find
 
-		ConstIterator FindFirst(ComponentPointer aValue) const{return mComponents.FindFirst(aValue);}
-		ConstIterator FindNext(ConstIterator aPos, ComponentPointer aValue) const{return mComponents.FindNext(aPos, aValue);}
-		ConstIterator FindLast(ComponentPointer aValue) const{return mComponents.FindLast(aValue);}
-		Iterator FindFirst(ComponentPointer aValue){return mComponents.FindFirst(aValue);}
-		Iterator FindNext(ConstIterator aPos, ComponentPointer aValue){return mComponents.FindNext(aPos, aValue);}
-		Iterator FindLast(ComponentPointer aValue){return mComponents.FindFirst(aValue);}
+		ConstIterator FindFirst(ComponentPtr aValue) const{return mComponents.FindFirst(aValue);}
+		ConstIterator FindNext(ConstIterator aPos, ComponentPtr aValue) const{return mComponents.FindNext(aPos, aValue);}
+		ConstIterator FindLast(ComponentPtr aValue) const{return mComponents.FindLast(aValue);}
+		Iterator FindFirst(ComponentPtr aValue){return mComponents.FindFirst(aValue);}
+		Iterator FindNext(ConstIterator aPos, ComponentPtr aValue){return mComponents.FindNext(aPos, aValue);}
+		Iterator FindLast(ComponentPtr aValue){return mComponents.FindFirst(aValue);}
 
         // Condition find
 
 		template<class F>
-		typename std::enable_if<decltype(mComponents)::CheckIfCondition<F>(), ConstIterator>::type
-		FindFirst(const F aCondition) const{return mComponents.FindFirst(aCondition);}
+		ConstIterator FindFirstIf(const F aCondition) const{return mComponents.FindFirstIf(aCondition);}
 
 		template<class F>
-		typename std::enable_if<decltype(mComponents)::CheckIfCondition<F>(), ConstIterator>::type
-		FindNext(ConstIterator aPos, const F aCondition) const{return mComponents.FindNext(aPos, aCondition);}
+		ConstIterator FindNextIf(ConstIterator aPos, const F aCondition) const{return mComponents.FindNext(aPos, aCondition);}
 
 		template<class F>
-		typename std::enable_if<decltype(mComponents)::CheckIfCondition<F>(), ConstIterator>::type
-		FindLast(const F aCondition) const{return mComponents.FindLast(aCondition);}
+		ConstIterator FindLastIf(const F aCondition) const{return mComponents.FindLastIf(aCondition);}
 
 		template<class F>
-		typename std::enable_if<decltype(mComponents)::CheckIfCondition<F>(), Iterator>::type
-		FindFirst(const F aCondition){return mComponents.FindFirst(aCondition);}
+		Iterator FindFirstIf(const F aCondition){return mComponents.FindFirstIf(aCondition);}
 
 		template<class F>
-		typename std::enable_if<decltype(mComponents)::CheckIfCondition<F>(), Iterator>::type
-		FindNext(ConstIterator aPos, const F aCondition){return mComponents.FindNext(aPos, aCondition);}
+		Iterator FindNextIf(ConstIterator aPos, const F aCondition){return mComponents.FindNextIf(aPos, aCondition);}
 
 		template<class F>
-		typename std::enable_if<decltype(mComponents)::CheckIfCondition<F>(), Iterator>::type
-		FindLast(const F aCondition){return mComponents.FindLast(aCondition);}
+		Iterator FindLastIf(const F aCondition){return mComponents.FindLastIf(aCondition);}
 
 		// Component-typed find
 
 		template<class T>
-		typename std::enable_if<std::is_base_of<Component, T>::type, ConstIterator>::type
-		FindFirst() const{
-            return mComponents.FindFirst<decltype(Component::CheckType<T>)>(Component::CheckType<T>);
-		}
+		ConstIterator FindFirst() const{return mComponents.FindFirst(CheckComponentType<T>);}
 
 		template<class T>
-		typename std::enable_if<std::is_base_of<Component, T>::type, ConstIterator>::type
-		FindNext(const ConstIterator aPos) const{
-            return mComponents.FindNext<decltype(Component::CheckType<T>)>(aPos, Component::CheckType<T>);
-		}
+		ConstIterator FindNext(const ConstIterator aPos) const{return mComponents.FindNext(aPos, CheckComponentType<T>);}
 
 		template<class T>
-		typename std::enable_if<std::is_base_of<Component, T>::type, ConstIterator>::type
-		FindLast() const{
-            return mComponents.FindLast<decltype(Component::CheckType<T>)>(Component::CheckType<T>);
+		ConstIterator FindLast() const{return mComponents.FindLast(CheckComponentType<T>);}
+
+		template<class T>
+		Iterator FindFirst(){return mComponents.FindFirst(CheckComponentType<T>);}
+
+		template<class T>
+		Iterator FindNext(const ConstIterator aPos){return mComponents.FindNext(aPos, CheckComponentType<T>);}
+
+		template<class T>
+		Iterator FindLast(){return mComponents.FindLast(CheckComponentType<T>);}
+
+		// Component Attach
+
+		template<class COMPONENT, class ...PARAMS>
+		std::shared_ptr<COMPONENT> Attach(PARAMS... aParams){
+		    Iterator it = FindFirst<COMPONENT>();
+		    if(it != end()) return *it;
+
+		    std::shared_ptr<COMPONENT> component = SharedAllocate<COMPONENT>(*this, aParams...);
+			mComponents.PushBack(component);
+			component->OnAttach(*this);
+			return component;
 		}
 	};
+
+    template<class T>
+    static constexpr bool CheckCompositeType(const ConstCompositePtr aComposite){
+        static_assert(std::is_base_of<Composite, T>::value, "CheckCompositeType() template must derive from Composite");
+        return dynamic_cast<const T*>(aComposite.get()) != nullptr;
+    }
 }}
 
 

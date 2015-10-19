@@ -25,10 +25,10 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 3.0
+	\version 4.0
 	\date
 	Created			: 7th September 2015
-	Last Modified	: 1st October 2015
+	Last Modified	: 19th October 2015
 */
 
 #include "..\Core\Memory\Allocator.hpp"
@@ -38,55 +38,33 @@ namespace Solaire{ namespace Components{
     class Composite;
     class Component;
 
-    typedef Allocator::SharedPointer<Composite> CompositePointer;
-    typedef Allocator::SharedPointer<Component> ComponentPointer;
-    typedef Allocator::SharedPointer<const Composite> ConstCompositePointer;
-    typedef Allocator::SharedPointer<const Component> ConstComponentPointer;
+    typedef SharedPointer<Component> ComponentPtr;
+    typedef SharedPointer<const Component> ConstComponentPtr;
 
     class Component : public std::enable_shared_from_this<Component>
 	{
+    public:
+        friend Composite;
 	private:
+		Composite& mParent;
+    private:
 		Component(Component&&) = delete;
 		Component(const Component&) = delete;
 		Component& operator=(Component&&) = delete;
 		Component& operator=(const Component&) = delete;
-
-		CompositePointer mParent;
-	protected:
-		virtual bool PreAttach(const ConstCompositePointer aParent) const = 0;
-		virtual void PostAttach() = 0;
-
-		virtual bool PreDetach() const = 0;
-		virtual void PostDetach(const ConstCompositePointer aParent) = 0;
 	public:
-		friend Composite;
+		Component(Composite& aParent);
+		virtual ~Component();
 
-		template<class T>
-		static bool CheckType(const ConstComponentPointer aComponent){
-			static_assert(std::is_base_of<Component, T>::value, "Component::CheckType() template must derive from Component");
-			return dynamic_cast<const T*>(aComponent.get()) != nullptr;
-		}
-
-		Component() :
-			mParent()
-		{}
-
-		virtual ~Component(){
-
-		}
-
-		bool HasParent() const{
-			return mParent ? true : false;
-		}
-
-		CompositePointer GetParent(){
-			return mParent;
-		}
-
-		ConstCompositePointer GetParent() const{
-			return mParent;
-		}
+		Composite& GetParent() const;
+		Allocator& GetAllocator() const;
 	};
+
+    template<class T>
+    static constexpr bool CheckComponentType(const ConstComponentPtr aComponent){
+        static_assert(std::is_base_of<Component, T>::value, "CheckComponentType() template must derive from Component");
+        return dynamic_cast<const T*>(aComponent.get()) != nullptr;
+    }
 }}
 
 
