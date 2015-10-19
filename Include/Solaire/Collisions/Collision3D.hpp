@@ -42,8 +42,9 @@ namespace Solaire{
 
 
     struct CollisionData3D{
-        bool Collides;
-        Vector3F PenitrationDepth;
+        bool collides;
+        Vector3F contactPoint;
+        Vector3F penitration;
     };
 
     class Collidable3D{

@@ -43,8 +43,9 @@ namespace Solaire{
 
 
     struct CollisionData2D{
-        bool Collides;
-        Vector2F PenitrationDepth;
+        bool collides;
+        Vector2F contactPoint;
+        Vector2F penitration;
     };
 
     class Collidable2D{
