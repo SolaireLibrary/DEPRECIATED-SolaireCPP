@@ -41,9 +41,7 @@ namespace Solaire{ namespace Components{
 	private:
 		DynamicArray<String> mTags;
 	public:
-		typedef DynamicArray<String>::Iterator Iterator;
 		typedef DynamicArray<String>::ConstIterator ConstIterator;
-		typedef DynamicArray<String>::ReverseIterator ReverseIterator;
 		typedef DynamicArray<String>::ConstReverseIterator ConstReverseIterator;
 
 		TagComponent(Composite& aParent):
@@ -68,33 +66,16 @@ namespace Solaire{ namespace Components{
 		~TagComponent(){
 
 		}
-
-		Iterator begin(){
-		    return mTags.begin();
-		}
-
 		ConstIterator begin() const{
 		    return mTags.begin();
-		}
-
-		Iterator end(){
-		    return mTags.end();
 		}
 
 		ConstIterator end() const{
 		    return mTags.end();
 		}
 
-		ReverseIterator rbegin(){
-		    return mTags.begin();
-		}
-
 		ConstReverseIterator rbegin() const{
 		    return mTags.rbegin();
-		}
-
-		ReverseIterator rend(){
-		    return mTags.rend();
 		}
 
 		ConstReverseIterator rend() const{
@@ -120,12 +101,20 @@ namespace Solaire{ namespace Components{
 		    mTags.Erase(aPos);
 		}
 
+		bool Contains(const String& aTag){
+		    return mTags.FindFirst(aTag) != mTags.end();
+		}
+
+		bool Contains(const std::initializer_list<String> aTags){
+		    for(const String& tag : aTags){
+                if(! Contains(tag)) return false;
+		    }
+		    return true;
+		}
+
 		ConstIterator FindFirst(const String& aTag) const{return mTags.FindFirst(aTag);}
 		ConstIterator FindNext(ConstIterator aPos, const String& aTag) const{return mTags.FindNext(aPos, aTag);}
 		ConstIterator FindLast(const String& aTag) const{return mTags.FindLast(aTag);}
-		Iterator FindFirst(const String& aTag){return mTags.FindFirst(aTag);}
-		Iterator FindNext(ConstIterator aPos, const String& aTag){return mTags.FindNext(aPos, aTag);}
-		Iterator FindLast(const String& aTag){return mTags.FindFirst(aTag);}
 
 		template<class F>
 		ConstIterator FindFirstIf(const F aCondition) const{return mTags.FindFirstIf(aCondition);}
@@ -135,15 +124,6 @@ namespace Solaire{ namespace Components{
 
 		template<class F>
 		ConstIterator FindLastIf(const F aCondition) const{return mTags.FindLastIf(aCondition);}
-
-		template<class F>
-		Iterator FindFirstIf(const F aCondition){return mTags.FindFirstIf(aCondition);}
-
-		template<class F>
-		Iterator FindNextIf(ConstIterator aPos, const F aCondition){return mTags.FindNextIf(aPos, aCondition);}
-
-		template<class F>
-		Iterator FindLastIf(const F aCondition){return mTags.FindLastIf(aCondition);}
 	};
 }}
 
