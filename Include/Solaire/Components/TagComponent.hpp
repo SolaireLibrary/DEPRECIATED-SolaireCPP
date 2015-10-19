@@ -25,184 +25,125 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 2.0
+	\version 3.0
 	\date
 	Created			: 7th September 2015
-	Last Modified	: 7th September 2015
+	Last Modified	: 19th October 2015
 */
 
-#include <string>
 #include "Composite.hpp"
+#include "..\Core\Strings\String.hpp"
 
 namespace Solaire{ namespace Components{
 
 	class TagComponent : public Component
 	{
 	private:
-		TagComponent(Component&&);
-		TagComponent& operator=(Component&&);
-
-		std::vector<const std::string> mTags;
-	protected:
-		// Inherited from Component
-
-		bool PreAttach(Composite& aNewParent) const override{
-			return aNewParent.GetComponent<TagComponent>() == aNewParent.ComponentEnd();
-		}
-
-		void PostAttach(){
-
-		}
-
-		bool PreDetach(const bool aCalledFromDestructor) const{
-			return true;
-		}
-
-		void PostDetach(Composite& aOldParent, const bool aCalledFromDestructor){
-
-		}
-
+		DynamicArray<String> mTags;
 	public:
-		template<class CALLBACK, class tag_iterator>
-		static size_t ForEachComposite(CALLBACK aCallback, tag_iterator aBegin, tag_iterator aEnd){
-			auto condition = [&](Component& aComponent){
-				TagComponent* tag = dynamic_cast<TagComponent*>(&aComponent);
-				if(tag == nullptr) return false;
-				return tag->HasTags(aBegin, aEnd);
-			};
+		typedef DynamicArray<String>::Iterator Iterator;
+		typedef DynamicArray<String>::ConstIterator ConstIterator;
+		typedef DynamicArray<String>::ReverseIterator ReverseIterator;
+		typedef DynamicArray<String>::ConstReverseIterator ConstReverseIterator;
 
-			auto action = [&](Component& aComponent){
-				aCallback(aComponent.GetParent());
-			};
+		TagComponent(Composite& aParent):
+		    Component(aParent),
+		    mTags(aParent.GetAllocator(), 8)
+        {}
 
-			return Composite::ForEachComponent(condition, action);
-		}
+		TagComponent(Composite& aParent, const String& aTag):
+		    Component(aParent),
+		    mTags(aParent.GetAllocator(), 8)
+        {
+            mTags.PushBack(aTag);
+        }
 
-		template<class CALLBACK>
-		static size_t ForEachComposite(CALLBACK aCallback, const std::initializer_list<const std::string> aTags){
-			return ForEachComposite(aCallback, aTags.begin(), aTags.end());
-		}
-
-		template<class CALLBACK>
-		static size_t ForEachComposite(CALLBACK aCallback, const std::string& aTag){
-			return TagComponent::ForEachComposite({aTag}, aCallback);
-		}
-
-		typedef std::vector<const std::string>::const_iterator tag_iterator;
-
-		TagComponent(){
-
-		}
-
-		TagComponent(const std::string& aTag){
-			AddTag(aTag);
-		}
-
-		TagComponent(const std::initializer_list<const std::string> aTags){
-			AddTags(aTags.begin(), aTags.end());
-		}
+		TagComponent(Composite& aParent, const std::initializer_list<String> aTags):
+		    Component(aParent),
+		    mTags(aParent.GetAllocator(), 8)
+        {
+            Add(aTags);
+        }
 
 		~TagComponent(){
 
 		}
 
-		TagComponent(const TagComponent& aOther) :
-			mTags(aOther.mTags)
-		{
-
+		Iterator begin(){
+		    return mTags.begin();
 		}
 
-		TagComponent& operator=(const TagComponent& aOther){
-			mTags = aOther.mTags;
-			return *this;
+		ConstIterator begin() const{
+		    return mTags.begin();
 		}
 
-		tag_iterator TagBegin() const{
-			return mTags.begin();
+		Iterator end(){
+		    return mTags.end();
 		}
 
-		tag_iterator TagEnd() const{
-			return mTags.end();
+		ConstIterator end() const{
+		    return mTags.end();
 		}
 
-		size_t TagCount() const{
-			return mTags.size();
+		ReverseIterator rbegin(){
+		    return mTags.begin();
 		}
 
-		const std::string& GetTag(size_t aIndex = 0) const{
-			return mTags[aIndex];
+		ConstReverseIterator rbegin() const{
+		    return mTags.rbegin();
 		}
 
-		bool AddTag(const std::string& aTag){
-			if(HasTag(aTag)) return false;
-			mTags.push_back(aTag);
-			return true;
+		ReverseIterator rend(){
+		    return mTags.rend();
 		}
 
-		template<class tag_iterator>
-		bool AddTags(tag_iterator aBegin, tag_iterator aEnd){
-			bool addedAll = true;
-			for(aBegin; aBegin != aEnd; ++aBegin){
-				addedAll = addedAll && AddTag(*aBegin);
-			}
-			return addedAll;
+		ConstReverseIterator rend() const{
+		    return mTags.rend();
 		}
 
-		bool AddTags(const std::initializer_list<const std::string> aTags){
-			return AddTags(aTags.begin(), aTags.end());
+		size_t Size() const{
+		    return mTags.Size();
 		}
 
-		bool RemoveTag(const std::string& aTag){
-			auto it = std::find(mTags.begin(), mTags.end(), aTag);
-			if(it == mTags.end()) return false;
-			mTags.erase(it);
-			return true;
+		void Add(const String& aTag){
+            if(mTags.FindFirst(aTag) != mTags.end()) return;
+            mTags.PushBack(aTag);
 		}
 
-		template<class tag_iterator>
-		bool RemoveTags(tag_iterator aBegin, tag_iterator aEnd){
-			bool removedAll = true;
-			for(aBegin; aBegin != aEnd; ++aBegin){
-				removedAll = removedAll && RemoveTag(*aBegin);
-			}
-			return removedAll;
+		void Add(const std::initializer_list<String> aTags){
+            for(const String& tag : aTags){
+                Add(tag);
+            }
 		}
 
-		bool RemoveTags(const std::initializer_list<const std::string> aTags){
-			return RemoveTags(aTags.begin(), aTags.end());
+		void Erase(const ConstIterator aPos){
+		    mTags.Erase(aPos);
 		}
 
-		bool HasTag(const std::string& aTag) const{
-			return std::find(mTags.begin(), mTags.end(), aTag) != mTags.end();
-		}
+		ConstIterator FindFirst(const String& aTag) const{return mTags.FindFirst(aTag);}
+		ConstIterator FindNext(ConstIterator aPos, const String& aTag) const{return mTags.FindNext(aPos, aTag);}
+		ConstIterator FindLast(const String& aTag) const{return mTags.FindLast(aTag);}
+		Iterator FindFirst(const String& aTag){return mTags.FindFirst(aTag);}
+		Iterator FindNext(ConstIterator aPos, const String& aTag){return mTags.FindNext(aPos, aTag);}
+		Iterator FindLast(const String& aTag){return mTags.FindFirst(aTag);}
 
-		template<class tag_iterator>
-		bool HasTags(tag_iterator aBegin, tag_iterator aEnd) const{
-			for(aBegin; aBegin != aEnd; ++aBegin){
-				if(! HasTag(*aBegin)) return false;
-			}
-			return true;
-		}
+		template<class F>
+		ConstIterator FindFirstIf(const F aCondition) const{return mTags.FindFirstIf(aCondition);}
 
-		bool HasTags(const std::initializer_list<const std::string> aTags) const{
-			return HasTags(aTags.begin(), aTags.end());
-		}
+		template<class F>
+		ConstIterator FindNextIf(ConstIterator aPos, const F aCondition) const{return mTags.FindNext(aPos, aCondition);}
 
-		bool operator==(const TagComponent& aOther) const{
-			return aOther.HasTags(mTags.begin(), mTags.end());
-		}
+		template<class F>
+		ConstIterator FindLastIf(const F aCondition) const{return mTags.FindLastIf(aCondition);}
 
-		bool operator!=(const TagComponent& aOther) const{
-			return ! aOther.HasTags(mTags.begin(), mTags.end());
-		}
+		template<class F>
+		Iterator FindFirstIf(const F aCondition){return mTags.FindFirstIf(aCondition);}
 
-		bool operator==(const std::initializer_list<const std::string> aTags) const{
-			return HasTags(aTags);
-		}
+		template<class F>
+		Iterator FindNextIf(ConstIterator aPos, const F aCondition){return mTags.FindNextIf(aPos, aCondition);}
 
-		bool operator!=(const std::initializer_list<const std::string> aTags) const{
-			return ! HasTags(aTags);
-		}
+		template<class F>
+		Iterator FindLastIf(const F aCondition){return mTags.FindLastIf(aCondition);}
 	};
 }}
 
