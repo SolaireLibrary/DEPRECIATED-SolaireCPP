@@ -31,6 +31,8 @@
 	Last Modified	: 19th October 2015
 */
 
+#include "..\Core\Iterators\DereferenceIterator.hpp"
+#include "..\Core\Iterators\ConstIterator.hpp"
 #include "Component.hpp"
 
 namespace Solaire{ namespace Components{
@@ -67,61 +69,84 @@ namespace Solaire{ namespace Components{
 
 		// Iterators
 
-		typedef typename DynamicArray<Component*>::Iterator Iterator;
-		typedef typename DynamicArray<Component*>::ConstIterator ConstIterator;
-		typedef typename DynamicArray<Component*>::ReverseIterator ReverseIterator;
-		typedef typename DynamicArray<Component*>::ConstReverseIterator ConstReverseIterator;
+		typedef DereferenceIteratorWrapper<Component, typename DynamicArray<Component*>::Iterator> Iterator;
+		typedef ConstIteratorWrapper<Component, Iterator> ConstIterator;
+		typedef DereferenceIteratorWrapper<Component, typename DynamicArray<Component*>::ReverseIterator> ReverseIterator;
+		typedef ConstIteratorWrapper<Component, ReverseIterator> ConstReverseIterator;
 
-		Iterator begin(){return mComponents.begin();}
-		ConstIterator begin() const{return mComponents.begin();}
-		Iterator end(){return mComponents.end();}
-		ConstIterator end() const{return mComponents.end();}
-		ReverseIterator rbegin(){return mComponents.rbegin();}
-		ConstReverseIterator rbegin() const{return mComponents.rbegin();}
-		ReverseIterator rend(){return mComponents.rend();}
-		ConstReverseIterator rend() const{return mComponents.rend();}
+		Iterator begin(){
+		    return mComponents.begin();
+        }
+
+		ConstIterator begin() const{
+		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).begin());
+        }
+
+		Iterator end(){
+		    return mComponents.end();
+        }
+
+		ConstIterator end() const{
+		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).end());
+        }
+
+		ReverseIterator rbegin(){
+		    return mComponents.rbegin();
+        }
+
+		ConstReverseIterator rbegin() const{
+		    return ReverseIterator(const_cast<DynamicArray<Component*>&>(mComponents).rbegin());
+        }
+
+		ReverseIterator rend(){
+		    return mComponents.rend();
+        }
+
+		ConstReverseIterator rend() const{
+		    return ReverseIterator(const_cast<DynamicArray<Component*>&>(mComponents).rend());
+        }
 
 		// Value Find
 
-		ConstIterator FindFirst(Component* aValue) const{return mComponents.FindFirst(aValue);}
-		ConstIterator FindNext(ConstIterator aPos, Component* aValue) const{return mComponents.FindNext(aPos, aValue);}
-		ConstIterator FindLast(Component* aValue) const{return mComponents.FindLast(aValue);}
-		Iterator FindFirst(Component* aValue){return mComponents.FindFirst(aValue);}
-		Iterator FindNext(ConstIterator aPos, Component* aValue){return mComponents.FindNext(aPos, aValue);}
-		Iterator FindLast(Component* aValue){return mComponents.FindFirst(aValue);}
+		//ConstIterator FindFirst(Component* aValue) const{return mComponents.FindFirst(aValue);}
+		//ConstIterator FindNext(ConstIterator aPos, Component* aValue) const{return mComponents.FindNext(aPos, aValue);}
+		//ConstIterator FindLast(Component* aValue) const{return mComponents.FindLast(aValue);}
+		//Iterator FindFirst(Component* aValue){return mComponents.FindFirst(aValue);}
+		//Iterator FindNext(ConstIterator aPos, Component* aValue){return mComponents.FindNext(aPos, aValue);}
+		//Iterator FindLast(Component* aValue){return mComponents.FindFirst(aValue);}
 
         // Condition find
 
-		template<class F>
-		ConstIterator FindFirstIf(const F aCondition) const{return mComponents.FindFirstIf(aCondition);}
+		//template<class F>
+		//ConstIterator FindFirstIf(const F aCondition) const{return mComponents.FindFirstIf(aCondition);}
 
-		template<class F>
-		ConstIterator FindNextIf(ConstIterator aPos, const F aCondition) const{return mComponents.FindNext(aPos, aCondition);}
+		//template<class F>
+		//ConstIterator FindNextIf(ConstIterator aPos, const F aCondition) const{return mComponents.FindNext(aPos, aCondition);}
 
-		template<class F>
-		ConstIterator FindLastIf(const F aCondition) const{return mComponents.FindLastIf(aCondition);}
+		//template<class F>
+		//ConstIterator FindLastIf(const F aCondition) const{return mComponents.FindLastIf(aCondition);}
 
-		template<class F>
-		Iterator FindFirstIf(const F aCondition){return mComponents.FindFirstIf(aCondition);}
+		//template<class F>
+		//Iterator FindFirstIf(const F aCondition){return mComponents.FindFirstIf(aCondition);}
 
-		template<class F>
-		Iterator FindNextIf(ConstIterator aPos, const F aCondition){return mComponents.FindNextIf(aPos, aCondition);}
+		//template<class F>
+		//Iterator FindNextIf(ConstIterator aPos, const F aCondition){return mComponents.FindNextIf(aPos, aCondition);}
 
-		template<class F>
-		Iterator FindLastIf(const F aCondition){return mComponents.FindLastIf(aCondition);}
+		//template<class F>
+		//Iterator FindLastIf(const F aCondition){return mComponents.FindLastIf(aCondition);}
 
 		// Component-typed find
 
 		template<class COMPONENT>
 		const COMPONENT* Get() const{
-		    ConstIterator it = mComponents.FindFirstIf(CheckComponentType<COMPONENT>);
-		    return it == end() ? nullptr : reinterpret_cast<const COMPONENT*>(*it);
+		    auto it = mComponents.FindFirstIf(CheckComponentType<COMPONENT>);
+		    return it == mComponents.end() ? nullptr : reinterpret_cast<const COMPONENT*>(*it);
         }
 
 		template<class COMPONENT>
 		COMPONENT* Get(){
-            Iterator it = mComponents.FindFirstIf(CheckComponentType<COMPONENT>);
-		    return it == end() ? nullptr : reinterpret_cast<COMPONENT*>(*it);
+            auto it = mComponents.FindFirstIf(CheckComponentType<COMPONENT>);
+		    return it == mComponents.end() ? nullptr : reinterpret_cast<COMPONENT*>(*it);
         }
 
 		// Component Attach
