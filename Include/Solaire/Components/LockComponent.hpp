@@ -56,12 +56,11 @@ namespace Solaire{ namespace Components{
 
 	class ReadComponentLockGuard{
     private:
-        LockComponent* mLock;
+        const LockComponent* mLock;
     public:
-        ReadComponentLockGuard(Composite& aComposite):
-            mLock(nullptr)
+        ReadComponentLockGuard(const Composite& aComposite):
+            mLock(aComposite.Get<LockComponent>())
         {
-            //! \todo Get lock component
             if(mLock) mLock->ReadLock();
         }
 
@@ -72,12 +71,11 @@ namespace Solaire{ namespace Components{
 
 	class WriteComponentLockGuard{
     private:
-        LockComponent* mLock;
+        const LockComponent* mLock;
     public:
-        WriteComponentLockGuard(Composite& aComposite):
-            mLock(nullptr)
+        WriteComponentLockGuard(const Composite& aComposite):
+            mLock(aComposite.Get<LockComponent>())
         {
-            //! \todo Get lock component
             if(mLock) mLock->WriteLock();
         }
 

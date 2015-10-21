@@ -37,13 +37,9 @@ namespace Solaire{ namespace Components{
 
     class Composite;
 
-    typedef SharedPointer<Composite> CompositePtr;
-    typedef SharedPointer<const Composite> ConstCompositePtr;
-
-    class Composite : public std::enable_shared_from_this<Composite>
-	{
+    class Composite{
     private:
-		DynamicArray<ComponentPtr> mComponents;
+		DynamicArray<Component*> mComponents;
 	private:
 		Composite(Composite&&) = delete;
 		Composite(const Composite&) = delete;
@@ -57,7 +53,12 @@ namespace Solaire{ namespace Components{
         {}
 
 		virtual ~Composite(){
-
+		    Allocator& allocator = GetAllocator();
+            for(Component* component : mComponents){
+                component->~Component();
+                //! \bug Size of original component class is not deallocated
+                allocator.Deallocate(component, sizeof(Component));
+            }
 		}
 
 		Allocator& GetAllocator() const{
@@ -66,10 +67,10 @@ namespace Solaire{ namespace Components{
 
 		// Iterators
 
-		typedef typename DynamicArray<ComponentPtr>::Iterator Iterator;
-		typedef typename DynamicArray<ComponentPtr>::ConstIterator ConstIterator;
-		typedef typename DynamicArray<ComponentPtr>::ReverseIterator ReverseIterator;
-		typedef typename DynamicArray<ComponentPtr>::ConstReverseIterator ConstReverseIterator;
+		typedef typename DynamicArray<Component*>::Iterator Iterator;
+		typedef typename DynamicArray<Component*>::ConstIterator ConstIterator;
+		typedef typename DynamicArray<Component*>::ReverseIterator ReverseIterator;
+		typedef typename DynamicArray<Component*>::ConstReverseIterator ConstReverseIterator;
 
 		Iterator begin(){return mComponents.begin();}
 		ConstIterator begin() const{return mComponents.begin();}
@@ -82,12 +83,12 @@ namespace Solaire{ namespace Components{
 
 		// Value Find
 
-		ConstIterator FindFirst(ComponentPtr aValue) const{return mComponents.FindFirst(aValue);}
-		ConstIterator FindNext(ConstIterator aPos, ComponentPtr aValue) const{return mComponents.FindNext(aPos, aValue);}
-		ConstIterator FindLast(ComponentPtr aValue) const{return mComponents.FindLast(aValue);}
-		Iterator FindFirst(ComponentPtr aValue){return mComponents.FindFirst(aValue);}
-		Iterator FindNext(ConstIterator aPos, ComponentPtr aValue){return mComponents.FindNext(aPos, aValue);}
-		Iterator FindLast(ComponentPtr aValue){return mComponents.FindFirst(aValue);}
+		ConstIterator FindFirst(Component* aValue) const{return mComponents.FindFirst(aValue);}
+		ConstIterator FindNext(ConstIterator aPos, Component* aValue) const{return mComponents.FindNext(aPos, aValue);}
+		ConstIterator FindLast(Component* aValue) const{return mComponents.FindLast(aValue);}
+		Iterator FindFirst(Component* aValue){return mComponents.FindFirst(aValue);}
+		Iterator FindNext(ConstIterator aPos, Component* aValue){return mComponents.FindNext(aPos, aValue);}
+		Iterator FindLast(Component* aValue){return mComponents.FindFirst(aValue);}
 
         // Condition find
 
@@ -112,25 +113,25 @@ namespace Solaire{ namespace Components{
 		// Component-typed find
 
 		template<class COMPONENT>
-		std::shared_ptr<const COMPONENT> Get() const{
-		    ConstIterator it = mComponents.FindFirst(CheckComponentType<COMPONENT>);
-		    return it == end() ? std::shared_ptr<const COMPONENT>() : *it;
+		const COMPONENT* Get() const{
+		    ConstIterator it = mComponents.FindFirstIf(CheckComponentType<COMPONENT>);
+		    return it == end() ? nullptr : reinterpret_cast<const COMPONENT*>(*it);
         }
 
 		template<class COMPONENT>
-		std::shared_ptr<COMPONENT> Get(){
-            Iterator it = mComponents.FindFirst(CheckComponentType<COMPONENT>);
-		    return it == end() ? std::shared_ptr<COMPONENT>() : *it;
+		COMPONENT* Get(){
+            Iterator it = mComponents.FindFirstIf(CheckComponentType<COMPONENT>);
+		    return it == end() ? nullptr : reinterpret_cast<COMPONENT*>(*it);
         }
 
 		// Component Attach
 
 		template<class COMPONENT, class ...PARAMS>
 		std::shared_ptr<COMPONENT> Attach(PARAMS... aParams){
-		    std::shared_ptr<COMPONENT> component = Get<COMPONENT>();
+		    COMPONENT* component = Get<COMPONENT>();
 
 		    if(! component){
-                component = SharedAllocate<COMPONENT>(*this, aParams...);
+                component = new(GetAllocator().Allocate(sizeof(COMPONENT))) COMPONENT(*this, aParams...);
                 mComponents.PushBack(component);
                 component->OnAttach(*this);
                 return component;
@@ -141,9 +142,9 @@ namespace Solaire{ namespace Components{
 	};
 
     template<class T>
-    static constexpr bool CheckCompositeType(const ConstCompositePtr aComposite){
+    static constexpr bool CheckCompositeType(const Composite* const aComposite){
         static_assert(std::is_base_of<Composite, T>::value, "CheckCompositeType() template must derive from Composite");
-        return dynamic_cast<const T*>(aComposite.get()) != nullptr;
+        return dynamic_cast<const T*>(aComposite) != nullptr;
     }
 }}
 

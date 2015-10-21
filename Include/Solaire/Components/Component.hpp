@@ -38,11 +38,7 @@ namespace Solaire{ namespace Components{
     class Composite;
     class Component;
 
-    typedef SharedPointer<Component> ComponentPtr;
-    typedef SharedPointer<const Component> ConstComponentPtr;
-
-    class Component : public std::enable_shared_from_this<Component>
-	{
+    class Component{
     public:
         friend Composite;
 	private:
@@ -61,9 +57,9 @@ namespace Solaire{ namespace Components{
 	};
 
     template<class T>
-    static constexpr bool CheckComponentType(const ConstComponentPtr aComponent){
+    static constexpr bool CheckComponentType(const Component* const aComponent){
         static_assert(std::is_base_of<Component, T>::value, "CheckComponentType() template must derive from Component");
-        return dynamic_cast<const T*>(aComponent.get()) != nullptr;
+        return dynamic_cast<const T*>(aComponent) != nullptr;
     }
 }}
 
