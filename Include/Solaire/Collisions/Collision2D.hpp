@@ -53,11 +53,11 @@ namespace Solaire{
         virtual ~Collidable2D(){}
 
         virtual CollisionData2D CollisionWith(const CollisionPoint2D aShape) const = 0;
-        virtual CollisionData2D CollisionWith(const CollisionLine2D aShape) const = 0;
-        virtual CollisionData2D CollisionWith(const CollisionCircle aShape) const = 0;
-        virtual CollisionData2D CollisionWith(const CollisionAabb aShape) const = 0;
-        virtual CollisionData2D CollisionWith(const CollisionObb aShape) const = 0;
-        virtual CollisionData2D CollisionWith(const Collisiontriangle aShape) const = 0;
+        virtual CollisionData2D CollisionWith(const CollisionLine2D& aShape) const = 0;
+        virtual CollisionData2D CollisionWith(const CollisionCircle& aShape) const = 0;
+        virtual CollisionData2D CollisionWith(const CollisionAabb& aShape) const = 0;
+        virtual CollisionData2D CollisionWith(const CollisionObb& aShape) const = 0;
+        virtual CollisionData2D CollisionWith(const Collisiontriangle& aShape) const = 0;
     };
 }
 
