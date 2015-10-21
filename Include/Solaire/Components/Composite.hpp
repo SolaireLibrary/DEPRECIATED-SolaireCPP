@@ -134,23 +134,35 @@ namespace Solaire{ namespace Components{
 
         // Condition find
 
-		//template<class F>
-		//ConstIterator FindFirstIf(const F aCondition) const{return mComponents.FindFirstIf(aCondition);}
+		template<class F>
+		ConstIterator FindFirstIf(const F aCondition) const{
+		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).FindFirstIf(aCondition));
+        }
 
-		//template<class F>
-		//ConstIterator FindNextIf(ConstIterator aPos, const F aCondition) const{return mComponents.FindNext(aPos, aCondition);}
+		template<class F>
+		ConstIterator FindNextIf(ConstIterator aPos, const F aCondition) const{
+		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).FindNextIf(mComponents.begin() + (ConstIterator(end()) - aPos), aCondition));
+        }
 
-		//template<class F>
-		//ConstIterator FindLastIf(const F aCondition) const{return mComponents.FindLastIf(aCondition);}
+		template<class F>
+		ConstIterator FindLastIf(const F aCondition) const{
+		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).FindLastIf(aCondition));
+        }
 
-		//template<class F>
-		//Iterator FindFirstIf(const F aCondition){return mComponents.FindFirstIf(aCondition);}
+		template<class F>
+		Iterator FindFirstIf(const F aCondition){
+		    return mComponents.FindFirstIf(aCondition);
+        }
 
-		//template<class F>
-		//Iterator FindNextIf(ConstIterator aPos, const F aCondition){return mComponents.FindNextIf(aPos, aCondition);}
+		template<class F>
+		Iterator FindNextIf(ConstIterator aPos, const F aCondition){
+		    return mComponents.FindNextIf(aPos, aCondition);
+        }
 
-		//template<class F>
-		//Iterator FindLastIf(const F aCondition){return mComponents.FindLastIf(aCondition);}
+		template<class F>
+		Iterator FindLastIf(const F aCondition){
+		    return mComponents.FindLastIf(aCondition);
+        }
 
 		// Component-typed find
 
