@@ -108,12 +108,29 @@ namespace Solaire{ namespace Components{
 
 		// Value Find
 
-		//ConstIterator FindFirst(Component* aValue) const{return mComponents.FindFirst(aValue);}
-		//ConstIterator FindNext(ConstIterator aPos, Component* aValue) const{return mComponents.FindNext(aPos, aValue);}
-		//ConstIterator FindLast(Component* aValue) const{return mComponents.FindLast(aValue);}
-		//Iterator FindFirst(Component* aValue){return mComponents.FindFirst(aValue);}
-		//Iterator FindNext(ConstIterator aPos, Component* aValue){return mComponents.FindNext(aPos, aValue);}
-		//Iterator FindLast(Component* aValue){return mComponents.FindFirst(aValue);}
+		ConstIterator FindFirst(Component& aValue) const{
+            return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).FindFirst(&aValue));
+        }
+
+		ConstIterator FindNext(ConstIterator aPos, Component& aValue) const{
+		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).FindNext(mComponents.begin() + (end() - aPos), &aValue));
+        }
+
+		ConstIterator FindLast(Component& aValue) const{
+		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).FindLast(&aValue));
+        }
+
+		Iterator FindFirst(Component& aValue){
+            return Iterator(mComponents.FindFirst(&aValue));
+        }
+
+		Iterator FindNext(ConstIterator aPos, Component& aValue){
+		    return Iterator(mComponents.FindNext(mComponents.begin() + (ConstIterator(end()) - aPos), &aValue));
+        }
+
+		Iterator FindLast(Component& aValue){
+		    return Iterator(mComponents.FindLast(&aValue));
+        }
 
         // Condition find
 
