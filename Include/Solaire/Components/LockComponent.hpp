@@ -37,7 +37,7 @@ namespace Solaire{ namespace Components{
 
 	class LockComponent : public Component{
 	public:
-		LockComponent(Composite& aParent, CompositeTracker& aTracker):
+		LockComponent(Composite& aParent):
 		    Component(aParent)
         {}
 

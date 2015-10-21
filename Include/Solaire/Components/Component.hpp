@@ -28,7 +28,7 @@
 	\version 4.0
 	\date
 	Created			: 7th September 2015
-	Last Modified	: 19th October 2015
+	Last Modified	: 21st October 2015
 */
 
 #include "..\Core\Memory\Allocator.hpp"
