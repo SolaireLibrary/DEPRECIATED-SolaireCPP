@@ -81,6 +81,55 @@ namespace Solaire{
         };
         uint8_t type;
 
+        static CollisionShape2D Point(const Vector2F aPoint){
+            CollisionShape2D tmp;
+            tmp.type = SHAPE2D_POINT;
+            tmp.point = aPoint;
+            return tmp;
+        }
+
+        static CollisionShape2D Line(const Vector2F aBegin, const Vector2F aEnd){
+            CollisionShape2D tmp;
+            tmp.type = SHAPE2D_LINE;
+            tmp.line.begin = aBegin;
+            tmp.line.end = aEnd;
+            return tmp;
+        }
+
+        static CollisionShape2D Circle(const Vector2F aCentre, const float aRadius){
+            CollisionShape2D tmp;
+            tmp.type = SHAPE2D_CIRCLE;
+            tmp.circle.centre = aCentre;
+            tmp.circle.radius = aRadius;
+            return tmp;
+        }
+
+        static CollisionShape2D Aabb(const Vector2F aCentre, const Vector2F aExtents){
+            CollisionShape2D tmp;
+            tmp.type = SHAPE2D_AABB;
+            tmp.aabb.centre = aCentre;
+            tmp.aabb.extents = aExtents;
+            return tmp;
+        }
+
+        static CollisionShape2D Obb(const Vector2F aCentre, const Vector2F aExtents, const float aRotation){
+            CollisionShape2D tmp;
+            tmp.type = SHAPE2D_OBB;
+            tmp.obb.centre = aCentre;
+            tmp.obb.extents = aExtents;
+            tmp.obb.rotation = aRotation;
+            return tmp;
+        }
+
+        static CollisionShape2D Triangle(const Vector2F aPointA, const Vector2F aPointB, const Vector2F aPointC){
+            CollisionShape2D tmp;
+            tmp.type = SHAPE2D_TRIANGLE;
+            tmp.triangle.points[0] = aPointA;
+            tmp.triangle.points[1] = aPointB;
+            tmp.triangle.points[2] = aPointC;
+            return tmp;
+        }
+
         CollisionShape2D():
             point({0.f, 0.f}),
             type(SHAPE2D_POINT)
