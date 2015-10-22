@@ -550,7 +550,7 @@ namespace Solaire{ namespace Json{
             aForwardFn();
             if(aGetFn() != 'l') goto STATE_FAIL;
             aForwardFn();
-            return aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_NULL);
+            return SharedAllocate<Value>(aDataAllocator, aDataAllocator, TYPE_NULL);
         }
         goto STATE_FAIL;
 
@@ -564,7 +564,7 @@ namespace Solaire{ namespace Json{
                 aForwardFn();
                 if(aGetFn() != 'e') goto STATE_FAIL;
                 aForwardFn();
-                return aDataAllocator.SharedAllocate<Value>(aDataAllocator, true);
+                return SharedAllocate<Value>(aDataAllocator, aDataAllocator, true);
             }else{
                 aForwardFn();
                 if(aGetFn() != 'a') goto STATE_FAIL;
@@ -575,7 +575,7 @@ namespace Solaire{ namespace Json{
                 aForwardFn();
                 if(aGetFn() != 'e') goto STATE_FAIL;
                 aForwardFn();
-                return aDataAllocator.SharedAllocate<Value>(aDataAllocator, false);
+                return SharedAllocate<Value>(aDataAllocator, aDataAllocator, false);
             }
         }
         goto STATE_FAIL;
@@ -614,7 +614,7 @@ namespace Solaire{ namespace Json{
                     if(it == buf){
                         goto STATE_FAIL;
                     }else{
-                        return aDataAllocator.SharedAllocate<Value>(aDataAllocator, num);
+                        return SharedAllocate<Value>(aDataAllocator, aDataAllocator, num);
                     }
                 }
                 break;
@@ -647,12 +647,12 @@ namespace Solaire{ namespace Json{
             }
 
             STATE_STRING_RETURN:
-            return aDataAllocator.SharedAllocate<Value>(aDataAllocator, string);
+            return SharedAllocate<Value>(aDataAllocator, aDataAllocator, string);
         }
 
         STATE_ARRAY:
         {
-            std::shared_ptr<Value> value = aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_ARRAY);
+            std::shared_ptr<Value> value = SharedAllocate<Value>(aDataAllocator, aDataAllocator, TYPE_ARRAY);
             aForwardFn();
             goto STATE_ARRAY_MEMEBER;
 
@@ -699,7 +699,7 @@ namespace Solaire{ namespace Json{
             bool isEscaped;
             char nameBuf[64];
             char* nameEnd  = nameBuf;
-            std::shared_ptr<Value> value = aDataAllocator.SharedAllocate<Value>(aDataAllocator, TYPE_OBJECT);
+            std::shared_ptr<Value> value = SharedAllocate<Value>(aDataAllocator, aDataAllocator, TYPE_OBJECT);
             aForwardFn();
             goto STATE_OBJECT_NAME;
 
@@ -1017,15 +1017,18 @@ namespace Solaire{ namespace Json{
 
         switch(mType){
         case TYPE_STRING:
-            mAllocator->Deallocate<String>(mDataString);
+            mDataString->~String();
+            mAllocator->Deallocate(mDataString, sizeof(String));
             mDataString = nullptr;
             break;
         case TYPE_ARRAY:
-            mAllocator->Deallocate<ArrayType>(mDataArray);
+            mDataArray->~ArrayType();
+            mAllocator->Deallocate(mDataArray, sizeof(ArrayType));
             mDataArray = nullptr;
             break;
         case TYPE_OBJECT:
-            mAllocator->Deallocate<ObjectType>(mDataObject);
+            mDataObject->~ObjectType();
+            mAllocator->Deallocate(mDataObject, sizeof(ObjectType));
             mDataObject = nullptr;
             break;
         default:
@@ -1034,13 +1037,13 @@ namespace Solaire{ namespace Json{
 
         switch(aType){
         case TYPE_STRING:
-            mDataString = new(mAllocator->AllocateAndRegister<String>()) String(*mAllocator);
+            mDataString = new(mAllocator->Allocate(sizeof(String))) String(*mAllocator);
             break;
         case TYPE_ARRAY:
-            mDataArray = new(mAllocator->AllocateAndRegister<ArrayType>()) ArrayType(*mAllocator, 9);
+            mDataArray = new(mAllocator->Allocate(sizeof(ArrayType))) ArrayType(*mAllocator, 9);
             break;
         case TYPE_OBJECT:
-            mDataObject = new(mAllocator->AllocateAndRegister<ObjectType>()) ObjectType(*mAllocator, 8);
+            mDataObject = new(mAllocator->Allocate(sizeof(ObjectType))) ObjectType(*mAllocator, 8);
             break;
         default:
             break;

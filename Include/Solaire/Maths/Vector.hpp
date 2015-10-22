@@ -36,6 +36,7 @@
 #include <stdexcept>
 #include "VectorLogic.inl"
 #include "..\Core\Serialise\Serialisable.hpp"
+#include "..\Core\Json\Value.hpp"
 
 namespace Solaire{
 
@@ -521,7 +522,7 @@ namespace Solaire{
         typedef Vector<TYPE, LENGTH> VectorType;
 
         static std::shared_ptr<Json::Value> Serialise(Allocator& aParseAllocator, const VectorType aValue){
-            std::shared_ptr<Json::Value> value = aParseAllocator.SharedAllocate<Json::Value>(aParseAllocator, Json::TYPE_ARRAY);
+            std::shared_ptr<Json::Value> value = SharedAllocate<Json::Value>(aParseAllocator, aParseAllocator, Json::TYPE_ARRAY);
             for(uint32_t i = 0; i < LENGTH; ++i){
                 value->pArray->PushBack(aParseAllocator, aValue[i]);
             }
