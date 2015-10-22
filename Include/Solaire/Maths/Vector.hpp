@@ -92,6 +92,14 @@ namespace Solaire{
 		}
 
 		/*!
+			\brief Copy a vector.
+			\param aOther The other vector.
+		*/
+		Vector(const Vector<TYPE, LENGTH>& aOther){
+		    Logic::Copy(mElements, aOther.mElements);
+		}
+
+		/*!
 			\brief Convert a vector from one type to another type.
 			\tparam T2 The element type of \a aOther.
 			\tparam LENGTH2 The element count of \a aOther.
@@ -99,7 +107,7 @@ namespace Solaire{
 		*/
 		template<class T2, const uint32_t LENGTH2>
 		Vector(const Vector<T2, LENGTH2>& aOther){
-		    Logic::Cast(mElements, aOther.mElements);
+            Logic::Cast(mElements, aOther.mElements);
 		}
 
 		// Operator overloads

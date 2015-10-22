@@ -52,9 +52,7 @@ namespace Solaire{
 
     struct CollisionShape2D{
         union{
-            struct{
-                Vector2F point;
-            } point;
+            Vector2F point;
 
             struct{
                 Vector2F begin;
@@ -95,36 +93,6 @@ namespace Solaire{
             return *this;
         }
     };
-
-    static CollisionData2D Collision2DPointVsPoint(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
-        //! \todo Implement Collision2D test
-        return CollisionData2D();
-    }
-
-    static CollisionData2D Collision2DPointVsLine(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
-        //! \todo Implement Collision2D test
-        return CollisionData2D();
-    }
-
-    static CollisionData2D Collision2DPointVsCircle(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
-        //! \todo Implement Collision2D test
-        return CollisionData2D();
-    }
-
-    static CollisionData2D Collision2DPointVsAabb(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
-        //! \todo Implement Collision2D test
-        return CollisionData2D();
-    }
-
-    static CollisionData2D Collision2DPointVsObb(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
-        //! \todo Implement Collision2D test
-        return CollisionData2D();
-    }
-
-    static CollisionData2D Collision2DPointVsTriangle(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
-        //! \todo Implement Collision2D test
-        return CollisionData2D();
-    }
 
     static CollisionData2D Collision2DLineVsPoint(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
         //! \todo Implement Collision2D test
@@ -274,6 +242,40 @@ namespace Solaire{
     static CollisionData2D Collision2DTriangleVsTriangle(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
         //! \todo Implement Collision2D test
         return CollisionData2D();
+    }
+
+    static CollisionData2D Collision2DPointVsPoint(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
+        CollisionData2D tmp;
+        tmp.collides = aShapeA.point == aShapeB.point;
+        tmp.contactPoint = aShapeA.point;
+        if(tmp.collides){
+            tmp.contactPoint = aShapeA.point;
+            tmp.penitration = {1.f, 1.f};
+        }else{
+            tmp.contactPoint = {0.f, 0.f};
+            tmp.penitration = {0.f, 0.f};
+        }
+        return tmp;
+    }
+
+    static CollisionData2D Collision2DPointVsLine(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
+        return Collision2DLineVsPoint(aShapeB, aShapeA).Reverse();
+    }
+
+    static CollisionData2D Collision2DPointVsCircle(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
+        return Collision2DCircleVsPoint(aShapeB, aShapeA).Reverse();
+    }
+
+    static CollisionData2D Collision2DPointVsAabb(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
+        return Collision2DAabbVsPoint(aShapeB, aShapeA).Reverse();
+    }
+
+    static CollisionData2D Collision2DPointVsObb(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
+        return Collision2DObbVsPoint(aShapeB, aShapeA).Reverse();
+    }
+
+    static CollisionData2D Collision2DPointVsTriangle(const CollisionShape2D& aShapeA, const CollisionShape2D& aShapeB){
+        return Collision2DTriangleVsPoint(aShapeB, aShapeA).Reverse();
     }
 
 
