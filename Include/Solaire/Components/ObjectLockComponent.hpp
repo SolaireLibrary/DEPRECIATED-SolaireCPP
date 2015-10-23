@@ -40,6 +40,11 @@ namespace Solaire{ namespace Components{
     private:
         //! \todo Change to read / write lock
         mutable RecursiveMutex mLock;
+    protected:
+        // Inherited from Component
+		void AttachCopy(Composite& aComposite) const override{
+		   aComposite.Attach<ObjectLockComponent>();
+		}
 	public:
 		ObjectLockComponent(Composite& aParent):
 		    LockComponent(aParent)
