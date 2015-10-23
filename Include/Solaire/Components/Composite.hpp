@@ -46,53 +46,14 @@ namespace Solaire{ namespace Components{
 		Composite& operator=(const Composite&) = delete;
 	protected:
 		virtual void OnAttach(Component& aComponent) = 0;
-
-		Composite& operator=(Composite&& aOther){
-		    std::swap(mComponents, aOther.mComponents);
-
-            for(Component* component : mComponents){
-                component->OnParentMove(aOther, *this);
-            }
-
-            for(Component* component : aOther.mComponents){
-                component->OnParentMove(*this, aOther);
-            }
-
-		    return *this;
-		}
+		Composite& operator=(Composite&& aOther);
 	public:
-		Composite(Allocator& aAllocator):
-		    mComponents(aAllocator, 16)
-        {}
+		Composite(Allocator& aAllocator);
+		Composite(const Composite& aOther);
+		Composite(Composite&& aOther);
+		virtual ~Composite();
 
-		Composite(const Composite& aOther):
-		    mComponents(aOther.GetAllocator(), 16)
-        {
-            for(const Component* component : aOther.mComponents){
-                component->AttachCopy(*this);
-            }
-		}
-
-		Composite(Composite&& aOther):
-		    mComponents(std::move(aOther.mComponents))
-        {
-            for(Component* component : mComponents){
-                component->OnParentMove(aOther, *this);
-            }
-		}
-
-		virtual ~Composite(){
-		    Allocator& allocator = GetAllocator();
-            for(Component* component : mComponents){
-                component->~Component();
-                //! \bug Size of original component class is not deallocated
-                allocator.Deallocate(component, sizeof(Component));
-            }
-		}
-
-		Allocator& GetAllocator() const{
-		    return mComponents.GetAllocator();
-		}
+		Allocator& GetAllocator() const;
 
 		// Iterators
 
@@ -101,63 +62,23 @@ namespace Solaire{ namespace Components{
 		typedef DereferenceIteratorWrapper<Component, typename DynamicArray<Component*>::ReverseIterator> ReverseIterator;
 		typedef ConstIteratorWrapper<Component, ReverseIterator> ConstReverseIterator;
 
-		Iterator begin(){
-		    return mComponents.begin();
-        }
-
-		ConstIterator begin() const{
-		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).begin());
-        }
-
-		Iterator end(){
-		    return mComponents.end();
-        }
-
-		ConstIterator end() const{
-		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).end());
-        }
-
-		ReverseIterator rbegin(){
-		    return mComponents.rbegin();
-        }
-
-		ConstReverseIterator rbegin() const{
-		    return ReverseIterator(const_cast<DynamicArray<Component*>&>(mComponents).rbegin());
-        }
-
-		ReverseIterator rend(){
-		    return mComponents.rend();
-        }
-
-		ConstReverseIterator rend() const{
-		    return ReverseIterator(const_cast<DynamicArray<Component*>&>(mComponents).rend());
-        }
+		Iterator begin();
+		ConstIterator begin() const;
+		Iterator end();
+		ConstIterator end() const;
+		ReverseIterator rbegin();
+		ConstReverseIterator rbegin() const;
+		ReverseIterator rend();
+		ConstReverseIterator rend() const;
 
 		// Value Find
 
-		ConstIterator FindFirst(Component& aValue) const{
-            return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).FindFirst(&aValue));
-        }
-
-		ConstIterator FindNext(ConstIterator aPos, Component& aValue) const{
-		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).FindNext(mComponents.begin() + (end() - aPos), &aValue));
-        }
-
-		ConstIterator FindLast(Component& aValue) const{
-		    return Iterator(const_cast<DynamicArray<Component*>&>(mComponents).FindLast(&aValue));
-        }
-
-		Iterator FindFirst(Component& aValue){
-            return Iterator(mComponents.FindFirst(&aValue));
-        }
-
-		Iterator FindNext(ConstIterator aPos, Component& aValue){
-		    return Iterator(mComponents.FindNext(mComponents.begin() + (ConstIterator(end()) - aPos), &aValue));
-        }
-
-		Iterator FindLast(Component& aValue){
-		    return Iterator(mComponents.FindLast(&aValue));
-        }
+		ConstIterator FindFirst(Component& aValue) const;
+		ConstIterator FindNext(ConstIterator aPos, Component& aValue) const;
+		ConstIterator FindLast(Component& aValue) const;
+		Iterator FindFirst(Component& aValue);
+		Iterator FindNext(ConstIterator aPos, Component& aValue);
+		Iterator FindLast(Component& aValue);
 
         // Condition find
 
@@ -228,6 +149,8 @@ namespace Solaire{ namespace Components{
         return dynamic_cast<const T*>(aComposite) != nullptr;
     }
 }}
+
+#include "Composite.inl"
 
 
 #endif
