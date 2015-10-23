@@ -168,6 +168,65 @@ namespace Solaire{
                 throw std::runtime_error("CollisionShape2D : Unknown type");
             }
         }
+
+        void Move(const Vector2F aVector){
+            switch(type){
+            case SHAPE2D_POINT:
+                point += aVector;
+                break;
+            case SHAPE2D_LINE:
+                line.begin += aVector;
+                line.end += aVector;
+                break;
+            case SHAPE2D_CIRCLE:
+                circle.centre += aVector;
+                break;
+            case SHAPE2D_AABB:
+                aabb.centre += aVector;
+                break;
+            case SHAPE2D_OBB:
+                obb.centre += aVector;
+                break;
+            case SHAPE2D_TRIANGLE:
+                triangle.points[0] += aVector;
+                triangle.points[1] += aVector;
+                triangle.points[2] += aVector;
+                break;
+            default:
+                throw std::runtime_error("CollisionShape2D : Unknown type");
+            }
+        }
+
+        void Scale(const float aScale){
+            switch(type){
+            case SHAPE2D_POINT:
+                break;
+            case SHAPE2D_LINE:
+                {
+                    Vector2F dif = line.end - line.begin;
+                    dif /= 2.f;
+                    dif *= aScale;
+                    line.begin -= dif;
+                    line.end += dif;
+                    //! \todo Test line scaleing
+                }
+                break;
+            case SHAPE2D_CIRCLE:
+                circle.radius *= aScale;
+                break;
+            case SHAPE2D_AABB:
+                aabb.extents  *= aScale;
+                break;
+            case SHAPE2D_OBB:
+                obb.extents *= aScale;
+                break;
+            case SHAPE2D_TRIANGLE:
+                //! \todo Implement triangle scaleing
+                break;
+            default:
+                throw std::runtime_error("CollisionShape2D : Unknown type");
+            }
+        }
     };
 
 

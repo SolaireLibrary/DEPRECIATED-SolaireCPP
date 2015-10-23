@@ -25,10 +25,10 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 4.0
+	\version 4.1
 	\date
 	Created			: 7th September 2015
-	Last Modified	: 21st October 2015
+	Last Modified	: 23rd October 2015
 */
 
 #include "..\Core\Memory\Allocator.hpp"
@@ -42,12 +42,15 @@ namespace Solaire{ namespace Components{
     public:
         friend Composite;
 	private:
-		Composite& mParent;
+		Composite* mParent;
     private:
 		Component(Component&&) = delete;
 		Component(const Component&) = delete;
 		Component& operator=(Component&&) = delete;
 		Component& operator=(const Component&) = delete;
+
+        virtual void OnParentMove(Composite& aOld, Composite& aNew);
+		virtual void AttachCopy(Composite& aComposite) const = 0;
 	public:
 		Component(Composite& aParent);
 		virtual ~Component();

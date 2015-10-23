@@ -25,10 +25,10 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 4.0
+	\version 4.1
 	\date
 	Created			: 19th September 2015
-	Last Modified	: 19th October 2015
+	Last Modified	: 23rd October 2015
 */
 
 #include "Composite.hpp"
@@ -38,15 +38,19 @@ namespace Solaire{ namespace Components{
     // Component
 
     Component::Component(Composite& aParent) :
-        mParent(aParent)
+        mParent(&aParent)
     {}
 
     Component::~Component(){
 
     }
 
+    void OnParentMove(Composite& aOld, Composite& aNew){
+        mParent = &aNew;
+    }
+
     Composite& Component::GetParent() const{
-        return mParent;
+        return *mParent;
     }
 
     Allocator& Component::GetAllocator() const{

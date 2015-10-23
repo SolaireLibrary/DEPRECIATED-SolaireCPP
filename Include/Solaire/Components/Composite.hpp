@@ -25,10 +25,10 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 4.0
+	\version 4.1
 	\date
 	Created			: 7th September 2015
-	Last Modified	: 21st October 2015
+	Last Modified	: 23rd October 2015
 */
 
 #include "..\Core\Iterators\DereferenceIterator.hpp"
@@ -42,17 +42,44 @@ namespace Solaire{ namespace Components{
     class Composite{
     private:
 		DynamicArray<Component*> mComponents;
-	private:
-		Composite(Composite&&) = delete;
-		Composite(const Composite&) = delete;
-		Composite& operator=(Composite&&) = delete;
+    private:
 		Composite& operator=(const Composite&) = delete;
 	protected:
 		virtual void OnAttach(Component& aComponent) = 0;
+
+		Composite& operator=(Composite&& aOther){
+		    std::swap(mComponents, aOther.mComponents);
+
+            for(Component* component : mComponents){
+                component->OnParentMove(aOther, *this);
+            }
+
+            for(Component* component : aOther.mComponents){
+                component->OnParentMove(*this, aOther);
+            }
+
+		    return *this;
+		}
 	public:
 		Composite(Allocator& aAllocator):
 		    mComponents(aAllocator, 16)
         {}
+
+		Composite(const Composite& aOther):
+		    mComponents(aOther.GetAllocator(), 16)
+        {
+            for(const Component* component : aOther.mComponents){
+                component->AttachCopy(*this);
+            }
+		}
+
+		Composite(Composite&& aOther):
+		    mComponents(std::move(aOther.mComponents))
+        {
+            for(Component* component : mComponents){
+                component->OnParentMove(aOther, *this);
+            }
+		}
 
 		virtual ~Composite(){
 		    Allocator& allocator = GetAllocator();
