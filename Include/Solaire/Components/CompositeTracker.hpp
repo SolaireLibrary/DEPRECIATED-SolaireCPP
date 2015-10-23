@@ -49,6 +49,11 @@ namespace Solaire{ namespace Components{
 	{
 	private:
 		CompositeTracker& mTracker;
+    protected:
+        // Inherited from Component
+		void AttachCopy(Composite& aComposite) const override{
+		   aComposite.Attach<CompositeTrackerComponent>(mTracker);
+		}
 	public:
 		CompositeTrackerComponent(Composite& aParent, CompositeTracker& aTracker):
 		    Component(aParent),

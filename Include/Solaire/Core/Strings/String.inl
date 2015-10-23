@@ -172,7 +172,7 @@ namespace Solaire{
         return *(end() - 1);
     }
 
-    String::ConstReference String::Back() const{
+    String::Type String::Back() const{
         return *(end() - 1);
     }
 
@@ -180,7 +180,7 @@ namespace Solaire{
         return mContainer.Front();
     }
 
-    String::ConstReference String::Front() const{
+    String::Type String::Front() const{
         return mContainer.Front();
     }
 

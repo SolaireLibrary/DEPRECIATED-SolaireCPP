@@ -113,9 +113,9 @@ namespace Solaire{
         Type PopFront();
 
         Reference Back();
-        ConstReference Back() const;
+        Type Back() const;
         Reference Front();
-        ConstReference Front() const;
+        Type Front() const;
 
         // Size
         size_t Size() const;
