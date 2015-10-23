@@ -25,10 +25,10 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 3.0
+	\version 3.1
 	\date
 	Created			: 7th September 2015
-	Last Modified	: 19th October 2015
+	Last Modified	: 23rd October 2015
 */
 
 #include "Composite.hpp"
@@ -38,12 +38,21 @@ namespace Solaire{ namespace Components{
 
 	class TagComponent : public Component
 	{
-	private:
-		DynamicArray<String> mTags;
-	public:
+public:
 		typedef DynamicArray<String>::ConstIterator ConstIterator;
 		typedef DynamicArray<String>::ConstReverseIterator ConstReverseIterator;
+	private:
+		DynamicArray<String> mTags;
+    protected:
+        // Inherited from Component
+		void AttachCopy(Composite& aComposite) const override{
+		    TagComponent* comp = aComposite.Attach<TagComponent>();
 
+		    for(const String& i : mTags){
+                comp->mTags.PushBack(i);
+		    }
+		}
+	public:
 		TagComponent(Composite& aParent):
 		    Component(aParent),
 		    mTags(aParent.GetAllocator(), 8)

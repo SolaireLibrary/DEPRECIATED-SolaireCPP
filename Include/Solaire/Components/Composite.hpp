@@ -129,17 +129,17 @@ namespace Solaire{ namespace Components{
 		// Component Attach
 
 		template<class COMPONENT, class ...PARAMS>
-		std::shared_ptr<COMPONENT> Attach(PARAMS... aParams){
+		COMPONENT* Attach(PARAMS... aParams){
 		    COMPONENT* component = Get<COMPONENT>();
 
 		    if(! component){
                 component = new(GetAllocator().Allocate(sizeof(COMPONENT))) COMPONENT(*this, aParams...);
                 mComponents.PushBack(component);
-                component->OnAttach(*this);
+                OnAttach(*component);
                 return component;
 		    }
 
-			return std::shared_ptr<COMPONENT>();
+			return nullptr;
 		}
 	};
 
