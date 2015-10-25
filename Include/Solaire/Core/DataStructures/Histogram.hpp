@@ -32,6 +32,8 @@
 */
 
 #include <map>
+#include <algorithm>
+#include "DynamicArray.hpp"
 
 namespace Solaire{
 
@@ -65,6 +67,31 @@ namespace Solaire{
             return histogram;
         }
     public:
+
+        ////
+
+        DynamicArray<std::pair<Type, CountType>> AsArray(Allocator& aAllocator) const{
+            DynamicArray<std::pair<Type, CountType>> tmp(aAllocator);
+             for(const std::pair<Type, CountType> i : mHistogram){
+                tmp.PushBack(i);
+            }
+        }
+
+        DynamicArray<std::pair<Type, CountType>> ByCountDescending(Allocator& aAllocator) const{
+            DynamicArray<std::pair<Type, CountType>> tmp = AsArray();
+            std::sort(tmp.begin(), tmp.end(), [](const std::pair<Type, CountType>& aFirst, const std::pair<Type, CountType>& aSecond)->bool{
+                return aFirst.second > aSecond.second;
+            });
+            return tmp;
+        }
+
+        DynamicArray<std::pair<Type, CountType>> ByCountAscending(Allocator& aAllocator) const{
+            DynamicArray<std::pair<Type, CountType>> tmp = AsArray();
+            std::sort(tmp.begin(), tmp.end(), [](const std::pair<Type, CountType>& aFirst, const std::pair<Type, CountType>& aSecond)->bool{
+                return aFirst.second < aSecond.second;
+            });
+            return tmp;
+        }
 
         ////
 
@@ -181,28 +208,28 @@ namespace Solaire{
         ////
 
         Histogram<TYPE, COUNT_TYPE>& operator+=(const COUNT_TYPE aScalar){
-            for(const std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
+            for(std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
                 i.second += aScalar;
             }
             return *this;
         }
 
         Histogram<TYPE, COUNT_TYPE>& operator-=(const COUNT_TYPE aScalar){
-            for(const std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
+            for(std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
                 i.second -= aScalar;
             }
             return *this;
         }
 
         Histogram<TYPE, COUNT_TYPE>& operator*=(const COUNT_TYPE aScalar){
-            for(const std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
+            for(std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
                 i.second += aScalar;
             }
             return *this;
         }
 
         Histogram<TYPE, COUNT_TYPE>& operator/=(const COUNT_TYPE aScalar){
-            for(const std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
+            for(std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
                 i.second += aScalar;
             }
             return *this;
