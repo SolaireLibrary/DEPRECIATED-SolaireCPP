@@ -71,10 +71,7 @@ namespace Solaire{
         ////
 
         DynamicArray<std::pair<Type, CountType>> AsArray(Allocator& aAllocator) const{
-            DynamicArray<std::pair<Type, CountType>> tmp(aAllocator);
-             for(const std::pair<Type, CountType> i : mHistogram){
-                tmp.PushBack(i);
-            }
+            return DynamicArray<std::pair<Type, CountType>>(aAllocator, mHistogram.begin(), mHistogram.end());
         }
 
         DynamicArray<std::pair<Type, CountType>> ByCountDescending(Allocator& aAllocator) const{
@@ -91,6 +88,16 @@ namespace Solaire{
                 return aFirst.second < aSecond.second;
             });
             return tmp;
+        }
+
+        ////
+
+        Type MostCommon(const size_t aOffset = 0) const{
+            return *(ByCountDescending(GetDefaultAllocator()).begin() + aOffset);
+        }
+
+        Type LeastCommon(const size_t aOffset = 0) const{
+            return *(ByCountDescending(GetDefaultAllocator()).end() - (aOffset + 1));
         }
 
         ////
