@@ -67,6 +67,23 @@ namespace Solaire{
             return histogram;
         }
     public:
+        ////
+
+        CountType& GetCount(PassType aKey){
+            Iterator it = mHistogram.find(aKey);
+            if(it == mHistogram.end()){
+                it = mHistogram.emplace(aKey, 0).first;
+            }
+            return it->second;
+        }
+
+        CountType GetCount(PassType aKey) const{
+            Iterator it = mHistogram.find(aKey);
+            if(it == mHistogram.end()){
+                return 0;
+            }
+            return it->second;
+        }
 
         ////
 
@@ -103,39 +120,19 @@ namespace Solaire{
         ////
 
         CountType Add(PassType aKey, const CountType aIncrement = static_cast<CountType>(1)){
-            Iterator it = mHistogram.find(aKey);
-            if(it == mHistogram.end()){
-                it = mHistogram.emplace(aKey, 0).first;
-            }
-            it->second += aIncrement;
-            return it->second;
+            return GetCount(aKey) += aIncrement;
         }
 
         CountType Subtract(PassType aKey, const CountType aIncrement = static_cast<CountType>(1)){
-            Iterator it = mHistogram.find(aKey);
-            if(it == mHistogram.end()){
-                it = mHistogram.emplace(aKey, 0).first;
-            }
-            it->second -= aIncrement;
-            return it->second;
+            return GetCount(aKey) -= aIncrement;
         }
 
         CountType Multiply(PassType aKey, const CountType aIncrement = static_cast<CountType>(1)){
-            Iterator it = mHistogram.find(aKey);
-            if(it == mHistogram.end()){
-                it = mHistogram.emplace(aKey, 0).first;
-            }
-            it->second *= aIncrement;
-            return it->second;
+            return GetCount(aKey) *= aIncrement;
         }
 
         CountType Divide(PassType aKey, const CountType aIncrement = static_cast<CountType>(1)){
-            Iterator it = mHistogram.find(aKey);
-            if(it == mHistogram.end()){
-                it = mHistogram.emplace(aKey, 0).first;
-            }
-            it->second /= aIncrement;
-            return it->second;
+            return GetCount(aKey) /= aIncrement;
         }
 
         ////
