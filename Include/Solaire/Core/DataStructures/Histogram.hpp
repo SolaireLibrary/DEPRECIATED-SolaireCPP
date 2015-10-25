@@ -180,6 +180,54 @@ namespace Solaire{
 
         ////
 
+        Histogram<TYPE, COUNT_TYPE>& operator+=(const COUNT_TYPE aScalar){
+            for(const std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
+                i.second += aScalar;
+            }
+            return *this;
+        }
+
+        Histogram<TYPE, COUNT_TYPE>& operator-=(const COUNT_TYPE aScalar){
+            for(const std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
+                i.second -= aScalar;
+            }
+            return *this;
+        }
+
+        Histogram<TYPE, COUNT_TYPE>& operator*=(const COUNT_TYPE aScalar){
+            for(const std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
+                i.second += aScalar;
+            }
+            return *this;
+        }
+
+        Histogram<TYPE, COUNT_TYPE>& operator/=(const COUNT_TYPE aScalar){
+            for(const std::pair<TYPE, COUNT_TYPE>& i : mHistogram){
+                i.second += aScalar;
+            }
+            return *this;
+        }
+
+        ////
+
+        Histogram<TYPE, COUNT_TYPE> operator+(const COUNT_TYPE aScalar) const{
+            return Histogram<TYPE, COUNT_TYPE>(*this) += aScalar;
+        }
+
+        Histogram<TYPE, COUNT_TYPE> operator-(const COUNT_TYPE aScalar) const{
+            return Histogram<TYPE, COUNT_TYPE>(*this) -= aScalar;
+        }
+
+        Histogram<TYPE, COUNT_TYPE> operator*(const COUNT_TYPE aScalar) const{
+            return Histogram<TYPE, COUNT_TYPE>(*this) *= aScalar;
+        }
+
+        Histogram<TYPE, COUNT_TYPE> operator/(const COUNT_TYPE aScalar) const{
+            return Histogram<TYPE, COUNT_TYPE>(*this) /= aScalar;
+        }
+
+        ////
+
         Iterator begin(){
             return mHistogram.begin();
         }
