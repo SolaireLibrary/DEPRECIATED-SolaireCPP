@@ -473,5 +473,92 @@ namespace Solaire{
     }
 }
 
+#ifdef SOLAIRE_ENABLE_TESTING
+
+#include "../Test/Test.hpp"
+
+namespace Solaire{ namespace Test{
+
+    template<>
+    struct TestSource<String>{
+        static void AddTests(TestManager& aManager){
+
+            aManager.Add(BuildTest<String>("PushBack(char)", [](String& aMessage)->bool{
+                String tmp(GetDefaultAllocator());
+                tmp.PushBack('T');
+                tmp.PushBack('e');
+                tmp.PushBack('s');
+                tmp.PushBack('t');
+
+                if(tmp.Size() != 4){
+                    aMessage = "String returns incorrect size";
+                    return false;
+                }else if(std::strcmp(tmp.CString(), "Test") != 0){
+                    aMessage = "String comparison failed";
+                    return false;
+                }
+
+                aMessage = "No errors";
+                return true;
+            }));
+
+            aManager.Add(BuildTest<String>("Append(char)", [](String& aMessage)->bool{
+                String tmp(GetDefaultAllocator());
+                tmp += 'T';
+                tmp += 'e';
+                tmp += 's';
+                tmp += 't';
+
+                if(tmp.Size() != 4){
+                    aMessage = "String returns incorrect size";
+                    return false;
+                }else if(std::strcmp(tmp.CString(), "Test") != 0){
+                    aMessage = "String comparison failed";
+                    return false;
+                }
+
+                aMessage = "No errors";
+                return true;
+            }));
+
+            aManager.Add(BuildTest<String>("Append(const char*)", [](String& aMessage)->bool{
+                String tmp(GetDefaultAllocator());
+                tmp += "Test";
+
+                if(tmp.Size() != 4){
+                    aMessage = "String returns incorrect size";
+                    return false;
+                }else if(std::strcmp(tmp.CString(), "Test") != 0){
+                    aMessage = "String comparison failed";
+                    return false;
+                }
+
+                aMessage = "No errors";
+                return true;
+            }));
+
+            aManager.Add(BuildTest<String>("Append(ConstStringFragment)", [](String& aMessage)->bool{
+                ConstStringFragment frag("Test\0this should not be appended");
+                String tmp(GetDefaultAllocator());
+                tmp += frag;
+
+                if(tmp.Size() != 4){
+                    aMessage = "String returns incorrect size";
+                    return false;
+                }else if(std::strcmp(tmp.CString(), "Test") != 0){
+                    aMessage = "String comparison failed";
+                    return false;
+                }
+
+                aMessage = "No errors";
+                return true;
+            }));
+
+        }
+    };
+}}
+
+#endif
+
 
 #endif

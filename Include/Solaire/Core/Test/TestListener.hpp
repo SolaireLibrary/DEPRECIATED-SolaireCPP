@@ -32,7 +32,7 @@
 */
 
 #include <stdexcept>
-#include "../Core/Strings/String.hpp"
+#include "../Strings/String.hpp"
 
 namespace Solaire{ namespace Test{
 

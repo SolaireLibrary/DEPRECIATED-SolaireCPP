@@ -33,7 +33,7 @@
 
 #include <typeinfo>
 #include <stdexcept>
-#include "..\Core\Strings\String.hpp"
+#include "../Strings/String.hpp"
 #include "TestListener.hpp"
 
 namespace Solaire{ namespace Test{

@@ -32,7 +32,6 @@ Last Modified	: 26th October 2015
 */
 
 #include <ostream>
-#include "..\Core\Macros.hpp"
 #include "TestListener.hpp"
 #include "TestBase.hpp"
 
