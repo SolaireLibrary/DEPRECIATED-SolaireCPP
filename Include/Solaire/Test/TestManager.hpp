@@ -25,10 +25,10 @@
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
-\version 1.0
+\version 1.1
 \date
 Created			: 14th September 2015
-Last Modified	: 17th September 2015
+Last Modified	: 26th October 2015
 */
 
 #include <map>
@@ -36,35 +36,44 @@ Last Modified	: 17th September 2015
 #include "TestBase.hpp"
 
 namespace Solaire { namespace Test {
-	
+
+    class TestManager;
+
+    template<class T>
+    struct TestSource{
+        static void AddTests(TestManager& aManager){
+
+        }
+    };
+
 	class TestManager{
 	private:
-		static void ParseTestName(const std::string& aName, std::string& aClass, std::string& aTest){
-			const char* begin = std::strstr(aName.c_str(), "::");
-			if(begin == nullptr) throw InvalidTestName();
+		static void ParseTestName(const ConstStringFragment aName, String& aClass, String& aTest){
+			const char* begin = aName.FindFirst("::").begin();
+			if(begin == nullptr) throw std::runtime_error("TestManager : Test name was invalid");
 
-			const size_t pos = begin - aName.c_str();
-			aClass = aName.substr(0, pos);
-			aTest = aName.substr(pos + 2, aName.size() - (pos + 2));
+			const size_t pos = begin - aName.begin();
+			aClass = ConstStringFragment(aName.begin(), pos);
+			aTest = ConstStringFragment(aName.begin() + pos + 2, aName.Size() - (pos + 2));
 		}
 
-		std::map<std::string, std::map<std::string, std::shared_ptr<Test>>> mTests;
+		std::map<String, std::map<String, std::shared_ptr<Test>>> mTests;
 		TestListener* mListener;
 
-		const std::map<std::string, std::shared_ptr<Test>>& FindTests(const std::string& aClassName) const{
+		const std::map<String, std::shared_ptr<Test>>& FindTests(const String& aClassName) const{
 			auto it = mTests.find(aClassName);
-			if (it == mTests.end()) throw ClassNotFound();
+			if (it == mTests.end()) throw std::runtime_error("TestManager : Could not find named class");
 			return it->second;
 		}
 
-		const Test& FindTest(const std::string& aClassName, const std::string& aTestName) const{
+		const Test& FindTest(const String& aClassName, const String& aTestName) const{
 			const auto& tests = FindTests(aClassName);
 			auto it = tests.find(aTestName);
-			if (it == tests.end()) throw TestNotFound();
+			if (it == tests.end()) throw std::runtime_error("TestManager : Could not find named Test in class");
 			return *(it->second);
 		}
 
-		void ForEachClass(std::function<void(const std::string&)> aCallback) const{
+		void ForEachClass(std::function<void(const String&)> aCallback) const{
 			for(auto& i : mTests){
 				aCallback(i.first);
 			}
@@ -78,30 +87,21 @@ namespace Solaire { namespace Test {
 			}
 		}
 
-		void ForEachTest(const std::string& aClassName, std::function<void(Test&)> aCallback) const {
-			auto& tests = FindTests(aClassName);
+		void ForEachTest(const ConstStringFragment aClassName, std::function<void(Test&)> aCallback) const {
+			auto& tests = FindTests(String(GetDefaultAllocator(), aClassName));
 			for(auto& i : tests){
 				aCallback(*i.second);
 			}
 		}
 
 	public:
-		SOLAIRE_EXCEPTION(ClassNotFound, "Could not find named class");
-		SOLAIRE_EXCEPTION(TestNotFound, "Could not find named Test in class");
-		SOLAIRE_EXCEPTION(InvalidTestName, "Test name was invalid");
-		SOLAIRE_EXCEPTION(TestNameConflict, "A test with this name is already a member of named class");
-
 		TestManager() :
 			mListener(nullptr)
-		{
-
-		}
+		{}
 
 		TestManager(TestListener& aListener) :
 			mListener(&aListener)
-		{
-
-		}
+		{}
 
 		void SetListener(TestListener& aListener){
 			mListener = &aListener;
@@ -111,43 +111,56 @@ namespace Solaire { namespace Test {
 			});
 		}
 
-		void Run(const std::string& aClassName, const std::string& aTestName) const{
-			FindTest(aClassName, aTestName)();
+		void Run(const ConstStringFragment aClassName, const ConstStringFragment aTestName) const{
+			FindTest(
+                String(GetDefaultAllocator(), aClassName),
+                String(GetDefaultAllocator(), aTestName)
+            )();
 		}
 
-		void Run(const std::string& aName) const{
-			std::string className;
-			std::string testName;
+		void Run(const ConstStringFragment aName) const{
+			String className(GetDefaultAllocator());
+			String testName(GetDefaultAllocator());
 			ParseTestName(aName, className, testName);
 			Run(className, testName);
 		}
 
-		void RunAll(const std::string& aClassName) const{
+		template<class T>
+		void RunAllForClass(){
+            RunAllForClass(GetClassName<T>());
+		}
+
+		void RunAllForClass(const ConstStringFragment aClassName) const{
 			ForEachTest(aClassName, [](Test& aTest){
 				aTest();
 			});
 		}
 
 		void RunAll() const {
-			ForEachClass([this](const std::string& aName) {
-				RunAll(aName);
+			ForEachClass([this](ConstStringFragment aName) {
+				RunAllForClass(aName);
 			});
 		}
 
 		void Add(std::shared_ptr<Test> aTest){
-			const std::string className = aTest->GetClassName();
-			const std::string testName = aTest->GetTestName();
+			const String className(GetDefaultAllocator(), aTest->GetClassName());
+			const String testName(GetDefaultAllocator(), aTest->GetTestName());
 
 			auto i = mTests.find(className);
 			if(i == mTests.end()){
-				i = mTests.emplace(className, std::map<std::string, std::shared_ptr<Test>>()).first;
+				i = mTests.emplace(className, std::map<String, std::shared_ptr<Test>>()).first;
 			}
 
 			auto j = i->second.find(testName);
-			if(j != i->second.end()) throw TestNameConflict();
+			if(j != i->second.end()) throw std::runtime_error("TestManager : Test name conflict");
 
 			aTest->Listener = mListener;
 			i->second.emplace(testName, aTest);
+		}
+
+        template<class T>
+		void AddTests(){
+			TestSource<T>::AddTests(*this);
 		}
 	};
 }}

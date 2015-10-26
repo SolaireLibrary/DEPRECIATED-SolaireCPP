@@ -25,14 +25,14 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 1.0
+	\version 1.1
 	\date
 	Created			: 14th September 2015
-	Last Modified	: 14th September 2015
+	Last Modified	: 26th October 2015
 */
 
 #include <stdexcept>
-#include <string>
+#include "../Core/Strings/String.hpp"
 
 namespace Solaire{ namespace Test{
 
@@ -44,9 +44,9 @@ namespace Solaire{ namespace Test{
 
 		}
 
-		virtual void OnTestPass(const Test& aTest, const std::string& aMessage) = 0;
-		virtual void OnTestFail(const Test& aTest, const std::string& aMessage) = 0;
-		virtual void OnTestError(const Test& aTest, const std::string& aMessage) = 0;
+		virtual void OnTestPass(const Test& aTest, const ConstStringFragment aMessage) = 0;
+		virtual void OnTestFail(const Test& aTest, const ConstStringFragment aMessage) = 0;
+		virtual void OnTestError(const Test& aTest, const ConstStringFragment aMessage) = 0;
 	};
 }}
 

@@ -25,10 +25,10 @@
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
-\version 1.0
+\version 1.1
 \date
 Created			: 14th September 2015
-Last Modified	: 14th September 2015
+Last Modified	: 26th October 2015
 */
 
 #include <ostream>
@@ -37,17 +37,15 @@ Last Modified	: 14th September 2015
 #include "TestBase.hpp"
 
 namespace Solaire { namespace Test {
-	
+
 	class PrintTestListener : public TestListener{
 	private:
-		void Print(const Test& aTest, const std::string& aMessage, const std::string& aResult){
-			if (Stream == nullptr) throw StreamNotSetException();
+		void Print(const Test& aTest, const ConstStringFragment aMessage, const std::string& aResult){
+			if (Stream == nullptr) throw std::runtime_error("PrintTestListener recieved a Test result before Stream was set");
 			std::ostream& stream = *Stream;
 			stream << aTest.GetClassName() << "::" << aTest.GetTestName() << " : " << aResult << " (" << aMessage << ")" << std::endl;
 		}
 	public:
-		SOLAIRE_EXCEPTION(StreamNotSetException, "PrintTestListener recieved a Test result before Stream was set");
-
 		std::ostream* Stream;
 
 		PrintTestListener() :
@@ -64,15 +62,15 @@ namespace Solaire { namespace Test {
 
 		// Inherited from TestListener
 
-		void OnTestPass(const Test& aTest, const std::string& aMessage) override{
+		void OnTestPass(const Test& aTest, const ConstStringFragment aMessage) override{
 			Print(aTest, aMessage, "PASS");
 		}
 
-		void OnTestFail(const Test& aTest, const std::string& aMessage) override{
+		void OnTestFail(const Test& aTest, const ConstStringFragment aMessage) override{
 			Print(aTest, aMessage, "FAIL");
 		}
 
-		void OnTestError(const Test& aTest, const std::string& aMessage) override{
+		void OnTestError(const Test& aTest, const ConstStringFragment aMessage) override{
 			Print(aTest, aMessage, "ERROR");
 		}
 	};

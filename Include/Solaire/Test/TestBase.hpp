@@ -25,100 +25,75 @@
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
-	\version 1.0
+	\version 1.1
 	\date
 	Created			: 14th September 2015
-	Last Modified	: 17th September 2015
+	Last Modified	: 26th October 2015
 */
 
+#include <typeinfo>
 #include <stdexcept>
-#include "../Core/Macros.hpp"
+#include "..\Core\Strings\String.hpp"
 #include "TestListener.hpp"
 
 namespace Solaire{ namespace Test{
 
 	class Test{
-	private:
-		SOLAIRE_EXCEPTION(InternalException, "This should not be seen");
 	public:
 		TestListener* Listener;
-
-		SOLAIRE_EXCEPTION(ListenerNotSetException, "A Test tried to run, but had a null TestListener");
 	protected:
 		virtual void Run() const = 0;
 
-		void Pass(const std::string& aMessage) const{
-			if(Listener == nullptr) throw ListenerNotSetException();
+		void Pass(const ConstStringFragment aMessage) const{
+			if(Listener == nullptr) throw std::runtime_error("Test : Listener was not set");
 			Listener->OnTestPass(*this, aMessage);
-			throw InternalException();
 		}
 
-		void Fail(const std::string& aMessage) const{
-			if(Listener == nullptr) throw ListenerNotSetException();
+		void Fail(const ConstStringFragment aMessage) const{
+			if(Listener == nullptr) throw std::runtime_error("Test : Listener was not set");
 			Listener->OnTestFail(*this, aMessage);
-			throw InternalException();
 		}
 	public:
 		Test() :
 			Listener(nullptr)
-		{
-
-		}
+		{}
 
 		Test(TestListener& aListener) :
 			Listener(&aListener)
-		{
-
-		}
+		{}
 
 		virtual ~Test(){
 
 		}
 
-		virtual std::string GetClassName() const = 0;
-		virtual std::string GetTestName() const = 0;
+		virtual ConstStringFragment GetClassName() const = 0;
+		virtual ConstStringFragment GetTestName() const = 0;
 
 		void operator()() const{
 			try{
 				Run();
-			}catch(InternalException&){
-				return;
 			}catch(std::exception& e){
-				Listener->OnTestError(*this, e.what());
+			    String tmp(GetDefaultAllocator(), e.what());
+				Listener->OnTestError(*this, tmp);
 			}catch (...) {
-				Listener->OnTestError(*this, "Non-exception was thrown");
+			    String tmp(GetDefaultAllocator(), "Non-exception was thrown");
+				Listener->OnTestError(*this, tmp);
 			}
 		}
 	};
 
-#define SOLAIRE_TEST(aClassName, aTestName, aCode)\
-	class Test ## aClassName ## aTestName : public Solaire::Test::Test{\
-	protected:\
-		void Run() const override{\
-			aCode\
-		}\
-	public:\
-		std::string GetClassName() const override{\
-			return #aClassName;\
-		}\
-		\
-		std::string GetTestName() const override{\
-			return #aTestName;\
-		}\
-	};
-
-	static std::shared_ptr<Test> BuildTest(const std::string aClassName, const std::string aTestName, std::function<bool(std::string&)> aFunction){
+	static std::shared_ptr<Test> BuildTest(const ConstStringFragment aClassName, const ConstStringFragment aTestName, std::function<bool(String&)> aFunction){
 		class InternalTest : public Test{
 		private:
-			const std::string mClass;
-			const std::string mTest;
-			const std::function<bool(std::string&)> mFunction;
+			const String mClass;
+			const String mTest;
+			const std::function<bool(String&)> mFunction;
 		protected:
 
 			// Inherited from Test
 
 			void Run() const override{
-				std::string message;
+				String message(GetDefaultAllocator());
 				if(mFunction(message)){
 					Pass(message);
 				}else{
@@ -126,9 +101,9 @@ namespace Solaire{ namespace Test{
 				}
 			}
 		public:
-			InternalTest(const std::string aClassName, const std::string aTestName, std::function<bool(std::string&)> aFunction) :
-				mClass(aClassName),
-				mTest(aTestName),
+			InternalTest(const ConstStringFragment aClassName, ConstStringFragment aTestName, std::function<bool(String&)> aFunction) :
+				mClass(GetDefaultAllocator(), aClassName),
+				mTest(GetDefaultAllocator(), aTestName),
 				mFunction(aFunction)
 			{
 
@@ -136,16 +111,26 @@ namespace Solaire{ namespace Test{
 
 			// Inherited from Test
 
-			std::string GetClassName() const override{
+			ConstStringFragment GetClassName() const override{
 				return mClass;
 			}
 
-			std::string GetTestName() const override{
+			ConstStringFragment GetTestName() const override{
 				return mTest;
 			}
 		};
 
 		return std::shared_ptr<Test>(new InternalTest(aClassName, aTestName, aFunction));
+	}
+
+	template<class T>
+	static ConstStringFragment GetClassName(){
+	    return ConstStringFragment(typeid(T).name());
+	}
+
+    template<class T>
+    static std::shared_ptr<Test> BuildTest(const ConstStringFragment aTestName, std::function<bool(String&)> aFunction){
+		return BuildTest(GetClassName<T>(), aTestName, aFunction);
 	}
 }}
 
