@@ -36,9 +36,43 @@ Last Modified	: 27th October 2015
 
 namespace Solaire{ namespace Graphics{
 
-    class TextureBase //: public Utility::Resource{
-    private:
+    namespace BufferImplementation{
+        static Mutex LOCK;
+    }
 
+    template<const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
+    class Buffer{ //: public Utility::Resource{;
+    private:
+        GLint mID;
+    private:
+        Buffer(const Buffer& aOther) = delete;
+        Buffer(Buffer&& aOther) = delete;
+        Buffer& operator=(const Buffer& aOther) = delete;
+        Buffer& operator=(Buffer&& aOther) = delete;
+    protected:
+        static constexpr GLint GetAccessFlags(){
+            return
+                (READ_BIT           ? GL_MAP_READ_BIT           : 0) |
+                (WRITE_BIT          ? GL_MAP_WRITE_BIT          : 0) |
+                (DYNAMIC_BIT        ? GL_DYNAMIC_STORAGE_BIT    : 0) |
+                (PERSISTENT_BIT     ? GL_PERSISTENT_BIT         : 0) |
+                (COHERENT_BIT       ? GL_COHERENT_BIT           : 0) |
+                (CLIENT_STORAGE_BIT ? GL_CLIENT_STORAGE_BIT     : 0)
+            ;
+        }
+    protected:
+        void Bind(const GLenum aTarget);
+        void Unbind(const GLenum aTarget);
+    public:
+        Buffer():
+            mID(0)
+        {
+            glGenBuffers(1, &mID);
+        }
+
+        virtual ~Buffer(){
+            glDeleteBuffers(1, &mID);
+        }
     };
 }}
 
