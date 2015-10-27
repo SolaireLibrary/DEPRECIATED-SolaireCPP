@@ -554,6 +554,52 @@ namespace Solaire{ namespace Test{
                 return true;
             }));
 
+            aManager.Add(BuildTest<String>("FindFirst(char)", [](String& aMessage)->bool{
+                String tmp(GetDefaultAllocator());
+                tmp += "abcdefghijklmnopqrstuvwxyz";
+
+                auto i = tmp.FindFirst('c');
+                const size_t expectedPos = 'c' - 'a';
+
+                if(i == tmp.end()){
+                    aMessage = "Could not find expected character in any position";
+                    return false;
+                }else if(i != tmp.begin() + expectedPos){
+                    aMessage = "Could not find expected character in expected position";
+                    return false;
+                }else if(tmp.FindFirst('5') != tmp.end()){
+                    aMessage = "Found character that does not exist in string";
+                    return false;
+                }
+
+                aMessage = "No errors";
+                return true;
+            }));
+
+            aManager.Add(BuildTest<String>("FindFirst(ConstStringFragment)", [](String& aMessage)->bool{
+                String tmp(GetDefaultAllocator());
+                tmp += "abcdefghijklmnopqrstuvwxyz";
+
+                const ConstStringFragment frag("lmnop");
+
+                const ConstStringFragment i = tmp.FindFirst(frag);
+                const size_t expectedPos = 'l' - 'a';
+
+                if(i == tmp.end()){
+                    aMessage = "Could not find expected fragment in any position";
+                    return false;
+                }else if(i.begin() != tmp.begin() + expectedPos){
+                    aMessage = "Could not find expected fragment in expected position";
+                    return false;
+                }else if(i != frag){
+                    aMessage = "Fragments do not match";
+                    return false;
+                }
+
+                aMessage = "No errors";
+                return true;
+            }));
+
         }
     };
 }}
