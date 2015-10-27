@@ -72,7 +72,7 @@ namespace Solaire{ namespace Graphics{
         void Bind(const GLenum aTarget, void* const aObject){
             BindStack& stack = GetStack(aTarget);
 
-            if(stack.IsEmpty() || stack.Back() != aObject){
+            if(stack.IsEmpty()){
                 stack.PushBack(aObject);
                 mBindFn(aTarget, aObject);
             }

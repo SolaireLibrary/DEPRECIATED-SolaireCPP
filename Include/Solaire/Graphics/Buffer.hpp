@@ -57,6 +57,23 @@ namespace Solaire{ namespace Graphics{
         static void BindFn(const GLenum aTarget, const void* const aObject){
             glBindBuffer​(aTarget, static_cast<BufferIDInterface*>(aObject)->GetID());
         }
+
+        static GLBindStack BIND_STACK(GetDefaultAllocator(), &BindFn, {
+            GL_ARRAY_BUFFER,
+            GL_ELEMENT_ARRAY_BUFFER,
+            GL_COPY_READ_BUFFER,
+            GL_COPY_WRITE_BUFFER,
+            GL_PIXEL_UNPACK_BUFFER ,
+            GL_PIXEL_PACK_BUFFER,
+            GL_QUERY_BUFFER,
+            GL_TEXTURE_BUFFER,
+            GL_TRANSFORM_FEEDBACK_BUFFER,
+            GL_UNIFORM_BUFFER,
+            GL_DRAW_INDIRECT_BUFFER,
+            GL_ATOMIC_COUNTER_BUFFER,
+            GL_DISPATCH_INDIRECT_BUFFER,
+            GL_SHADER_STORAGE_BUFFER
+        });
     }
 
     template<const bool MUTABLE, const GLenum USAGE, const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
@@ -79,8 +96,6 @@ namespace Solaire{ namespace Graphics{
     private:
         GLuint mBytes;
         GLuint mID;
-        GLuint mPreviousID;
-        GLenum mTarget;
     private:
 
         static constexpr GLint GetAccessFlags(){
@@ -96,75 +111,61 @@ namespace Solaire{ namespace Graphics{
     public:
         Buffer():
             mBytes(0),
-            mID(0),
-            mPreviousID(0),
-            mTarget(0)
+            mID(0)
         {
             glGenBuffers(1, &mID);
         }
 
         Buffer(const size_t aBytes):
             mBytes(0),
-            mID(0),
-            mPreviousID(0),
-            mTarget(0)
+            mID(0)
         {
             glGenBuffers(1, &mID);
 
             Bind(GL_COPY_WRITE_BUFFER);
             Allocate(aBytes);
-            Unbind();
+            Unbind(GL_COPY_WRITE_BUFFER);
         }
 
         Buffer(const void* const aData, const size_t aBytes):
             mBytes(0),
-            mID(0),
-            mPreviousID(0),
-            mTarget(0)
+            mID(0)
         {
             glGenBuffers(1, &mID);
 
             Bind(GL_COPY_WRITE_BUFFER);
             AllocateAndCopy(aData, aBytes);
-            Unbind();
+            Unbind(GL_COPY_WRITE_BUFFER);
         }
 
         template<const bool MUTABLE2, const GLenum USAGE2, const bool READ_BIT2, const bool WRITE_BIT2, const bool DYNAMIC_BIT2, const bool PERSISTENT_BIT2, const bool COHERENT_BIT2, const bool CLIENT_STORAGE_BIT2>
         Buffer(const Buffer<MUTABLE2, USAGE, READ_BIT2, WRITE_BIT2, DYNAMIC_BIT2, PERSISTENT_BIT2, COHERENT_BIT2, CLIENT_STORAGE_BIT2>& aOther):
             mBytes(0),
-            mID(0),
-            mPreviousID(0),
-            mTarget(0)
+            mID(0)
         {
             glGenBuffers(1, &mID);
+            Bind(GL_COPY_WRITE_BUFFER);
             Allocate(aOther.mBytes);
+            Unbind(GL_COPY_WRITE_BUFFER);
             Copy(aOther, 0, 0, mBytes);
         }
 
         Buffer(Self&& aOther):
             mBytes(aOther.mBytes),
-            mID(aOther.mID),
-            mPreviousID(aOther.mPreviousID),
-            mTarget(aOther.mTarget)
+            mID(aOther.mID)
         {
             aOther.mBytes = 0;
             aOther.mID = 0;
-            aOther.mPreviousID = 0;
-            aOther.mTarget = 0;
         }
 
         ~Buffer(){
             if(mID != 0){
-                if(IsBound()){
-                    Unbind();
-                }
+                BufferImplementation::BIND_STACK::UNBIND_ALL(this);
 
                 glDeleteBuffers(1, &mID);
 
                 mBytes = 0;
                 mID = 0;
-                mPreviousID = 0;
-                mTarget = 0;
             }
         }
 
@@ -183,13 +184,9 @@ namespace Solaire{ namespace Graphics{
 
             mBytes = aOther.mBytes;
             mID = aOther.mID;
-            mPreviousID = aOther.mPreviousID;
-            mTarget = aOther.mTarget;
 
             aOther.mBytes = 0;
             aOther.mID = 0;
-            aOther.mPreviousID = 0;
-            aOther.mTarget = 0;
 
             return *this;
         }
@@ -206,30 +203,17 @@ namespace Solaire{ namespace Graphics{
 
         ////
 
-        bool IsBound() const{
-            return mTarget != 0;
+        bool IsBound(const GLenum aTarget) const{
+            const DynamicArray<GLEnum targets> targets = BufferImplementation::BIND_STACK::GetBoundTargets(this);
+            return targets.FindFirst(aTarget) != targets.end();
         }
 
         void Bind(const GLenum aTarget){
-            BufferImplementation::LOCK.lock();
-
-            if(IsBound()){
-                BufferImplementation::LOCK.unlock();
-                throw std::runtime_error("Buffer: Buffer is already bound");
-            }
-
-            mPreviousID = GetCurrentlyBoundBuffer(aTarget);
-            glBindBuffer​(aTarget, mID);
-            mTarget = aTarget;
+            BufferImplementation::BIND_STACK::Bind(aTarget, this);
         }
 
         void Unbind(){
-            if(! IsBound()) throw std::runtime_error("Buffer: Buffer is not bound");
-
-            glBindBuffer​(mTarget, mPreviousID);
-            mTarget = 0;
-
-            BufferImplementation::LOCK.unlock();
+            BufferImplementation::BIND_STACK::Unbind(aTarget, this);
         }
 
         ////
@@ -323,19 +307,16 @@ namespace Solaire{ namespace Graphics{
             Buffer<MUTABLE2, USAGE, READ_BIT2, WRITE_BIT2, DYNAMIC_BIT2, PERSISTENT_BIT2, COHERENT_BIT2, CLIENT_STORAGE_BIT2>& other =
                 const_cast<Buffer<MUTABLE2, USAGE, READ_BIT2, WRITE_BIT2, DYNAMIC_BIT2, PERSISTENT_BIT2, COHERENT_BIT2, CLIENT_STORAGE_BIT2>&>(aOther);
 
-            bool thisBound = IsBound();
-            bool otherBound = other.IsBound();
-
             mBytes = aOther.mBytes;
             Allocate(mBytes);
 
-            if(! thisBound) other.Bind(GL_COPY_READ_BUFFER);
-            if(! otherBound) Bind(GL_COPY_WRITE_BUFFER);
+            other.Bind(GL_COPY_READ_BUFFER);
+            Bind(GL_COPY_WRITE_BUFFER);
 
-            glCopyBufferSubData(other.mTarget, mTarget, aReadOffet, aWriteOffset, mBytes);
+            glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, aReadOffet, aWriteOffset, mBytes);
 
-            if(! thisBound) other.Unbind();
-            if(! otherBound) Unbind();
+            other.Unbind(GL_COPY_READ_BUFFER);
+            Unbind(GL_COPY_WRITE_BUFFER);
         }
     };
 
