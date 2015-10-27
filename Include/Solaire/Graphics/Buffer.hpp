@@ -44,19 +44,35 @@ namespace Solaire{ namespace Graphics{
     #define SOLAIRE_BUFFER_ENABLE_IF(aType, aCondition) template<const bool B = (aCondition)> typename std:enable_if<B, aType>::type
     #define SOLAIRE_BUFFER_ENABLE_IF_NOT(aType, aCondition) template<const bool B = !(aCondition)> typename std:enable_if<B, aType>::type
 
+    //! \todo Buffer Mapping
+    //! \todo Buffer Alignment
+    //! \todo Buffer Write Synchronization
+    //! \todo Buffer Read Synchronization
+    //! \todo Buffer Invalidation
+    //! \todo Buffer Streaming
+
     template<const bool MUTABLE, const GLenum USAGE, const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
     class Buffer{ //: public Utility::Resource{;
     public:
         typedef Buffer<MUTABLE, USAGE, READ_BIT, WRITE_BIT, DYNAMIC_BIT, PERSISTENT_BIT, COHERENT_BIT, CLIENT_STORAGE_BIT> Self;
+
+        enum class ImmutableFlags : bool{
+            READ = READ_BIT,
+            WRITE = WRITE_BIT,
+            DYNAMIC = DYNAMIC_BIT,
+            PERSISTENT = PERSISTENT_BIT,
+            COHERENT = COHERENT_BIT,
+            CLIENT_STORAGE = CLIENT_STORAGE_BIT
+        };
+
+        enum MutableUsage : GLenum{
+            USAGE_MODE = USAGE
+        };
     private:
         GLuint mBytes;
         GLuint mID;
         GLuint mPreviousID;
         GLenum mTarget;
-    private:
-        Buffer(Self&& aOther) = delete;
-        Self& operator=(const Self& aOther) = delete;
-        Self& operator=(Self&& aOther) = delete;
     protected:
         static constexpr GLint GetAccessFlags(){
             return
@@ -130,8 +146,8 @@ namespace Solaire{ namespace Graphics{
             Unbind();
         }
 
-        template<const bool MUTABLE, const GLenum USAGE, const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
-        Buffer(const Buffer<MUTABLE, USAGE, READ_BIT, WRITE_BIT, DYNAMIC_BIT, PERSISTENT_BIT, COHERENT_BIT, CLIENT_STORAGE_BIT>& aOther):
+        template<const bool MUTABLE2, const GLenum USAGE2, const bool READ_BIT2, const bool WRITE_BIT2, const bool DYNAMIC_BIT2, const bool PERSISTENT_BIT2, const bool COHERENT_BIT2, const bool CLIENT_STORAGE_BIT2>
+        Buffer(const Buffer<MUTABLE2, USAGE, READ_BIT2, WRITE_BIT2, DYNAMIC_BIT2, PERSISTENT_BIT2, COHERENT_BIT2, CLIENT_STORAGE_BIT2>& aOther):
             mBytes(0),
             mID(0),
             mPreviousID(0),
@@ -142,8 +158,57 @@ namespace Solaire{ namespace Graphics{
             Copy(aOther, 0, 0, mBytes);
         }
 
+        Buffer(Self&& aOther):
+            mBytes(aOther.mBytes),
+            mID(aOther.mID),
+            mPreviousID(aOther.mPreviousID),
+            mTarget(aOther.mTarget)
+        {
+            aOther.mBytes = 0;
+            aOther.mID = 0;
+            aOther.mPreviousID = 0;
+            aOther.mTarget = 0;
+        }
+
         ~Buffer(){
-            glDeleteBuffers(1, &mID);
+            if(mID != 0){
+                if(IsBound()){
+                    Unbind();
+                }
+
+                glDeleteBuffers(1, &mID);
+
+                mBytes = 0;
+                mID = 0;
+                mPreviousID = 0;
+                mTarget = 0;
+            }
+        }
+
+        template<const bool MUTABLE2, const GLenum USAGE2, const bool READ_BIT2, const bool WRITE_BIT2, const bool DYNAMIC_BIT2, const bool PERSISTENT_BIT2, const bool COHERENT_BIT2, const bool CLIENT_STORAGE_BIT2>
+        Self& operator=(const Buffer<MUTABLE2, USAGE2, READ_BIT2, WRITE_BIT2, DYNAMIC_BIT2, PERSISTENT_BIT2, COHERENT_BIT2, CLIENT_STORAGE_BIT2>& aOther){
+            if(mBytes < aOther.mBytes){
+                Allocate(aOther.mBytes);
+            }
+
+            Copy(aOther, 0, 0, aOther.mBytes);
+            return *this;
+        }
+
+        Self& operator=(Self&& aOther){
+            ~Buffer();
+
+            mBytes = aOther.mBytes;
+            mID = aOther.mID;
+            mPreviousID = aOther.mPreviousID;
+            mTarget = aOther.mTarget;
+
+            aOther.mBytes = 0;
+            aOther.mID = 0;
+            aOther.mPreviousID = 0;
+            aOther.mTarget = 0;
+
+            return *this;
         }
 
         ////
@@ -265,20 +330,24 @@ namespace Solaire{ namespace Graphics{
         }
 
         ////
-        template<const bool MUTABLE, const GLenum USAGE, const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
-        void Copy(const Buffer<MUTABLE, USAGE, READ_BIT, WRITE_BIT, DYNAMIC_BIT, PERSISTENT_BIT, COHERENT_BIT, CLIENT_STORAGE_BIT>& aOther, const size_t aReadOffet, const size_t aWriteOffset, const size_t aBytes){
+        template<const bool MUTABLE2, const GLenum USAGE2, const bool READ_BIT2, const bool WRITE_BIT2, const bool DYNAMIC_BIT2, const bool PERSISTENT_BIT2, const bool COHERENT_BIT2, const bool CLIENT_STORAGE_BIT2>
+        void Copy(const Buffer<MUTABLE2, USAGE, READ_BIT2, WRITE_BIT2, DYNAMIC_BIT2, PERSISTENT_BIT2, COHERENT_BIT2, CLIENT_STORAGE_BIT2>& aOther, const size_t aReadOffet, const size_t aWriteOffset, const size_t aBytes){
+
+            Buffer<MUTABLE2, USAGE, READ_BIT2, WRITE_BIT2, DYNAMIC_BIT2, PERSISTENT_BIT2, COHERENT_BIT2, CLIENT_STORAGE_BIT2>& other =
+                const_cast<Buffer<MUTABLE2, USAGE, READ_BIT2, WRITE_BIT2, DYNAMIC_BIT2, PERSISTENT_BIT2, COHERENT_BIT2, CLIENT_STORAGE_BIT2>&>(aOther);
+
             bool thisBound = IsBound();
-            bool otherBound = IsBound();
+            bool otherBound = other.IsBound();
 
             mBytes = aOther.mBytes;
             Allocate(mBytes);
 
-            if(! thisBound) aOther.Bind(GL_COPY_READ_BUFFER);
+            if(! thisBound) other.Bind(GL_COPY_READ_BUFFER);
             if(! otherBound) Bind(GL_COPY_WRITE_BUFFER);
 
-            glCopyBufferSubData(aOther.mTarget, mTarget, aReadOffet, aWriteOffset, mBytes);
+            glCopyBufferSubData(other.mTarget, mTarget, aReadOffet, aWriteOffset, mBytes);
 
-            if(! thisBound) aOther.Unbind();
+            if(! thisBound) other.Unbind();
             if(! otherBound) Unbind();
         }
     };
