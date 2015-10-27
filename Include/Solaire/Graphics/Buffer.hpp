@@ -37,15 +37,19 @@ Last Modified	: 27th October 2015
 namespace Solaire{ namespace Graphics{
 
     namespace BufferImplementation{
+        //! \todo Lock per buffer target
         static Mutex LOCK;
     }
 
-    template<const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
+    #define SOLAIRE_BUFFER_ENABLE_IF(aType, aCondition) template<const bool B = (aCondition)> typename std:enable_if<B, aType>::type
+    #define SOLAIRE_BUFFER_ENABLE_IF_NOT(aType, aCondition) template<const bool B = !(aCondition)> typename std:enable_if<B, aType>::type
+
+    template<const bool MUTABLE, const GLenum USAGE, const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
     class Buffer{ //: public Utility::Resource{;
     private:
         GLuint mID;
         GLuint mPreviousID;
-        bool mIsBound;
+        GLenum mTarget;
     private:
         Buffer(const Buffer& aOther) = delete;
         Buffer(Buffer&& aOther) = delete;
@@ -90,7 +94,7 @@ namespace Solaire{ namespace Graphics{
         }
     protected:
         bool IsBound() const{
-            return mIsBound;
+            return mTarget != 0;
         }
 
         void Bind(const GLenum aTarget){
@@ -103,22 +107,50 @@ namespace Solaire{ namespace Graphics{
 
             mPreviousID = GetCurrentlyBoundBuffer(aTarget);
             glBindBuffer​(aTarget, mID);
-            mIsBound = true;
+            mTarget = aTarget;
         }
 
         void Unbind(const GLenum aTarget){
             if(! IsBound()) throw std::runtime_error("Buffer: Buffer is not bound");
 
             glBindBuffer​(aTarget, mPreviousID);
-            mIsBound = false;
+            mTarget = 0;
 
             BufferImplementation::LOCK.unlock();
+        }
+
+        ////
+
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Allocate(const void* const aData, const size_t aBytese){
+            glBufferData(mTarget, aBytes, aData, USAGE);
+        }
+
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Allocate(const void* const aData, const size_t aBytes){
+            glBufferStorage(mTarget, aBytes, aData, GetAccessFlags());
+        }
+
+        SOLAIRE_BUFFER_ENABLE_IF_NOT(void, MUTABLE) Allocate(const size_t aBytes){
+            glBufferData(mTarget, aBytes, nullptr, USAGE);
+        }
+
+       SOLAIRE_BUFFER_ENABLE_IF_NOT(void, MUTABLE) Allocate(const size_t aBytes){
+            glBufferStorage(mTarget, aBytes, nullptr, GetAccessFlags());
+        }
+
+        ////
+
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE || DYNAMIC_BIT) Buffer(const void* const aData, const size_t aBytes){
+            glBufferSubData(mTarget, 0, aBytes, aData);
+        }
+
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE || DYNAMIC_BIT) OffsetBuffer(const size_t aOffset, const void* const aData, const size_t aBytes){
+            glBufferSubData(mTarget, aOffset, aBytes, aData);
         }
     public:
         Buffer():
             mID(0),
             mPreviousID(0),
-            mIsBound(0)
+            mTarget(0)
         {
             glGenBuffers(1, &mID);
         }
@@ -127,6 +159,15 @@ namespace Solaire{ namespace Graphics{
             glDeleteBuffers(1, &mID);
         }
     };
+
+    #undef SOLAIRE_BUFFER_ENABLE_IF
+    #undef SOLAIRE_BUFFER_ENABLE_IF_NOT
+
+    template<const GLenum USAGE>
+    using MutableBuffer = Buffer<true, USAGE, false, false, false, false, false, false>;
+
+    template<const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
+    using ImmutableBuffer = Buffer<false, 0, READ_BIT, WRITE_BIT, DYNAMIC_BIT, PERSISTENT_BIT, COHERENT_BIT, CLIENT_STORAGE_BIT>;
 }}
 
 #endif
