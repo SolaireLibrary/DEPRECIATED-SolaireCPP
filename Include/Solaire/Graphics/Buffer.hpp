@@ -43,7 +43,9 @@ namespace Solaire{ namespace Graphics{
     template<const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
     class Buffer{ //: public Utility::Resource{;
     private:
-        GLint mID;
+        GLuint mID;
+        GLuint mPreviousID;
+        bool mIsBound;
     private:
         Buffer(const Buffer& aOther) = delete;
         Buffer(Buffer&& aOther) = delete;
@@ -60,12 +62,63 @@ namespace Solaire{ namespace Graphics{
                 (CLIENT_STORAGE_BIT ? GL_CLIENT_STORAGE_BIT     : 0)
             ;
         }
+
+        static constexpr GLenum GetBufferBinding(const GLenum aTarget){
+            return
+                aTarget == GL_ARRAY_BUFFER ? GL_ARRAY_BUFFER_BINDING :
+                aTarget == GL_ELEMENT_ARRAY_BUFFER ? GL_ELEMENT_ARRAY_BUFFER_BINDING :
+                aTarget == GL_COPY_READ_BUFFER ? GL_COPY_READ_BUFFER_BINDING :
+                aTarget == GL_COPY_WRITE_BUFFER ? GL_COPY_WRITE_BUFFER_BINDING :
+                aTarget == GL_PIXEL_PACK_BUFFER ? GL_PIXEL_PACK_BUFFER_BINDING :
+                aTarget == GL_PIXEL_UNPACK_BUFFER ? GL_PIXEL_UNPACK_BUFFER_BINDING :
+                aTarget == GL_QUERY_BUFFER ? GL_QUERY_BUFFER_BINDING :
+                aTarget == GL_TEXTURE_BUFFER ? GL_TEXTURE_BUFFER_BINDING :
+                aTarget == GL_TRANSFORM_FEEDBACK_BUFFER ? GL_TRANSFORM_FEEDBACK_BUFFER_BINDING :
+                aTarget == GL_UNIFORM_BUFFER ? GL_UNIFORM_BUFFER_BINDING :
+                aTarget == GL_DRAW_INDIRECT_BUFFER ? GL_DRAW_INDIRECT_BUFFER_BINDING :
+                aTarget == GL_ATOMIC_COUNTER_BUFFER ? GL_ATOMIC_COUNTER_BUFFER_BINDING :
+                aTarget == GL_DISPATCH_INDIRECT_BUFFER ? GL_DISPATCH_INDIRECT_BUFFER_BINDING :
+                aTarget == GL_SHADER_STORAGE_BUFFER ? GL_SHADER_STORAGE_BUFFER_BINDING :
+                0
+            ;
+        }
+
+        static GLuint GetCurrentlyBoundBuffer(const GLenum aTarget){
+            GLuint id = 0;
+            glGetIntegerv(GetBufferBinding(aTarget), &id);
+            return id;
+        }
     protected:
-        void Bind(const GLenum aTarget);
-        void Unbind(const GLenum aTarget);
+        bool IsBound() const{
+            return mIsBound;
+        }
+
+        void Bind(const GLenum aTarget){
+            BufferImplementation::LOCK.lock();
+
+            if(IsBound()){
+                BufferImplementation::LOCK.unlock();
+                throw std::runtime_error("Buffer: Buffer is already bound");
+            }
+
+            mPreviousID = GetCurrentlyBoundBuffer(aTarget);
+            glBindBuffer​(aTarget, mID);
+            mIsBound = true;
+        }
+
+        void Unbind(const GLenum aTarget){
+            if(! IsBound()) throw std::runtime_error("Buffer: Buffer is not bound");
+
+            glBindBuffer​(aTarget, mPreviousID);
+            mIsBound = false;
+
+            BufferImplementation::LOCK.unlock();
+        }
     public:
         Buffer():
-            mID(0)
+            mID(0),
+            mPreviousID(0),
+            mIsBound(0)
         {
             glGenBuffers(1, &mID);
         }
