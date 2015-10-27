@@ -60,14 +60,6 @@ namespace Solaire{ namespace Graphics{
             mID(aID)
         {}
 
-        Buffer(Buffer&& aOther):
-            mBytes(aOther.mBytes)
-            mID(aOther.mID)
-        {
-            aOther.mBytes = 0;
-            aOther.mID = 0;
-        }
-
         virtual ~Buffer(){
             if(mID != 0){
                 BIND_STACK.UnbindAll(this);
@@ -206,9 +198,13 @@ namespace Solaire{ namespace Graphics{
             Copy(aOther, 0, 0, mBytes);
         }
 
+
         ImmutableBuffer(Buffer&& aOther):
-            Buffer(std::move(aOther))
-        {}
+            Buffer(aOther.mBytes, aOther.mID)
+        {
+            aOther.mBytes = 0;
+            aOther.mID = 0;
+        }
 
         ////
 
@@ -259,8 +255,11 @@ namespace Solaire{ namespace Graphics{
         }
 
         MutableBuffer(Buffer&& aOther):
-            Buffer(std::move(aOther))
-        {}
+            Buffer(aOther.mBytes, aOther.mID)
+        {
+            aOther.mBytes = 0;
+            aOther.mID = 0;
+        }
 
         ////
 
