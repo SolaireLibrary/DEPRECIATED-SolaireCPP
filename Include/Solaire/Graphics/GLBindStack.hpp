@@ -39,13 +39,11 @@ namespace Solaire{ namespace Graphics{
     class GLBindStack{
     public:
         typedef void(*BindFn)(const GLenum, const void* const);
-        typedef void(*UnbindFn)(const GLenum, const void* const);
     private:
         typedef DynamicArray<void*> BindStack;
     private:
         std::map<GLenum, BindStack> mStacks;
         BindFn mBindFn;
-        UnbindFn mUnbindFn;
     private:
         DynamicArray<void*>& GetStack(const GLenum aTarget){
             auto it = mStacks.find(aTarget);
@@ -59,9 +57,8 @@ namespace Solaire{ namespace Graphics{
             return it->second;
         }
     public:
-        GLBindStack(Allocator& aAllocator, BindFn aBindFn, UnbindFn aUnbindFn, const std::initializer_list<GLenum> aTargets):
-            mBindFn(aBindFn),
-            mUnbindFn(aUnbindFn)
+        GLBindStack(Allocator& aAllocator, BindFn aBindFn, const std::initializer_list<GLenum> aTargets):
+            mBindFn(aBindFn)
         {
             for(const GLenum target : aTargets){
                 mStacks.emplace(target, BindStack(aAllocator));

@@ -33,13 +33,9 @@ Last Modified	: 27th October 2015
 
 #include "..\Maths\Vector2.hpp"
 #include "Graphics.inl"
+#include "GLBindStack.hpp"
 
 namespace Solaire{ namespace Graphics{
-
-    namespace BufferImplementation{
-        //! \todo Lock per buffer target
-        static Mutex LOCK;
-    }
 
     #define SOLAIRE_BUFFER_ENABLE_IF(aType, aCondition) template<const bool B = (aCondition)> typename std:enable_if<B, aType>::type
     #define SOLAIRE_BUFFER_ENABLE_IF_NOT(aType, aCondition) template<const bool B = !(aCondition)> typename std:enable_if<B, aType>::type
@@ -51,8 +47,20 @@ namespace Solaire{ namespace Graphics{
     //! \todo Buffer Invalidation
     //! \todo Buffer Streaming
 
+    class BufferIDInterface{
+    public:
+        virtual ~BufferIDInterface(){}
+        virtual GLuint GetID() const = 0;
+    };
+
+    namespace BufferImplementation{
+        static void BindFn(const GLenum aTarget, const void* const aObject){
+            glBindBuffer​(aTarget, static_cast<BufferIDInterface*>(aObject)->GetID());
+        }
+    }
+
     template<const bool MUTABLE, const GLenum USAGE, const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
-    class Buffer{ //: public Utility::Resource{;
+    class Buffer : public BufferIDInterface{ //: public Utility::Resource{;
     public:
         typedef Buffer<MUTABLE, USAGE, READ_BIT, WRITE_BIT, DYNAMIC_BIT, PERSISTENT_BIT, COHERENT_BIT, CLIENT_STORAGE_BIT> Self;
 
@@ -73,7 +81,8 @@ namespace Solaire{ namespace Graphics{
         GLuint mID;
         GLuint mPreviousID;
         GLenum mTarget;
-    protected:
+    private:
+
         static constexpr GLint GetAccessFlags(){
             return
                 (READ_BIT           ? GL_MAP_READ_BIT           : 0) |
@@ -84,32 +93,6 @@ namespace Solaire{ namespace Graphics{
                 (CLIENT_STORAGE_BIT ? GL_CLIENT_STORAGE_BIT     : 0)
             ;
         }
-
-        static constexpr GLenum GetBufferBinding(const GLenum aTarget){
-            return
-                aTarget == GL_ARRAY_BUFFER ? GL_ARRAY_BUFFER_BINDING :
-                aTarget == GL_ELEMENT_ARRAY_BUFFER ? GL_ELEMENT_ARRAY_BUFFER_BINDING :
-                aTarget == GL_COPY_READ_BUFFER ? GL_COPY_READ_BUFFER_BINDING :
-                aTarget == GL_COPY_WRITE_BUFFER ? GL_COPY_WRITE_BUFFER_BINDING :
-                aTarget == GL_PIXEL_PACK_BUFFER ? GL_PIXEL_PACK_BUFFER_BINDING :
-                aTarget == GL_PIXEL_UNPACK_BUFFER ? GL_PIXEL_UNPACK_BUFFER_BINDING :
-                aTarget == GL_QUERY_BUFFER ? GL_QUERY_BUFFER_BINDING :
-                aTarget == GL_TEXTURE_BUFFER ? GL_TEXTURE_BUFFER_BINDING :
-                aTarget == GL_TRANSFORM_FEEDBACK_BUFFER ? GL_TRANSFORM_FEEDBACK_BUFFER_BINDING :
-                aTarget == GL_UNIFORM_BUFFER ? GL_UNIFORM_BUFFER_BINDING :
-                aTarget == GL_DRAW_INDIRECT_BUFFER ? GL_DRAW_INDIRECT_BUFFER_BINDING :
-                aTarget == GL_ATOMIC_COUNTER_BUFFER ? GL_ATOMIC_COUNTER_BUFFER_BINDING :
-                aTarget == GL_DISPATCH_INDIRECT_BUFFER ? GL_DISPATCH_INDIRECT_BUFFER_BINDING :
-                aTarget == GL_SHADER_STORAGE_BUFFER ? GL_SHADER_STORAGE_BUFFER_BINDING :
-                0
-            ;
-        }
-
-        static GLuint GetCurrentlyBoundBuffer(const GLenum aTarget){
-            GLuint id = 0;
-            glGetIntegerv(GetBufferBinding(aTarget), &id);
-            return id;
-    }
     public:
         Buffer():
             mBytes(0),
@@ -212,6 +195,10 @@ namespace Solaire{ namespace Graphics{
         }
 
         ////
+
+        GLuint GetID() const override{
+            return mID();
+        }
 
         GLuint Size() const{
             return mBytes;
