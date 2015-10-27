@@ -99,7 +99,44 @@ namespace Solaire{ namespace Graphics{
                 if(it == stack.end())throw std::runtime_error("GLBindStack : Object was not bound to target");
                 stack.Erase(it);
             }
+        }
 
+        void UnbindAll(void* const aObject){
+            for(std::pair<GlEnum, BindStack>& i : mStacks){
+                BindStack& stack = i.second;
+
+                bool popped = false;
+                while(stack.Back() == aObject){
+                    popped = true;
+                    stack.PopBack();
+                }
+                if(popped){
+                    if(stack.IsEmpty()){
+                        mBindFn(aTarget, nullptr);
+                    }else{
+                        mBindFn(aTarget, stack.Back());
+                    }
+                }
+
+                auto it = stack.FindFirst(aObject);
+                while(it != stack.end()){
+                    stack.Erase(it);
+                    it = stack.FindFirst(aObject);
+                }
+            }
+        }
+
+        DynamicArray<GLenum> GetBoundTargets(void* const aObject){
+            DynamicArray<GLenum> targets(mStacks.GetAllocator());
+
+            for(std::pair<GlEnum, BindStack>& i : mStacks){
+                auto it = i.second.FindFirst(aObject);
+                if(it != i.second.end()){
+                    targets.PushBack(i.first);
+                }
+            }
+
+            return targets;
         }
     };
 }}
