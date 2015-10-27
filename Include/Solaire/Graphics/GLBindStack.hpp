@@ -91,11 +91,9 @@ namespace Solaire{ namespace Graphics{
                 }else{
                     mBindFn(aTarget, stack.Back());
                 }
-            }else{
-                auto it = stack.FindLast(aObject);
-                if(it == stack.end())throw std::runtime_error("GLBindStack : Object was not bound to target");
-                stack.Erase(it);
             }
+
+            throw std::runtime_error("GLBindStack : Object was not bound to target");
         }
 
         void UnbindAll(void* const aObject){

@@ -47,18 +47,56 @@ namespace Solaire{ namespace Graphics{
     //! \todo Buffer Invalidation
     //! \todo Buffer Streaming
 
-    class BufferIDInterface{
-    public:
-        virtual ~BufferIDInterface(){}
-        virtual GLuint GetID() const = 0;
-    };
-
-    namespace BufferImplementation{
+    class BufferInterface{
+    protected:
+        static GLBindStack BIND_STACK
+    protected:
+        GLuint mBytes;
+        GLuint mID;
+    private:
         static void BindFn(const GLenum aTarget, const void* const aObject){
             glBindBuffer​(aTarget, static_cast<BufferIDInterface*>(aObject)->GetID());
         }
+    public:
+        BufferInterface(const GLuint aBytes, const GLuint aID):
+            mBytes(aBytes),
+            mID(aID)
+        {}
 
-        static GLBindStack BIND_STACK(GetDefaultAllocator(), &BindFn, {
+        virtual ~BufferIDInterface(){
+
+        }
+
+        ////
+
+        GLuint GetID() const{
+            return mID;
+        }
+
+        GLuint Size() const{
+            return mBytes;
+        }
+
+        ////
+
+        bool IsBound(const GLenum aTarget) const{
+            const DynamicArray<GLEnum targets> targets = BIND_STACK.GetBoundTargets(this);
+            return targets.FindFirst(aTarget) != targets.end();
+        }
+
+        void Bind(const GLenum aTarget){
+            BIND_STACK.Bind(aTarget, this);
+        }
+
+        void Unbind(){
+            BIND_STACK.Unbind(aTarget, this);
+        }
+    };
+
+    GLBindStack BufferInterface::BIND_STACK(
+        GetDefaultAllocator(),
+        &BufferInterface::BindFn,
+        {
             GL_ARRAY_BUFFER,
             GL_ELEMENT_ARRAY_BUFFER,
             GL_COPY_READ_BUFFER,
@@ -73,8 +111,8 @@ namespace Solaire{ namespace Graphics{
             GL_ATOMIC_COUNTER_BUFFER,
             GL_DISPATCH_INDIRECT_BUFFER,
             GL_SHADER_STORAGE_BUFFER
-        });
-    }
+        }
+    );
 
     template<const bool MUTABLE, const GLenum USAGE, const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
     class Buffer : public BufferIDInterface{ //: public Utility::Resource{;
@@ -94,9 +132,6 @@ namespace Solaire{ namespace Graphics{
             USAGE_MODE = USAGE
         };
     private:
-        GLuint mBytes;
-        GLuint mID;
-    private:
 
         static constexpr GLint GetAccessFlags(){
             return
@@ -110,15 +145,13 @@ namespace Solaire{ namespace Graphics{
         }
     public:
         Buffer():
-            mBytes(0),
-            mID(0)
+            BufferInterface(0, 0)
         {
             glGenBuffers(1, &mID);
         }
 
         Buffer(const size_t aBytes):
-            mBytes(0),
-            mID(0)
+            BufferInterface(0, 0)
         {
             glGenBuffers(1, &mID);
 
@@ -128,8 +161,7 @@ namespace Solaire{ namespace Graphics{
         }
 
         Buffer(const void* const aData, const size_t aBytes):
-            mBytes(0),
-            mID(0)
+            BufferInterface(0, 0)
         {
             glGenBuffers(1, &mID);
 
@@ -140,8 +172,7 @@ namespace Solaire{ namespace Graphics{
 
         template<const bool MUTABLE2, const GLenum USAGE2, const bool READ_BIT2, const bool WRITE_BIT2, const bool DYNAMIC_BIT2, const bool PERSISTENT_BIT2, const bool COHERENT_BIT2, const bool CLIENT_STORAGE_BIT2>
         Buffer(const Buffer<MUTABLE2, USAGE, READ_BIT2, WRITE_BIT2, DYNAMIC_BIT2, PERSISTENT_BIT2, COHERENT_BIT2, CLIENT_STORAGE_BIT2>& aOther):
-            mBytes(0),
-            mID(0)
+            BufferInterface(0, 0)
         {
             glGenBuffers(1, &mID);
             Bind(GL_COPY_WRITE_BUFFER);
@@ -151,8 +182,7 @@ namespace Solaire{ namespace Graphics{
         }
 
         Buffer(Self&& aOther):
-            mBytes(aOther.mBytes),
-            mID(aOther.mID)
+            BufferInterface(aOther.mBytes, aOther.mID)
         {
             aOther.mBytes = 0;
             aOther.mID = 0;
@@ -160,7 +190,7 @@ namespace Solaire{ namespace Graphics{
 
         ~Buffer(){
             if(mID != 0){
-                BufferImplementation::BIND_STACK::UNBIND_ALL(this);
+                BIND_STACK.UNBIND_ALL(this);
 
                 glDeleteBuffers(1, &mID);
 
@@ -189,31 +219,6 @@ namespace Solaire{ namespace Graphics{
             aOther.mID = 0;
 
             return *this;
-        }
-
-        ////
-
-        GLuint GetID() const override{
-            return mID();
-        }
-
-        GLuint Size() const{
-            return mBytes;
-        }
-
-        ////
-
-        bool IsBound(const GLenum aTarget) const{
-            const DynamicArray<GLEnum targets> targets = BufferImplementation::BIND_STACK::GetBoundTargets(this);
-            return targets.FindFirst(aTarget) != targets.end();
-        }
-
-        void Bind(const GLenum aTarget){
-            BufferImplementation::BIND_STACK::Bind(aTarget, this);
-        }
-
-        void Unbind(){
-            BufferImplementation::BIND_STACK::Unbind(aTarget, this);
         }
 
         ////
