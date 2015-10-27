@@ -46,16 +46,17 @@ namespace Solaire{ namespace Graphics{
 
     template<const bool MUTABLE, const GLenum USAGE, const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
     class Buffer{ //: public Utility::Resource{;
+    public:
+        typedef Buffer<MUTABLE, USAGE, READ_BIT, WRITE_BIT, DYNAMIC_BIT, PERSISTENT_BIT, COHERENT_BIT, CLIENT_STORAGE_BIT> Self;
     private:
         GLuint mBytes;
         GLuint mID;
         GLuint mPreviousID;
         GLenum mTarget;
     private:
-        Buffer(const Buffer& aOther) = delete;
-        Buffer(Buffer&& aOther) = delete;
-        Buffer& operator=(const Buffer& aOther) = delete;
-        Buffer& operator=(Buffer&& aOther) = delete;
+        Buffer(Self&& aOther) = delete;
+        Self& operator=(const Self& aOther) = delete;
+        Self& operator=(Self&& aOther) = delete;
     protected:
         static constexpr GLint GetAccessFlags(){
             return
@@ -103,6 +104,44 @@ namespace Solaire{ namespace Graphics{
             glGenBuffers(1, &mID);
         }
 
+        Buffer(const size_t aBytes):
+            mBytes(0),
+            mID(0),
+            mPreviousID(0),
+            mTarget(0)
+        {
+            glGenBuffers(1, &mID);
+
+            Bind(GL_COPY_WRITE_BUFFER);
+            Allocate(aBytes);
+            Unbind();
+        }
+
+        Buffer(const void* const aData, const size_t aBytes):
+            mBytes(0),
+            mID(0),
+            mPreviousID(0),
+            mTarget(0)
+        {
+            glGenBuffers(1, &mID);
+
+            Bind(GL_COPY_WRITE_BUFFER);
+            AllocateAndCopy(aData, aBytes);
+            Unbind();
+        }
+
+        template<const bool MUTABLE, const GLenum USAGE, const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
+        Buffer(const Buffer<MUTABLE, USAGE, READ_BIT, WRITE_BIT, DYNAMIC_BIT, PERSISTENT_BIT, COHERENT_BIT, CLIENT_STORAGE_BIT>& aOther):
+            mBytes(0),
+            mID(0),
+            mPreviousID(0),
+            mTarget(0)
+        {
+            glGenBuffers(1, &mID);
+            Allocate(aOther.mBytes);
+            Copy(aOther, 0, 0, mBytes);
+        }
+
         ~Buffer(){
             glDeleteBuffers(1, &mID);
         }
@@ -132,10 +171,10 @@ namespace Solaire{ namespace Graphics{
             mTarget = aTarget;
         }
 
-        void Unbind(const GLenum aTarget){
+        void Unbind(){
             if(! IsBound()) throw std::runtime_error("Buffer: Buffer is not bound");
 
-            glBindBuffer​(aTarget, mPreviousID);
+            glBindBuffer​(mTarget, mPreviousID);
             mTarget = 0;
 
             BufferImplementation::LOCK.unlock();
@@ -175,34 +214,72 @@ namespace Solaire{ namespace Graphics{
 
         ////
 
-        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLubyte aValue, const GLenum aInternalFormat, const GLenum aType){
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLubyte aValue, const GLenum aInternalFormat){
             glClearBufferData(mTarget, aInternalFormat, mBytes, aFormat, GL_UNSIGNED_BYTE, &aValue);
         }
 
-        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLbyte aValue, const GLenum aInternalFormat, const GLenum aType){
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLbyte aValue, const GLenum aInternalFormat){
             glClearBufferData(mTarget, aInternalFormat, mBytes, aFormat, GL_BYTE, &aValue);
         }
 
-        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLushort aValue, const GLenum aInternalFormat, const GLenum aType){
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLushort aValue, const GLenum aInternalFormat){
             glClearBufferData(mTarget, aInternalFormat, mBytes, aFormat, GL_UNSIGNED_SHORT, &aValue);
         }
 
-        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLshort aValue, const GLenum aInternalFormat, const GLenum aType){
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLshort aValue, const GLenum aInternalFormat){
             glClearBufferData(mTarget, aInternalFormat, mBytes, aFormat, GL_SHORT, &aValue);
         }
 
-        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLuint aValue, const GLenum aInternalFormat, const GLenum aType){
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLuint aValue, const GLenum aInternalFormat){
             glClearBufferData(mTarget, aInternalFormat, mBytes, aFormat, GL_UNSIGNED_INT, &aValue);
         }
 
-        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLint aValue, const GLenum aInternalFormat, const GLenum aType){
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) Clear(const GLint aValue, const GLenum aInternalFormat){
             glClearBufferData(mTarget, aInternalFormat, mBytes, aFormat, GL_INT, &aValue);
         }
 
         ////
 
-        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) SubClear(const GLubyte aValue, const GLenum aInternalFormat, const GLenum aType){
-            glClearBufferData(mTarget, aInternalFormat, mBytes, aFormat, GL_UNSIGNED_BYTE, &aValue);
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) SubClear(const GLubyte aValue, const size_t aOffset, const size_t aBytes, const GLenum aInternalFormat){
+            glClearBufferData(mTarget, aInternalFormat, aOffset, aBytes, aFormat, GL_UNSIGNED_BYTE, &aValue);
+        }
+
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) SubClear(const GLbyte aValue, const size_t aOffset, const size_t aBytes, const GLenum aInternalFormat){
+            glClearBufferData(mTarget, aInternalFormat, aOffset, aBytes, aFormat, GL_BYTE, &aValue);
+        }
+
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) SubClear(const GLushort aValue, const size_t aOffset, const size_t aBytes, const GLenum aInternalFormat){
+            glClearBufferData(mTarget, aInternalFormat, aOffset, aBytes, aFormat, GL_UNSIGNED_SHORT, &aValue);
+        }
+
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) SubClear(const GLshort aValue, const size_t aOffset, const size_t aBytes, const GLenum aInternalFormat){
+            glClearBufferData(mTarget, aInternalFormat, aOffset, aBytes, aFormat, GL_SHORT, &aValue);
+        }
+
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) SubClear(const GLuint aValue, const size_t aOffset, const size_t aBytes, const GLenum aInternalFormat){
+            glClearBufferData(mTarget, aInternalFormat, aOffset, aBytes, aFormat, GL_UNSIGNED_INT, &aValue);
+        }
+
+        SOLAIRE_BUFFER_ENABLE_IF(void, MUTABLE) SubClear(const GLint aValue, const size_t aOffset, const size_t aBytes, const GLenum aInternalFormat){
+            glClearBufferData(mTarget, aInternalFormat, aOffset, aBytes, aFormat, GL_INT, &aValue);
+        }
+
+        ////
+        template<const bool MUTABLE, const GLenum USAGE, const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
+        void Copy(const Buffer<MUTABLE, USAGE, READ_BIT, WRITE_BIT, DYNAMIC_BIT, PERSISTENT_BIT, COHERENT_BIT, CLIENT_STORAGE_BIT>& aOther, const size_t aReadOffet, const size_t aWriteOffset, const size_t aBytes){
+            bool thisBound = IsBound();
+            bool otherBound = IsBound();
+
+            mBytes = aOther.mBytes;
+            Allocate(mBytes);
+
+            if(! thisBound) aOther.Bind(GL_COPY_READ_BUFFER);
+            if(! otherBound) Bind(GL_COPY_WRITE_BUFFER);
+
+            glCopyBufferSubData(aOther.mTarget, mTarget, aReadOffet, aWriteOffset, mBytes);
+
+            if(! thisBound) aOther.Unbind();
+            if(! otherBound) Unbind();
         }
     };
 
