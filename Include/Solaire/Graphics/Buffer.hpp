@@ -390,30 +390,42 @@ namespace Solaire{ namespace Graphics{
         }
     };
 
-    template<const GLenum USAGE>
+    enum class BufferFrequency{
+        STATIC,
+        DYNAMIC,
+        STREAM
+    };
+
+    enum class BufferUsage{
+        DRAW,
+        READ,
+        COPY
+    };
+
+    template<const BufferFrequency BUFFER_FREQUENCY, const BufferUsage BUFFER_USAGE>
     class MutableBuffer : public Buffer{
     public:
-        typedef MutableBuffer<MUTABLE> Self;
+        typedef MutableBuffer<BUFFER_FREQUENCY, BUFFER_USAGE> Self;
 
         enum : GLenum{
-            USAGE_MODE = USAGE
+            USAGE =
+                BUFFER_FREQUENCY == BufferFrequency::STATIC ?
+                    BUFFER_USAGE == BufferUsage::DRAW ? GL_STATIC_DRAW :
+                    BUFFER_USAGE == BufferUsage::READ ? GL_STATIC_READ :
+                    BUFFER_USAGE == BufferUsage::COPY ? GL_STATIC_COPY :
+                    0
+                BUFFER_FREQUENCY  == BufferFrequency::DYNAMIC ?
+                    BUFFER_USAGE == BufferUsage::DRAW ? GL_DYNAMIC_DRAW :
+                    BUFFER_USAGE == BufferUsage::READ ? GL_DYNAMIC_READ :
+                    BUFFER_USAGE == BufferUsage::COPY ? GL_DYNAMIC_COPY :
+                    0
+                BUFFER_FREQUENCY == BufferFrequency::STREAM ?
+                    BUFFER_USAGE == BufferUsage::DRAW ? GL_STREAM_DRAW :
+                    BUFFER_USAGE == BufferUsage::READ ? GL_STREAM_READ :
+                    BUFFER_USAGE == BufferUsage::COPY ? GL_STREAM_COPY :
+                    0
+                :0
         };
-
-        static constexpr bool CanRead(){
-            return
-                USAGE == STATIC_READ ? true :
-                USAGE == DYNAMIC_READ ? true :
-                USAGE == STREAM_READ ? true :
-                false;
-        }
-
-        static constexpr bool CanWrite(){
-            return
-                USAGE == STATIC_DRAW ? true :
-                USAGE == DYNAMIC_DRAW ? true :
-                USAGE == STREAM_DRAW ? true :
-                false;
-        }
     public:
         MutableBuffer():
             Buffer()
@@ -522,29 +534,29 @@ namespace Solaire{ namespace Graphics{
 
         ////
 
-        template<bool R = CanRead()>
+        template<bool R =  BUFFER_USAGE == BufferUsage::READ>
         typename std::enable_if<R, const void*> ReadMap() const{
             return const_cast<Buffer*>(this)->InternalMap(GL_READ_ONLY);
         }
 
-        template<bool R = CanRead(), bool W = CanWrite()>
+        template<bool R =  BUFFER_USAGE == BufferUsage::READ, bool W = BUFFER_USAGE == BufferUsage::DRAW>
         typename std::enable_if<W && ! R, void*> WriteMap(){
             return InternalMap(GL_WRITE_ONLY);
         }
 
-        template<bool R = CanRead(), bool W = CanWrite()>
+        template<bool R =  BUFFER_USAGE == BufferUsage::READ, bool W = BUFFER_USAGE == BufferUsage::DRAW>
         typename std::enable_if<R && W, void*> WriteMap(){
             return InternalMap(GL_READ_WRITE);
         }
 
-        template<bool R = CanRead(), bool W = CanWrite()>
+        template<bool R =  BUFFER_USAGE == BufferUsage::READ, bool W = BUFFER_USAGE == BufferUsage::DRAW>
         typename std::enable_if<R || W, void> Unmap() const{
             InternalUnmap();
         }
 
         ////
 
-        template<bool R = CanRead(), bool W = CanWrite()>
+        template<bool R =  BUFFER_USAGE == BufferUsage::READ, bool W = BUFFER_USAGE == BufferUsage::DRAW>
         typename std::enable_if<R, const void*> ReadMap(const size_t aOffset, const size_t aBytes, const bool aUnsyncronised = false) const{
 
             GLbitfield flags = GL_READ_BIT;
@@ -553,7 +565,7 @@ namespace Solaire{ namespace Graphics{
             return InternalMapRange(aOffset, aBytes, flags);
         }
 
-        template<bool R = CanRead(), bool W = CanWrite()>
+        template<bool R =  BUFFER_USAGE == BufferUsage::READ, bool W = BUFFER_USAGE == BufferUsage::DRAW>
         typename std::enable_if<W, void*> WriteMap(const size_t aOffset, const size_t aBytes, const bool aInvalidateRange = false, const bool aInvalidateBuffer = false, const bool aFlushExplicit, const bool aUnsyncronised = false){
 
             GLbitfield flags = GL_WRITE_BIT;
@@ -566,7 +578,7 @@ namespace Solaire{ namespace Graphics{
             return InternalMapRange(aOffset, aBytes, flags);
         }
 
-        template<bool R = CanRead(), bool W = CanWrite()>
+        template<bool R =  BUFFER_USAGE == BufferUsage::READ, bool W = BUFFER_USAGE == BufferUsage::DRAW>
         typename std::enable_if<R || W, void> FlushMappedRange(const size_t aOffset, const size_t aBytes) const{
             InternalFlushMappedRange(aOffset, aBytes);
         }
