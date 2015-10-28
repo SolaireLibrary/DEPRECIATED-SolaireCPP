@@ -28,7 +28,7 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 27th October 2015
-Last Modified	: 27th October 2015
+Last Modified	: 28th October 2015
 */
 
 #include "..\Maths\Vector2.hpp"
@@ -42,6 +42,8 @@ namespace Solaire{ namespace Graphics{
     //! \todo Buffer Write Synchronization
     //! \todo Buffer Read Synchronization
     //! \todo Buffer Streaming
+    //! \todo Flush SubBuffer
+
 
     class Buffer{
     protected:
@@ -67,8 +69,8 @@ namespace Solaire{ namespace Graphics{
 
         void InternalUnmap() const{
             if(mMapTarget == 0) throw std::runtime_error("Buffer : Buffer has not been mapped");
-            mMapTarget = 0;
             glUnmapBuffer(mMapTarget);
+            mMapTarget = 0;
         }
 
         void* InternalMapRange(const size_t aOffset, const size_t aBytes, const GLenum aAccessFlags){
@@ -87,6 +89,12 @@ namespace Solaire{ namespace Graphics{
             mMapTarget = targets.Back();
 
             return glMapBufferRange(mMapTarget, aOffset, aBytes, aAccessFlags);
+        }
+
+        void InternalFlushMappedRange(const size_t aOffset, const size_t aBytes) const{
+            if(mMapTarget == 0) throw std::runtime_error("Buffer : Buffer has not been mapped");
+            glFlushMappedBufferRange(mMapTarget, aOffset, aBytes);
+            mMapTarget = 0;
         }
     public:
         Buffer():
@@ -336,6 +344,11 @@ namespace Solaire{ namespace Graphics{
             if((aAccessFlags & GL_READ_BIT) && ! R) throw std::runtime_error("ImmutableBuffer : GL_READ_BIT set on a write only buffer");
             return InternalMapRange(aOffset, aBytes, aAccessFlags | GL_WRITE_BIT);
         }
+
+        template<bool R = READ_BIT, bool W = WRITE_BIT>
+        typename std::enable_if<R || W, void> FlushMappedRange(const size_t aOffset, const size_t aBytes) const{
+            InternalFlushMappedRange(aOffset, aBytes);
+        }
     };
 
     template<const GLenum USAGE>
@@ -502,6 +515,11 @@ namespace Solaire{ namespace Graphics{
         typename std::enable_if<W, void*> WriteMap(const size_t aOffset, const size_t aBytes, const GLenum aAccessFlags = 0){
             if((aAccessFlags & GL_READ_BIT) && ! R) throw std::runtime_error("MutableBuffer : GL_READ_BIT set on a write only buffer");
             return InternalMapRange(aOffset, aBytes, aAccessFlags | GL_WRITE_BIT);
+        }
+
+        template<bool R = CanRead(), bool W = CanWrite()>
+        typename std::enable_if<R || W, void> FlushMappedRange(const size_t aOffset, const size_t aBytes) const{
+            InternalFlushMappedRange(aOffset, aBytes);
         }
     };
 }}
