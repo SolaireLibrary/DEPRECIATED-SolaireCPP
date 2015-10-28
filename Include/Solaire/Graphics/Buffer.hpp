@@ -48,13 +48,34 @@ namespace Solaire{ namespace Graphics{
     class Buffer{
     protected:
         static GLBindStack BIND_STACK
+    private:
+        GLenum mMapTarget;
+        GLbitfield mBarriers;
     protected:
         GLuint mBytes;
         GLuint mID;
-        GLenum mMapTarget;
     private:
         static void BindFn(const GLenum aTarget, const void* const aObject){
             glBindBuffer​(aTarget, static_cast<BufferInterface*>(aObject)->mID);
+        }
+
+        static GLbitfield GetBarrierBit(const GLenum aTarget){
+            switch(aTarget){
+            case GL_VERTEX_ATTRIB_ARRAY_BUFFER :
+                return GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT;
+            case GL_ELEMENT_ARRAY_BUFFER:
+                return GL_ELEMENT_ARRAY_BARRIER_BIT;
+            case GL_DRAW_INDIRECT_BUFFER :
+            case GL_DISPATCH_INDIRECT_BUFFER :
+                return GL_COMMAND_BARRIER_BIT;
+            case GL_PIXEL_PACK_BUFFER:
+            case GL_PIXEL_UNPACK_BUFFER:
+                return GL_PIXEL_BUFFER_BARRIER_BIT;
+            case GL_QUERY_BUFFER:
+                return GL_QUERY_BUFFER_BARRIER_BIT;
+            default:
+                return 0;
+            }
         }
     protected:
         void* InternalMap(const GLenum aAccessFlags){
@@ -62,6 +83,9 @@ namespace Solaire{ namespace Graphics{
 
             const DynamicArray<GLenum> targets = BIND_MAP::GetBoundTargets(this);
             if(targets.IsEmpty()) throw std::runtime_error("Buffer : Buffer is not bound");
+            for(const GLenum target : targets){
+                barriers |= GetBarrierBit(target);
+            }
             mMapTarget = targets.Back();
 
             return glMapBuffer(mMapTarget, aAccessFlags);
@@ -71,7 +95,10 @@ namespace Solaire{ namespace Graphics{
             if(mMapTarget == 0) throw std::runtime_error("Buffer : Buffer has not been mapped");
             glUnmapBuffer(mMapTarget);
             mMapTarget = 0;
+            barriers = 0;
         }
+
+        ////
 
         void* InternalMapRange(const size_t aOffset, const size_t aBytes, const GLenum aAccessFlags){
             if(mMapTarget != 0) throw std::runtime_error("Buffer : Buffer has already been mapped");
@@ -86,6 +113,9 @@ namespace Solaire{ namespace Graphics{
 
             const DynamicArray<GLenum> targets = BIND_MAP::GetBoundTargets(this);
             if(targets.IsEmpty()) throw std::runtime_error("Buffer : Buffer is not bound");
+            for(const GLenum target : targets){
+                barriers |= GetBarrierBit(target);
+            }
             mMapTarget = targets.Back();
 
             return glMapBufferRange(mMapTarget, aOffset, aBytes, aAccessFlags);
@@ -94,40 +124,51 @@ namespace Solaire{ namespace Graphics{
         void InternalFlushMappedRange(const size_t aOffset, const size_t aBytes) const{
             if(mMapTarget == 0) throw std::runtime_error("Buffer : Buffer has not been mapped");
             glFlushMappedBufferRange(mMapTarget, aOffset, aBytes);
-            mMapTarget = 0;
+        }
+
+        ////
+
+        void InternalMemoryBarrier(){
+            if(mBarriers == 0) throw std::runtime_error("Buffer : Buffer has not been mapped to any buffers with memory barriers");
+            glMemoryBarrier(mBarriers);
         }
     public:
         Buffer():
+            mMapTarget(0),
+            mBarriers(0),
             mBytes(0),
-            mID(0),
-            mMapTarget(0)
+            mID(0)
         {
             glGenBuffers(1, &mID);
         }
 
         Buffer(const size_t aBytes):
+            mMapTarget(0),
+            mBarriers(0),
             mBytes(aBytes),
-            mID(0),
-            mMapTarget(0)
+            mID(0)
         {
             glGenBuffers(1, &mID);
             Allocate(aBytes);
         }
 
         Buffer(Buffer&& aOther):
+            mMapTarget(aOther.mMapTarget),
+            mBarriers(aOther.mBarriers),
             mBytes(aOther.mBytes),
-            mID(aOther.mID),
-            mMapTarget(aOther.mMapTarget)
+            mID(aOther.mID)
         {
+            aOther.mMapTarget = 0;
+            aOther.mBarriers = 0;
             aOther.mBytes = 0;
             aOther.mID = 0;
-            aOther.mMapTarget = 0;
         }
 
         Buffer(const Buffer& aOther):
+            mMapTarget(0),
+            mBarriers(0),
             mBytes(aOther.mBytes),
-            mID(0),
-            mMapTarget(0)
+            mID(0)
         {
             glGenBuffers(1, &mID);
             Bind(GL_COPY_WRITE_BUFFER);
@@ -138,6 +179,7 @@ namespace Solaire{ namespace Graphics{
 
         virtual ~Buffer(){
             if(mID != 0){
+                if(mMapTarget != 0) InternalUnmap();
                 BIND_STACK.UnbindAll(this);
 
                 glDeleteBuffers(1, &mID);
@@ -145,29 +187,6 @@ namespace Solaire{ namespace Graphics{
                 mBytes = 0;
                 mID = 0;
             }
-        }
-
-        ////
-
-        Buffer& operator=(Buffer&& aOther){
-            ~Buffer();
-
-            mBytes = aOther.mBytes;
-            mID = aOther.mID;
-
-            aOther.mBytes = 0;
-            aOther.mID = 0;
-
-            return *this;
-        }
-
-        Buffer& operator=(const Buffer& aOther){
-            if(mBytes < aOther.mBytes){
-                Allocate(aOther.mBytes);
-            }
-
-            Copy(aOther, 0, 0, aOther.mBytes);
-            return *this;
         }
 
         ////
@@ -349,6 +368,11 @@ namespace Solaire{ namespace Graphics{
         typename std::enable_if<R || W, void> FlushMappedRange(const size_t aOffset, const size_t aBytes) const{
             InternalFlushMappedRange(aOffset, aBytes);
         }
+
+        template<bool R = CanRead(), bool W = CanWrite()>
+        typename std::enable_if<R || W, void> MemoryBarrier() const{
+            InternalMemoryBarrier(aOffset, aBytes);
+        }
     };
 
     template<const GLenum USAGE>
@@ -520,6 +544,11 @@ namespace Solaire{ namespace Graphics{
         template<bool R = CanRead(), bool W = CanWrite()>
         typename std::enable_if<R || W, void> FlushMappedRange(const size_t aOffset, const size_t aBytes) const{
             InternalFlushMappedRange(aOffset, aBytes);
+        }
+
+        template<bool R = CanRead(), bool W = CanWrite()>
+        typename std::enable_if<R || W, void> MemoryBarrier() const{
+            InternalMemoryBarrier(aOffset, aBytes);
         }
     };
 }}
