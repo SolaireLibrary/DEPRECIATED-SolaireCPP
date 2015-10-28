@@ -37,11 +37,10 @@ Last Modified	: 27th October 2015
 
 namespace Solaire{ namespace Graphics{
 
-    //! \todo Buffer Mapping
+    //! \todo Buffer Check if buffer is mapped
     //! \todo Buffer Alignment
     //! \todo Buffer Write Synchronization
     //! \todo Buffer Read Synchronization
-    //! \todo Buffer Invalidation
     //! \todo Buffer Streaming
 
     class Buffer{
@@ -50,6 +49,7 @@ namespace Solaire{ namespace Graphics{
     protected:
         GLuint mBytes;
         GLuint mID;
+        bool mIsMapped;
     private:
         static void BindFn(const GLenum aTarget, const void* const aObject){
             glBindBuffer​(aTarget, static_cast<BufferInterface*>(aObject)->mID);
@@ -57,7 +57,8 @@ namespace Solaire{ namespace Graphics{
     public:
         Buffer(const GLuint aBytes, const GLuint aID):
             mBytes(aBytes),
-            mID(aID)
+            mID(aID),
+            mIsMapped(false)
         {}
 
         virtual ~Buffer(){
@@ -144,6 +145,14 @@ namespace Solaire{ namespace Graphics{
         void Invalidate(const size_t aOffset, const size_t aBytes){
             glInvalidateBufferSubData​(mID, aOffset, aBytes);
         }
+
+        ////
+
+        void Read(const size_t aOffset, const size_t aBytes, void* const aData){
+            Bind(GL_COPY_READ_BUFFER);
+            glGetBufferSubData(mID, aOffset, aBytes, aData);
+            Unbind(GL_COPY_READ_BUFFER);
+        }
     };
 
     GLBindStack BufferInterface::BIND_STACK(
@@ -227,6 +236,37 @@ namespace Solaire{ namespace Graphics{
             glBufferStorage(mTarget, aBytes, aData, ACCESS_FLAGS);
             mBytes = aBytes;
         }
+
+        ////
+
+        template<bool R = READ_BIT>
+        typename std::enable_if<R, const void*> ReadMap() const{
+            if(mIsMapped) throw std::runtime_error("ImmutableBuffer : Buffer has already been mapped");
+            mIsMapped = true;
+            return glMapBuffer(mID, GL_READ_ONLY);
+        }
+
+        template<bool R = READ_BIT, bool W = WRITE_BIT>
+        typename std::enable_if<W && ! R, void*> WriteMap(){
+            if(mIsMapped) throw std::runtime_error("ImmutableBuffer : Buffer has already been mapped");
+            mIsMapped = true;
+            return glMapBuffer(mID, GL_WRITE_ONLY);
+        }
+
+        template<bool R = READ_BIT, bool W = WRITE_BIT>
+        typename std::enable_if<R && W, void*> WriteMap(){
+            if(mIsMapped) throw std::runtime_error("ImmutableBuffer : Buffer has already been mapped");
+            mIsMapped = true;
+            return glMapBuffer(mID, GL_READ_WRITE);
+        }
+
+        template<bool R = READ_BIT, bool W = WRITE_BIT>
+        typename std::enable_if<R || W, void> WriteMap(){
+            if(! mIsMapped) throw std::runtime_error("ImmutableBuffer : Buffer has not been mapped");
+            mIsMapped = false;
+            glUnmapBuffer(mID);
+        }
+
     };
 
     template<const GLenum USAGE>
@@ -237,6 +277,22 @@ namespace Solaire{ namespace Graphics{
         enum : GLenum{
             USAGE_MODE = USAGE
         };
+
+        static constexpr bool CanRead(){
+            return
+                USAGE == STATIC_READ ? true :
+                USAGE == DYNAMIC_READ ? true :
+                USAGE == STREAM_READ ? true :
+                false;
+        }
+
+        static constexpr bool CanWrite(){
+            return
+                USAGE == STATIC_DRAW ? true :
+                USAGE == DYNAMIC_DRAW ? true :
+                USAGE == STREAM_DRAW ? true :
+                false;
+        }
     public:
         MutableBuffer():
             Buffer(0, 0)
@@ -285,11 +341,11 @@ namespace Solaire{ namespace Graphics{
 
         ////
 
-        void Buffer(const void* const aData, const size_t aBytes){
+        void Write(const void* const aData, const size_t aBytes){
             glBufferSubData(mTarget, 0, aBytes, aData);
         }
 
-        void OffsetBuffer(const size_t aOffset, const void* const aData, const size_t aBytes){
+        void Write(const size_t aOffset, const void* const aData, const size_t aBytes){
             glBufferSubData(mTarget, aOffset, aBytes, aData);
         }
 
@@ -343,6 +399,36 @@ namespace Solaire{ namespace Graphics{
 
         void SubClear(const GLint aValue, const size_t aOffset, const size_t aBytes, const GLenum aInternalFormat){
             glClearBufferData(mTarget, aInternalFormat, aOffset, aBytes, aFormat, GL_INT, &aValue);
+        }
+
+        ////
+
+        template<bool R = CanRead()>
+        typename std::enable_if<R, const void*> ReadMap() const{
+            if(mIsMapped) throw std::runtime_error("MutableBuffer : Buffer has already been mapped");
+            mIsMapped = true;
+            return glMapBuffer(mID, GL_READ_ONLY);
+        }
+
+        template<bool R = CanRead(), bool W = CanWrite()>
+        typename std::enable_if<W && ! R, void*> WriteMap(){
+            if(mIsMapped) throw std::runtime_error("MutableBuffer : Buffer has already been mapped");
+            mIsMapped = true;
+            return glMapBuffer(mID, GL_WRITE_ONLY);
+        }
+
+        template<bool R = CanRead(), bool W = CanWrite()>
+        typename std::enable_if<R && W, void*> WriteMap(){
+            if(mIsMapped) throw std::runtime_error("MutableBuffer : Buffer has already been mapped");
+            mIsMapped = true;
+            return glMapBuffer(mID, GL_READ_WRITE);
+        }
+
+        template<bool R = CanRead(), bool W = CanWrite()>
+        typename std::enable_if<R || W, void> WriteMap(){
+            if(! mIsMapped) throw std::runtime_error("MutableBuffer : Buffer has not been mapped");
+            mIsMapped = false;
+            glUnmapBuffer(mID);
         }
     };
 }}
