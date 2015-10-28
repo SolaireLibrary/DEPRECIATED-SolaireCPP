@@ -276,6 +276,12 @@ namespace Solaire{ namespace Graphics{
                 (PERSISTENT_BIT     ? GL_PERSISTENT_BIT         : 0) |
                 (COHERENT_BIT       ? GL_COHERENT_BIT           : 0) |
                 (CLIENT_STORAGE_BIT ? GL_CLIENT_STORAGE_BIT     : 0)
+
+            MAP_FLAGS =
+                (READ_BIT           ? GL_MAP_READ_BIT           : 0) |
+                (WRITE_BIT          ? GL_MAP_WRITE_BIT          : 0) |
+                (PERSISTENT_BIT     ? GL_MAP_PERSISTENT_BIT     : 0) |
+                (COHERENT_BIT       ? GL_MAP_COHERENT_BIT       : 0)
         };
     public:
         ImmutableBuffer():
@@ -346,15 +352,26 @@ namespace Solaire{ namespace Graphics{
         ////
 
         template<bool R = READ_BIT, bool W = WRITE_BIT>
-        typename std::enable_if<R, const void*> ReadMap(const size_t aOffset, const size_t aBytes, const GLenum aAccessFlags = 0) const{
-            if((aAccessFlags & GL_WRITE_BIT) && ! W) throw std::runtime_error("ImmutableBuffer : GL_WRITE_BIT set on a read only buffer");
-            return InternalMapRange(aOffset, aBytes, aAccessFlags | GL_READ_BIT);
+        typename std::enable_if<R, const void*> ReadMap(const size_t aOffset, const size_t aBytes, const bool aUnsyncronised = false) const{
+
+            GLbitfield flags = MAP_FLAGS;
+            flags &= (~GL_WRITE_BIT;
+            flags |= aUnsyncronised ? GL_MAP_UNSYNCHRONIZED_BIT : 0;
+
+            return InternalMapRange(aOffset, aBytes, flags);
         }
 
         template<bool R = READ_BIT, bool W = WRITE_BIT>
-        typename std::enable_if<W, void*> WriteMap(const size_t aOffset, const size_t aBytes, const GLenum aAccessFlags = 0){
-            if((aAccessFlags & GL_READ_BIT) && ! R) throw std::runtime_error("ImmutableBuffer : GL_READ_BIT set on a write only buffer");
-            return InternalMapRange(aOffset, aBytes, aAccessFlags | GL_WRITE_BIT);
+        typename std::enable_if<W, void*> WriteMap(const size_t aOffset, const size_t aBytes, const bool aInvalidateRange = false, const bool aInvalidateBuffer = false, const bool aFlushExplicit, const bool aUnsyncronised = false){
+
+            GLbitfield flags = MAP_FLAGS;
+            if(aInvalidateRange || aInvalidateBuffer) flags &= (~GL_READ_BIT);
+            flags |= aInvalidateRange ? GL_MAP_INVALIDATE_RANGE_BIT : 0;
+            flags |= aInvalidateBuffer ? GL_MAP_INVALIDATE_BUFFER_BIT : 0;
+            flags |= aFlushExplicit ? GL_MAP_FLUSH_EXPLICIT_BIT : 0;
+            flags |= aUnsyncronised ? GL_MAP_UNSYNCHRONIZED_BIT : 0;
+
+            return InternalMapRange(aOffset, aBytes, flags);
         }
 
         template<bool R = READ_BIT, bool W = WRITE_BIT>
@@ -362,13 +379,13 @@ namespace Solaire{ namespace Graphics{
             InternalFlushMappedRange(aOffset, aBytes);
         }
 
-        template<bool R = READ_BIT, bool W = WRITE_BIT>
-        typename std::enable_if<R, void> ReadBarrier() const{
+        template<bool R = READ_BIT, bool P = PERSISTENT_BIT>
+        typename std::enable_if<R && P, void> ReadBarrier() const{
             InternalReadBarrier(aOffset, aBytes);
         }
 
-        template<bool R = READ_BIT), bool W = WRITE_BIT>
-        typename std::enable_if<W, void> WriteBarrier() const{
+        template<bool W = WRITE_BIT, bool P = PERSISTENT_BIT>
+        typename std::enable_if<W && P, void> WriteBarrier() const{
             InternalWriteBarrier(aOffset, aBytes);
         }
     };
@@ -542,16 +559,6 @@ namespace Solaire{ namespace Graphics{
         template<bool R = CanRead(), bool W = CanWrite()>
         typename std::enable_if<R || W, void> FlushMappedRange(const size_t aOffset, const size_t aBytes) const{
             InternalFlushMappedRange(aOffset, aBytes);
-        }
-
-        template<bool R = CanRead(), bool W = CanWrite()>
-        typename std::enable_if<R, void> ReadBarrier() const{
-            InternalReadBarrier(aOffset, aBytes);
-        }
-
-        template<bool R = CanRead(), bool W = CanWrite()>
-        typename std::enable_if<W, void> WriteBarrier() const{
-            InternalWriteBarrier(aOffset, aBytes);
         }
     };
 }}
