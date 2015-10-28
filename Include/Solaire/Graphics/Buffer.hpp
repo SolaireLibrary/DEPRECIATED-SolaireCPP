@@ -70,6 +70,24 @@ namespace Solaire{ namespace Graphics{
             mMapTarget = 0;
             glUnmapBuffer(mMapTarget);
         }
+
+        void* InternalMapRange(const size_t aOffset, const size_t aBytes, const GLenum aAccessFlags){
+            if(mMapTarget != 0) throw std::runtime_error("Buffer : Buffer has already been mapped");
+            if(aAccessFlags & GL_MAP_READ_BIT){
+                if(aAccessFlags & GL_MAP_INVALIDATE_RANGE_BIT) throw std::runtime_error("Buffer : GL_MAP_READ_BIT cannot be used with GL_MAP_INVALIDATE_RANGE_BIT");
+                if(aAccessFlags & GL_MAP_INVALIDATE_BUFFER_BIT) throw std::runtime_error("Buffer : GL_MAP_READ_BIT cannot be used with GL_MAP_INVALIDATE_BUFFER_BIT");
+            }
+
+            if(aAccessFlags & GL_MAP_FLUSH_EXPLICIT_BIT ){
+                if(! (aAccessFlags & GL_MAP_WRITE_BIT)) throw std::runtime_error("Buffer : GL_MAP_FLUSH_EXPLICIT_BIT must be used with GL_MAP_WRITE_BIT");
+            }
+
+            const DynamicArray<GLenum> targets = BIND_MAP::GetBoundTargets(this);
+            if(targets.IsEmpty()) throw std::runtime_error("Buffer : Buffer is not bound");
+            mMapTarget = targets.Back();
+
+            return glMapBufferRange(mMapTarget, aOffset, aBytes, aAccessFlags);
+        }
     public:
         Buffer():
             mBytes(0),
@@ -307,6 +325,17 @@ namespace Solaire{ namespace Graphics{
 
         ////
 
+        template<bool R = READ_BIT, bool W = WRITE_BIT>
+        typename std::enable_if<R, const void*> ReadMap(const size_t aOffset, const size_t aBytes, const GLenum aAccessFlags = 0) const{
+            if((aAccessFlags & GL_WRITE_BIT) && ! W) throw std::runtime_error("ImmutableBuffer : GL_WRITE_BIT set on a read only buffer");
+            return InternalMapRange(aOffset, aBytes, aAccessFlags | GL_READ_BIT);
+        }
+
+        template<bool R = READ_BIT, bool W = WRITE_BIT>
+        typename std::enable_if<W, void*> WriteMap(const size_t aOffset, const size_t aBytes, const GLenum aAccessFlags = 0){
+            if((aAccessFlags & GL_READ_BIT) && ! R) throw std::runtime_error("ImmutableBuffer : GL_READ_BIT set on a write only buffer");
+            return InternalMapRange(aOffset, aBytes, aAccessFlags | GL_WRITE_BIT);
+        }
     };
 
     template<const GLenum USAGE>
@@ -459,6 +488,20 @@ namespace Solaire{ namespace Graphics{
         template<bool R = CanRead(), bool W = CanWrite()>
         typename std::enable_if<R || W, void> Unmap() const{
             InternalUnmap();
+        }
+
+        ////
+
+        template<bool R = CanRead(), bool W = CanWrite()>
+        typename std::enable_if<R, const void*> ReadMap(const size_t aOffset, const size_t aBytes, const GLenum aAccessFlags = 0) const{
+            if((aAccessFlags & GL_WRITE_BIT) && ! W) throw std::runtime_error("MutableBuffer : GL_WRITE_BIT set on a read only buffer");
+            return InternalMapRange(aOffset, aBytes, aAccessFlags | GL_READ_BIT);
+        }
+
+        template<bool R = CanRead(), bool W = CanWrite()>
+        typename std::enable_if<W, void*> WriteMap(const size_t aOffset, const size_t aBytes, const GLenum aAccessFlags = 0){
+            if((aAccessFlags & GL_READ_BIT) && ! R) throw std::runtime_error("MutableBuffer : GL_READ_BIT set on a write only buffer");
+            return InternalMapRange(aOffset, aBytes, aAccessFlags | GL_WRITE_BIT);
         }
     };
 }}
