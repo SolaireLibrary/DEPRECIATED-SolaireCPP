@@ -65,17 +65,50 @@ namespace Solaire{ namespace Graphics{
             return glMapBuffer(mMapTarget, aAccessFlags);
         }
 
-        void Unmap() const{
+        void InternalUnmap() const{
             if(mMapTarget == 0) throw std::runtime_error("Buffer : Buffer has not been mapped");
             mMapTarget = 0;
             glUnmapBuffer(mMapTarget);
         }
     public:
-        Buffer(const GLuint aBytes, const GLuint aID):
-            mBytes(aBytes),
-            mID(aID),
+        Buffer():
+            mBytes(0),
+            mID(0),
             mMapTarget(0)
-        {}
+        {
+            glGenBuffers(1, &mID);
+        }
+
+        Buffer(const size_t aBytes):
+            mBytes(aBytes),
+            mID(0),
+            mMapTarget(0)
+        {
+            glGenBuffers(1, &mID);
+            Allocate(aBytes);
+        }
+
+        Buffer(Buffer&& aOther):
+            mBytes(aOther.mBytes),
+            mID(aOther.mID),
+            mMapTarget(aOther.mMapTarget)
+        {
+            aOther.mBytes = 0;
+            aOther.mID = 0;
+            aOther.mMapTarget = 0;
+        }
+
+        Buffer(const Buffer& aOther):
+            mBytes(aOther.mBytes),
+            mID(0),
+            mMapTarget(0)
+        {
+            glGenBuffers(1, &mID);
+            Bind(GL_COPY_WRITE_BUFFER);
+            Allocate(aOther.mBytes);
+            Unbind(GL_COPY_WRITE_BUFFER);
+            Copy(aOther, 0, 0, mBytes);
+        }
 
         virtual ~Buffer(){
             if(mID != 0){
@@ -208,37 +241,34 @@ namespace Solaire{ namespace Graphics{
         };
     public:
         ImmutableBuffer():
-            Buffer(0, 0)
-        {
-            glGenBuffers(1, &mID);
-        }
+            Buffer()
+        {}
 
         ImmutableBuffer(const size_t aBytes):
-            Buffer(0, 0)
-        {
-            glGenBuffers(1, &mID);
-
-            Bind(GL_COPY_WRITE_BUFFER);
-            Allocate(aBytes);
-            Unbind(GL_COPY_WRITE_BUFFER);
-        }
+            Buffer(aBytes)
+        {}
 
         ImmutableBuffer(const Buffer& aOther):
-            Buffer(0, 0)
-        {
-            glGenBuffers(1, &mID);
-            Bind(GL_COPY_WRITE_BUFFER);
-            Allocate(aOther.mBytes);
-            Unbind(GL_COPY_WRITE_BUFFER);
-            Copy(aOther, 0, 0, mBytes);
-        }
+            Buffer(aOther)
+        {}
 
 
         ImmutableBuffer(Buffer&& aOther):
-            Buffer(aOther.mBytes, aOther.mID)
-        {
-            aOther.mBytes = 0;
-            aOther.mID = 0;
+            Buffer(std::move(aOther))
+        {}
+
+        ////
+
+        Self& operator=(const Buffer& aOther){
+            ~Buffer();
+            new(this) Self(aOther);
+            return *this;
+        }
+
+        Self& operator=(Buffer&& aOther){
+            ~Buffer();
+            new(this) Self(std::move(aOther));
+            return *this;
         }
 
         ////
@@ -305,36 +335,34 @@ namespace Solaire{ namespace Graphics{
         }
     public:
         MutableBuffer():
-            Buffer(0, 0)
-        {
-            glGenBuffers(1, &mID);
-        }
+            Buffer()
+        {}
 
         MutableBuffer(const size_t aBytes):
-            Buffer(0, 0)
-        {
-            glGenBuffers(1, &mID);
-
-            Bind(GL_COPY_WRITE_BUFFER);
-            Allocate(aBytes);
-            Unbind(GL_COPY_WRITE_BUFFER);
-        }
+            Buffer(aBytes)
+        {}
 
         MutableBuffer(const Buffer& aOther):
-            Buffer(0, 0)
-        {
-            glGenBuffers(1, &mID);
-            Bind(GL_COPY_WRITE_BUFFER);
-            Allocate(aOther.mBytes);
-            Unbind(GL_COPY_WRITE_BUFFER);
-            Copy(aOther, 0, 0, mBytes);
-        }
+            Buffer(aOther)
+        {}
+
 
         MutableBuffer(Buffer&& aOther):
-            Buffer(aOther.mBytes, aOther.mID)
-        {
-            aOther.mBytes = 0;
-            aOther.mID = 0;
+            Buffer(std::move(aOther))
+        {}
+
+        ////
+
+        Self& operator=(const Buffer& aOther){
+            ~Buffer();
+            new(this) Self(aOther);
+            return *this;
+        }
+
+        Self& operator=(Buffer&& aOther){
+            ~Buffer();
+            new(this) Self(std::move(aOther));
+            return *this;
         }
 
         ////
