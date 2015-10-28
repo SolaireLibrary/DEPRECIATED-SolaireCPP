@@ -583,6 +583,27 @@ namespace Solaire{ namespace Graphics{
             InternalFlushMappedRange(aOffset, aBytes);
         }
     };
+
+    template<const BufferUsage BUFFER_USAGE>
+    using StaticBuffer = MutableBuffer<BufferFrequency::STATIC, BUFFER_USAGE>;
+
+    template<const BufferUsage BUFFER_USAGE>
+    using DynamicBuffer = MutableBuffer<BufferFrequency::DYNAMIC, BUFFER_USAGE>;
+
+    template<const BufferUsage BUFFER_USAGE>
+    using StreamBuffer = MutableBuffer<BufferFrequency::STREAM, BUFFER_USAGE>;
+
+    typedef StaticBuffer<BufferUsage::DRAW> StaticDrawBuffer;
+    typedef StaticBuffer<BufferUsage::READ> StaticReadBuffer;
+    typedef StaticBuffer<BufferUsage::COPY> StaticCopyBuffer;
+
+    typedef DynamicBuffer<BufferUsage::DRAW> DynamicDrawBuffer;
+    typedef DynamicBuffer<BufferUsage::READ> DynamicReadBuffer;
+    typedef DynamicBuffer<BufferUsage::COPY> DynamicCopyBuffer;
+
+    typedef StreamBuffer<BufferUsage::DRAW> StreamDrawBuffer;
+    typedef StreamBuffer<BufferUsage::READ> StreamReadBuffer;
+    typedef StreamBuffer<BufferUsage::COPY> StreamCopyBuffer;
 }}
 
 #endif
