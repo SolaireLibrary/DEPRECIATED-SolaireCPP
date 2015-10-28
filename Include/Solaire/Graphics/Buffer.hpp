@@ -263,6 +263,23 @@ namespace Solaire{ namespace Graphics{
         }
     );
 
+    class BufferBindGuard{
+    private:
+        Buffer& mBuffer;
+        const GLenum mTarget;
+    public:
+        BufferBindGuard(const GLenum aTarget, Buffer& aBuffer):
+            mBuffer(aBuffer),
+            mTarget(aTarget)
+        {
+            mBuffer.Bind(aTarget);
+        }
+
+        ~BufferBindGuard(){
+            mBuffer.Unind(aTarget);
+        }
+    };
+
     template<const bool READ_BIT, const bool WRITE_BIT, const bool DYNAMIC_BIT, const bool PERSISTENT_BIT, const bool COHERENT_BIT, const bool CLIENT_STORAGE_BIT>
     class ImmutableBuffer : public Buffer{
     public:
