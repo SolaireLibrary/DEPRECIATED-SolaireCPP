@@ -49,16 +49,32 @@ namespace Solaire{ namespace Graphics{
     protected:
         GLuint mBytes;
         GLuint mID;
-        bool mIsMapped;
+        GLenum mMapTarget;
     private:
         static void BindFn(const GLenum aTarget, const void* const aObject){
             glBindBuffer​(aTarget, static_cast<BufferInterface*>(aObject)->mID);
+        }
+    protected:
+        void* InternalMap(const GLenum aAccessFlags){
+            if(mMapTarget != 0) throw std::runtime_error("Buffer : Buffer has already been mapped");
+
+            const DynamicArray<GLenum> targets = BIND_MAP::GetBoundTargets(this);
+            if(targets.IsEmpty()) throw std::runtime_error("Buffer : Buffer is not bound");
+            mMapTarget = targets.Back();
+
+            return glMapBuffer(mMapTarget, aAccessFlags);
+        }
+
+        void Unmap() const{
+            if(mMapTarget == 0) throw std::runtime_error("Buffer : Buffer has not been mapped");
+            mMapTarget = 0;
+            glUnmapBuffer(mMapTarget);
         }
     public:
         Buffer(const GLuint aBytes, const GLuint aID):
             mBytes(aBytes),
             mID(aID),
-            mIsMapped(false)
+            mMapTarget(0)
         {}
 
         virtual ~Buffer(){
@@ -241,31 +257,25 @@ namespace Solaire{ namespace Graphics{
 
         template<bool R = READ_BIT>
         typename std::enable_if<R, const void*> ReadMap() const{
-            if(mIsMapped) throw std::runtime_error("ImmutableBuffer : Buffer has already been mapped");
-            mIsMapped = true;
-            return glMapBuffer(mID, GL_READ_ONLY);
+            return const_cast<Buffer*>(this)->InternalMap(GL_READ_ONLY);
         }
 
         template<bool R = READ_BIT, bool W = WRITE_BIT>
         typename std::enable_if<W && ! R, void*> WriteMap(){
-            if(mIsMapped) throw std::runtime_error("ImmutableBuffer : Buffer has already been mapped");
-            mIsMapped = true;
-            return glMapBuffer(mID, GL_WRITE_ONLY);
+            return InternalMap(GL_WRITE_ONLY);
         }
 
         template<bool R = READ_BIT, bool W = WRITE_BIT>
         typename std::enable_if<R && W, void*> WriteMap(){
-            if(mIsMapped) throw std::runtime_error("ImmutableBuffer : Buffer has already been mapped");
-            mIsMapped = true;
-            return glMapBuffer(mID, GL_READ_WRITE);
+            return InternalMap(GL_READ_WRITE);
         }
 
         template<bool R = READ_BIT, bool W = WRITE_BIT>
-        typename std::enable_if<R || W, void> WriteMap(){
-            if(! mIsMapped) throw std::runtime_error("ImmutableBuffer : Buffer has not been mapped");
-            mIsMapped = false;
-            glUnmapBuffer(mID);
+        typename std::enable_if<R || W, void> Unmap() const{
+            InternalUnmap();
         }
+
+        ////
 
     };
 
@@ -405,30 +415,22 @@ namespace Solaire{ namespace Graphics{
 
         template<bool R = CanRead()>
         typename std::enable_if<R, const void*> ReadMap() const{
-            if(mIsMapped) throw std::runtime_error("MutableBuffer : Buffer has already been mapped");
-            mIsMapped = true;
-            return glMapBuffer(mID, GL_READ_ONLY);
+            return const_cast<Buffer*>(this)->InternalMap(GL_READ_ONLY);
         }
 
         template<bool R = CanRead(), bool W = CanWrite()>
         typename std::enable_if<W && ! R, void*> WriteMap(){
-            if(mIsMapped) throw std::runtime_error("MutableBuffer : Buffer has already been mapped");
-            mIsMapped = true;
-            return glMapBuffer(mID, GL_WRITE_ONLY);
+            return InternalMap(GL_WRITE_ONLY);
         }
 
         template<bool R = CanRead(), bool W = CanWrite()>
         typename std::enable_if<R && W, void*> WriteMap(){
-            if(mIsMapped) throw std::runtime_error("MutableBuffer : Buffer has already been mapped");
-            mIsMapped = true;
-            return glMapBuffer(mID, GL_READ_WRITE);
+            return InternalMap(GL_READ_WRITE);
         }
 
         template<bool R = CanRead(), bool W = CanWrite()>
-        typename std::enable_if<R || W, void> WriteMap(){
-            if(! mIsMapped) throw std::runtime_error("MutableBuffer : Buffer has not been mapped");
-            mIsMapped = false;
-            glUnmapBuffer(mID);
+        typename std::enable_if<R || W, void> Unmap() const{
+            InternalUnmap();
         }
     };
 }}
