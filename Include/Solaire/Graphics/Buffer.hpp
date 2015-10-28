@@ -50,7 +50,6 @@ namespace Solaire{ namespace Graphics{
         static GLBindStack BIND_STACK
     private:
         GLenum mMapTarget;
-        GLbitfield mBarriers;
     protected:
         GLuint mBytes;
         GLuint mID;
@@ -83,9 +82,6 @@ namespace Solaire{ namespace Graphics{
 
             const DynamicArray<GLenum> targets = BIND_MAP::GetBoundTargets(this);
             if(targets.IsEmpty()) throw std::runtime_error("Buffer : Buffer is not bound");
-            for(const GLenum target : targets){
-                barriers |= GetBarrierBit(target);
-            }
             mMapTarget = targets.Back();
 
             return glMapBuffer(mMapTarget, aAccessFlags);
@@ -95,7 +91,6 @@ namespace Solaire{ namespace Graphics{
             if(mMapTarget == 0) throw std::runtime_error("Buffer : Buffer has not been mapped");
             glUnmapBuffer(mMapTarget);
             mMapTarget = 0;
-            barriers = 0;
         }
 
         ////
@@ -113,9 +108,6 @@ namespace Solaire{ namespace Graphics{
 
             const DynamicArray<GLenum> targets = BIND_MAP::GetBoundTargets(this);
             if(targets.IsEmpty()) throw std::runtime_error("Buffer : Buffer is not bound");
-            for(const GLenum target : targets){
-                barriers |= GetBarrierBit(target);
-            }
             mMapTarget = targets.Back();
 
             return glMapBufferRange(mMapTarget, aOffset, aBytes, aAccessFlags);
@@ -128,14 +120,19 @@ namespace Solaire{ namespace Graphics{
 
         ////
 
-        void InternalMemoryBarrier(){
-            if(mBarriers == 0) throw std::runtime_error("Buffer : Buffer has not been mapped to any buffers with memory barriers");
-            glMemoryBarrier(mBarriers);
+        void InternalReadBarrier(){
+            if(mMapTarget == 0) throw std::runtime_error("Buffer : Buffer has not been mapped");
+            glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+            //! \todo Create a fence
+        }
+
+        void InternalWriteBarrier(){
+            if(mMapTarget == 0) throw std::runtime_error("Buffer : Buffer has not been mapped");
+            glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
         }
     public:
         Buffer():
             mMapTarget(0),
-            mBarriers(0),
             mBytes(0),
             mID(0)
         {
@@ -144,7 +141,6 @@ namespace Solaire{ namespace Graphics{
 
         Buffer(const size_t aBytes):
             mMapTarget(0),
-            mBarriers(0),
             mBytes(aBytes),
             mID(0)
         {
@@ -154,19 +150,16 @@ namespace Solaire{ namespace Graphics{
 
         Buffer(Buffer&& aOther):
             mMapTarget(aOther.mMapTarget),
-            mBarriers(aOther.mBarriers),
             mBytes(aOther.mBytes),
             mID(aOther.mID)
         {
             aOther.mMapTarget = 0;
-            aOther.mBarriers = 0;
             aOther.mBytes = 0;
             aOther.mID = 0;
         }
 
         Buffer(const Buffer& aOther):
             mMapTarget(0),
-            mBarriers(0),
             mBytes(aOther.mBytes),
             mID(0)
         {
@@ -369,9 +362,14 @@ namespace Solaire{ namespace Graphics{
             InternalFlushMappedRange(aOffset, aBytes);
         }
 
-        template<bool R = CanRead(), bool W = CanWrite()>
-        typename std::enable_if<R || W, void> MemoryBarrier() const{
-            InternalMemoryBarrier(aOffset, aBytes);
+        template<bool R = READ_BIT, bool W = WRITE_BIT>
+        typename std::enable_if<R, void> ReadBarrier() const{
+            InternalReadBarrier(aOffset, aBytes);
+        }
+
+        template<bool R = READ_BIT), bool W = WRITE_BIT>
+        typename std::enable_if<W, void> WriteBarrier() const{
+            InternalWriteBarrier(aOffset, aBytes);
         }
     };
 
@@ -547,8 +545,13 @@ namespace Solaire{ namespace Graphics{
         }
 
         template<bool R = CanRead(), bool W = CanWrite()>
-        typename std::enable_if<R || W, void> MemoryBarrier() const{
-            InternalMemoryBarrier(aOffset, aBytes);
+        typename std::enable_if<R, void> ReadBarrier() const{
+            InternalReadBarrier(aOffset, aBytes);
+        }
+
+        template<bool R = CanRead(), bool W = CanWrite()>
+        typename std::enable_if<W, void> WriteBarrier() const{
+            InternalWriteBarrier(aOffset, aBytes);
         }
     };
 }}
