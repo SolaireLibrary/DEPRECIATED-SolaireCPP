@@ -134,6 +134,16 @@ namespace Solaire{ namespace Graphics{
             const_cast<Buffer&>(aOther).Unbind(GL_COPY_READ_BUFFER);
             Unbind(GL_COPY_WRITE_BUFFER);
         }
+
+        ////
+
+        void Invalidate(){
+            glInvalidateBufferData​(mID);
+        }
+
+        void Invalidate(const size_t aOffset, const size_t aBytes){
+            glInvalidateBufferSubData​(mID, aOffset, aBytes);
+        }
     };
 
     GLBindStack BufferInterface::BIND_STACK(
