@@ -66,6 +66,10 @@ namespace Solaire{ namespace Graphics{
 
         virtual bool HasFocus() const = 0;
         virtual bool IsVisible() const = 0;
+
+        virtual void Open() = 0;
+        virtual void Close() = 0;
+        virtual bool IsOpen() const = 0;
     };
 
     class WindowListener : public Listener<Window, WindowListener>{
