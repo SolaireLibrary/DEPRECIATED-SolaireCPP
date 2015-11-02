@@ -33,13 +33,16 @@ Last Modified	: 2nd November 2015
 
 #include "..\Core\Strings\String.hpp"
 #include "..\Maths\Vector2.hpp"
+#include "..\Core\Listener.hpp"
 #include "Graphics.inl"
 
 namespace Solaire{ namespace Graphics{
 
     typedef Vector2<int16_t> WindowCoord;
 
-    class Window{
+    class WindowListener;
+
+    class Window : public Source<Window, WindowListener>{
     public:
         enum Mode{
             FULLSCREEN,
@@ -65,7 +68,7 @@ namespace Solaire{ namespace Graphics{
         virtual bool IsVisible() const = 0;
     };
 
-    class WindowListener{
+    class WindowListener : public Listener<Window, WindowListener>{
     public:
         virtual ~WindowListener(){}
 
