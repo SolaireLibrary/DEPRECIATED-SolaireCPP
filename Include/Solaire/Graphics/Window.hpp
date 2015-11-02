@@ -84,6 +84,9 @@ namespace Solaire{ namespace Graphics{
 
         virtual void OnVisible(Window& aWindow) = 0;
         virtual void OnInvisible(Window& aWindow) = 0;
+
+        virtual void OnOpen(Window& aWindow) = 0;
+        virtual void OnClose(Window& aWindow) = 0;
     };
 
     typedef Window::Mode WindowMode;
