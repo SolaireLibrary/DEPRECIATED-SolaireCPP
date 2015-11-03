@@ -25,10 +25,10 @@
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
-\version 1.0
+\version 2.0
 \date
 Created			: 20th September 2015
-Last Modified	: 20th September 2015
+Last Modified	: 3rd November 2015
 */
 
 #include <map>
@@ -37,328 +37,208 @@ Last Modified	: 20th September 2015
 #include "..\Utility\ResourceFactory.hpp"
 #include "..\Maths\Vector2.hpp"
 #include "Graphics.inl"
+#include "GLBindStack.hpp"
 
 namespace Solaire{ namespace Graphics{
 
-    typedef uint16_t TextureCoord1D;
-    typedef Maths::Vector2<uint16_t> TextureCoord2D;
-    typedef Maths::Vector3<uint16_t> TextureCoord3D;
+    //! \todo Stencil Textures
+    //! \todo Mipmap specification
+    //! \todo Mipmap generation
+    //! \todo Texture Units
+    //! \todo Texture Storage
 
-    class TextureDataFactory : public  Utility::ResourceFactory{
+    //! \todo GL_TEXTURE_1D
+    //! \todo GL_TEXTURE_2D
+    //! \todo GL_TEXTURE_3D
+    //! \todo GL_TEXTURE_RECTANGLE
+    //! \todo GL_TEXTURE_BUFFER
+    //! \todo GL_TEXTURE_CUBE_MAP
+    //! \todo GL_TEXTURE_1D_ARRAY
+    //! \todo GL_TEXTURE_2D_ARRAY
+    //! \todo GL_TEXTURE_CUBE_MAP_ARRAY
+    //! \todo GL_TEXTURE_2D_MULTISAMPLE
+    //! \todo GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+
+    //! \todo GL_TEXTURE_COMPARE_FUNC
+    //! \todo GL_TEXTURE_COMPARE_MODE
+    //! \todo GL_TEXTURE_BORDER_COLOR
+    //! \todo GL_TEXTURE_MIN_LOD
+    //! \todo GL_TEXTURE_MAX_LOD
+    //! \todo GL_TEXTURE_LOD_BIAS
+    //! \todo GL_TEXTURE_MAX_LEVEL
+    //! \todo GL_TEXTURE_BASE_LEVEL
+    //! \todo GL_DEPTH_STENCIL_TEXTURE_MODE
+
+    class Texture{
     public:
-        virtual ~TextureDataFactory(){
-
-        }
-    };
-
-    class Texture1DFactory : public TextureDataFactory{
-    public:
-        virtual ~Texture1DFactory(){
-
-        }
-
-        virtual TextureCoord1D Size() const = 0;
-        virtual ColourRGBA GetColour(const TextureCoord1D aIndex) const = 0;
-    };
-
-    class Texture2DFactory : public TextureDataFactory{
-    public:
-        virtual ~Texture2DFactory(){
-
-        }
-
-        virtual TextureCoord2D Size() const = 0;
-        virtual ColourRGBA GetColour(const TextureCoord2D aIndex) const;
-
-        ColourRGBA GetColour(const TextureCoord2D::value_t aX, const TextureCoord2D::value_t aY) const{
-            return GetColour(TextureCoord2D(aX, aY));
-        }
-    };
-
-    class Texture3DFactory : public TextureDataFactory{
-    public:
-        virtual ~Texture3DFactory(){
-
-        }
-
-        virtual TextureCoord3D Size() const = 0;
-        virtual ColourRGBA GetColour(const TextureCoord3D aIndex) const;
-
-        ColourRGBA GetColour(const TextureCoord3D::value_t aX, const TextureCoord3D::value_t aY, const TextureCoord3D::value_t aZ) const{
-            return GetColour(TextureCoord3D(aX, aY, aZ));
-        }
-    };
-
-    enum class TextureFilter : GLenum{
-        NEAREST_NEIGHBOUR = GL_NEAREST,
-        LINEAR = GL_LINEAR
-    };
-
-    enum class TextureWrap : GLenum{
-        REPEAT = GL_REPEAT,
-        CLAMP_TO_EDGE = GL_CLAMP_TO_EDGE
-    };
-
-    class TextureParamFactory : public Utility::ResourceFactory{
-    public:
-        static TextureFilter DEFAULT_FILTER;
-        static TextureWrap DEFAULT_WRAP_MODE;
-
-        virtual ~TextureParamFactory(){
-
-        }
-
-        virtual TextureFilter Filter() const{
-            return DEFAULT_FILTER;
-        }
-
-        virtual TextureWrap WrapMode() const{
-            return DEFAULT_WRAP_MODE;
-        }
-
-        virtual TextureFilter MipMapFilter() const{
-            return DEFAULT_FILTER;
-        }
-
-        virtual bool MipmapsEnabled() const{
-            return false;
-        }
-
-    };
-
-    TextureFilter TextureParamFactory::DEFAULT_FILTER = TextureFilter::NEAREST_NEIGHBOUR;
-    TextureWrap TextureParamFactory::DEFAULT_WRAP_MODE = TextureWrap::CLAMP_TO_EDGE;
-
-    //! \TODO Implement Texture classes
-
-    class TextureBase : public Utility::Resource{
-    private:
-        static std::map<GLenum, std::vector<TextureBase*>> BINDING_MAP;
-
-        static std::vector<TextureBase*>& GetBoundTextures(const GLenum aTarget){
-            auto i = BINDING_MAP.find(aTarget);
-            if(i == BINDING_MAP.end()){
-                i = BINDING_MAP.emplace(aTarget, std::vector<TextureBase*>()).first;
-            }
-            return i->second;
-        }
-
-        static std::vector<GLenum> GetBoundTargets(const TextureBase& aTexture){
-            std::vector<GLenum> bindings;
-            for(const std::pair<GLenum, std::vector<TextureBase*>>& i : BINDING_MAP){
-                auto it = std::find(i.second.begin(), i.second.end(), &aTexture);
-                if(it != i.second.end()) bindings.push_back(i.first);
-            }
-            return bindings;
-        }
-    protected:
-        enum : GLuint{
-            INVALID_TEXTURE_ID = 0
+        enum class Channel : GLint{
+            RED = GL_RED,
+            GREEN = GL_GREEN,
+            BLUE = GL_BLUE,
+            ALPHA = GL_ALPHA,
+            ZERO = GL_ZERO,
+            ONE = GL_ONE
         };
 
-        virtual void CreateTexture() = 0;
-        virtual void DestroyTexture() = 0;
-        virtual bool IsCreated() const = 0;
-        virtual GLuint GetTextureID() const = 0;
+        enum class Filter : GLenum{
+            NEAREST = GL_NEAREST,
+            LINEAR = GL_LINEAR
+        };
 
-        void ForceUnbindAll(){
-            // Unbind all instances of this texture from the bind stacks
-            const std::vector<GLenum> list = GetBoundTargets(*this);
-            for(const GLenum target : list){
-                std::vector<TextureBase*>& bindings = GetBoundTextures(target);
-                    while(bindings.back() == this){
-                        Unbind(target);
-                    }
-                auto it = std::find(bindings.begin(), bindings.end(), this);
-                while(it != bindings.end()){
-                    bindings.erase(it);
-                    OnForcedUnbind(target);
-                    it = std::find(bindings.begin(), bindings.end(), this);
-                }
-            }
-        }
-
-        virtual void OnForcedUnbind(const GLenum aTarget) = 0;
-
-    public:
-        virtual ~TextureBase(){
-            if(IsCreated()){
-                DestroyTexture();
-            }
-        }
-
-        virtual void Bind(const GLenum aTarget){
-            if(IsCreated()){
-                GetBoundTextures(aTarget).push_back(this);
-                //glBindTexture(aTarget, getTextureID());
-            }else{
-                throw std::runtime_error("Texture must be created before it can be bound");
-            }
-        }
-
-       virtual void Unbind(const GLenum aTarget){
-            if(IsCreated()){
-                std::vector<TextureBase*>& list = GetBoundTextures(aTarget);
-                if(list.back() != this) throw std::runtime_error("This texture is not at the top of the binding stack for this target");
-                list.pop_back();
-                //glBindTexture(aTarget, list.empty() ? INVALID_TEXTURE_ID : list.back());
-            }else{
-                throw std::runtime_error("Texture must be created before it can be unbound");
-            }
-        }
-
-        virtual bool IsBound(const GLenum aTarget) const{
-            const std::vector<TextureBase*>& list = GetBoundTextures(aTarget);
-            return std::find(list.begin(), list.end(), this) != list.end();
-        }
-
-        // Inherited from Resource
-        virtual void Reload() override{
-            if(IsCreated()){
-                const std::vector<GLenum> list = GetBoundTargets(*this);
-                for(const GLenum i : list) Unbind(i);
-                DestroyTexture();
-                CreateTexture();
-                for(const GLenum i : list) Bind(i);
-            }
-        }
-    };
-
-    class TextureBindGuard{
+        enum class Wrap : GLenum{
+            CLAMP_TO_BORDER = CLAMP_TO_BORDER,
+            CLAMP_TO_EDGE = GL_CLAMP_TO_EDGE,
+            MIRRORED_REPEAT = GL_MIRRORED_REPEAT,
+            MIRROR_CLAMP_TO_EDGE = GL_MIRROR_CLAMP_TO_EDGE,
+            REPEAT = GL_REPEAT,
+        };
+    protected:
+        static GLBindStack BIND_STACK;
     private:
-        TextureBase& mTexture;
-        const GLenum mTarget;
-    public:
-        TextureBindGuard(TextureBase& aTexture, const GLenum aTarget) :
-            mTexture(aTexture),
-            mTarget(aTarget)
-        {
-            mTexture.Bind(mTarget);
-        }
-
-        ~TextureBindGuard(){
-            mTexture.Unbind(mTarget);
-        }
-    };
-
-    class Texture1D : public TextureBase{
-    private:
-        Texture1DFactory* mDataFactory;
-        TextureParamFactory* mParamFactory;
-    public:
-        virtual ~Texture1D(){
-
-        }
-    };
-
-    class Texture2D : public TextureBase{
-    private:
-        Texture2DFactory* mDataFactory;
-        TextureParamFactory* mParamFactory;
-
+        GLint mSwizzle[4];
         GLuint mID;
+        GLenum mMinFilter;
+        GLenum mMagfilter;
+        GLenum mTWrap;
+        GLenum mSWrap;
     protected:
-        // Inherited from TextureBase
-
-        GLuint GetTextureID() const override{
-            return mID;
-        };
-
-        void OnForcedUnbind(const GLenum aTarget) override{
-
+        static constexpr bool CanHaveMipMaps(const GLenum aTarget){
+            return
+                aTarget == GL_TEXTURE_1D ?                      true :
+                aTarget == GL_TEXTURE_2D ?                      true :
+                aTarget == GL_TEXTURE_3D ?                      true :
+                aTarget == GL_TEXTURE_1D_ARRAY ?                true :
+                aTarget == GL_TEXTURE_2D_ARRAY ?                true :
+                aTarget == GL_TEXTURE_CUBE_MAP ?                true :
+                aTarget == GL_TEXTURE_CUBE_MAP_ARRAY ?          true :
+                aTarget == GL_TEXTURE_RECTANGLE ?               false :
+                aTarget == GL_TEXTURE_BUFFER ?                  false :
+                aTarget == GL_TEXTURE_2D_MULTISAMPLE ?          false :
+                aTarget == GL_TEXTURE_2D_MULTISAMPLE_ARRAY ?    false :
+                false;
         }
 
-        void CreateTexture() override{
-
-            const TextureCoord2D size = mDataFactory->Size();
-            ColourRGBA* const pixels = new ColourRGBA[size.X * size.Y];
-
-            TextureCoord2D i(0,0);
-            for(i.X; i.X < size.X; ++i.X){
-                for(i.Y; i.Y < size.Y; ++i.Y){
-                    //! \TODO Check row major order
-                    pixels[i.X + size.X * size.Y] = mDataFactory->GetColour(i);
-                }
-            }
-
-            //glGenTextures(1& mID);
-
-            TextureBindGuard guard(*this, GL_TEXTURE_2D);
-
-            //glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, size.X, size.Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-            delete[] pixels;
-
-            const TextureFilter filter = mParamFactory->Filter();
-            if(mParamFactory->MipmapsEnabled()){
-                TextureFilter mipmapFilter = mParamFactory->MipMapFilter();
-
-                if(mipmapFilter == TextureFilter::NEAREST_NEIGHBOUR){
-                    if(filter == TextureFilter::NEAREST_NEIGHBOUR){
-                        mipmapFilter = static_cast<TextureFilter>(GL_NEAREST_MIPMAP_NEAREST);
-                    }else if(filter == TextureFilter::LINEAR){
-                        mipmapFilter = static_cast<TextureFilter>(GL_NEAREST_MIPMAP_LINEAR);
-                    }
-                }else if(mipmapFilter == TextureFilter::LINEAR){
-                    if(filter == TextureFilter::NEAREST_NEIGHBOUR){
-                        mipmapFilter = static_cast<TextureFilter>(GL_LINEAR_MIPMAP_NEAREST);
-                    }else if(filter == TextureFilter::LINEAR){
-                        mipmapFilter = static_cast<TextureFilter>(GL_LINEAR_MIPMAP_LINEAR);
-                    }
-                }
-                //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, static_cast<GLenum>(filter));
-                //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLenum>(mipmapFilter));
-                //glGenerateMipmap(GL_TEXTURE_2D);
-            }else{
-                //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, static_cast<GLenum>(filter));
-                //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLenum>(filter));
-            }
-            const TextureWrap wrapMode = mParamFactory->WrapMode();
-            //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLenum>(wrapMode));
-            //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLenum>(wrapMode));
-
+        static constexpr bool HasArrayLayers(const GLenum aTarget){
+            return
+                aTarget == GL_TEXTURE_1D ?                      false :
+                aTarget == GL_TEXTURE_2D ?                      false :
+                aTarget == GL_TEXTURE_3D ?                      false :
+                aTarget == GL_TEXTURE_1D_ARRAY ?                true :
+                aTarget == GL_TEXTURE_2D_ARRAY ?                true :
+                aTarget == GL_TEXTURE_CUBE_MAP ?                false :
+                aTarget == GL_TEXTURE_CUBE_MAP_ARRAY ?          true :
+                aTarget == GL_TEXTURE_RECTANGLE ?               false :
+                aTarget == GL_TEXTURE_BUFFER ?                  false :
+                aTarget == GL_TEXTURE_2D_MULTISAMPLE ?          false :
+                aTarget == GL_TEXTURE_2D_MULTISAMPLE_ARRAY ?    true :
+                false;
         }
 
-        void DestroyTexture() override{
-            ForceUnbindAll();
-            //glDeleteTextures (1, &mID);
+        static constexpr bool HasCubemapFaces(const GLenum aTarget){
+            return
+                aTarget == GL_TEXTURE_1D ?                      false :
+                aTarget == GL_TEXTURE_2D ?                      false :
+                aTarget == GL_TEXTURE_3D ?                      false :
+                aTarget == GL_TEXTURE_1D_ARRAY ?                false :
+                aTarget == GL_TEXTURE_2D_ARRAY ?                false :
+                aTarget == GL_TEXTURE_CUBE_MAP ?                true :
+                aTarget == GL_TEXTURE_CUBE_MAP_ARRAY ?          true :
+                aTarget == GL_TEXTURE_RECTANGLE ?               false :
+                aTarget == GL_TEXTURE_BUFFER ?                  false :
+                aTarget == GL_TEXTURE_2D_MULTISAMPLE ?          false :
+                aTarget == GL_TEXTURE_2D_MULTISAMPLE_ARRAY ?    false :
+                false;
         }
 
-        bool IsCreated() const override{
-            return mID != INVALID_TEXTURE_ID;
+        static constexpr uint8_t GetDimentions(const GLenum aTarget){
+            return
+                aTarget == GL_TEXTURE_1D ?                      1 :
+                aTarget == GL_TEXTURE_2D ?                      2 :
+                aTarget == GL_TEXTURE_3D ?                      3 :
+                aTarget == GL_TEXTURE_1D_ARRAY ?                1 :
+                aTarget == GL_TEXTURE_2D_ARRAY ?                2 :
+                aTarget == GL_TEXTURE_CUBE_MAP ?                2 :
+                aTarget == GL_TEXTURE_CUBE_MAP_ARRAY ?          2 :
+                aTarget == GL_TEXTURE_RECTANGLE ?               2 :
+                aTarget == GL_TEXTURE_BUFFER ?                  1 :
+                aTarget == GL_TEXTURE_2D_MULTISAMPLE ?          2 :
+                aTarget == GL_TEXTURE_2D_MULTISAMPLE_ARRAY ?    2 :
+                0;
         }
-
-    public:
-        virtual ~Texture2D(){
-
-        }
-
-    };
-
-    class Texture3D : public TextureBase{
     private:
-        Texture3DFactory* mDataFactory;
-        TextureParamFactory* mParamFactory;
+        Texture(const Texture&) = delete;
+        Texture(Texture&&) = delete;
+        Texture& operator=(const Texture&) = delete;
+        Texture& operator=(Texture&&) = delete;
     public:
-        virtual ~Texture3D(){
+        Texture();
+        virtual ~Texture();
 
-        }
+        GLuint GetID() const;
+
+        void Create();
+        void Destroy();
+
+        void SetMinFilter(const Filter aFilter);
+        Filter GetMinFilter() const;
+
+        void SetMaxFilter(const Filter aFilter);
+        Filter GetMaxFilter() const;
+
+        void SetFilter(const Filter aFilter);
+
+        virtual GLEnum GetTarget() const = 0;
+
+        virtual GLuint GetMipmapLevels() const = 0;
+        virtual Filter GetMipmapFilter() = 0;
+
+        void SetWrapT(const Wrap aWrap);
+        Wrap GetWrapT() const;
+
+        void SetWrapR(const Wrap aWrap);
+        Wrap GetWrapR() const;
+
+        void SetWrap(const Wrap aWrap);
     };
 
-    class CubeMap : public TextureBase{
+    class MipmapedTexture : public Texture{
     private:
-        Texture2DFactory* mFront;
-        Texture2DFactory* mBack;
-        Texture2DFactory* mLeft;
-        Texture2DFactory* mRight;
-        Texture2DFactory* mTop;
-        Texture2DFactory* mBottom;
-        TextureParamFactory* mParamFactory;
+        GLuint mLevels;
+        Filter mFilter;
     public:
-        virtual ~CubeMap(){
+        virtual ~MipmapedTexture(){}
 
-        }
+        void SetMipmapLevels(const GLuint aLevels) const;
+        void SetMipmapFilter(const Filter aFilter);
+
+        // Inherited from Texture
+
+        GLuint GetMipmapLevels() const override;
+        Filter GetMipmapFilter() override;
     };
-}}
+
+    class NonMipmapedTexture : public Texture{
+    public:
+        virtual ~NonMipmapedTexture(){}
+
+        // Inherited from Texture
+
+        GLuint GetMipmapLevels() const override;
+        Filter GetMipmapFilter() override;
+    };
+
+    class Texture1D : public MipmappedTexture{};
+    class Texture2D : public MipmappedTexture{};
+    class Texture3D : public MipmappedTexture{};
+    class TextureRectangle : public NonMipmapedTexture{};
+    class TextureBuffer : public NonMipmapedTexture{};
+    class TextureCubemap : public MipmapedTexture{};
+    class Texture2DMultisample : public NonMipmapedTexture{};
+
+    class Texture1DArray : public MipmapedTexture{};
+    class Texture2DArray : public MipmapedTexture{};
+    class Texture3DArray : public MipmapedTexture{};
+    class TextureCubemapArray : public MipmapedTexture{};
+    class Texture2DMultisampleArray : public NonMipmapedTexture{};
 
 #endif
