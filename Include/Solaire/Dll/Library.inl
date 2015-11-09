@@ -61,7 +61,7 @@ namespace Solaire{namespace Dll{
 		mFunctions.emplace(std::string(aName), &aLocation);
 		if(mLibrary){
 			FunctionPointer const tmp = reinterpret_cast<FunctionPointer>(GetProcAddress(mLibrary, aName));
-			if(! tmp) throw std::runtime_error("DLL : Failed to load function");
+			if(! tmp) throw std::runtime_error("Solaire::Dll::Library : Failed to load function");
 			aLocation = tmp;
 		}
 	}
@@ -74,7 +74,7 @@ namespace Solaire{namespace Dll{
 
 		for(std::pair<const std::string, FunctionPointer*>& function : mFunctions){
 			FunctionPointer const tmp = reinterpret_cast<FunctionPointer>(GetProcAddress(mLibrary, function.first.c_str()));
-			if(! tmp) throw std::runtime_error("DLL : Failed to load function");
+			if(! tmp) throw std::runtime_error("Solaire::Dll::Library : Failed to load function");
 			*function.second = tmp;
 		}
 		
