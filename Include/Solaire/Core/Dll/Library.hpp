@@ -35,7 +35,6 @@ Last Modified	: 9th November 2015
 #include <string>
 #include "Dll.inl"
 
-
 namespace Solaire{namespace Dll{
 	class Library{
 	public:

@@ -102,20 +102,21 @@ namespace Solaire{
 
     ////
 
-    //template<class T>
-    //struct TypeTraits<T, typename std::enable_if<is_arithmetic<T>::value>::type>{
-    //    static constexpr int PassMode = PASS_BY_VALUE;
-    //};
-
-    template<>
-    struct TypeTraits<bool>{
+    template<class T>
+    struct TypeTraits<T, typename std::enable_if<
+		std::is_arithmetic<T>::value ||
+		std::is_same<T, bool>::value ||
+		std::is_same<T, char>::value ||
+		std::is_pointer<T>::value
+	>::type>{
         static constexpr int PassMode = PASS_BY_VALUE;
     };
 
-    template<>
-    struct TypeTraits<char>{
-        static constexpr int PassMode = PASS_BY_VALUE;
-    };
+	template<class T>
+	using PassType = typename PassTypes<T>::Type;
+
+	template<class T>
+	using ConstPassType = typename PassTypes<T>::ConstType;
 
 }
 
