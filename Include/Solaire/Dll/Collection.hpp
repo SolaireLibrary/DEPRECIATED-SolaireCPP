@@ -75,6 +75,7 @@ namespace Solaire{namespace Dll{
 	public:
 		virtual T& Add(const T&) = 0;
 		virtual void Remove(const Iterator<const T>&) = 0;
+		virtual void Clear() = 0;
 	};
 }}
 
