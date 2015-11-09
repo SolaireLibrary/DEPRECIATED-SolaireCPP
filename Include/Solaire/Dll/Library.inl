@@ -59,6 +59,11 @@ namespace Solaire{namespace Dll{
 
 	void Library::DefineFunction(const char* const aName, FunctionPointer& aLocation){
 		mFunctions.emplace(std::string(aName), &aLocation);
+		if(mLibrary){
+			FunctionPointer const tmp = reinterpret_cast<FunctionPointer>(GetProcAddress(mLibrary, aName));
+			if(! tmp) throw std::runtime_error("DLL : Failed to load function");
+			aLocation = tmp;
+		}
 	}
 
 	void Library::Load(const char* const aFile){
