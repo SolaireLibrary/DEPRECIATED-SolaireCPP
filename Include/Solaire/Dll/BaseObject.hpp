@@ -57,6 +57,4 @@ namespace Solaire{namespace Dll{
 	};
 }}
 
-#include "Loader.inl"
-
 #endif
