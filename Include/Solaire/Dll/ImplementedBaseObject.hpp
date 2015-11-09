@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_DLL_BASE_OBJECT_HPP
-#define SOLAIRE_DLL_BASE_OBJECT_HPP
+#ifndef SOLAIRE_DLL_IMPLEMENTED_BASE_OBJECT_HPP
+#define SOLAIRE_DLL_IMPLEMENTED_BASE_OBJECT_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file BaseObject.hpp
+\file ImplementedBaseObject.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -31,32 +31,33 @@ Created			: 9th November 2015
 Last Modified	: 9th November 2015
 */
 
-#include <cstdint>
-#include "Dll.inl"
+#include "BaseObject.hpp"
 
 namespace Solaire{namespace Dll{
-	class SOLAIRE_DLL_API BaseObject{
-	public:
-		typedef uint32_t ErrorCode;
-		
-		enum : ErrorCode{
-			NO_ERROR,
-			RELEASED_UNREFERENCED_OBJECT,
-			ERROR_OVERFLOW
+	class SOLAIRE_DLL_API ImplementedBaseObject : public BaseObject{
+	private:
+		enum{
+			MAX_ERRORS = 16
 		};
 	private:
-		BaseObject(const BaseObject&) = delete;
-		BaseObject(BaseObject&&) = delete;
-		BaseObject& operator=(const BaseObject&) = delete;
-		BaseObject& operator=(BaseObject&&) = delete;
+		uint32_t mReferenceCount;
+		ErrorCode mErrorCodes[MAX_ERRORS];
+		uint8_t mErrorHead;
+	protected:
+		void SetError(const ErrorCode);
 	public:
-		virtual void CreateReference() = 0;
-		virtual void ReleaseReference() = 0;
-		virtual uint32_t GetReferenceCount() const = 0;
-		virtual ErrorCode GetError() = 0;
+		ImplementedBaseObject();
+		virtual ~ImplementedBaseObject();
+		
+		// Inherited from BaseObject
+		
+		void CreateReference() override;
+		void ReleaseReference() override;
+		uint32_t GetReferenceCount() const override;
+		ErrorCode GetError() override;
 	};
 }}
 
-#include "Loader.inl"
+#include "ImplementedBaseObject.inl"
 
 #endif
