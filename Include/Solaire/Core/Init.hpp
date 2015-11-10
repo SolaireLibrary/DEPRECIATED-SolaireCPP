@@ -70,15 +70,26 @@ aMods typename std::enable_if<aCondition, RETURN_TYPE>::type
 
 namespace Solaire{
 
+	struct TypeTraitData{
+		const uint16_t Size;
+		const bool IsSerialisable;
+
+		constexpr TypeTraitData(const bool aSerialiseable, const uint16_t aSize):
+			Size(aSize),
+			IsSerialisable(aSerialiseable)
+		{}
+	};
+
     template<class T, class Enable = void>
     struct TypeTraits{
 		typedef T Type;
 		typedef const T ConstType;
 		typedef T& PassType;
 		typedef const T& ConstPassType;
-		enum{
-			IsSerialiseable = 0
-		};
+
+		static constexpr TypeTraitData GetData() {
+			return TypeTraitData(false, sizeof(T));
+		}
     };
 
 	#define SolaireRuntimeAssert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage)

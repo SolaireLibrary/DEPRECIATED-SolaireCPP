@@ -43,9 +43,10 @@ namespace Solaire{
 		typedef const T ConstType;
 		typedef T PassType;
 		typedef const T ConstPassType;
-		enum {
-			IsSerialiseable = 1
-		};
+
+		static constexpr TypeTraitData GetData(){
+			return TypeTraitData(true, sizeof(T));
+		}
 	};
 
 	template<class T>
@@ -56,9 +57,10 @@ namespace Solaire{
 		typedef const T ConstType;
 		typedef T PassType;
 		typedef const T ConstPassType;
-		enum {
-			IsSerialiseable = 0
-		};
+
+		static constexpr TypeTraitData GetData() {
+			return TypeTraitData(false, sizeof(T));
+		}
 	};
 
 }
