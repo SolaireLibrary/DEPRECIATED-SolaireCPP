@@ -16,7 +16,7 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include "Solaire\Core\DefaultAllocator.hpp"
+#include "Solaire\Core\Memory\DefaultAllocator.hpp"
 
 namespace Solaire{
 

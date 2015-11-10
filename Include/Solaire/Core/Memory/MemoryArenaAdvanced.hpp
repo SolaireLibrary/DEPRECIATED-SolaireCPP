@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_MEMORY_ARENA_HPP
-#define SOLAIRE_MEMORY_ARENA_HPP
+#ifndef SOLAIRE_MEMORY_ARENA_ADVANCED_HPP
+#define SOLAIRE_MEMORY_ARENA_ADVANCED_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file MemoryArena.hpp
+\file MemoryArenaAdvanced.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -32,55 +32,14 @@ Last Modified	: 9th November 2015
 */
 
 #include <vector>
-#include <algorithm>
-#include <type_traits>
 #include "Allocator.hpp"
+#include "MemoryArena.hpp"
 
 namespace Solaire{
 
     /*!
-        \class MemoryArena
         \detail
-        Use different MemoryArenas for different object lifetimes (eg. objects that are destroyed at the end of a frame)
     */
-
-	class MemoryArena : public Allocator{
-	public:
-		virtual ~MemoryArena();
-		virtual void Clear() = 0;
-	};
-
-    class BasicMemoryArena : public MemoryArena {
-    private:
-        typedef std::pair<void*, uint32_t> Block;
-    private:
-        Allocator& mAllocator;
-		void* const mBlock;
-		const uint32_t mSize;
-		uint32_t mAllocated;
-	private:
-		BasicMemoryArena(const BasicMemoryArena&) = delete;
-		BasicMemoryArena(BasicMemoryArena&&) = delete;
-		BasicMemoryArena& operator=(const BasicMemoryArena&) = delete;
-		BasicMemoryArena& operator=(BasicMemoryArena&&) = delete;
-    public:
-		BasicMemoryArena(const uint32_t);
-		BasicMemoryArena(Allocator&, const uint32_t);
-		~BasicMemoryArena();
-
-		// Inherited from Allocator
-
-		void Clear() override;
-
-        // Inherited from Allocator
-
-		uint32_t GetAllocatedBytes() const override;
-		uint32_t GetFreeBytes() const override;
-
-		void* Allocate(const size_t aBytes) override;
-		void Deallocate(void* const aObject, const size_t aBytes) override;
-    };
-
 	class AdvancedMemoryArena : public MemoryArena {
 	private:
 		typedef std::pair<void*, uint32_t> Block;
