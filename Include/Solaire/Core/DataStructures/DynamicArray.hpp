@@ -58,7 +58,7 @@ namespace Solaire{
 		typedef INDEX Index;
 		typedef DynamicArray<TYPE, CONST_TYPE, INDEX> Self;
 
-		typedef typename PassTypes<Type>::ConstType PassType;
+		typedef typename TypeTraits<Type>::ConstPassType PassType;
 	private:
         Allocator* mAllocator;
 		Index mHead;

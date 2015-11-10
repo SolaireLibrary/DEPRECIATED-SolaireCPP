@@ -70,53 +70,16 @@ aMods typename std::enable_if<aCondition, RETURN_TYPE>::type
 
 namespace Solaire{
 
-    enum{
-        PASS_BY_VALUE,
-        PASS_BY_REFERENCE
-    };
-
     template<class T, class Enable = void>
     struct TypeTraits{
-        static constexpr int PassMode = PASS_BY_REFERENCE;
+		typedef T Type;
+		typedef const T ConstType;
+		typedef T& PassType;
+		typedef const T& ConstPassType;
+		enum{
+			IsSerialiseable = 0
+		};
     };
-
-    template<class T, const int Mode = TypeTraits<T>::PassMode>
-    struct PassTypes{
-        typedef void Type;
-        typedef void ConstType;
-    };
-
-    ////
-
-    template<class T>
-    struct PassTypes<T, PASS_BY_VALUE>{
-        typedef T Type;
-        typedef const T ConstType;
-    };
-
-    template<class T>
-    struct PassTypes<T, PASS_BY_REFERENCE>{
-        typedef T& Type;
-        typedef const T& ConstType;
-    };
-
-    ////
-
-    template<class T>
-    struct TypeTraits<T, typename std::enable_if<
-		std::is_arithmetic<T>::value ||
-		std::is_same<T, bool>::value ||
-		std::is_same<T, char>::value ||
-		std::is_pointer<T>::value
-	>::type>{
-        static constexpr int PassMode = PASS_BY_VALUE;
-    };
-
-	template<class T>
-	using PassType = typename PassTypes<T>::Type;
-
-	template<class T>
-	using ConstPassType = typename PassTypes<T>::ConstType;
 
 	#define SolaireRuntimeAssert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage)
 	#define SolaireStaticAssert static_assert(aCondition, aMessage)
@@ -135,5 +98,7 @@ namespace Solaire{
 	#endif
 
 }
+
+#include "Init.inl"
 
 #endif
