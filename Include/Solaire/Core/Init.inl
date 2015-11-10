@@ -45,7 +45,7 @@ namespace Solaire{
 		typedef const T ConstPassType;
 
 		static constexpr TypeTraitData GetData(){
-			return TypeTraitData(true, sizeof(T));
+			return TypeTraitData::GetData<T>(false);
 		}
 	};
 
@@ -59,7 +59,7 @@ namespace Solaire{
 		typedef const T ConstPassType;
 
 		static constexpr TypeTraitData GetData() {
-			return TypeTraitData(false, sizeof(T));
+			return TypeTraitData::GetData<T>(false);
 		}
 	};
 
