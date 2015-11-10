@@ -118,6 +118,22 @@ namespace Solaire{
 	template<class T>
 	using ConstPassType = typename PassTypes<T>::ConstType;
 
+	#define SolaireRuntimeAssert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage)
+	#define SolaireStaticAssert static_assert(aCondition, aMessage)
+
+	#ifndef SOLAIRE_DISABLE_MULTITHREADING
+	#define SolaireSynchronized(aLock, aCode)\
+		{\
+			std::lock_guard<decltype(aLock)> _solaire_guard(aLock);\
+			aCode\
+		}
+	#else
+	#define SolaireSynchronized(aLock, aCode)\
+		{\
+			aCode\
+		}
+	#endif
+
 }
 
 #endif
