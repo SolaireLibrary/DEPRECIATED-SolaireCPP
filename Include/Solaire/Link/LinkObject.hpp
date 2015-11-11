@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_DLL_LIBRARY_HPP
-#define SOLAIRE_DLL_LIBRARY_HPP
+#ifndef SOLAIRE_LINK_OBJECT_HPP
+#define SOLAIRE_LINK_OBJECT_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file Library.hpp
+\file LinkObject.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -28,44 +28,33 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 9th November 2015
-Last Modified	: 9th November 2015
+Last Modified	: 11th November 2015
 */
 
-#include <map>
-#include <string>
-#include "Dll.inl"
+#include <cstdint>
+#include "Link.inl"
 
-namespace Solaire{namespace Dll{
-	class Library{
+namespace Solaire{
+	class SOLAIRE_DLL_API LinkObject{
 	public:
-		#if SOLAIRE_OS == SOLAIRE_WINDOWS
-			typedef int(__stdcall  *FunctionPointer)();
-		#else
-			typedef int(*FunctionPointer)();
-		#endif
-	private:
-		#if SOLAIRE_OS == SOLAIRE_WINDOWS
-			HMODULE mLibrary;
-		#else
-			void* mLibrary;
-		#endif
-		std::map<std::string, FunctionPointer*> mFunctions;
-	private:
-		Library(const Library&);
-		Library& operator=(const Library&);
-	public:
-		Library();
-		Library(Library&& Library);
-		~Library();
+		typedef uint32_t ErrorCode;
 		
-		Library& operator=(Library&&);
-
-		void DefineFunction(const char* const, FunctionPointer&);
-
-		void Load(const char* const);
-		void Unload();
-		bool IsLoaded() const;
+		enum : ErrorCode{
+			DLL_NO_ERROR,
+			DLL_RELEASED_UNREFERENCED_OBJECT,
+			DLL_ERROR_OVERFLOW
+		};
+	private:
+		//LinkObject(const LinkObject&) = delete;
+		//LinkObject(LinkObject&&) = delete;
+		//LinkObject& operator=(const LinkObject&) = delete;
+		//LinkObject& operator=(LinkObject&&) = delete;
+	public:
+		virtual void CreateReference() = 0;
+		virtual void ReleaseReference() = 0;
+		virtual uint32_t GetReferenceCount() const = 0;
+		virtual ErrorCode GetError() = 0;
 	};
-}}
+}
 
 #endif

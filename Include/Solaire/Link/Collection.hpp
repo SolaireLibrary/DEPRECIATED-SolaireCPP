@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_DLL_COLLECTION_HPP
-#define SOLAIRE_DLL_COLLECTION_HPP
+#ifndef SOLAIRE_COLLECTION_HPP
+#define SOLAIRE_COLLECTION_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -27,13 +27,13 @@ Created			: Adam Smith
 Last modified	: Adam Smith
 \version 1.0
 \date
-Created			: 9th November 2015
-Last Modified	: 9th November 2015
+Created			: 11th November 2015
+Last Modified	: 11th November 2015
 */
 
 #include <cstdint>
-#include <funtional>
-#include "Dll.inl"
+#include <functional>
+#include "Link.inl"
 
 namespace Solaire{namespace Dll{
 

@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_DLL_INL
-#define SOLAIRE_DLL_INL
+#ifndef SOLAIRE_DLL_HPP
+#define SOLAIRE_DLL_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file Dll.inl
+\file Library.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -28,21 +28,40 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 9th November 2015
-Last Modified	: 9th November 2015
+Last Modified	: 11th November 2015
 */
 
-#include "..\Init.hpp"
+#include <map>
+#include <string>
+#include "SharedLibrary.hpp"
 
-#if SOLAIRE_OS == SOLAIRE_WINDOWS
-	#define SOLAIRE_DLL_IMPORT __declspec(dllimport)
-	#define SOLAIRE_DLL_EXPORT __declspec(dllexport)
-#else
-	#define SOLAIRE_DLL_IMPORT
-	#define SOLAIRE_DLL_EXPORT
+#if SOLAIRE_OS != SOLAIRE_WINDOWS
+	#error SolaireCPP : DLL class is only avaliable on Windows
 #endif
 
-#ifndef SOLAIRE_DLL_API
-	#define SOLAIRE_DLL_API SOLAIRE_DLL_IMPORT
-#endif
+namespace Solaire{
+	class DLL : public SharedLibrary{
+	private:
+		HMODULE mLibrary;
+		std::map<std::string, FunctionPointer*> mFunctions;
+	private:
+		DLL(const DLL&);
+		DLL& operator=(const DLL&);
+	public:
+		DLL();
+		DLL(DLL&& Library);
+		~DLL();
+		
+		DLL& operator=(DLL&&);
+
+		// Inherited from SharedLibrary
+
+		void DefineFunction(const char* const, FunctionPointer&) override;
+
+		void Load(const char* const) override;
+		void Unload() override;
+		bool IsLoaded() const override;
+	};
+}
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_DLL_BASE_OBJECT_HPP
-#define SOLAIRE_DLL_BASE_OBJECT_HPP
+#ifndef SOLAIRE_DLL_SHARED_LIBRARY_HPP
+#define SOLAIRE_DLL_SHARED_LIBRARY_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,41 +20,36 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file BaseObject.hpp
+\file SharedLibrary.hpp
 \brief
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
 \version 1.0
 \date
-Created			: 9th November 2015
-Last Modified	: 9th November 2015
+Created			: 11th November 2015
+Last Modified	: 11th November 2015
 */
 
-#include <cstdint>
-#include "Dll.inl"
+#include "Link.inl"
 
-namespace Solaire{namespace Dll{
-	class SOLAIRE_DLL_API BaseObject{
+namespace Solaire{
+	class SharedLibrary{
 	public:
-		typedef uint32_t ErrorCode;
-		
-		enum : ErrorCode{
-			DLL_NO_ERROR,
-			DLL_RELEASED_UNREFERENCED_OBJECT,
-			DLL_ERROR_OVERFLOW
-		};
-	private:
-		//BaseObject(const BaseObject&) = delete;
-		//BaseObject(BaseObject&&) = delete;
-		//BaseObject& operator=(const BaseObject&) = delete;
-		//BaseObject& operator=(BaseObject&&) = delete;
+#if SOLAIRE_OS == SOLAIRE_WINDOWS
+		typedef int(__stdcall  *FunctionPointer)();
+#else
+		typedef int(*FunctionPointer)();
+#endif
 	public:
-		virtual void CreateReference() = 0;
-		virtual void ReleaseReference() = 0;
-		virtual uint32_t GetReferenceCount() const = 0;
-		virtual ErrorCode GetError() = 0;
+		virtual ~SharedLibrary(){}
+
+		virtual void DefineFunction(const char* const, FunctionPointer&) = 0;
+
+		virtual void Load(const char* const) = 0;
+		virtual void Unload() = 0;
+		virtual bool IsLoaded() const = 0;
 	};
-}}
+}
 
 #endif

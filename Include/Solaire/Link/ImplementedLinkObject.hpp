@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_DLL_IMPLEMENTED_BASE_OBJECT_HPP
-#define SOLAIRE_DLL_IMPLEMENTED_BASE_OBJECT_HPP
+#ifndef SOLAIRE_IMPLEMENTED_LINK_OBJECT_HPP
+#define SOLAIRE_IMPLEMENTED_LINK_OBJECT_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file ImplementedBaseObject.hpp
+\file ImplementedLinkObject.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -28,13 +28,13 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 9th November 2015
-Last Modified	: 9th November 2015
+Last Modified	: 11th November 2015
 */
 
-#include "BaseObject.hpp"
+#include "LinkObject.hpp"
 
 namespace Solaire{namespace Dll{
-	class ImplementedBaseObject : public BaseObject{
+	class ImplementedLinkObject : public LinkObject {
 	private:
 		enum{
 			MAX_ERRORS = 16
@@ -46,10 +46,10 @@ namespace Solaire{namespace Dll{
 	protected:
 		void SetError(const ErrorCode);
 	public:
-		ImplementedBaseObject();
-		virtual ~ImplementedBaseObject();
+		ImplementedLinkObject();
+		virtual ~ImplementedLinkObject();
 		
-		// Inherited from BaseObject
+		// Inherited from LinkObject
 		
 		void CreateReference() override;
 		void ReleaseReference() override;

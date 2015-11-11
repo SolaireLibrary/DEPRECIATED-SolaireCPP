@@ -16,22 +16,22 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include "Solaire\Core\Dll\ImplementedBaseObject.hpp"
+#include "Solaire\Link\ImplementedLinkObject.hpp"
 
 namespace Solaire{namespace Dll{
 	
-	// ImplementedBaseObject
+	// ImplementedLinkObject
 	
-	ImplementedBaseObject::ImplementedBaseObject() :
+	ImplementedLinkObject::ImplementedLinkObject() :
 		mReferenceCount(0),
 		mErrorHead(0)
 	{}
 	
-	ImplementedBaseObject::~ImplementedBaseObject(){
+	ImplementedLinkObject::~ImplementedLinkObject(){
 		
 	}
 	
-	void ImplementedBaseObject::SetError(const ErrorCode aCode){
+	void ImplementedLinkObject::SetError(const ErrorCode aCode){
 		if(mErrorHead == MAX_ERRORS){
 			for(int i = 0; i < MAX_ERRORS - 2; ++i){
 				mErrorCodes[i] = mErrorCodes[i + 2];
@@ -43,26 +43,26 @@ namespace Solaire{namespace Dll{
 		}
 	}
 	
-	void ImplementedBaseObject::CreateReference(){
+	void ImplementedLinkObject::CreateReference(){
 		++mReferenceCount;
 	}
 	
-	void ImplementedBaseObject::ReleaseReference(){
+	void ImplementedLinkObject::ReleaseReference(){
 		if(mReferenceCount == 0){
 			SetError(DLL_RELEASED_UNREFERENCED_OBJECT);
 		}else{
 			--mReferenceCount;
 			if(mReferenceCount == 0){
-				this->~ImplementedBaseObject();
+				this->~ImplementedLinkObject();
 			}
 		}
 	}
 	
-	uint32_t ImplementedBaseObject::GetReferenceCount() const{
+	uint32_t ImplementedLinkObject::GetReferenceCount() const{
 		return mReferenceCount;
 	}
 	
-	BaseObject::ErrorCode ImplementedBaseObject::GetError(){
+	LinkObject::ErrorCode ImplementedLinkObject::GetError(){
 		if(mErrorHead == 0) return DLL_NO_ERROR;
 		return mErrorCodes[mErrorHead--];
 	}
