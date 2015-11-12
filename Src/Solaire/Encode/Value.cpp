@@ -274,7 +274,7 @@ namespace Solaire{ namespace Encode{
 		}
 	}
 
-	const std::string& Value::GetString() const {
+	ConstStringFragment Value::GetString() const {
 		switch (mType)
 		{
 		case TYPE_STRING:
@@ -284,7 +284,7 @@ namespace Solaire{ namespace Encode{
 		}
 	}
 
-	Array& Value::GetArray() const {
+	const Array& Value::GetArray() const {
 		switch (mType)
 		{
 		case TYPE_ARRAY:
@@ -294,7 +294,7 @@ namespace Solaire{ namespace Encode{
 		}
 	}
 
-	Object& Value::GetObject() const {
+	const Object& Value::GetObject() const {
 		switch (mType)
 		{
 		case TYPE_OBJECT:
@@ -308,7 +308,7 @@ namespace Solaire{ namespace Encode{
 		switch(mType)
 		{
 		case TYPE_STRING:
-			mString->~basic_string();
+			mString->~String();
 			mAllocator->Deallocate(mString, sizeof(std::string));
 			break;
 		case TYPE_ARRAY:
@@ -355,13 +355,13 @@ namespace Solaire{ namespace Encode{
 		mDouble = aValue;
 	}
 
-	std::string& Value::SetString() {
+	String& Value::SetString() {
 		if(mType != TYPE_STRING) {
 			SetNull();
 			mType = TYPE_STRING;
-			mString = new(mAllocator->Allocate(sizeof(std::string))) std::string();
+			mString = new(mAllocator->Allocate(sizeof(std::string))) String(mAllocator);
 		}else {
-			mString->clear();
+			mString->Clear();
 		}
 		return *mString;
 	}

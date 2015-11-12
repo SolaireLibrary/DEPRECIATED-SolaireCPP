@@ -34,6 +34,7 @@
 #include <map>
 #include <memory>
 #include "..\DataStructures\DynamicArray.hpp"
+#include "..\Strings\String.hpp"
 
 #undef GetObject
 
@@ -42,7 +43,7 @@ namespace Solaire{ namespace Encode{
 	class Value;
 
 	typedef DynamicArray<Value> Array;
-	typedef std::map<std::string, Value> Object;
+	typedef std::map<String, Value> Object;
 
 	class Value{
 	private:
@@ -65,7 +66,7 @@ namespace Solaire{ namespace Encode{
 			double mDouble;
 			Object* mObject;
 			Array* mArray;
-			std::string* mString;
+			String* mString;
 		};
 		uint8_t mType;
 	public:
@@ -104,9 +105,9 @@ namespace Solaire{ namespace Encode{
 		uint64_t GetUint() const;
 		int64_t GetInt() const;
 		double GetDouble() const;
-		const std::string& GetString() const;
-		Array& GetArray() const;
-		Object& GetObject() const;
+		ConstStringFragment GetString() const;
+		const Array& GetArray() const;
+		const Object& GetObject() const;
 
 		void SetNull();
 		void SetBool(const bool);
@@ -114,7 +115,7 @@ namespace Solaire{ namespace Encode{
 		void SetUint(const uint64_t);
 		void SetInt(const int64_t);
 		void SetDouble(const double);
-		std::string& SetString();
+		String& SetString();
 		Array& SetArray();
 		Object& SetObject();
 	};
