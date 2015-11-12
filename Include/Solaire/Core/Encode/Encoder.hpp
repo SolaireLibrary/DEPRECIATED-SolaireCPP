@@ -51,6 +51,16 @@ namespace Encode{
 		static Value Encode(EncodeType, Allocator&) = delete;
 	};
 
+	template<class T>
+	static typename Encoder<T>::DecodeType Decode(const Value& aValue, Allocator& aAllocator){
+		return Encoder<T>::Decode(aValue, aAllocator);
+	}
+
+	template<class T>
+	static Value Encode(typename Encoder<T>::EncodeType aValue, Allocator& aAllocator) {
+		return Encoder<T>::Encode(aValue, aAllocator);
+	}
+
 }}
 
 #include "Encoder.inl"

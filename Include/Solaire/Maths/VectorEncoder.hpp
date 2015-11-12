@@ -51,7 +51,7 @@ namespace Solaire{
 
 			DecodeType tmp;
 			for(uint32_t i = 0; i < LENGTH; ++i) {
-				tmp[i] = Encode::Encoder<T>::Decode(_array[i], aAllocator);
+				tmp[i] = Encode::Decode<T>(_array[i], aAllocator);
 			}
 			return tmp;
 		}
@@ -61,7 +61,7 @@ namespace Solaire{
 			Encode::Array& _array = value.SetArray();
 
 			for(uint32_t i = 0; i < LENGTH; ++i) {
-				_array.PushBack(Encode::Encoder<T>::Encode(aVector[i], aAllocator));
+				_array.PushBack(Encode::Encode<T>(aVector[i], aAllocator));
 			}
 
 			return value;
