@@ -33,10 +33,13 @@
 
 #include <memory>
 
-namespace Solaire{ namespace Encode{
+namespace Solaire{ 
+
+	class Allocator;
+
+namespace Encode{
 
 	class Value;
-	class Allocator;
 
 	template<class T>
 	struct Encoder {
@@ -45,7 +48,7 @@ namespace Solaire{ namespace Encode{
 		typedef const T& EncodeType;
 
 		static DecodeType Decode(const Value&, Allocator&) = delete;
-		static std::shared_ptr<Value> Encode(EncodeType, Allocator&) = delete;
+		static Value Encode(EncodeType, Allocator&) = delete;
 	};
 
 }}

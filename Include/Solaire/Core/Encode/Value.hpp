@@ -31,46 +31,92 @@
 	Last Modified	: 12th November 2015
 */
 
-#include <cstdint>
+#include <map>
+#include <memory>
+#include "..\DataStructures\DynamicArray.hpp"
+
+#undef GetObject
 
 namespace Solaire{ namespace Encode{
 
-	class Array;
-	class Object;
+	class Value;
 
-	class Value {
+	typedef DynamicArray<Value> Array;
+	typedef std::map<std::string, Value> Object;
+
+	class Value{
+	private:
+		enum : uint8_t {
+			TYPE_NULL,
+			TYPE_BOOL,
+			TYPE_CHAR,
+			TYPE_UINT,
+			TYPE_INT,
+			TYPE_DOUBLE,
+			TYPE_STRING,
+			TYPE_ARRAY,
+			TYPE_OBJECT
+		};
+	private:
+		Allocator* mAllocator;
+		union{
+			uint64_t mUint;
+			int64_t mInt;
+			double mDouble;
+			Object* mObject;
+			Array* mArray;
+			std::string* mString;
+		};
+		uint8_t mType;
 	public:
-		virtual ~Value(){}
+		Value(Allocator&);
+		Value(const Value&);
+		Value(Value&&);
+		Value(Allocator&, const bool);
+		Value(Allocator&, const uint8_t);
+		Value(Allocator&, const uint16_t);
+		Value(Allocator&, const uint32_t);
+		Value(Allocator&, const uint64_t);
+		Value(Allocator&, const int8_t);
+		Value(Allocator&, const int16_t);
+		Value(Allocator&, const int32_t);
+		Value(Allocator&, const int64_t);
+		Value(Allocator&, const float);
+		Value(Allocator&, const double);
+		Value(Allocator&, const std::string&);
+		~Value();
 
-		virtual bool IsNull() const = 0;
-		virtual bool IsBool() const = 0;
-		virtual bool IsChar() const = 0;
-		virtual bool IsUint() const = 0;
-		virtual bool IsInt() const = 0;
-		virtual bool IsDouble() const = 0;
-		virtual bool IsString() const = 0;
-		virtual bool IsArray() const = 0;
-		virtual bool IsObject() const = 0;
+		Value& operator=(const Value&);
+		Value& operator=(Value&&);
 
-		virtual bool GetBool() const = 0;
-		virtual char GetChar() const = 0;
-		virtual uint64_t GetUint() const = 0;
-		virtual int64_t GetInt() const = 0;
-		virtual double GetDouble() const = 0;
-		virtual const char* GetString() const = 0;
-		virtual uint32_t GetStringLength() const = 0;
-		virtual Array& GetArray() const = 0;
-		virtual Object& GetObject() const = 0;
+		bool IsNull() const;
+		bool IsBool() const;
+		bool IsChar() const;
+		bool IsUint() const;
+		bool IsInt() const;
+		bool IsDouble() const;
+		bool IsString() const;
+		bool IsArray() const;
+		bool IsObject() const;
 
-		virtual void SetNull() = 0;
-		virtual void SetBool(const bool) = 0;
-		virtual void SetChar(const char) = 0;
-		virtual void SetUint(const uint64_t) = 0;
-		virtual void SetInt(const int64_t) = 0;
-		virtual void SetDouble(const double) = 0;
-		virtual const char* SetString(const char* const) = 0;
-		virtual Array& SetArray() = 0;
-		virtual Object& SetObject() = 0;
+		bool GetBool() const;
+		char GetChar() const;
+		uint64_t GetUint() const;
+		int64_t GetInt() const;
+		double GetDouble() const;
+		const std::string& GetString() const;
+		Array& GetArray() const;
+		Object& GetObject() const;
+
+		void SetNull();
+		void SetBool(const bool);
+		void SetChar(const char);
+		void SetUint(const uint64_t);
+		void SetInt(const int64_t);
+		void SetDouble(const double);
+		std::string& SetString();
+		Array& SetArray();
+		Object& SetObject();
 	};
 }}
 
