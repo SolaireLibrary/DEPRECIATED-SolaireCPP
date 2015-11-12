@@ -40,7 +40,7 @@
 namespace Solaire{
 
 	template<class T, const uint32_t LENGTH>
-	class VectorMath{
+	class VectorMaths{
 	public:
 		typedef T Scalar;
 		typedef typename TypeTraits<Scalar>::ConstPassType ScalarPass;
