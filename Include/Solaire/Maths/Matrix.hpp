@@ -196,7 +196,26 @@ static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator/=(Solaire::Matrix<T, W
 	return aMatrix;
 }
 
-//! \todo matrix / vector operators
+template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
+static Solaire::Vector<T, HEIGHT>& operator+=(Solaire::Vector<T, HEIGHT>& aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+	for(uint32_t i = 0; i < HEIGHT) {
+		aVector[i] += aMatrix.GetRow(i).Sum();
+	}
+	return aVector;
+}
+
+template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
+static Solaire::Vector<T, HEIGHT>& operator-=(Solaire::Vector<T, HEIGHT>& aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+	for(uint32_t i = 0; i < HEIGHT) {
+		aVector[i] -= aMatrix.GetRow(i).Sum();
+	}
+	return aVector;
+}
+
+template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
+static Solaire::Vector<T, WIDTH>& operator*=(Solaire::Vector<T, WIDTH>& aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+	return aVector = aVector * aMatrix;
+}
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
 static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator+(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) {
@@ -212,7 +231,7 @@ static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator-(const Solaire::Matrix<
 	return aFirst;
 }
 
-template<class T, const uint32_t WIDTH, const uint32_t HEIGHT, const uint32_t WIDTH2, const uint32_t HEIGHT2, typename ENABLE = typename std::enable_if<WIDTH == HEIGHT2 && HEIGHT == WIDTH2>::type>
+template<class T, const uint32_t WIDTH, const uint32_t HEIGHT, const uint32_t WIDTH2, const uint32_t HEIGHT2, typename ENABLE = typename std::enable_if<WIDTH == HEIGHT2>::type>
 static Solaire::Matrix<T, Solaire::Max(WIDTH, WIDTH2), Solaire::Max(HEIGHT, HEIGHT2)> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH2, HEIGHT2>& aSecond) {
 	enum : uint32_t {
 		W = Solaire::Max(WIDTH, WIDTH2),
@@ -285,6 +304,64 @@ static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator/(typename Solaire::Matr
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Div(tmp.AsPointer(), aScalar, aMatrix.AsPointer());
 	return aMatrix;
+}
+
+template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
+static Solaire::Vector<T, HEIGHT> operator+(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, const Solaire::Vector<T, HEIGHT> aVector) {
+	Solaire::Vector<T, HEIGHT> tmp;
+	for(uint32_t i = 0; i < HEIGHT) {
+		tmp[i] = aMatrix.GetRow().Sum() + aVector[i];
+	}
+	return tmp;
+}
+
+template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
+static Solaire::Vector<T, HEIGHT> operator-(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, const Solaire::Vector<T, HEIGHT> aVector) {
+	Solaire::Vector<T, HEIGHT> tmp;
+	for (uint32_t i = 0; i < HEIGHT) {
+		tmp[i] = aMatrix.GetRow().Sum() - aVector[i];
+	}
+	return tmp;
+}
+
+template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
+static Solaire::Vector<T, WIDTH> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, const Solaire::Vector<T, WIDTH> aVector) {
+	Solaire::Vector<T, WIDTH> tmp;
+
+	for(uint32_t i = 0; i < WIDTH) {
+		tmp[i] = aMatrix.GetRow(i).Dot(aVector);
+	}
+
+	return tmp;
+}
+
+template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
+static Solaire::Vector<T, HEIGHT> operator+(const Solaire::Vector<T, HEIGHT> aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+	Solaire::Vector<T, HEIGHT> tmp;
+	for(uint32_t i = 0; i < HEIGHT) {
+		tmp[i] = aVector[i] + aMatrix.GetRow().Sum();
+	}
+	return tmp;
+}
+
+template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
+static Solaire::Vector<T, HEIGHT> operator-(const Solaire::Vector<T, HEIGHT> aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+	Solaire::Vector<T, HEIGHT> tmp;
+	for(uint32_t i = 0; i < HEIGHT) {
+		tmp[i] = aVector[i] - aMatrix.GetRow().Sum();
+	}
+	return tmp;
+}
+
+template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
+static Solaire::Vector<T, HEIGHT> operator*(const Solaire::Vector<T, HEIGHT> aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+	Solaire::Vector<T, HEIGHT> tmp;
+
+	for (uint32_t i = 0; i < HEIGHT) {
+		tmp[i] = aVector.Dot(aMatrix.GetColumn(i));
+	}
+
+	return tmp;
 }
 
 #endif
