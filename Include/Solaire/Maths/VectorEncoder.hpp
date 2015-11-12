@@ -63,6 +63,8 @@ namespace Solaire{
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				_array.PushBack(Encode::Encoder<T>::Encode(aVector[i], aAllocator));
 			}
+
+			return value;
 		}
 	};
 

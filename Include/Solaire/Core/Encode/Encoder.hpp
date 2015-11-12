@@ -41,7 +41,7 @@ namespace Encode{
 
 	class Value;
 
-	template<class T>
+	template<class T, typename ENABLE = void>
 	struct Encoder {
 		typedef T Type;
 		typedef std::shared_ptr<T> DecodeType;
@@ -52,5 +52,7 @@ namespace Encode{
 	};
 
 }}
+
+#include "Encoder.inl"
 
 #endif
