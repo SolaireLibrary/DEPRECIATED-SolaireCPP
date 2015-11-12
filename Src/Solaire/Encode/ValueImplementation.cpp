@@ -23,12 +23,17 @@ namespace Solaire{ namespace Encode{
 
 	// ValueImplementation
 
-	ValueImplementation::ValueImplementation():
+	ValueImplementation::ValueImplementation(Allocator& aAllocator):
+		mAllocator(aAllocator),
 		mType(TYPE_NULL)
 	{}
 
 	ValueImplementation::~ValueImplementation() {
 		SetNull();
+	}
+
+	Allocator& ValueImplementation::GetAllocator() const{
+		return mAllocator;
 	}
 
 	bool ValueImplementation::IsNull() const {
@@ -191,7 +196,7 @@ namespace Solaire{ namespace Encode{
 		switch(mType)
 		{
 		case TYPE_STRING:
-			DestroyString(mString, std::strlen(mString));
+			mAllocator.Deallocate(mString, std::strlen(mString) + 1);
 			break;
 		case TYPE_ARRAY:
 			DestroyArray(mArray);
@@ -235,29 +240,32 @@ namespace Solaire{ namespace Encode{
 		mDouble = aValue;
 	}
 
-	void ValueImplementation::SetString(const char* const aValue) {
+	const char* ValueImplementation::SetString(const char* const aValue) {
 		SetNull();
 		mType = TYPE_STRING;
 		const uint32_t length = std::strlen(aValue);
-		mString = CreateString(length);
+		mString = static_cast<char*>(mAllocator.Allocate(length + 1));
 		std::memcpy(mString, aValue, length);
 		mString[length] = '\0';
+		return mString;
 	}
 
-	void ValueImplementation::SetArray() {
+	Array& ValueImplementation::SetArray() {
 		if(mType != TYPE_ARRAY) {
 			SetNull();
 			mType = TYPE_ARRAY;
 			mArray = CreateArray();
 		}
+		return *mArray;
 	}
 
-	void ValueImplementation::SetObject() {
+	Object& ValueImplementation::SetObject() {
 		if(mType != TYPE_OBJECT) {
 			SetNull();
 			mType = TYPE_OBJECT;
 			mObject = CreateObject();
 		}
+		return *mObject;
 	}
 
 }}

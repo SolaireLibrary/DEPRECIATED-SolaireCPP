@@ -32,6 +32,7 @@
 */
 
 #include "Value.hpp"
+#include "..\Memory\Allocator.hpp"
 
 namespace Solaire{ namespace Encode{
 
@@ -49,6 +50,7 @@ namespace Solaire{ namespace Encode{
 			TYPE_OBJECT
 		};
 	private:
+		Allocator& mAllocator;
 		union{
 			uint64_t mUint;
 			int64_t mInt;
@@ -65,10 +67,9 @@ namespace Solaire{ namespace Encode{
 		virtual Array* CreateArray() const = 0;
 		virtual void DestroyArray(const Array*) const = 0;
 
-		virtual char* CreateString(const uint32_t) const = 0;
-		virtual void DestroyString(const char* const, const uint32_t) const = 0;
+		Allocator& GetAllocator() const;
 	public:
-		ValueImplementation();
+		ValueImplementation(Allocator&);
 		virtual ~ValueImplementation();
 
 		// Inherited from Value
@@ -99,9 +100,9 @@ namespace Solaire{ namespace Encode{
 		void SetUint(const uint64_t) override;
 		void SetInt(const int64_t) override;
 		void SetDouble(const double) override;
-		void SetString(const char* const) override;
-		void SetArray() override;
-		void SetObject() override;
+		const char* SetString(const char* const) override;
+		Array& SetArray() override;
+		Object& SetObject() override;
 	};
 }}
 

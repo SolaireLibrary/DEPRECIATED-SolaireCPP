@@ -68,9 +68,9 @@ namespace Solaire{ namespace Encode{
 		virtual void SetUint(const uint64_t) = 0;
 		virtual void SetInt(const int64_t) = 0;
 		virtual void SetDouble(const double) = 0;
-		virtual void SetString(const char* const) = 0;
-		virtual void SetArray() = 0;
-		virtual void SetObject() = 0;
+		virtual const char* SetString(const char* const) = 0;
+		virtual Array& SetArray() = 0;
+		virtual Object& SetObject() = 0;
 	};
 }}
 
