@@ -230,12 +230,12 @@ namespace Solaire{
         }
     };
 
-    /*template<class HASH_TYPE>
+    template<class HASH_TYPE>
     struct HashWrapper<String, HASH_TYPE>{
         static HASH_TYPE Hash(const HashFunction<HASH_TYPE>& aFunction, const String& aValue){
             return aFunction.Hash(aValue.begin(), aValue.Size());
         }
-    };*/
+    };
 }
 
 
