@@ -44,7 +44,7 @@ namespace Solaire{ namespace Encode{
 		typedef std::shared_ptr<T> DecodeType;
 		typedef const T& EncodeType;
 
-		static DecodeType Decode(Value&, Allocator&) = delete;
+		static DecodeType Decode(const Value&, Allocator&) = delete;
 		static void Encode(EncodeType, Value&, Allocator&) = delete;
 	};
 
