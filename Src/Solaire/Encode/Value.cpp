@@ -359,7 +359,7 @@ namespace Solaire{ namespace Encode{
 		if(mType != TYPE_STRING) {
 			SetNull();
 			mType = TYPE_STRING;
-			mString = new(mAllocator->Allocate(sizeof(std::string))) String(mAllocator);
+			mString = new(mAllocator->Allocate(sizeof(std::string))) String(*mAllocator);
 		}else {
 			mString->Clear();
 		}
