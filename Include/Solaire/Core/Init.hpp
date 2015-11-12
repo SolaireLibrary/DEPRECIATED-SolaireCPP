@@ -312,6 +312,16 @@ namespace Solaire{
 		}
 	#endif
 
+	template<class T>
+	static constexpr T Max(const T aFirst, const T aSecond) {
+		return aFirst > aSecond ? aFirst : aSecond;
+	}
+
+	template<class T>
+	static constexpr T Min(const T aFirst, const T aSecond) {
+		return aFirst < aSecond ? aFirst : aSecond;
+	}
+
 }
 
 #include "Init.inl"
