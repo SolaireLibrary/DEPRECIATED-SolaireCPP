@@ -213,20 +213,17 @@ static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator-(const Solaire::Matrix<
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT, const uint32_t WIDTH2, const uint32_t HEIGHT2, typename ENABLE = typename std::enable_if<WIDTH == HEIGHT2 && HEIGHT == WIDTH2>::type>
-static inline Solaire::Matrix<T, Solaire::Max(WIDTH, WIDTH2), Solaire::Max(HEIGHT, HEIGHT2)> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH2, HEIGHT2>& aSecond) {
-	
+static Solaire::Matrix<T, Solaire::Max(WIDTH, WIDTH2), Solaire::Max(HEIGHT, HEIGHT2)> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH2, HEIGHT2>& aSecond) {
 	enum : uint32_t {
-		WMAX = Solaire::Max(WIDTH, WIDTH2),
-		HMAX = Solaire::Max(HEIGHT, HEIGHT2),
-		WIN = Solaire::Min(WIDTH, WIDTH2),
-		HIN = Solaire::Min(HEIGHT, HEIGHT2),
+		W = Solaire::Max(WIDTH, WIDTH2),
+		H = Solaire::Max(HEIGHT, HEIGHT2)
 	};
 
-	Solaire::Matrix<T, WMAX, HMAX> tmp;
+	Solaire::Matrix<T, W, H> tmp;
 
-	for(uint32_t i = 0; i < WMAX; ++i) {
+	for(uint32_t i = 0; i < W; ++i) {
 		const Solaire::Vector<T, WIDTH> row = aFirst.GetRow(i);
-		for (uint32_t j = 0; j < HMAX; ++j) {
+		for (uint32_t j = 0; j < H; ++j) {
 			tmp[i][j] = row.Dot(aSecond.GetColumn(j));
 		}
 	}
