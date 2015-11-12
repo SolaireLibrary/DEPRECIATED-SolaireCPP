@@ -243,7 +243,7 @@ namespace Solaire{
 		static T Dot(const T* const aFirst, const T* const aSecond) {
 			T tmp = static_cast<T>(0);
 			for (uint32_t i = 0; i < LENGTH; ++i) {
-				sum += aFirst[i] * aSecond[i];
+				tmp += aFirst[i] * aSecond[i];
 			}
 			return tmp;
 		}

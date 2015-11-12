@@ -84,7 +84,7 @@ namespace Solaire{
 		}
 
 		inline Row GetRow(const uint32_t aIndex) const{
-			return *reinterpret_cast<Row*>(operator[](aIndex));
+			return *reinterpret_cast<const Row*>(operator[](aIndex));
 		}
 
 		inline Row& GetRow(const uint32_t aIndex) {
@@ -93,7 +93,7 @@ namespace Solaire{
 
 		Column GetColumn(const uint32_t aIndex) const{
 			Column tmp;
-			for(uint32_t i = 0; i < HEIGHT) {
+			for (uint32_t i = 0; i < HEIGHT; ++i) {
 				tmp[i] = mMatrix[i * aIndex];
 			}
 			return tmp;
@@ -104,7 +104,7 @@ namespace Solaire{
 		}
 
 		void SetColumn(const uint32_t aIndex, const Column aColumn) {
-			for (uint32_t i = 0; i < HEIGHT) {
+			for (uint32_t i = 0; i < HEIGHT; ++i) {
 				mMatrix[i * aIndex] = aColumn[i];
 			}
 		}
@@ -214,8 +214,24 @@ static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator-(const Solaire::Matrix<
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT, const uint32_t WIDTH2, const uint32_t HEIGHT2, typename ENABLE = typename std::enable_if<WIDTH == HEIGHT2 && HEIGHT == WIDTH2>::type>
 static inline Solaire::Matrix<T, Solaire::Max(WIDTH, WIDTH2), Solaire::Max(HEIGHT, HEIGHT2)> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH2, HEIGHT2>& aSecond) {
-	//! \todo Implement matrix inversion
-	throw std::runtime_error("Solaire::Matrix : Multiply not implemented");
+	
+	enum : uint32_t {
+		WMAX = Solaire::Max(WIDTH, WIDTH2),
+		HMAX = Solaire::Max(HEIGHT, HEIGHT2),
+		WIN = Solaire::Min(WIDTH, WIDTH2),
+		HIN = Solaire::Min(HEIGHT, HEIGHT2),
+	};
+
+	Solaire::Matrix<T, WMAX, HMAX> tmp;
+
+	for(uint32_t i = 0; i < WMAX; ++i) {
+		const Solaire::Vector<T, WIDTH> row = aFirst.GetRow(i);
+		for (uint32_t j = 0; j < HMAX; ++j) {
+			tmp[i][j] = row.Dot(aSecond.GetColumn(j));
+		}
+	}
+
+	return tmp;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
