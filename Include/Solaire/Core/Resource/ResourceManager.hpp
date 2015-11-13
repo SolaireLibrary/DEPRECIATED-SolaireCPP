@@ -36,6 +36,8 @@
 namespace Solaire{
 
 	class ResourceManager {
+	public:
+		typedef uint64_t GroupID;
 	private:
 		ResourceManager(const ResourceManager&) = delete;
 		ResourceManager(ResourceManager&&) = delete;
@@ -44,13 +46,17 @@ namespace Solaire{
 	public:
 		virtual ~ResourceManager(){}
 
-		virtual Resource::ID AddResource(Resource&) = 0;
-		virtual bool AddResource(const Resource::ID, Resource&) = 0;
+		virtual Resource::ID AddResource(ResourcePtr) = 0;
+		virtual bool AddResource(const Resource::ID, ResourcePtr) = 0;
 		virtual bool FreeResource(const Resource::ID) = 0;
 
 		virtual void FreeAllResources() = 0;
 
-		virtual Resource& GetResource(const Resource::ID) const = 0;
+		virtual ResourcePtr GetResource(const Resource::ID) const = 0;
+
+		virtual GroupID CreateGroup() = 0;
+		virtual void AddToGroup(const GroupID, const Resource::ID) = 0;
+		virtual void FreeGroup(const GroupID) = 0;
 	};
     
 }

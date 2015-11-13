@@ -32,6 +32,7 @@
 */
 
 #include <cstdint>
+#include <memory>
 #include "..\Init.hpp"
 
 namespace Solaire{
@@ -47,6 +48,9 @@ namespace Solaire{
 	public:
 		virtual ~Resource(){}
 	};
+
+	typedef std::shared_ptr<Resource> ResourcePtr;
+	typedef std::shared_ptr<const Resource> ConstResourcePtr;
     
 }
 
