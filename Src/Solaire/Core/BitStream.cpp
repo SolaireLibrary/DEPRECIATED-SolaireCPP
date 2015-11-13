@@ -123,6 +123,15 @@ namespace Solaire{
 	void BitStream::ReadBits(void* aByte, const uint8_t aOffset, uint32_t aCount) {
 		BitStream other(aByte, aOffset);
 
+		if(mMask == 0 && other.mMask == 0){
+			while(aCount > 8) {
+				*other.mByte = *mByte;
+				++mByte;
+				++other.mByte;
+				aCount -= 8;
+			}
+		}
+
 		while(aCount != 0) {
 			if(CheckBit()){
 				other.SetBit();
@@ -138,6 +147,15 @@ namespace Solaire{
 
 	void BitStream::WriteBits(const void* aByte, const uint8_t aOffset, uint32_t aCount) {
 		BitStream other(const_cast<void*>(aByte), aOffset);
+
+		if(mMask == 0 && other.mMask == 0) {
+			while(aCount > 8) {
+				*mByte = *other.mByte;
+				++mByte;
+				++other.mByte;
+				aCount -= 8;
+			}
+		}
 
 		while(aCount != 0) {
 			if(other.CheckBit()) {
