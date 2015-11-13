@@ -66,14 +66,24 @@ namespace Solaire{
 		}
 	}
 
-	void BitStream::IncrementBit(const uint8_t aOffset) {
-		for(uint8_t i = 0; i < aOffset; ++i) {
+	void BitStream::IncrementBit(uint32_t aOffset) {
+		while(aOffset >= 8) {
+			++mByte;
+			aOffset -= 8;
+		}
+
+		for(uint32_t i = 0; i < aOffset; ++i) {
 			IncrementBit();
 		}
 	}
 
-	void BitStream::DecrementBit(const uint8_t aOffset) {
-		for(uint8_t i = 0; i < aOffset; ++i) {
+	void BitStream::DecrementBit(uint32_t aOffset) {
+		while(aOffset >= 8) {
+			--mByte;
+			aOffset -= 8;
+		}
+
+		for(uint32_t i = 0; i < aOffset; ++i) {
 			DecrementBit();
 		}
 	}
@@ -140,6 +150,14 @@ namespace Solaire{
 			other.IncrementBit();
 			--aCount;
 		}
+	}
+	
+	void BitStream::AlignByteBegin() {
+		mMask = 0;
+	}
+
+	void BitStream::AlignByteEnd() {
+		mMask = 128;
 	}
     
 }

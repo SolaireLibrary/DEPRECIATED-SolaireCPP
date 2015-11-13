@@ -51,8 +51,8 @@ namespace Solaire{
 		void IncrementBit();
 		void DecrementBit();
 
-		void IncrementBit(const uint8_t);
-		void DecrementBit(const uint8_t);
+		void IncrementBit(uint32_t);
+		void DecrementBit(uint32_t);
 
 		uint8_t Offset() const;
 
@@ -61,6 +61,9 @@ namespace Solaire{
 
 		void ReadBits(void*, const uint8_t, uint32_t);
 		void WriteBits(const void*, const uint8_t, uint32_t);
+
+		void AlignByteBegin();
+		void AlignByteEnd();
 	};
     
 }
