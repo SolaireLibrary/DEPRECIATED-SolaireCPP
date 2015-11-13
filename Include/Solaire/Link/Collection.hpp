@@ -38,7 +38,7 @@ Last Modified	: 11th November 2015
 namespace Solaire{namespace Dll{
 
 	template<class T>
-	class SOLAIRE_DLL_API Iterator{
+	class SOLAIRE_SHARED_API Iterator{
 	public:
 		virtual bool HasPrevious() const = 0;
 		virtual bool HasNext() const = 0;
@@ -49,7 +49,7 @@ namespace Solaire{namespace Dll{
 	};
 
 	template<class T>
-	class SOLAIRE_DLL_API Collection{
+	class SOLAIRE_SHARED_API Collection{
 	public:
 		typedef std::function<bool(const T&)> Condition;
 	public:
@@ -71,7 +71,7 @@ namespace Solaire{namespace Dll{
 	
 
 	template<class T>
-	class SOLAIRE_DLL_API DynamicCollection : public Collection<T>{
+	class SOLAIRE_SHARED_API DynamicCollection : public Collection<T>{
 	public:
 		virtual T& Add(const T&) = 0;
 		virtual void Remove(const Iterator<const T>&) = 0;

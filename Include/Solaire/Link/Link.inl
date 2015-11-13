@@ -34,15 +34,15 @@ Last Modified	: 9th November 2015
 #include "..\Core\Init.hpp"
 
 #if SOLAIRE_OS == SOLAIRE_WINDOWS
-	#define SOLAIRE_DLL_IMPORT __declspec(dllimport)
-	#define SOLAIRE_DLL_EXPORT __declspec(dllexport)
+	#define SOLAIRE_SHARED_IMPORT __declspec(dllimport)
+	#define SOLAIRE_SHARED_EXPORT __declspec(dllexport)
 #else
-	#define SOLAIRE_DLL_IMPORT
-	#define SOLAIRE_DLL_EXPORT
+	#define SOLAIRE_SHARED_IMPORT
+	#define SOLAIRE_SHARED_EXPORT
 #endif
 
-#ifndef SOLAIRE_DLL_API
-	#define SOLAIRE_DLL_API SOLAIRE_DLL_IMPORT
+#ifndef SOLAIRE_SHARED_API
+	#define SOLAIRE_SHARED_API SOLAIRE_SHARED_IMPORT
 #endif
 
 #endif

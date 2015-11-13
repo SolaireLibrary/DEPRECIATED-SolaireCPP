@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_LINK_OBJECT_HPP
-#define SOLAIRE_LINK_OBJECT_HPP
+#ifndef SOLAIRE_RESOURCE_HPP
+#define SOLAIRE_RESOURCE_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,41 +20,35 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file LinkObject.hpp
-\brief
-\author
-Created			: Adam Smith
-Last modified	: Adam Smith
-\version 1.0
-\date
-Created			: 9th November 2015
-Last Modified	: 11th November 2015
+	\file Resource.hpp
+	\brief
+	\author
+	Created			: Adam Smith
+	Last modified	: Adam Smith
+	\version 1.0
+	\date
+	Created			: 13th November 2015
+	Last Modified	: 13th November 2015
 */
 
 #include <cstdint>
-#include "Link.inl"
+#include "..\Init.hpp"
 
 namespace Solaire{
-	class SOLAIRE_SHARED_API LinkObject{
+
+	class Resource {
 	public:
-		typedef uint32_t ErrorCode;
-		
-		enum : ErrorCode{
-			DLL_NO_ERROR,
-			DLL_RELEASED_UNREFERENCED_OBJECT,
-			DLL_ERROR_OVERFLOW
-		};
+		typedef uint64_t ID;
 	private:
-		//LinkObject(const LinkObject&) = delete;
-		//LinkObject(LinkObject&&) = delete;
-		//LinkObject& operator=(const LinkObject&) = delete;
-		//LinkObject& operator=(LinkObject&&) = delete;
+		Resource(const Resource&) = delete;
+		Resource(Resource&&) = delete;
+		Resource& operator=(const Resource&) = delete;
+		Resource& operator=(Resource&&) = delete;
 	public:
-		virtual void CreateReference() = 0;
-		virtual void ReleaseReference() = 0;
-		virtual uint32_t GetReferenceCount() const = 0;
-		virtual ErrorCode GetError() = 0;
+		virtual ~Resource(){}
 	};
+    
 }
+
 
 #endif

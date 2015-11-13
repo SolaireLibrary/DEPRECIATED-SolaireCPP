@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_BIT_STREAM_HPP
-#define SOLAIRE_BIT_STREAM_HPP
+#ifndef SOLAIRE_RESOURCE_MANAGER_HPP
+#define SOLAIRE_RESOURCE_MANAGER_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file BitStream.hpp
+	\file ResourceManager.hpp
 	\brief
 	\author
 	Created			: Adam Smith
@@ -31,39 +31,26 @@
 	Last Modified	: 13th November 2015
 */
 
-#include <cstdint>
+#include "Resource.hpp"
 
 namespace Solaire{
 
-	class BitStream {
+	class ResourceManager {
 	private:
-		uint8_t* mByte;
-		uint8_t mMask;
+		ResourceManager(const ResourceManager&) = delete;
+		ResourceManager(ResourceManager&&) = delete;
+		ResourceManager& operator=(const ResourceManager&) = delete;
+		ResourceManager& operator=(ResourceManager&&) = delete;
 	public:
-		BitStream(void*);
-		BitStream(void*, const uint8_t);
-		~BitStream();
+		virtual ~ResourceManager(){}
 
-		void SetBit();
-		void ClearBit();
-		bool CheckBit() const;
+		virtual Resource::ID AddResource(Resource&) = 0;
+		virtual bool AddResource(const Resource::ID, Resource&) = 0;
+		virtual bool FreeResource(const Resource::ID) = 0;
 
-		void IncrementBit();
-		void DecrementBit();
+		virtual void FreeAllResources() = 0;
 
-		void IncrementBit(uint32_t);
-		void DecrementBit(uint32_t);
-
-		uint8_t Offset() const;
-
-		void ReadBits(void*, uint32_t);
-		void WriteBits(const void*, uint32_t);
-
-		void ReadBits(void*, const uint8_t, uint32_t);
-		void WriteBits(const void*, const uint8_t, uint32_t);
-
-		void AlignByteBegin();
-		void AlignByteEnd();
+		virtual Resource& GetResource(const Resource::ID) const = 0;
 	};
     
 }
