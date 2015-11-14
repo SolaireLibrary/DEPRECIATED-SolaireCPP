@@ -22,8 +22,105 @@
 
 namespace Solaire{
 
+	/*!
+		\brief Calculate how many padding bytes an unpadded message would have.
+		\param aLength The length of the unpadded message in bytes.
+		\return The number of padding bytes.
+	*/
+    constexpr uint32_t Base64::UnpaddedPaddingBytes(const uint32_t aLength) {
+		return (aLength & 3) == 3 ? 1 : aLength & 3;
+	}
+
+	/*!
+		\brief Calculate the length of an unpadded Base64 encode.
+		\param aLength The number of bytes being encoded into Base64.
+		\return The number of bytes required to encode the data into Base64.
+	*/
+    uint32_t Base64::UnpaddedEncodeLength(const uint32_t aLength) {
+        //! \todo Optimise UnpaddedEncodeLength
+
+		uint32_t input = 0;
+		uint32_t output = 0;
+
+		while(input < aLength) {
+    		++output;
+    		if(input + 1 < aLength) {
+    			++output;
+    			if(input + 2 < aLength) {
+    				output += 2;
+    			}else {
+    				++output;
+    			}
+    		}else{
+    			++output;
+    		}
+    		input += 3;
+    	}
+
+    	return output;
+	}
+
+	/*!
+		\brief Calculate the length of an unpadded Base64 decode.
+		\param aLength The number of bytes being decoded from Base64.
+		\return The number of bytes required to decode the data from Base64.
+	*/
+	uint32_t Base64::UnpaddedDecodeLength(const uint32_t aLength) {
+        //! \todo Optimise UnpaddedDecodeLength
+        uint32_t i = 0;
+        uint32_t length = 0;
+        while(length != aLength){
+            length = UnpaddedEncodeLength(i);
+            ++i;
+        }
+        return i - 1;
+	}
+
+
+    /*!
+		\brief Calculate how many padding bytes an padded message would have.
+		\param aLength The length of the unpadded message in bytes.
+		\return The number of padding bytes.
+	*/
+	uint32_t Base64::PaddedPaddingBytes(const uint32_t aLength) {
+		return UnpaddedPaddingBytes(UnpaddedEncodeLength(PaddedDecodeLength(aLength)));
+	}
+
+	/*!
+		\brief Calculate the length of a padded Base64 encode.
+		\param aLength The number of bytes being encoded into Base64.
+		\return The number of bytes required to encode the data into Base64.
+	*/
+	 uint32_t Base64::PaddedEncodeLength(const uint32_t aLength) {
+        //! \todo Optimise PaddedEncodeLength
+        uint32_t input = 0;
+        uint32_t output = 0;
+        while (input < aLength) {
+            output += 4;
+    		input += 3;
+    	}
+
+    	return output;
+	}
+
+	/*!
+		\brief Calculate the length of a padded Base64 decode.
+		\param aLength The number of bytes being decoded from Base64.
+		\return The number of bytes required to decode the data from Base64.
+	*/
+	uint32_t Base64::PaddedDecodeLength(const uint32_t aLength) {
+        //! \todo Optimise PaddedDecodeLength
+        uint32_t i = 0;
+        uint32_t length = 0;
+        while(length != aLength){
+            length = PaddedEncodeLength(i);
+            ++i;
+        }
+        return i - 1;
+	}
+
     char* Base64::Encode(char* aOutput, const uint32_t aOutputLength, const void* const aInput, const uint32_t aInputLength, const char* const aBase64, const char* const aPadding) {
-        const uint32_t outputLength = (aInputLength * 4) / 3;
+		const uint32_t outputLength = UnpaddedEncodeLength(aInputLength) + aPadding ? UnpaddedPaddingBytes(aInputLength) : 0;
     	if (aOutputLength < outputLength) {
     		return nullptr;
     	}
@@ -83,14 +180,14 @@ namespace Solaire{
     	}
     	const char* input = static_cast<const char*>(aInput);
     	const char* const end = input + aInputLength;
-    
-    	const uint32_t lastPadding =
-            input[aInputLength - 2] == aPadding ? aInputLength - 2 :
-            input[aInputLength - 1] == aPadding ? aInputLength - 1 :
-            aInputLength;
-            
-    	const uint32_t outputLength = ((aInputLength * 3) / 4) - (lastPadding != aInputLength ? (aInputLength - lastPadding) : 0);
-    
+
+    	const uint32_t paddingBytes =
+            input[aInputLength - 2] == aPadding ? 2 :
+            input[aInputLength - 1] == aPadding ? 1 :
+            0;
+
+    	const uint32_t outputLength = Base64::UnpaddedDecodeLength(aInputLength - paddingBytes);
+
     	if (aOutputLength < outputLength) {
     		return nullptr;
     	}
@@ -124,7 +221,7 @@ namespace Solaire{
     	//! \todo Optimise DecodeBase64WithoutPadding
 
 		const char paddingChar = *BASE_64_STANDARD_PADDING;
-    	const uint32_t padding = (aInputLength & 3) == 3 ? 1 : aInputLength & 3;
+		const uint32_t padding = Base64::UnpaddedPaddingBytes(aInputLength);
 
 		char* output = nullptr;
 
@@ -158,6 +255,7 @@ namespace Solaire{
     
     char* Base64::Decode(char* aOutput, const uint32_t aOutputLength, const void* const aInput, const uint32_t aInputLength, const char* const aBase64, const char* const aPadding) {
     	return aPadding ? 
+    	return aPadding ?
     	    DecodeBase64WithPadding(aOutput, aOutputLength, aInput, aInputLength, aBase64, *aPadding) :
     	    DecodeBase64WithoutPadding(aOutput, aOutputLength, aInput, aInputLength, aBase64);
     }

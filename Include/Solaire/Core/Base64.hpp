@@ -37,6 +37,14 @@ namespace Solaire{
 	struct Base64 {
 		static char* Encode(char*, const uint32_t, const void* const, const uint32_t, const char* const, const char* const);
 		static char* Decode(char*, const uint32_t, const void* const, const uint32_t, const char* const, const char* const);
+
+		static constexpr uint32_t UnpaddedPaddingBytes(const uint32_t);
+		static uint32_t UnpaddedEncodeLength(const uint32_t);
+		static uint32_t UnpaddedDecodeLength(const uint32_t);
+
+		static uint32_t PaddedPaddingBytes(const uint32_t);
+		static uint32_t PaddedEncodeLength(const uint32_t);
+		static uint32_t PaddedDecodeLength(const uint32_t);
 	};
 
 	static constexpr const char* BASE_64_NO_PADDING = nullptr;
