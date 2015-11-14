@@ -95,6 +95,7 @@ namespace Solaire{
     		return nullptr;
     	}
     
+
     	uint8_t b[4];
     	while (input != end) {
     		//! \todo Pre-calculate?
@@ -123,10 +124,7 @@ namespace Solaire{
     	//! \todo Optimise DecodeBase64WithoutPadding
 
 		const char paddingChar = *BASE_64_STANDARD_PADDING;
-    	uint32_t padding = aInputLength & 3;
-    	if(padding == 3){
-            padding = 1;
-    	}
+    	const uint32_t padding = (aInputLength & 3) == 3 ? 1 : aInputLength & 3;
 
 		char* output = nullptr;
 
