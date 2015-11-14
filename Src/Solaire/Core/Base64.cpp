@@ -255,7 +255,6 @@ namespace Solaire{
     
     char* Base64::Decode(char* aOutput, const uint32_t aOutputLength, const void* const aInput, const uint32_t aInputLength, const char* const aBase64, const char* const aPadding) {
     	return aPadding ? 
-    	return aPadding ?
     	    DecodeBase64WithPadding(aOutput, aOutputLength, aInput, aInputLength, aBase64, *aPadding) :
     	    DecodeBase64WithoutPadding(aOutput, aOutputLength, aInput, aInputLength, aBase64);
     }
