@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file BitStream.hpp
+	\file Base64.hpp
 	\brief
 	\author
 	Created			: Adam Smith
