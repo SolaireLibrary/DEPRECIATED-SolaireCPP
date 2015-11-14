@@ -34,18 +34,24 @@
 #include <cstdint>
 
 namespace Solaire{
-
-	static constexpr char BASE_64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-	static constexpr const char* BASE_64_PADDING = BASE_64 + 64;
-	static constexpr const char* BASE_64_NO_PADDING = nullptr;
-
-	static constexpr char BASE_64_URL[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-	static constexpr const char* BASE_64_URL_PADDING = BASE_64_NO_PADDING;
-
 	struct Base64 {
 		static char* Encode(char*, const uint32_t, const void* const, const uint32_t, const char* const, const char* const);
 		static char* Decode(char*, const uint32_t, const void* const, const uint32_t, const char* const, const char* const);
 	};
+
+	static constexpr const char* BASE_64_NO_PADDING = nullptr;
+
+	static constexpr char BASE_64_STANDARD[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+	static constexpr const char* BASE_64_STANDARD_PADDING = BASE_64_STANDARD + 64;
+
+	static constexpr char BASE_64_URL[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+	static constexpr const char* BASE_64_URL_PADDING = BASE_64_NO_PADDING;
+
+	static constexpr char BASE_64_XML_NAME[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-";
+	static constexpr const char* BASE_64_XML_NAME_PADDING = BASE_64_NO_PADDING;
+
+	static constexpr char BASE_64_XML_IDENTIFIER[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_:";
+	static constexpr const char* BASE_64_XML_IDENTIFIER_PADDING = BASE_64_NO_PADDING;
 }
 
 

@@ -122,30 +122,40 @@ namespace Solaire{
     static char* DecodeBase64WithoutPadding(char* aOutput, const uint32_t aOutputLength, const void* const aInput, const uint32_t aInputLength, const char* const aBase64) {
     	//! \todo Optimise DecodeBase64WithoutPadding
 
-		char base64[66];
-		std::memcpy(base64, aBase64, 64);
-		base64[64] = '=';
-		base64[65] = '\0';
-    	
-    	const uint32_t padding = (aInputLength - 1) % 3;
-    	
-    	char* const buf = new char[aInputLength + 3];
-    	std::memcpy(buf, aInput, aInputLength);
-    	
-    	if(padding == 1){
-    	    buf[aInputLength] = '=';
-    	    buf[aInputLength + 1] = '\0';
-    	}else if(padding == 2){
-    	    buf[aInputLength] = '=';
-    	    buf[aInputLength + 1] = '=';
-    	    buf[aInputLength + 2] = '\0';
-    	}else{
-    	    buf[aInputLength] = '\0';
+		const char paddingChar = *BASE_64_STANDARD_PADDING;
+    	uint32_t padding = aInputLength & 3;
+    	if(padding == 3){
+            padding = 1;
     	}
-    	
-    	char* const tmp = DecodeBase64WithPadding(aOutput, aOutputLength, buf, aInputLength + padding, base64, '=');
-    	delete buf;
-    	return tmp;
+
+		char* output = nullptr;
+
+		if(padding > 0) {
+			char* const buf = new char[aInputLength + 3];
+			std::memcpy(buf, aInput, aInputLength);
+
+			if(padding == 1) {
+				buf[aInputLength] = paddingChar;
+				buf[aInputLength + 1] = '\0';
+			}else if(padding == 2) {
+				buf[aInputLength] = paddingChar;
+				buf[aInputLength + 1] = paddingChar;
+				buf[aInputLength + 2] = '\0';
+			}
+
+			char base64[66];
+			std::memcpy(base64, aBase64, 64);
+			base64[64] = '=';
+			base64[65] = '\0';
+
+			output = DecodeBase64WithPadding(aOutput, aOutputLength, buf, aInputLength + padding, base64, paddingChar);
+
+			delete buf;
+		}else{
+			output = DecodeBase64WithPadding(aOutput, aOutputLength, aInput, aInputLength, aBase64, paddingChar);
+		}
+
+    	return output;
     }
     
     char* Base64::Decode(char* aOutput, const uint32_t aOutputLength, const void* const aInput, const uint32_t aInputLength, const char* const aBase64, const char* const aPadding) {
