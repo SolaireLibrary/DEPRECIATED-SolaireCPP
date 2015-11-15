@@ -51,7 +51,7 @@ namespace Solaire{
 	}
 
 	void LinkObjectImplementation::Destructor() {
-		mAllocator.Deallocate(this, GetClassSize());
+		mAllocator.Deallocate(this, GetTypeTraits().Size);
 	}
 	
 }

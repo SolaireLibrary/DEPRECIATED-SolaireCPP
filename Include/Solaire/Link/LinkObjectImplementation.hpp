@@ -44,7 +44,7 @@ namespace Solaire{
 		LinkObjectImplementation& operator=(const LinkObjectImplementation&);
 		LinkObjectImplementation& operator=(LinkObjectImplementation&&);
 		
-		virtual uint32_t GetClassSize() const = 0;
+		virtual const TypeTraitData& GetTypeTraits() const = 0;
 	public:
 		LinkObjectImplementation(LinkAllocator&);
 		~LinkObjectImplementation();

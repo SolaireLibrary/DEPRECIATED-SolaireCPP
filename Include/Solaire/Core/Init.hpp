@@ -296,6 +296,12 @@ namespace Solaire{
 		}
     };
 
+	template<class T>
+	static const TypeTraitData& GetTypeTraits() {
+		static TypeTraitData DATA = TypeTraits<T>::GetData();
+		return DATA;
+	}
+
 	#define SolaireRuntimeAssert(aCondition, aMessage) if(! (aCondition)) throw std::runtime_error(aMessage)
 	#define SolaireStaticAssert static_assert(aCondition, aMessage)
 
