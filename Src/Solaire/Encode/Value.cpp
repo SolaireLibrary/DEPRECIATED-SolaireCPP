@@ -17,7 +17,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include <stdexcept>
-#include "Solaire\Core\Encode\Value.hpp"
+#include "Solaire\Encode\Value.hpp"
 
 namespace Solaire{ namespace Encode{
 
