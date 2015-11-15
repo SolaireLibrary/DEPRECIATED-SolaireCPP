@@ -35,7 +35,7 @@ Last Modified	: 11th November 2015
 #include "Link.inl"
 
 namespace Solaire{
-	class SOLAIRE_SHARED_API LinkObject{
+	class SOLAIRE_EXPORT_API LinkObject{
 	public:
 		typedef uint32_t ErrorCode;
 		
@@ -50,10 +50,10 @@ namespace Solaire{
 		//LinkObject& operator=(const LinkObject&) = delete;
 		//LinkObject& operator=(LinkObject&&) = delete;
 	public:
-		virtual void CreateReference() = 0;
-		virtual void ReleaseReference() = 0;
-		virtual uint32_t GetReferenceCount() const = 0;
-		virtual ErrorCode GetError() = 0;
+		virtual void SOLAIRE_EXPORT_CALL CreateReference() = 0;
+		virtual void SOLAIRE_EXPORT_CALL ReleaseReference() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL GetReferenceCount() const = 0;
+		virtual ErrorCode SOLAIRE_EXPORT_CALL GetError() = 0;
 	};
 }
 

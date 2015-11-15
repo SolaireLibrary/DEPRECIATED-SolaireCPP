@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_IMPLEMENTED_LINK_OBJECT_HPP
-#define SOLAIRE_IMPLEMENTED_LINK_OBJECT_HPP
+#ifndef SOLAIRE_LINK_ALLOCATOR_HPP
+#define SOLAIRE_LINK_ALLOCATOR_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,42 +20,29 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file ImplementedLinkObject.hpp
+\file LinkAllocator.hpp
 \brief
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
 \version 1.0
 \date
-Created			: 9th November 2015
-Last Modified	: 11th November 2015
+Created			: 15th November 2015
+Last Modified	: 15th November 2015
 */
 
-#include "LinkObject.hpp"
+#include <cstdint>
+#include "Link.inl"
 
-namespace Solaire{namespace Dll{
-	class ImplementedLinkObject : public LinkObject {
-	private:
-		enum{
-			MAX_ERRORS = 16
-		};
-	private:
-		uint32_t mReferenceCount;
-		ErrorCode mErrorCodes[MAX_ERRORS];
-		uint8_t mErrorHead;
-	protected:
-		void SetError(const ErrorCode);
+namespace Solaire{
+	class SOLAIRE_EXPORT_API LinkAllocator{
 	public:
-		ImplementedLinkObject();
-		virtual ~ImplementedLinkObject();
-		
-		// Inherited from LinkObject
-		
-		void SOLAIRE_EXPORT_CALL CreateReference() override;
-		void SOLAIRE_EXPORT_CALL ReleaseReference() override;
-		uint32_t SOLAIRE_EXPORT_CALL GetReferenceCount() const override;
-		ErrorCode SOLAIRE_EXPORT_CALL GetError() override;
+		virtual uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const = 0;
+
+		virtual void* SOLAIRE_EXPORT_CALL Allocate(const size_t) = 0;
+		virtual void SOLAIRE_EXPORT_CALL Deallocate(void* const, const size_t) = 0;
 	};
-}}
+}
 
 #endif
