@@ -18,11 +18,11 @@
 
 #include "Solaire\Link\AllocatorWrappers.hpp"
 
-namespace Solaire{
+namespace Solaire{ namespace Link{
 	
 	// LinkAllocatorWrapper
 
-	CoreToLinkAllocator::CoreToLinkAllocator(Allocator& aAllocator)  :
+	CoreToLinkAllocator::CoreToLinkAllocator(CoreAllocator& aAllocator)  :
 		mAllocator(aAllocator)
 	{}
 
@@ -64,4 +64,4 @@ namespace Solaire{
 		return mAllocator.Deallocate(aObject, aBytes);
 	}
 	
-}
+}}

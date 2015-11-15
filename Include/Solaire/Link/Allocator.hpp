@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_LINK_OBJECT_HPP
-#define SOLAIRE_LINK_OBJECT_HPP
+#ifndef SOLAIRE_LINK_ALLOCATOR_HPP
+#define SOLAIRE_LINK_ALLOCATOR_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,29 +20,34 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file LinkObject.hpp
+\file Allocator.hpp
 \brief
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
 \version 1.0
 \date
-Created			: 9th November 2015
-Last Modified	: 11th November 2015
+Created			: 15th November 2015
+Last Modified	: 15th November 2015
 */
 
 #include <cstdint>
 #include "Link.inl"
 
-namespace Solaire{
-
-	class LinkAllocator;
-
-	class SOLAIRE_EXPORT_API LinkObject{
+namespace Solaire{ namespace Link{
+	class SOLAIRE_EXPORT_API Allocator{
 	public:
-		virtual LinkAllocator& SOLAIRE_EXPORT_CALL GetAllocator() const = 0;
-		virtual void SOLAIRE_EXPORT_CALL Destructor() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const = 0;
+
+		virtual void* SOLAIRE_EXPORT_CALL Allocate(const size_t) = 0;
+		virtual void SOLAIRE_EXPORT_CALL Deallocate(void* const, const size_t) = 0;
 	};
+}
+	class Allocator;
+
+	typedef Allocator CoreAllocator;
+	typedef Link::Allocator LinkAllocator;
 }
 
 #endif

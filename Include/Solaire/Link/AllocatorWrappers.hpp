@@ -31,16 +31,16 @@ Created			: 15th November 2015
 Last Modified	: 15th November 2015
 */
 
-#include "LinkAllocator.hpp"
+#include "Allocator.hpp"
 #include "Solaire\Core\Memory\Allocator.hpp"
 
-namespace Solaire{
+namespace Solaire{ namespace Link{
 
 	class CoreToLinkAllocator : public LinkAllocator{
 	private:
-		Allocator& mAllocator;
+		CoreAllocator& mAllocator;
 	public:
-		CoreToLinkAllocator(Allocator&);
+		CoreToLinkAllocator(CoreAllocator&);
 
 		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const override;
 		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const override;
@@ -49,7 +49,7 @@ namespace Solaire{
 		void SOLAIRE_EXPORT_CALL Deallocate(void* const, const size_t) override;
 	};
 
-	class LinkToCoreAllocator : public Allocator {
+	class LinkToCoreAllocator : public CoreAllocator {
 	private:
 		LinkAllocator& mAllocator;
 	public:
@@ -61,6 +61,6 @@ namespace Solaire{
 		void* Allocate(const size_t) override;
 		void Deallocate(void* const, const size_t) override;
 	};
-}
+}}
 
 #endif

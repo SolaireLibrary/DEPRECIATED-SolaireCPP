@@ -28,17 +28,17 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 11th November 2015
-Last Modified	: 11th November 2015
+Last Modified	: 15th November 2015
 */
 
 #include <cstdint>
 #include <functional>
-#include "Link.inl"
+#include "Object.hpp"
 
-namespace Solaire{namespace Dll{
+namespace Solaire{namespace Link{
 
 	template<class T>
-	class SOLAIRE_EXPORT_API Iterator{
+	class SOLAIRE_EXPORT_API Iterator : public Object{
 	public:
 		virtual bool HasPrevious() const = 0;
 		virtual bool HasNext() const = 0;
@@ -46,36 +46,6 @@ namespace Solaire{namespace Dll{
 		virtual T& Peak() const = 0;
 		virtual T& Next() = 0;
 		virtual T& Previous() = 0;
-	};
-
-	template<class T>
-	class SOLAIRE_EXPORT_API Collection{
-	public:
-		typedef std::function<bool(const T&)> Condition;
-	public:
-		virtual uint32_t Size() const = 0;
-		virtual T& Get(const uint32_t) = 0;
-		virtual const T& Get(const uint32_t) const = 0;
-		
-		virtual Iterator<T>& GetIterator() = 0;
-		virtual Iterator<const T>& GetIterator() const = 0;
-		
-		virtual Iterator<const T>& FindFirst(const T&) const = 0;
-		virtual Iterator<const T>& FindNext(const Iterator<const T>&, const T&) const = 0;
-		virtual Iterator<const T>& FindLast(const T&) const = 0;
-		
-		virtual Iterator<const T>& FindFirst(const Condition&) const = 0;
-		virtual Iterator<const T>& FindNext(const Iterator<const T>&, const Condition&) const = 0;
-		virtual Iterator<const T>& FindLast(const Condition&) const = 0;
-	};
-	
-
-	template<class T>
-	class SOLAIRE_EXPORT_API DynamicCollection : public Collection<T>{
-	public:
-		virtual T& Add(const T&) = 0;
-		virtual void Remove(const Iterator<const T>&) = 0;
-		virtual void Clear() = 0;
 	};
 }}
 

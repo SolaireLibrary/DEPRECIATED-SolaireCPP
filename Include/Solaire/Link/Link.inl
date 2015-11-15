@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_DLL_INL
-#define SOLAIRE_DLL_INL
+#ifndef SOLAIRE_LINK_INL
+#define SOLAIRE_LINK_INL
 
 //Copyright 2015 Adam Smith
 //
