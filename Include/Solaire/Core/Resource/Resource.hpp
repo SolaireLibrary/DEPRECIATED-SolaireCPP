@@ -33,24 +33,18 @@
 
 #include <cstdint>
 #include <memory>
-#include "..\Init.hpp"
+#include "..\Link\Object.hpp"
+#include "..\Link\ObjectUtility.hpp"
 
 namespace Solaire{
 
-	class Resource {
+	class SOLAIRE_EXPORT_API Resource : public Link::Object{
 	public:
 		typedef uint64_t ID;
-	private:
-		Resource(const Resource&) = delete;
-		Resource(Resource&&) = delete;
-		Resource& operator=(const Resource&) = delete;
-		Resource& operator=(Resource&&) = delete;
-	public:
-		virtual ~Resource(){}
 	};
 
-	typedef std::shared_ptr<Resource> ResourcePtr;
-	typedef std::shared_ptr<const Resource> ConstResourcePtr;
+	typedef Link::SharedPtr<Resource> ResourcePtr;
+	typedef Link::SharedPtr<const Resource> ConstResourcePtr;
     
 }
 
