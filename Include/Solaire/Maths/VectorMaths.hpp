@@ -33,8 +33,6 @@
 
 #include <cmath>
 #include <cstdint>
-//#include <cstring>
-#include <stdexcept>
 #include "..\Core\Init.hpp"
 
 namespace Solaire{
@@ -45,71 +43,71 @@ namespace Solaire{
 		typedef T Scalar;
 		typedef typename TypeTraits<Scalar>::ConstPassType ScalarPass;
 	public:
-		static inline T* Copy(T* const aFirst, const T* const aSecond) {
+		static inline T* Copy(T* const aFirst, const T* const aSecond) throw() {
 			std::memcpy(aFirst, aSecond, sizeof(T) * LENGTH);
 			return aFirst;
 		}
 
-		static inline bool Equals(const T* const aFirst, const T* const aSecond) {
+		static inline bool Equals(const T* const aFirst, const T* const aSecond) throw() {
 			return std::memcmp(aFirst, aSecond, LENGTH * sizeof(T)) == 0;
 		}
 
-		static inline bool NotEquals(const T* const aFirst, const T* const aSecond) {
+		static inline bool NotEquals(const T* const aFirst, const T* const aSecond) throw() {
 			return std::memcmp(aFirst, aSecond, LENGTH * sizeof(T)) != 0;
 		}
 
 		////
 
-		static inline T* AddEq(T* const aFirst, const T* const aSecond) {
+		static inline T* AddEq(T* const aFirst, const T* const aSecond) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aFirst[i] += aSecond[i];
 			}
 			return aFirst;
 		}
 
-		static inline T* SubEq(T* const aFirst, const T* const aSecond) {
+		static inline T* SubEq(T* const aFirst, const T* const aSecond) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aFirst[i] -= aSecond[i];
 			}
 			return aFirst;
 		}
 
-		static inline T* MulEq(T* const aFirst, const T* const aSecond) {
+		static inline T* MulEq(T* const aFirst, const T* const aSecond) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aFirst[i] *= aSecond[i];
 			}
 			return aFirst;
 		}
 
-		static inline T* DivEq(T* const aVector, const T* const aSecond) {
+		static inline T* DivEq(T* const aVector, const T* const aSecond) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aVector[i] /= aSecond[i];
 			}
 			return aVector;
 		}
 
-		static inline T* AddEq(T* const aVector, const ScalarPass aScalar) {
+		static inline T* AddEq(T* const aVector, const ScalarPass aScalar) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aVector[i] += aScalar;
 			}
 			return aVector;
 		}
 
-		static inline T* SubEq(T* const aVector, const ScalarPass aScalar) {
+		static inline T* SubEq(T* const aVector, const ScalarPass aScalar) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aVector[i] -= aScalar;
 			}
 			return aVector;
 		}
 
-		static inline T* MulEq(T* const aVector, const ScalarPass aScalar) {
+		static inline T* MulEq(T* const aVector, const ScalarPass aScalar) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aVector[i] *= aScalar;
 			}
 			return aVector;
 		}
 
-		static inline T* DivEq(T* const aVector, const ScalarPass aScalar) {
+		static inline T* DivEq(T* const aVector, const ScalarPass aScalar) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aVector[i] /= aScalar;
 			}
@@ -118,84 +116,84 @@ namespace Solaire{
 
 		////
 
-		static inline T* Add(T* const aOutput, const T* const aFirst, const T* const aSecond) {
+		static inline T* Add(T* const aOutput, const T* const aFirst, const T* const aSecond) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aFirst[i] + aSecond[i];
 			}
 			return aOutput;
 		}
 
-		static inline T* Sub(T* const aOutput, const T* const aFirst, const T* const aSecond) {
+		static inline T* Sub(T* const aOutput, const T* const aFirst, const T* const aSecond) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aFirst[i] - aSecond[i];
 			}
 			return aOutput;
 		}
 
-		static inline void Mul(T* const aOutput, const T* const aFirst, const T* const aSecond) {
+		static inline void Mul(T* const aOutput, const T* const aFirst, const T* const aSecond) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aFirst[i] * aSecond[i];
 			}
 			return aOutput;
 		}
 
-		static inline T* Div(T* const aOutput, const T* const aFirst, const T* const aSecond) {
+		static inline T* Div(T* const aOutput, const T* const aFirst, const T* const aSecond) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aFirst[i] / aSecond[i];
 			}
 			return aOutput;
 		}
 
-		static inline T* Add(T* const aOutput, const T* const aVector, const ScalarPass aScalar) {
+		static inline T* Add(T* const aOutput, const T* const aVector, const ScalarPass aScalar) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aVector[i] + aScalar;
 			}
 			return aOutput;
 		}
 
-		static inline T* Sub(T* const aOutput, const T* const aVector, const ScalarPass aScalar) {
+		static inline T* Sub(T* const aOutput, const T* const aVector, const ScalarPass aScalar) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aVector[i] - aScalar;
 			}
 			return aOutput;
 		}
 
-		static inline void Mul(T* const aOutput, const T* const aVector, const ScalarPass aScalar) {
+		static inline void Mul(T* const aOutput, const T* const aVector, const ScalarPass aScalar) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aVector[i] * aScalar;
 			}
 			return aOutput;
 		}
 
-		static inline T* Div(T* const aOutput, const T* const aVector, const ScalarPass aScalar) {
+		static inline T* Div(T* const aOutput, const T* const aVector, const ScalarPass aScalar) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aVector[i] / aScalar;
 			}
 			return aOutput;
 		}
 
-		static inline T* Add(T* const aOutput, const ScalarPass aScalar, const T* const aVector) {
+		static inline T* Add(T* const aOutput, const ScalarPass aScalar, const T* const aVector) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aScalar + aVector[i];
 			}
 			return aOutput;
 		}
 
-		static inline T* Sub(T* const aOutput, const ScalarPass aScalar, const T* const aVector) {
+		static inline T* Sub(T* const aOutput, const ScalarPass aScalar, const T* const aVector) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aScalar - aVector[i];
 			}
 			return aOutput;
 		}
 
-		static inline T* Mul(T* const aOutput, const ScalarPass aScalar, const T* const aVector) {
+		static inline T* Mul(T* const aOutput, const ScalarPass aScalar, const T* const aVector) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aScalar * aVector[i];
 			}
 			return aOutput;
 		}
 
-		static inline T* Div(T* const aOutput, const ScalarPass aScalar, const T* const aVector) {
+		static inline T* Div(T* const aOutput, const ScalarPass aScalar, const T* const aVector) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aScalar / aVector[i];
 			}
@@ -204,31 +202,31 @@ namespace Solaire{
 
 		////
 
-        static inline T* LerpEq(T* const aFirst, const T* const aSecond, const double aWeight) {
+        static inline T* LerpEq(T* const aFirst, const T* const aSecond, const double aWeight) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aFirst[i] = static_cast<T>((1.0 - aWeight) * static_cast<double>(aFirst[i]) + aWeight * static_cast<double>(aSecond[i]));
 			}
 			return aFirst;
 		}
 
-		static inline T* Lerp(T* const aOutput, const T* const aFirst, const T* const aSecond, const double aWeight) {
+		static inline T* Lerp(T* const aOutput, const T* const aFirst, const T* const aSecond, const double aWeight) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = static_cast<T>((1.0 - aWeight) * static_cast<double>(aFirst[i]) + aWeight * static_cast<double>(aSecond[i]));
 			}
 			return aOutput;
 		}
 
-		static inline T Sum(const T* const aVector) {
+		static inline T Sum(const T* const aVector) throw() {
 			T sum = static_cast<T>(0);
 			for(uint32_t i = 0; i < LENGTH; ++i) sum += aVector[i];
 			return sum;
 		}
 
-		static inline T Avg(const T* const aVector) {
+		static inline T Avg(const T* const aVector) throw() {
 			return Sum(aVector) / static_cast<T>(LENGTH);
 		}
 
-		static T MagSq(const T* aVector) {
+		static T MagSq(const T* aVector) throw() {
 			T tmp = static_cast<T>(0);
 			for (uint32_t i = 0; i < LENGTH; ++i){
 				sum += aVector[i] * aVector[i];
@@ -236,11 +234,11 @@ namespace Solaire{
 			return tmp;
 		}
 
-		static double Mag(const T* const aVector) {
+		static double Mag(const T* const aVector) throw() {
 			return std::sqrt(static_cast<double>(MagSq(aVector)));
 		}
 
-		static T Dot(const T* const aFirst, const T* const aSecond) {
+		static T Dot(const T* const aFirst, const T* const aSecond) throw() {
 			T tmp = static_cast<T>(0);
 			for (uint32_t i = 0; i < LENGTH; ++i) {
 				tmp += aFirst[i] * aSecond[i];
@@ -249,33 +247,33 @@ namespace Solaire{
 		}
 
 		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<LENGTH == 3>::type>
-		static inline T* Cross(T* const aOutput, const T* const aFirst, const T* const aSecond) {
+		static inline T* Cross(T* const aOutput, const T* const aFirst, const T* const aSecond) throw() {
 			aOutput[0] = (aFirst[1] * aSecond[2]) - (aFirst[2] * aSecond[1]);
 			aOutput[1] = (aFirst[2] * aSecond[0]) - (aFirst[0] * aSecond[2]);
 			aOutput[2] = (aFirst[0] * aSecond[1]) - (aFirst[1] * aSecond[0]);
 		}
 		
-		static inline T* Swizzle(T* const aOutput, const T* const aVector, const uint32_t* const aSwizzle) {
+		static inline T* Swizzle(T* const aOutput, const T* const aVector, const uint32_t* const aSwizzle)  throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = aVector[aSwizzle[i]];
 			}
 			return aOutput;
 		}
 
-		static inline T* SwizzleEq(T* const aVector, const uint32_t* const aSwizzle) {
+		static inline T* SwizzleEq(T* const aVector, const uint32_t* const aSwizzle) throw() {
 			T tmp[LENGTH];
 			return Swizzle(aVector, Copy(tmp, aVector), aSwizzle);
 		}
 
-		static inline T* NormaliseEq(T* const aVector) {
+		static inline T* NormaliseEq(T* const aVector) throw() {
 			return DivEq(aVector, Mag(aVector));
 		}
 
-		static inline T* Normalise(T* const aOutput, const T* const aVector) {
+		static inline T* Normalise(T* const aOutput, const T* const aVector) throw() {
 			return NormaliseEq(Copy(aOutput, aVector));
 		}
 
-		static inline T* Fill(T* const aVector, const ScalarPass aScalar) {
+		static inline T* Fill(T* const aVector, const ScalarPass aScalar) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aVector[i] = aScalar;
 			}
@@ -283,7 +281,7 @@ namespace Solaire{
 		} 
 		
 		template<class T2>
-		static T* Cast(T* const aOutput, const T2* const aVector) {
+		static T* Cast(T* const aOutput, const T2* const aVector) throw() {
 			for(uint32_t i = 0; i < LENGTH; ++i) {
 				aOutput[i] = static_cast<T>(aSecond[i]);
 			}

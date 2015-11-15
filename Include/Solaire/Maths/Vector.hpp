@@ -45,15 +45,15 @@ namespace Solaire{
 	private:
 		Scalar mVector[LENGTH];
 	public:
-		Vector(){
+		Vector() throw() {
 
 		}
 
-		Vector(ScalarPass aScalar){
+		Vector(ScalarPass aScalar) throw() {
 			Fill(aScalar);
 		}
 
-		Vector(const std::initializer_list<Scalar> aScalars) {
+		Vector(const std::initializer_list<Scalar> aScalars) throw() {
 			uint32_t i = 0;
 
 			for(ScalarPass i scalar : aScalars) {
@@ -67,7 +67,7 @@ namespace Solaire{
 			}
 		}
 
-		Vector(const std::initializer_list<Scalar> aScalars, ScalarPass aDefault) {
+		Vector(const std::initializer_list<Scalar> aScalars, ScalarPass aDefault) throw() {
 			uint32_t i = 0;
 
 			for (ScalarPass i scalar : aScalars) {
@@ -81,71 +81,71 @@ namespace Solaire{
 			}
 		}
 
-		inline ScalarPass operator[](const uint32_t aIndex) const{
+		inline ScalarPass operator[](const uint32_t aIndex) const throw() {
 			return mVector[aIndex];
 		}
 
-		inline Scalar& operator[](const uint32_t aIndex) {
+		inline Scalar& operator[](const uint32_t aIndex) throw() {
 			return mVector[aIndex];
 		}
 
-		inline uint32_t Size() const {
+		inline uint32_t Size() const throw() {
 			return LENGTH;
 		}
 
-		inline const Scalar* AsPointer() const {
+		inline const Scalar* AsPointer() const throw() {
 			return mVector;
 		}
 
-		inline Scalar* AsPointer() {
+		inline Scalar* AsPointer() throw() {
 			return mVector;
 		}
 
-		inline Vector<Scalar, LENGTH> Lerp(const Vector<Scalar, LENGTH> aOther, const double aWeight) const {
+		inline Vector<Scalar, LENGTH> Lerp(const Vector<Scalar, LENGTH> aOther, const double aWeight) const throw() {
 			Vector<Scalar, LENGTH> tmp;
 			MathsImplementation::Lerp(tmp.mVector, mVector, aOther.mVector, aWeight);
 			return tmp;
 		}
 
-		inline Scalar Sum() const {
+		inline Scalar Sum() const throw() {
 			return MathsImplementation::Sum(mVector);
 		}
 
-		inline Scalar Average() const {
+		inline Scalar Average() const throw() {
 			return MathsImplementation::Avg(mVector);
 		}
 
-		inline double MagnitudeSquared() const {
+		inline double MagnitudeSquared() const throw() {
 			return MathsImplementation::MagSq(mVector);
 		}
 
-		inline double Magnitude() const {
+		inline double Magnitude() const throw() {
 			return MathsImplementation::Mag(mVector);
 		}
 
-		inline Scalar Dot(const Vector<Scalar, LENGTH> aOther) const {
+		inline Scalar Dot(const Vector<Scalar, LENGTH> aOther) const throw() {
 			return MathsImplementation::Dot(mVector, aOther.mVector);
 		}
 
 		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<LENGTH == 3>::type>
-		inline Vector<Scalar, LENGTH> Cross(const Vector<Scalar, LENGTH> aOther) const {
+		inline Vector<Scalar, LENGTH> Cross(const Vector<Scalar, LENGTH> aOther) const throw() {
 			Vector<Scalar, LENGTH> tmp;
 			MathsImplementation::Cross(tmp.mVector, mVector, aOther.mVector);
 			return tmp;
 		}
 
-		inline Vector<Scalar, LENGTH> Swizzle(const Vector<uint32_t, LENGTH> aSwizzle) const {
+		inline Vector<Scalar, LENGTH> Swizzle(const Vector<uint32_t, LENGTH> aSwizzle) const throw() {
 			Vector<Scalar, LENGTH> tmp;
 			MathsImplementation::Swizzle(tmp.mVector, mVector, aSwizzle.mVector);
 			return tmp;
 		}
 
-		inline Vector<Scalar, LENGTH>& Normalise() {
+		inline Vector<Scalar, LENGTH>& Normalise() throw() {
 			MathsImplementation::NormaliseEq(mVector);
 			return *this;
 		}
 
-		inline Vector<Scalar, LENGTH>& Fill(const ScalarPass aScalar){
+		inline Vector<Scalar, LENGTH>& Fill(const ScalarPass aScalar) throw() {
 			MathsImplementation::Fill(mVector, aScalar);
 			return *this;
 		}
@@ -182,7 +182,7 @@ namespace Solaire{
 	typedef Vector4<double>		Vector4D;
 
 	template<class T, class T2, const uint32_t LENGTH>
-	static inline Solaire::Vector<T, LENGTH> VectorCast(const Solaire::Vector<T2, LENGTH> aVector) {
+	static inline Solaire::Vector<T, LENGTH> VectorCast(const Solaire::Vector<T2, LENGTH> aVector) throw() {
 		Solaire::Vector<T, LENGTH> tmp;
 		Solaire::VectorMaths<T, LENGTH>::Cast<T2>(aVector.AsPointer(), tmp.AsPointer());
 		return tmp;
@@ -190,132 +190,132 @@ namespace Solaire{
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH>& operator+=(Solaire::Vector<T, LENGTH>& aFirst, const Solaire::Vector<T, LENGTH> aSecond) {
+static inline Solaire::Vector<T, LENGTH>& operator+=(Solaire::Vector<T, LENGTH>& aFirst, const Solaire::Vector<T, LENGTH> aSecond) throw() {
 	Solaire::VectorMaths<T, LENGTH>::AddEq(aFirst.AsPointer(), aSecond.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH>& operator-=(Solaire::Vector<T, LENGTH>& aFirst, const Solaire::Vector<T, LENGTH> aSecond) {
+static inline Solaire::Vector<T, LENGTH>& operator-=(Solaire::Vector<T, LENGTH>& aFirst, const Solaire::Vector<T, LENGTH> aSecond) throw() {
 	Solaire::VectorMaths<T, LENGTH>::SubEq(aFirst.AsPointer(), aSecond.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH>& operator*=(Solaire::Vector<T, LENGTH>& aFirst, const Solaire::Vector<T, LENGTH> aSecond) {
+static inline Solaire::Vector<T, LENGTH>& operator*=(Solaire::Vector<T, LENGTH>& aFirst, const Solaire::Vector<T, LENGTH> aSecond) throw() {
 	Solaire::VectorMaths<T, LENGTH>::MulEq(aFirst.AsPointer(), aSecond.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH>& operator/=(Solaire::Vector<T, LENGTH>& aFirst, const Solaire::Vector<T, LENGTH> aSecond) {
+static inline Solaire::Vector<T, LENGTH>& operator/=(Solaire::Vector<T, LENGTH>& aFirst, const Solaire::Vector<T, LENGTH> aSecond) throw() {
 	Solaire::VectorMaths<T, LENGTH>::DivEq(aFirst.AsPointer(), aSecond.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH>& operator+=(Solaire::Vector<T, LENGTH>& aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) {
+static inline Solaire::Vector<T, LENGTH>& operator+=(Solaire::Vector<T, LENGTH>& aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) throw() {
 	Solaire::VectorMaths<T, LENGTH>::AddEq(aFirst.AsPointer(), aScalar);
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH>& operator-=(Solaire::Vector<T, LENGTH>& aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) {
+static inline Solaire::Vector<T, LENGTH>& operator-=(Solaire::Vector<T, LENGTH>& aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) throw() {
 	Solaire::VectorMaths<T, LENGTH>::SubEq(aFirst.AsPointer(), aScalar);
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH>& operator*=(Solaire::Vector<T, LENGTH>& aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) {
+static inline Solaire::Vector<T, LENGTH>& operator*=(Solaire::Vector<T, LENGTH>& aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) throw() {
 	Solaire::VectorMaths<T, LENGTH>::MulEq(aFirst.AsPointer(), aScalar);
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH>& operator/=(Solaire::Vector<T, LENGTH>& aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) {
+static inline Solaire::Vector<T, LENGTH>& operator/=(Solaire::Vector<T, LENGTH>& aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) throw() {
 	Solaire::VectorMaths<T, LENGTH>::DivEq(aFirst.AsPointer(), aScalar);
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator+(const Solaire::Vector<T, LENGTH> aFirst, const Solaire::Vector<T, LENGTH> aSecond) {
+static inline Solaire::Vector<T, LENGTH> operator+(const Solaire::Vector<T, LENGTH> aFirst, const Solaire::Vector<T, LENGTH> aSecond) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Add(tmp.AsPointer(), aFirst.AsPointer(), aSecond.AsPointer());
 	return tmp;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator-(const Solaire::Vector<T, LENGTH> aFirst, const Solaire::Vector<T, LENGTH> aSecond) {
+static inline Solaire::Vector<T, LENGTH> operator-(const Solaire::Vector<T, LENGTH> aFirst, const Solaire::Vector<T, LENGTH> aSecond) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Sub(tmp.AsPointer(), aFirst.AsPointer(), aSecond.AsPointer());
 	return tmp;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator*(const Solaire::Vector<T, LENGTH> aFirst, const Solaire::Vector<T, LENGTH> aSecond) {
+static inline Solaire::Vector<T, LENGTH> operator*(const Solaire::Vector<T, LENGTH> aFirst, const Solaire::Vector<T, LENGTH> aSecond) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Mul(tmp.AsPointer(), aFirst.AsPointer(), aSecond.AsPointer());
 	return tmp;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator/(const Solaire::Vector<T, LENGTH> aFirst, const Solaire::Vector<T, LENGTH> aSecond) {
+static inline Solaire::Vector<T, LENGTH> operator/(const Solaire::Vector<T, LENGTH> aFirst, const Solaire::Vector<T, LENGTH> aSecond) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Div(tmp.AsPointer(), aFirst.AsPointer(), aSecond.AsPointer());
 	return tmp;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator+(const Solaire::Vector<T, LENGTH> aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) {
+static inline Solaire::Vector<T, LENGTH> operator+(const Solaire::Vector<T, LENGTH> aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Add(tmp.AsPointer(), aFirst.AsPointer(), aScalar);
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator-(const Solaire::Vector<T, LENGTH> aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) {
+static inline Solaire::Vector<T, LENGTH> operator-(const Solaire::Vector<T, LENGTH> aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Sub(tmp.AsPointer(), aFirst.AsPointer(), aScalar);
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator*(const Solaire::Vector<T, LENGTH> aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) {
+static inline Solaire::Vector<T, LENGTH> operator*(const Solaire::Vector<T, LENGTH> aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Mul(tmp.AsPointer(), aFirst.AsPointer(), aScalar);
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator/(const Solaire::Vector<T, LENGTH> aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) {
+static inline Solaire::Vector<T, LENGTH> operator/(const Solaire::Vector<T, LENGTH> aFirst, const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Div(tmp.AsPointer(), aFirst.AsPointer(), aScalar);
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator+(const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar, const Solaire::Vector<T, LENGTH> aFirst) {
+static inline Solaire::Vector<T, LENGTH> operator+(const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar, const Solaire::Vector<T, LENGTH> aFirst) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Add(tmp.AsPointer(), aScalar, aFirst.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator-(const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar, const Solaire::Vector<T, LENGTH> aFirst) {
+static inline Solaire::Vector<T, LENGTH> operator-(const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar, const Solaire::Vector<T, LENGTH> aFirst) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Sub(tmp.AsPointer(), aScalar, aFirst.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator*(const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar, const Solaire::Vector<T, LENGTH> aFirst) {
+static inline Solaire::Vector<T, LENGTH> operator*(const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar, const Solaire::Vector<T, LENGTH> aFirst) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Mul(tmp.AsPointer(), aScalar, aFirst.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t LENGTH>
-static inline Solaire::Vector<T, LENGTH> operator/(const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar, const Solaire::Vector<T, LENGTH> aFirst) {
+static inline Solaire::Vector<T, LENGTH> operator/(const typename Solaire::Vector<T, LENGTH>::ScalarPass aScalar, const Solaire::Vector<T, LENGTH> aFirst) throw() {
 	Solaire::Vector<T, LENGTH> tmp;
 	Solaire::VectorMaths<T, LENGTH>::Div(tmp.AsPointer(), aScalar, aFirst.AsPointer());
 	return aFirst;
