@@ -32,6 +32,7 @@
 */
 
 #include <cstdint>
+#include "..\Core\Maths.hpp"
 
 namespace Solaire{
 
@@ -77,19 +78,19 @@ namespace Solaire{
 	static constexpr uint8_t Reflect16(const uint16_t aValue) throw() {
 		return
 			Reflect8(aValue >> 8) +
-			Reflect8(aValue & 0xFF);
+			Reflect8(aValue & NYBBLE_0);
     }
 
 	static constexpr uint8_t Reflect32(const uint32_t aValue) throw() {
 		return
 			Reflect16(aValue >> 16) +
-			Reflect16(aValue & 0xFFFF);
+			Reflect16(aValue & SHORT_0);
     }
 
     static constexpr uint8_t Reflect64(const uint64_t aValue) throw() {
 		return
 			Reflect32(aValue >> 32) +
-			Reflect32(aValue & 0xFFFFFFFFFFFFFFFF);
+			Reflect32(aValue & INT_0);
     }
 
 	template<class T>

@@ -32,6 +32,7 @@
 */
 
 #include <cstdint>
+#include "..\Core\Maths.hpp"
 
 namespace Solaire{
 
@@ -49,33 +50,26 @@ namespace Solaire{
 	static constexpr uint8_t PopCount8(const uint8_t aValue) throw() {
 		return
 			PopCount4(aValue >> 4) +
-			PopCount4(aValue & 0xF);
+			PopCount4(aValue & NYBBLE_0);
     }
 
 	static constexpr uint8_t PopCount16(const uint16_t aValue) throw() {
 		return
             PopCount8(aValue >> 8) +
-            PopCount8(aValue & 0xFF);
+            PopCount8(aValue & BYTE_0);
     }
 
 	static constexpr uint8_t PopCount32(const uint32_t aValue) throw() {
 		return
 			PopCount16(aValue >> 16) +
-            PopCount16(aValue & 0xFFFF);
+            PopCount16(aValue & SHORT_0);
     }
 
     static constexpr uint8_t PopCount64(const uint64_t aValue) throw() {
 		return
 			PopCount32(aValue >> 32) +
-			PopCount32(aValue & 0xFFFFFFFFFFFFFFFF);
+			PopCount32(aValue & INT_0);
     }
-	
-
-	static constexpr uint8_t PopCount64(const uint64_t aValue) throw() {
-		return
-			PopCount32(aValue >> 32) +
-			PopCount32(aValue & 0xFFFFFFFFFFFFFFFF);
-	}	
 	
 	template<class T>
 	static constexpr T PopCount(const T aValue) throw();

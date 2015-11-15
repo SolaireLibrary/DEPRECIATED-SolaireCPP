@@ -33,7 +33,116 @@
 
 #include <cstdint>
 
-namespace Solaire{ namespace Maths{
+namespace Solaire{
+
+	enum : uint64_t {
+		BIT_0		= 1,
+		BIT_1		= BIT_0 << 1L,
+		BIT_2		= BIT_1 << 1L,
+		BIT_3		= BIT_2 << 1L,
+		BIT_4		= BIT_3 << 1L,
+		BIT_5		= BIT_4 << 1L,
+		BIT_6		= BIT_5 << 1L,
+		BIT_7		= BIT_6 << 1L,
+		BIT_8		= BIT_7 << 1L,
+		BIT_9		= BIT_8 << 1L,
+		BIT_10		= BIT_9 << 1L,
+		BIT_11		= BIT_10 << 1L,
+		BIT_12		= BIT_11 << 1L,
+		BIT_13		= BIT_12 << 1L,
+		BIT_14		= BIT_13 << 1L,
+		BIT_15		= BIT_14 << 1L,
+		BIT_16		= BIT_15 << 1L,
+		BIT_17		= BIT_16 << 1L,
+		BIT_18		= BIT_17 << 1L,
+		BIT_19		= BIT_18 << 1L,
+		BIT_20		= BIT_19 << 1L,
+		BIT_21		= BIT_20 << 1L,
+		BIT_22		= BIT_21 << 1L,
+		BIT_23		= BIT_22 << 1L,
+		BIT_24		= BIT_23 << 1L,
+		BIT_25		= BIT_24 << 1L,
+		BIT_26		= BIT_25 << 1L,
+		BIT_27		= BIT_26 << 1L,
+		BIT_28		= BIT_27 << 1L,
+		BIT_29		= BIT_28 << 1L,
+		BIT_30		= BIT_29 << 1L,
+		BIT_31		= BIT_30 << 1L,
+		BIT_32		= BIT_31 << 1L,
+		BIT_33		= BIT_32 << 1L,
+		BIT_34		= BIT_33 << 1L,
+		BIT_35		= BIT_34 << 1L,
+		BIT_36		= BIT_35 << 1L,
+		BIT_37		= BIT_36 << 1L,
+		BIT_38		= BIT_37 << 1L,
+		BIT_39		= BIT_38 << 1L,
+		BIT_40		= BIT_39 << 1L,
+		BIT_41		= BIT_40 << 1L,
+		BIT_42		= BIT_41 << 1L,
+		BIT_43		= BIT_42 << 1L,
+		BIT_44		= BIT_43 << 1L,
+		BIT_45		= BIT_44 << 1L,
+		BIT_46		= BIT_45 << 1L,
+		BIT_47		= BIT_46 << 1L,
+		BIT_48		= BIT_47 << 1L,
+		BIT_49		= BIT_48 << 1L,
+		BIT_50		= BIT_49 << 1L,
+		BIT_51		= BIT_50 << 1L,
+		BIT_52		= BIT_51 << 1L,
+		BIT_53		= BIT_52 << 1L,
+		BIT_54		= BIT_53 << 1L,
+		BIT_55		= BIT_54 << 1L,
+		BIT_56		= BIT_55 << 1L,
+		BIT_57		= BIT_56 << 1L,
+		BIT_58		= BIT_57 << 1L,
+		BIT_59		= BIT_58 << 1L,
+		BIT_60		= BIT_59 << 1L,
+		BIT_61		= BIT_60 << 1L,
+		BIT_62		= BIT_61 << 1L,
+		BIT_63		= BIT_62 << 1L,
+
+		NYBBLE_0	= BIT_0 | BIT_1 | BIT_2 | BIT_3,
+		NYBBLE_1	= NYBBLE_0 << 4L,
+		NYBBLE_2	= NYBBLE_1 << 4L,
+		NYBBLE_3	= NYBBLE_2 << 4L,
+		NYBBLE_4	= NYBBLE_3 << 4L,
+		NYBBLE_5	= NYBBLE_4 << 4L,
+		NYBBLE_6	= NYBBLE_5 << 4L,
+		NYBBLE_7	= NYBBLE_6 << 4L,
+		NYBBLE_8	= NYBBLE_7 << 4L,
+		NYBBLE_9	= NYBBLE_8 << 4L,
+		NYBBLE_10	= NYBBLE_9 << 4L,
+		NYBBLE_11	= NYBBLE_10 << 4L,
+		NYBBLE_12	= NYBBLE_11 << 4L,
+		NYBBLE_13	= NYBBLE_12 << 4L,
+		NYBBLE_14	= NYBBLE_13 << 4L,
+		NYBBLE_15	= NYBBLE_14 << 4L,
+
+		BYTE_0		= NYBBLE_0 | NYBBLE_1,
+		BYTE_1		= BYTE_0 << 8L,
+		BYTE_2		= BYTE_1 << 8L,
+		BYTE_3		= BYTE_2 << 8L,
+		BYTE_4		= BYTE_3 << 8L,
+		BYTE_5		= BYTE_4 << 8L,
+		BYTE_6		= BYTE_5 << 8L,
+		BYTE_7		= BYTE_6 << 8L,
+
+		SHORT_0		= BYTE_0 | BYTE_1,
+		SHORT_1		= SHORT_0 << 16L,
+		SHORT_2		= SHORT_1 << 16L,
+		SHORT_3		= SHORT_2 << 16L,
+
+		INT_0		= SHORT_0 | SHORT_1,
+		INT_1		= SHORT_1 << 32L,
+
+		LONG_0		= INT_0 | INT_1
+	};
+	
+	/*
+
+	
+	
+	namespace Maths{
 
     namespace MathsInternal{
 
@@ -322,9 +431,9 @@ namespace Solaire{ namespace Maths{
 	template<class T>
     static constexpr T Lerp(const T aFirst, const T aSecond, const T aWeight) throw() {
         return (static_cast<T>(1) - aWeight) * aFirst + aWeight * aSecond;
-    }
+    }*/
 
-}}
+}
 
 
 #endif
