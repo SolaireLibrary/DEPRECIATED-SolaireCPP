@@ -37,6 +37,11 @@ Last Modified	: 11th November 2015
 namespace Solaire{ namespace Link{
 
 	class SOLAIRE_EXPORT_API Object{
+	private:
+		Object(const Object&) = delete;
+		Object(Object&&) = delete;
+		Object& operator=(const Object&) = delete;
+		Object& operator=(Object&&) = delete;
 	public:
 		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const = 0;
 		virtual void SOLAIRE_EXPORT_CALL Destructor() = 0;
