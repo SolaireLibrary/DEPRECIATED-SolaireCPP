@@ -32,7 +32,6 @@ Last Modified	: 15th November 2015
 */
 
 #include <cstdint>
-#include <functional>
 #include "Object.hpp"
 
 namespace Solaire{namespace Link{

@@ -38,10 +38,9 @@ namespace Solaire{
     /*!
         \detail Use different MemoryArenas for different object lifetimes (eg. objects that are destroyed at the end of a frame)
     */
-	class MemoryArena : public Allocator{
+	class SOLAIRE_EXPORT_API MemoryArena : public Allocator{
 	public:
-		virtual ~MemoryArena();
-		virtual void Clear() = 0;
+		virtual void SOLAIRE_EXPORT_CALL Clear() = 0;
 	};
 }
 

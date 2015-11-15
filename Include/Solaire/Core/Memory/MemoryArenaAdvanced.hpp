@@ -58,9 +58,9 @@ namespace Solaire{
 		AdvancedMemoryArena(Allocator&, const uint32_t);
 		~AdvancedMemoryArena();
 
-		// Inherited from Allocator
+		// Inherited from MemoryArena
 
-		void Clear() override;
+		void SOLAIRE_EXPORT_CALL Clear() override;
 
 		// Inherited from Allocator
 

@@ -106,6 +106,7 @@ namespace Solaire{
 	}
 
 	AdvancedMemoryArena::~AdvancedMemoryArena() {
+		Clear();
 		for(Block i : mBlocks){
 			mAllocator.Deallocate(i.first, i.second);
 		}
