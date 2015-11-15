@@ -40,9 +40,10 @@ namespace Solaire{
 		return tmp;
 	}
 
-	void DefaultAllocator::Deallocate(void* const aObject, const size_t aBytes) {
+	bool DefaultAllocator::Deallocate(void* const aObject, const size_t aBytes) {
 		operator delete(aObject);
 		mAllocatedBytes -= aBytes;
+		return true;
 	}
 
 }

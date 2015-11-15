@@ -34,6 +34,7 @@
 #include <limits>
 #include <type_traits>
 #include <memory>
+#include "Allocator.hpp"
 
 namespace Solaire{
     template<class T>
@@ -42,37 +43,35 @@ namespace Solaire{
     template<class T>
     using UniquePointer = std::unique_ptr<T, std::function<void(void*)>>;
 
-    class Allocator{
-    public:
-        virtual ~Allocator(){}
-
-        virtual uint32_t GetAllocatedBytes() const = 0;
-        virtual uint32_t GetFreeBytes() const = 0;
-
-        virtual void* Allocate(const size_t aBytes) = 0;
-        virtual void Deallocate(void* const aObject, const size_t aBytes) = 0;
-    };
-
     template<class T, class ...PARAMS>
-    static SharedPointer<T> SharedAllocate(Allocator& aAllocator, PARAMS&&... aParams){
-        return SharedPointer<T>(
-            new(aAllocator.Allocate(sizeof(T))) T(aParams...),
-            [&](T* const aObject){
-                aAllocator.Deallocate(aObject, sizeof(T));
-                aObject->~T();
-            }
-        );
+    static SharedPointer<T> SharedAllocate(Allocator& aAllocator, PARAMS&&... aParams) throw() {
+		try{
+			return SharedPointer<T>(
+				new(aAllocator.Allocate(sizeof(T))) T(aParams...),
+				[&](T* const aObject) {
+					aAllocator.Deallocate(aObject, sizeof(T));
+					aObject->~T();
+				}
+			);
+		}catch (...) {
+			return SharedPointer<T>();
+		}
     }
 
     template<class T, class ...PARAMS>
-    static UniquePointer<T> UniqueAllocate(Allocator& aAllocator, PARAMS&&... aParams){
-        return UniquePointer<T>(
-            new(aAllocator.Allocate(sizeof(T))) T(aParams...),
-            [&](void* aObject){
-                aAllocator.Deallocate(aObject, sizeof(T));
-                static_cast<T*>(aObject)->~T();
-            }
-        );
+    static UniquePointer<T> UniqueAllocate(Allocator& aAllocator, PARAMS&&... aParams) throw() {
+		try{
+			return UniquePointer<T>(
+				new(aAllocator.Allocate(sizeof(T))) T(aParams...),
+				[&](void* aObject) {
+					aAllocator.Deallocate(aObject, sizeof(T));
+					static_cast<T*>(aObject)->~T();
+				}
+			);
+		}catch (...) {
+			return UniquePointer<T>();
+		}
+        
     }
 }
 
