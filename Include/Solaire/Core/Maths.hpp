@@ -84,53 +84,53 @@ namespace Solaire{ namespace Maths{
     // Cast
 
     template<class A, class B, typename Enable = typename std::enable_if<sizeof(A) == sizeof(B)>::type>
-    static constexpr A IntactCast(const B aValue){
+    static constexpr A BitwiseCast(const B aValue) throw() {
         return *reinterpret_cast<const B*>(&aValue);
     }
 
     // Word Length
 
-    static constexpr uint8_t Lower4(const uint8_t aValue){
+    static constexpr uint8_t Lower4(const uint8_t aValue) throw() {
         return aValue & 0xF;
     }
 
-    static constexpr uint8_t Upper4(const uint8_t aValue){
+    static constexpr uint8_t Upper4(const uint8_t aValue) throw() {
         return aValue >> 4;
     }
 
-    static constexpr uint8_t Lower8(const uint16_t aValue){
+    static constexpr uint8_t Lower8(const uint16_t aValue) throw() {
         return aValue & 0xFF;
     }
 
-    static constexpr uint8_t Upper8(const uint16_t aValue){
+    static constexpr uint8_t Upper8(const uint16_t aValue) throw() {
         return aValue >> 8;
     }
 
-    static constexpr uint16_t Lower16(const uint32_t aValue){
+    static constexpr uint16_t Lower16(const uint32_t aValue) throw() {
         return aValue & 0xFFFF;
     }
 
-    static constexpr uint16_t Upper16(const uint32_t aValue){
+    static constexpr uint16_t Upper16(const uint32_t aValue) throw() {
         return aValue >> 16;
     }
 
-    static constexpr uint32_t Lower32(const uint64_t aValue){
+    static constexpr uint32_t Lower32(const uint64_t aValue) throw() {
         return aValue & 0xFFFFFFFFL;
     }
 
-    static constexpr uint32_t Upper32(const uint64_t aValue){
+    static constexpr uint32_t Upper32(const uint64_t aValue) throw() {
         return aValue >> 32L;
     }
 
     // Combine
 
-    static constexpr uint16_t Combine16(const uint8_t a0, const uint32_t a1){
+    static constexpr uint16_t Combine16(const uint8_t a0, const uint32_t a1) throw(){
         return (static_cast<uint16_t>(a0) << 8) | a1;
     }
 
     static constexpr uint32_t Combine32(
         const uint8_t a0, const uint32_t a1, const uint8_t a2, const uint32_t a3
-    ){
+    ) throw() {
         return
             (static_cast<uint32_t>(a0) << 24) |
             (static_cast<uint32_t>(a1) << 16) |
@@ -141,7 +141,7 @@ namespace Solaire{ namespace Maths{
     static constexpr uint64_t Combine64(
         const uint8_t a0, const uint32_t a1, const uint8_t a2, const uint32_t a3,
         const uint8_t a4, const uint32_t a5, const uint8_t a6, const uint32_t a7
-    ){
+    ) throw() {
         return
             (static_cast<uint64_t>(a0) << 56L) |
             (static_cast<uint64_t>(a1) << 48L) |
@@ -157,22 +157,22 @@ namespace Solaire{ namespace Maths{
     // PopCount
 
     template<class T>
-    static constexpr uint8_t PopCount(const T aValue) = delete;
+    static constexpr uint8_t PopCount(const T aValue) throw() = delete;
 
     template<>
-    constexpr uint8_t PopCount<uint8_t>(const uint8_t aValue){
+    constexpr uint8_t PopCount<uint8_t>(const uint8_t aValue) throw() {
         return MathsInternal::BIT_COUNTS[Lower4(aValue)] + MathsInternal::BIT_COUNTS[Upper4(aValue)];
     }
 
     template<>
-    constexpr uint8_t PopCount<uint16_t>(const uint16_t aValue){
+    constexpr uint8_t PopCount<uint16_t>(const uint16_t aValue) throw() {
       return
             PopCount<uint8_t>(aValue >> 8) +
             PopCount<uint8_t>(aValue & 0xFF);
     }
 
     template<>
-    constexpr uint8_t PopCount<uint32_t>(const uint32_t aValue){
+    constexpr uint8_t PopCount<uint32_t>(const uint32_t aValue) throw() {
       return
             PopCount<uint8_t>(aValue >> 24) +
             PopCount<uint8_t>(aValue >> 16) +
@@ -181,7 +181,7 @@ namespace Solaire{ namespace Maths{
     }
 
     template<>
-    constexpr uint8_t PopCount<uint64_t>(const uint64_t aValue){
+    constexpr uint8_t PopCount<uint64_t>(const uint64_t aValue) throw() {
         return
             PopCount<uint8_t>(static_cast<uint8_t>(aValue >> 56L)) +
             PopCount<uint8_t>(static_cast<uint8_t>(aValue >> 48L)) +
@@ -194,32 +194,32 @@ namespace Solaire{ namespace Maths{
     }
 
     template<>
-    constexpr uint8_t PopCount<int8_t>(const int8_t aValue){
-        return PopCount<uint8_t>(IntactCast<uint8_t>(aValue));
+    constexpr uint8_t PopCount<int8_t>(const int8_t aValue) throw() {
+        return PopCount<uint8_t>(BitwiseCast<uint8_t>(aValue));
     }
 
     template<>
-    constexpr uint8_t PopCount<int16_t>(const int16_t aValue){
-        return PopCount<uint16_t>(IntactCast<uint16_t>(aValue));
+    constexpr uint8_t PopCount<int16_t>(const int16_t aValue) throw() {
+        return PopCount<uint16_t>(BitwiseCast<uint16_t>(aValue));
     }
 
     template<>
-    constexpr uint8_t PopCount<int32_t>(const int32_t aValue){
-        return PopCount<uint32_t>(IntactCast<uint32_t>(aValue));
+    constexpr uint8_t PopCount<int32_t>(const int32_t aValue) throw() {
+        return PopCount<uint32_t>(BitwiseCast<uint32_t>(aValue));
     }
 
     template<>
-    constexpr uint8_t PopCount<int64_t>(const int64_t aValue){
-        return PopCount<uint64_t>(IntactCast<uint64_t>(aValue));
+    constexpr uint8_t PopCount<int64_t>(const int64_t aValue) throw() {
+        return PopCount<uint64_t>(BitwiseCast<uint64_t>(aValue));
     }
 
     // Hex
 
     template<class T>
-    static char* ToHex(const T aValue, char* aString) = delete;
+    static char* ToHex(const T aValue, char* aString) throw() = delete;
 
     template<>
-    char* ToHex<uint8_t>(const uint8_t aValue, char* aString){
+    char* ToHex<uint8_t>(const uint8_t aValue, char* aString) throw() {
         *aString = MathsInternal::HEX_STRING[aValue >> 4];
         ++aString;
         *aString = MathsInternal::HEX_STRING[aValue & 0xF];
@@ -228,25 +228,25 @@ namespace Solaire{ namespace Maths{
     }
 
     template<>
-    char* ToHex<uint16_t>(const uint16_t aValue, char* aString){
+    char* ToHex<uint16_t>(const uint16_t aValue, char* aString) throw() {
         return ToHex<uint8_t>(aValue >> 8, ToHex<uint8_t>(aValue & 0xFF, aString));
     }
 
     template<>
-    char* ToHex<uint32_t>(const uint32_t aValue, char* aString){
+    char* ToHex<uint32_t>(const uint32_t aValue, char* aString) throw() {
         return ToHex<uint16_t>(aValue >> 16, ToHex<uint16_t>(aValue & 0xFFFF, aString));
     }
 
     template<>
-    char* ToHex<uint64_t>(const uint64_t aValue, char* aString){
+    char* ToHex<uint64_t>(const uint64_t aValue, char* aString) throw() {
         return ToHex<uint32_t>(aValue >> 32L, ToHex<uint32_t>(aValue & 0xFFFFFFFFL, aString));
     }
 
     template<class T>
-    static const char* FromHex(T& aValue, const char* aString) = delete;
+    static const char* FromHex(T& aValue, const char* aString) throw() = delete;
 
     template<>
-    const char* FromHex<uint8_t>(uint8_t& aValue, const char* aString){
+    const char* FromHex<uint8_t>(uint8_t& aValue, const char* aString) throw() {
         char c;
 
         c = *aString;
@@ -260,17 +260,17 @@ namespace Solaire{ namespace Maths{
     }
 
     template<>
-    const char* FromHex<uint16_t>(uint16_t& aValue, const char* aString){
+    const char* FromHex<uint16_t>(uint16_t& aValue, const char* aString) throw() {
         return FromHex<uint8_t>(*(reinterpret_cast<uint8_t*>(&aValue) + 1), FromHex<uint8_t>(*reinterpret_cast<uint8_t*>(&aValue), aString));
     }
 
     template<>
-    const char* FromHex<uint32_t>(uint32_t& aValue, const char* aString){
+    const char* FromHex<uint32_t>(uint32_t& aValue, const char* aString) throw() {
         return FromHex<uint16_t>(*(reinterpret_cast<uint16_t*>(&aValue) + 1), FromHex<uint16_t>(*reinterpret_cast<uint16_t*>(&aValue), aString));
     }
 
     template<>
-    const char* FromHex<uint64_t>(uint64_t& aValue, const char* aString){
+    const char* FromHex<uint64_t>(uint64_t& aValue, const char* aString) throw() {
         return FromHex<uint32_t>(*(reinterpret_cast<uint32_t*>(&aValue) + 1), FromHex<uint32_t>(*reinterpret_cast<uint32_t*>(&aValue), aString));
     }
 
@@ -278,10 +278,10 @@ namespace Solaire{ namespace Maths{
     // Binary string
 
     template<class T>
-    static char* ToBinary(const T aValue, char* aString) = delete;
+    static char* ToBinary(const T aValue, char* aString) throw() = delete;
 
     template<>
-    char* ToBinary<uint8_t>(const uint8_t aValue, char* aString){
+    char* ToBinary<uint8_t>(const uint8_t aValue, char* aString) throw() {
         uint32_t* string = reinterpret_cast<uint32_t*>(aString);
         *string = *reinterpret_cast<const uint32_t*>(MathsInternal::BIT_PATTERNS[aValue & 0xF]);
         ++string;
@@ -290,7 +290,7 @@ namespace Solaire{ namespace Maths{
     }
 
     template<>
-    char* ToBinary<uint16_t>(const uint16_t aValue, char* aString){
+    char* ToBinary<uint16_t>(const uint16_t aValue, char* aString) throw() {
         return ToBinary<uint8_t>(aValue >> 8, ToBinary<uint8_t>(aValue & 0xFF, aString));
     }
 
@@ -300,35 +300,35 @@ namespace Solaire{ namespace Maths{
     }
 
     template<>
-    char* ToBinary<uint64_t>(const uint64_t aValue, char* aString){
+    char* ToBinary<uint64_t>(const uint64_t aValue, char* aString) throw() {
         return ToBinary<uint32_t>(aValue >> 32L, ToBinary<uint32_t>(aValue & 0xFFFFFFFFL, aString));
     }
 
     template<>
-    char* ToBinary<int8_t>(const int8_t aValue, char* aString){
-        return ToBinary<uint8_t>(IntactCast<uint8_t>(aValue), aString);
+    char* ToBinary<int8_t>(const int8_t aValue, char* aString) throw() {
+        return ToBinary<uint8_t>(BitwiseCast<uint8_t>(aValue), aString);
     }
 
     template<>
-    char* ToBinary<int16_t>(const int16_t aValue, char* aString){
-        return ToBinary<uint16_t>(IntactCast<uint16_t>(aValue), aString);
+    char* ToBinary<int16_t>(const int16_t aValue, char* aString) throw() {
+        return ToBinary<uint16_t>(BitwiseCast<uint16_t>(aValue), aString);
     }
 
     template<>
-    char* ToBinary<int32_t>(const int32_t aValue, char* aString){
-        return ToBinary<uint32_t>(IntactCast<uint32_t>(aValue), aString);
+    char* ToBinary<int32_t>(const int32_t aValue, char* aString) throw() {
+        return ToBinary<uint32_t>(BitwiseCast<uint32_t>(aValue), aString);
     }
 
     template<>
-    char* ToBinary<int64_t>(const int64_t aValue, char* aString){
-        return ToBinary<uint64_t>(IntactCast<uint64_t>(aValue), aString);
+    char* ToBinary<int64_t>(const int64_t aValue, char* aString) throw() {
+        return ToBinary<uint64_t>(BitwiseCast<uint64_t>(aValue), aString);
     }
 
     template<class T>
-    static const char* FromBinary(T& aValue, const char* aString) = delete;
+    static const char* FromBinary(T& aValue, const char* aString) throw() = delete;
 
     template<>
-    const char* FromBinary<uint8_t>(uint8_t& aValue, const char* aString){
+    const char* FromBinary<uint8_t>(uint8_t& aValue, const char* aString) throw() {
         aValue = (aString[0] == '1' ? 1 : 0) | (aString[1] == '1' ? 2 : 0) | (aString[2] == '1' ? 4 : 0) | (aString[3] == '1' ? 8 : 0);
         aString += 4;
         aValue |= (aString[0] == '1' ? 1 : 0) | (aString[1] == '1' ? 2 : 0) | (aString[2] == '1' ? 4 : 0) | (aString[3] == '1' ? 8 : 0) << 4;
@@ -336,98 +336,98 @@ namespace Solaire{ namespace Maths{
     }
 
     template<>
-    const char* FromBinary<uint16_t>(uint16_t& aValue, const char* aString){
+    const char* FromBinary<uint16_t>(uint16_t& aValue, const char* aString) throw() {
         return FromBinary<uint8_t>(*(reinterpret_cast<uint8_t*>(&aValue) + 1), FromBinary<uint8_t>(*reinterpret_cast<uint8_t*>(&aValue), aString));
     }
 
     template<>
-    const char* FromBinary<uint32_t>(uint32_t& aValue, const char* aString){
+    const char* FromBinary<uint32_t>(uint32_t& aValue, const char* aString) throw() {
         return FromBinary<uint16_t>(*(reinterpret_cast<uint16_t*>(&aValue) + 1), FromBinary<uint16_t>(*reinterpret_cast<uint16_t*>(&aValue), aString));
     }
 
     template<>
-    const char* FromBinary<uint64_t>(uint64_t& aValue, const char* aString){
+    const char* FromBinary<uint64_t>(uint64_t& aValue, const char* aString) throw() {
         return FromBinary<uint32_t>(*(reinterpret_cast<uint32_t*>(&aValue) + 1), FromBinary<uint32_t>(*reinterpret_cast<uint32_t*>(&aValue), aString));
     }
 
     template<>
-    const char* FromBinary<int8_t>(int8_t& aValue, const char* aString){
+    const char* FromBinary<int8_t>(int8_t& aValue, const char* aString) throw() {
         return FromBinary<uint8_t>(reinterpret_cast<uint8_t&>(aValue), aString);
     }
 
     template<>
-    const char* FromBinary<int16_t>(int16_t& aValue, const char* aString){
+    const char* FromBinary<int16_t>(int16_t& aValue, const char* aString) throw() {
         return FromBinary<uint16_t>(reinterpret_cast<uint16_t&>(aValue), aString);
     }
 
     template<>
-    const char* FromBinary<int32_t>(int32_t& aValue, const char* aString){
+    const char* FromBinary<int32_t>(int32_t& aValue, const char* aString) throw() {
         return FromBinary<uint32_t>(reinterpret_cast<uint32_t&>(aValue), aString);
     }
 
     template<>
-    const char* FromBinary<int64_t>(int64_t& aValue, const char* aString){
+    const char* FromBinary<int64_t>(int64_t& aValue, const char* aString) throw() {
         return FromBinary<uint64_t>(reinterpret_cast<uint64_t&>(aValue), aString);
     }
 
     // Conditions
 
     template<class T>
-    static constexpr bool IsPow2(const T aValue){
+    static constexpr bool IsPow2(const T aValue) throw() {
         return aValue == 0 ? false : (aValue & (aValue - 1)) == 0;
     }
 
     // Rounding
 
     template<class T>
-    static constexpr T CeilToClosestMultiple(const T aValue, const T aMultiple){
+    static constexpr T CeilToClosestMultiple(const T aValue, const T aMultiple) throw() {
         return ((aValue + aMultiple - 1) / aMultiple) * aMultiple;
     }
 
     template<class T>
-    static constexpr T CeilToClosestMultiplePow2(const T aValue, const T aMultiple){
+    static constexpr T CeilToClosestMultiplePow2(const T aValue, const T aMultiple) throw() {
         return (aValue + aMultiple - 1) & ~(aMultiple - 1);
     }
 
     template<class T>
-    static constexpr T FloorToClosestMultiple(const T aValue, const T aMultiple){
+    static constexpr T FloorToClosestMultiple(const T aValue, const T aMultiple) throw() {
         return aValue % aMultiple == 0 ? aValue : CeilToClosestMultiple<T>(aValue, aMultiple) - aMultiple;
     }
 
     template<class T>
-    static constexpr T FloorToClosestMultiplePow2(const T aValue, const T aMultiple){
+    static constexpr T FloorToClosestMultiplePow2(const T aValue, const T aMultiple) throw() {
         return aValue & (aMultiple - 1) == 0 ? aValue : CeilToClosestMultiple<T>(aValue, aMultiple) - aMultiple;
     }
 
     template<class T>
-    static constexpr T RoundToClosestMultiple(const T aValue, const T aMultiple){
+    static constexpr T RoundToClosestMultiple(const T aValue, const T aMultiple) throw() {
         return CeilToClosestMultiple<T>(aValue, aMultiple) - (((aValue % aMultiple) < 5) && ((aValue % aMultiple) != 0) ? 5 : 0);
     }
 
     template<class T>
-    static constexpr T RoundToClosestMultiplePow2(const T aValue, const T aMultiple){
+    static constexpr T RoundToClosestMultiplePow2(const T aValue, const T aMultiple) throw() {
         return CeilToClosestMultiple<T>(aValue, aMultiple) - (((aValue & (aMultiple - 1)) < 5) && ((aValue & (aMultiple - 1)) != 0) ? 5 : 0);
     }
 
     // Reflection
 
     template<class T>
-    static constexpr T Reflect(const T aValue) = delete;
+    static constexpr T Reflect(const T aValue) throw() = delete;
 
     template<>
-    constexpr uint8_t Reflect<uint8_t>(const uint8_t aValue){
+    constexpr uint8_t Reflect<uint8_t>(const uint8_t aValue) throw() {
         return MathsInternal::REFLECTED_BYTES[aValue];
     }
 
     template<>
-    constexpr uint16_t Reflect<uint16_t>(const uint16_t aValue){
+    constexpr uint16_t Reflect<uint16_t>(const uint16_t aValue) throw() {
         return
             (static_cast<uint16_t>(Reflect<uint8_t>(aValue >> 8)))|
             (static_cast<uint16_t>(Reflect<uint8_t>(aValue & 0xFF)) << 8);
     }
 
     template<>
-    constexpr uint32_t Reflect<uint32_t>(const uint32_t aValue){
+    constexpr uint32_t Reflect<uint32_t>(const uint32_t aValue) throw() {
         return
             (static_cast<uint32_t>(Reflect<uint8_t>(aValue >> 24))) |
             (static_cast<uint32_t>(Reflect<uint8_t>(aValue >> 16)) << 8) |
@@ -436,7 +436,7 @@ namespace Solaire{ namespace Maths{
     }
 
     template<>
-    constexpr uint64_t Reflect<uint64_t>(const uint64_t aValue){
+    constexpr uint64_t Reflect<uint64_t>(const uint64_t aValue) throw() {
         return
             (static_cast<uint64_t>(Reflect<uint8_t>(static_cast<uint8_t>(aValue >> 56L)))) |
             (static_cast<uint64_t>(Reflect<uint8_t>(static_cast<uint8_t>(aValue >> 48L)) << 8L)) |
@@ -449,29 +449,29 @@ namespace Solaire{ namespace Maths{
     }
 
     template<>
-    constexpr int8_t Reflect<int8_t>(const int8_t aValue){
-        return IntactCast<int8_t>(Reflect<uint8_t>(IntactCast<uint8_t>(aValue)));
+    constexpr int8_t Reflect<int8_t>(const int8_t aValue) throw() {
+        return BitwiseCast<int8_t>(Reflect<uint8_t>(BitwiseCast<uint8_t>(aValue)));
     }
 
     template<>
-    constexpr int16_t Reflect<int16_t>(const int16_t aValue){
-        return IntactCast<int16_t>(Reflect<uint16_t>(IntactCast<uint16_t>(aValue)));
+    constexpr int16_t Reflect<int16_t>(const int16_t aValue) throw() {
+        return BitwiseCast<int16_t>(Reflect<uint16_t>(BitwiseCast<uint16_t>(aValue)));
     }
 
     template<>
-    constexpr int32_t Reflect<int32_t>(const int32_t aValue){
-        return IntactCast<int32_t>(Reflect<uint32_t>(IntactCast<uint32_t>(aValue)));
+    constexpr int32_t Reflect<int32_t>(const int32_t aValue) throw() {
+        return BitwiseCast<int32_t>(Reflect<uint32_t>(BitwiseCast<uint32_t>(aValue)));
     }
 
     template<>
-    constexpr int64_t Reflect<int64_t>(const int64_t aValue){
-        return IntactCast<int64_t>(Reflect<uint64_t>(IntactCast<uint64_t>(aValue)));
+    constexpr int64_t Reflect<int64_t>(const int64_t aValue) throw() {
+        return BitwiseCast<int64_t>(Reflect<uint64_t>(BitwiseCast<uint64_t>(aValue)));
     }
 
     // Misc
 
 	template<class T>
-    static constexpr T Lerp(const T aFirst, const T aSecond, const T aWeight){
+    static constexpr T Lerp(const T aFirst, const T aSecond, const T aWeight) throw() {
         return (static_cast<T>(1) - aWeight) * aFirst + aWeight * aSecond;
     }
 

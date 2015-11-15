@@ -22,25 +22,25 @@ namespace Solaire{
 
 	// BitStream
 	
-	BitStream::BitStream(void* aByte) :
+	BitStream::BitStream(void* aByte) throw() :
 		mByte(static_cast<uint8_t*>(aByte)),
 		mMask(1)
 	{}
 
-	BitStream::BitStream(void* aByte, const uint8_t aOffset) :
+	BitStream::BitStream(void* aByte, const uint8_t aOffset) throw() :
 		mByte(static_cast<uint8_t*>(aByte)),
 		mMask(1 << aOffset)
 	{}
 
-	BitStream::~BitStream() {
+	BitStream::~BitStream() throw() {
 
 	}
 
-	void BitStream::SetBit() {
+	void BitStream::SetBit() throw() {
 		*mByte |= mMask;
 	}
 
-	void BitStream::ClearBit() {
+	void BitStream::ClearBit() throw() {
 		*mByte &= ~ mMask;
 	}
 
@@ -48,7 +48,7 @@ namespace Solaire{
 		return (*mByte & mMask) != 0;
 	}
 
-	void BitStream::IncrementBit() {
+	void BitStream::IncrementBit() throw() {
 		if(mMask == 128) {
 			mMask = 1;
 			++mByte;
@@ -57,7 +57,7 @@ namespace Solaire{
 		}
 	}
 
-	void BitStream::DecrementBit() {
+	void BitStream::DecrementBit() throw() {
 		if(mMask == 1) {
 			mMask = 128;
 			--mByte;
@@ -66,7 +66,7 @@ namespace Solaire{
 		}
 	}
 
-	void BitStream::IncrementBit(uint32_t aOffset) {
+	void BitStream::IncrementBit(uint32_t aOffset) throw() {
 		while(aOffset >= 8) {
 			++mByte;
 			aOffset -= 8;
@@ -77,7 +77,7 @@ namespace Solaire{
 		}
 	}
 
-	void BitStream::DecrementBit(uint32_t aOffset) {
+	void BitStream::DecrementBit(uint32_t aOffset) throw() {
 		while(aOffset >= 8) {
 			--mByte;
 			aOffset -= 8;
@@ -88,7 +88,7 @@ namespace Solaire{
 		}
 	}
 
-	uint8_t BitStream::Offset() const {
+	uint8_t BitStream::Offset() const throw() {
 		switch(mMask)
 		{
 		case 1:
@@ -112,15 +112,15 @@ namespace Solaire{
 		}
 	}
 
-	void BitStream::ReadBits(void* aByte, uint32_t aCount) {
+	void BitStream::ReadBits(void* aByte, uint32_t aCount) throw() {
 		ReadBits(aByte, 0, aCount);
 	}
 
-	void BitStream::WriteBits(const void* aByte, uint32_t aCount) {
+	void BitStream::WriteBits(const void* aByte, uint32_t aCount) throw() {
 		WriteBits(aByte, 0, aCount);
 	}
 
-	void BitStream::ReadBits(void* aByte, const uint8_t aOffset, uint32_t aCount) {
+	void BitStream::ReadBits(void* aByte, const uint8_t aOffset, uint32_t aCount) throw() {
 		BitStream other(aByte, aOffset);
 
 		if(mMask == 0 && other.mMask == 0){
@@ -145,7 +145,7 @@ namespace Solaire{
 		}
 	}
 
-	void BitStream::WriteBits(const void* aByte, const uint8_t aOffset, uint32_t aCount) {
+	void BitStream::WriteBits(const void* aByte, const uint8_t aOffset, uint32_t aCount) throw() {
 		BitStream other(const_cast<void*>(aByte), aOffset);
 
 		if(mMask == 0 && other.mMask == 0) {
@@ -170,11 +170,11 @@ namespace Solaire{
 		}
 	}
 	
-	void BitStream::AlignByteBegin() {
+	void BitStream::AlignByteBegin() throw() {
 		mMask = 0;
 	}
 
-	void BitStream::AlignByteEnd() {
+	void BitStream::AlignByteEnd() throw() {
 		mMask = 128;
 	}
     

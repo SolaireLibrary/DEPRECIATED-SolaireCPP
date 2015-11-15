@@ -32,6 +32,7 @@
 */
 
 #include <cstdint>
+#include "Init.hpp"
 
 namespace Solaire{
 
@@ -40,30 +41,30 @@ namespace Solaire{
 		uint8_t* mByte;
 		uint8_t mMask;
 	public:
-		BitStream(void*);
-		BitStream(void*, const uint8_t);
-		~BitStream();
+		BitStream(void*) throw();
+		BitStream(void*, const uint8_t) throw();
+		~BitStream() throw();
 
-		void SetBit();
-		void ClearBit();
-		bool CheckBit() const;
+		void SetBit() throw();
+		void ClearBit() throw();
+		bool CheckBit() const throw();
 
-		void IncrementBit();
-		void DecrementBit();
+		void IncrementBit() throw();
+		void DecrementBit() throw();
 
-		void IncrementBit(uint32_t);
-		void DecrementBit(uint32_t);
+		void IncrementBit(uint32_t) throw();
+		void DecrementBit(uint32_t) throw();
 
-		uint8_t Offset() const;
+		uint8_t Offset() const throw();
 
-		void ReadBits(void*, uint32_t);
-		void WriteBits(const void*, uint32_t);
+		void ReadBits(void*, uint32_t) throw();
+		void WriteBits(const void*, uint32_t) throw();
 
-		void ReadBits(void*, const uint8_t, uint32_t);
-		void WriteBits(const void*, const uint8_t, uint32_t);
+		void ReadBits(void*, const uint8_t, uint32_t) throw();
+		void WriteBits(const void*, const uint8_t, uint32_t) throw();
 
-		void AlignByteBegin();
-		void AlignByteEnd();
+		void AlignByteBegin() throw();
+		void AlignByteEnd() throw();
 	};
     
 }
