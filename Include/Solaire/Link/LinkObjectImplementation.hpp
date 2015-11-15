@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file ImplementedLinkObject.hpp
+\file LinkObjectImplementation.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -28,34 +28,32 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 9th November 2015
-Last Modified	: 11th November 2015
+Last Modified	: 15th November 2015
 */
 
 #include "LinkObject.hpp"
+#include "LinkAllocator.hpp"
 
-namespace Solaire{namespace Dll{
-	class ImplementedLinkObject : public LinkObject {
+namespace Solaire{
+	class LinkObjectImplementation : public LinkObject {
 	private:
-		enum{
-			MAX_ERRORS = 16
-		};
-	private:
-		uint32_t mReferenceCount;
-		ErrorCode mErrorCodes[MAX_ERRORS];
-		uint8_t mErrorHead;
+		LinkAllocator& mAllocator;
 	protected:
-		void SetError(const ErrorCode);
+		LinkObjectImplementation(const LinkObjectImplementation&);
+		LinkObjectImplementation(LinkObjectImplementation&&);
+		LinkObjectImplementation& operator=(const LinkObjectImplementation&);
+		LinkObjectImplementation& operator=(LinkObjectImplementation&&);
+		
+		virtual uint32_t GetClassSize() const = 0;
 	public:
-		ImplementedLinkObject();
-		virtual ~ImplementedLinkObject();
-		
+		LinkObjectImplementation(LinkAllocator&);
+		~LinkObjectImplementation();
+
 		// Inherited from LinkObject
-		
-		void SOLAIRE_EXPORT_CALL CreateReference() override;
-		void SOLAIRE_EXPORT_CALL ReleaseReference() override;
-		uint32_t SOLAIRE_EXPORT_CALL GetReferenceCount() const override;
-		ErrorCode SOLAIRE_EXPORT_CALL GetError() override;
+
+		LinkAllocator& SOLAIRE_EXPORT_CALL GetAllocator() const override;
+		virtual void SOLAIRE_EXPORT_CALL Destructor() override;
 	};
-}}
+}
 
 #endif

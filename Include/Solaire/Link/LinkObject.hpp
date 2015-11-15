@@ -35,25 +35,13 @@ Last Modified	: 11th November 2015
 #include "Link.inl"
 
 namespace Solaire{
+
+	class LinkAllocator;
+
 	class SOLAIRE_EXPORT_API LinkObject{
 	public:
-		typedef uint32_t ErrorCode;
-		
-		enum : ErrorCode{
-			DLL_NO_ERROR,
-			DLL_RELEASED_UNREFERENCED_OBJECT,
-			DLL_ERROR_OVERFLOW
-		};
-	private:
-		//LinkObject(const LinkObject&) = delete;
-		//LinkObject(LinkObject&&) = delete;
-		//LinkObject& operator=(const LinkObject&) = delete;
-		//LinkObject& operator=(LinkObject&&) = delete;
-	public:
-		virtual void SOLAIRE_EXPORT_CALL CreateReference() = 0;
-		virtual void SOLAIRE_EXPORT_CALL ReleaseReference() = 0;
-		virtual uint32_t SOLAIRE_EXPORT_CALL GetReferenceCount() const = 0;
-		virtual ErrorCode SOLAIRE_EXPORT_CALL GetError() = 0;
+		virtual LinkAllocator& SOLAIRE_EXPORT_CALL GetAllocator() const = 0;
+		virtual void SOLAIRE_EXPORT_CALL Destructor() = 0;
 	};
 }
 
