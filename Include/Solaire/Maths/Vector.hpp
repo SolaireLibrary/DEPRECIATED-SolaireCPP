@@ -127,7 +127,7 @@ namespace Solaire{
 			return MathsImplementation::Dot(mVector, aOther.mVector);
 		}
 
-		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<LENGTH == 3>::type>
+		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L == 3>::type>
 		inline Vector<Scalar, LENGTH> Cross(const Vector<Scalar, LENGTH> aOther) const throw() {
 			Vector<Scalar, LENGTH> tmp;
 			MathsImplementation::Cross(tmp.mVector, mVector, aOther.mVector);
@@ -148,6 +148,46 @@ namespace Solaire{
 		inline Vector<Scalar, LENGTH>& Fill(const ScalarPass aScalar) throw() {
 			MathsImplementation::Fill(mVector, aScalar);
 			return *this;
+		}
+
+		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 1>::type>
+		inline ScalarPass X() const throw() {
+			return mVector[0];
+		}
+
+		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 1>::type>
+		inline Scalar& X() throw() {
+			return mVector[0];
+		}
+
+		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 2>::type>
+		inline ScalarPass Y() const throw() {
+			return mVector[1];
+		}
+
+		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 2>::type>
+		inline Scalar& Y() throw() {
+			return mVector[1];
+		}
+
+		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 3>::type>
+		inline ScalarPass Z() const throw() {
+			return mVector[1];
+		}
+
+		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 3>::type>
+		inline Scalar& Z() throw() {
+			return mVector[1];
+		}
+
+		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 4>::type>
+		inline ScalarPass W() const throw() {
+			return mVector[1];
+		}
+
+		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 4>::type>
+		inline Scalar& W() throw() {
+			return mVector[1];
 		}
 	};
 
