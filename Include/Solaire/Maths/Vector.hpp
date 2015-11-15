@@ -172,22 +172,22 @@ namespace Solaire{
 
 		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 3>::type>
 		inline ScalarPass Z() const throw() {
-			return mVector[1];
+			return mVector[2];
 		}
 
 		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 3>::type>
 		inline Scalar& Z() throw() {
-			return mVector[1];
+			return mVector[2];
 		}
 
 		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 4>::type>
 		inline ScalarPass W() const throw() {
-			return mVector[1];
+			return mVector[3];
 		}
 
 		template<const uint32_t L = LENGTH, typename ENABLE = typename std::enable_if<L >= 4>::type>
 		inline Scalar& W() throw() {
-			return mVector[1];
+			return mVector[3];
 		}
 	};
 
