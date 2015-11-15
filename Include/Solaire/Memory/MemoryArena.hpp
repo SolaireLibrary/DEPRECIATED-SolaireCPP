@@ -40,7 +40,7 @@ namespace Solaire{
     */
 	class SOLAIRE_EXPORT_API MemoryArena : public Allocator{
 	public:
-		virtual void SOLAIRE_EXPORT_CALL Clear() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Clear() throw() = 0;
 	};
 }
 

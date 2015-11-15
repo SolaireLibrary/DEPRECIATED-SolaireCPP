@@ -24,13 +24,13 @@ namespace Solaire{
 
 	typedef std::pair<void*, uint32_t> Block;
 
-	static void SortBlocks(std::vector<Block>& aBlocks) {
+	static void SortBlocks(std::vector<Block>& aBlocks) throw() {
 		std::sort(aBlocks.begin(), aBlocks.end(), [](const Block aFirst, const Block aSecond)->bool{
 			return aFirst.second < aSecond.second;
 		});
 	}
 
-	static void MergeBlocks(std::vector<Block>& aBlocks) {
+	static void MergeBlocks(std::vector<Block>& aBlocks) throw() {
 		auto begin = aBlocks.begin();
 		auto end = aBlocks.end();
 
@@ -59,7 +59,7 @@ namespace Solaire{
 		}
 	}
 
-	static void* AllocateFromBlocks(std::vector<Block>& aBlocks, const uint32_t aSize) {
+	static void* AllocateFromBlocks(std::vector<Block>& aBlocks, const uint32_t aSize) throw() {
 		const auto end = aBlocks.end();
 		for(auto i = aBlocks.begin(); i != aBlocks.end(); ++i){
 			if(i->second >= aSize){
@@ -83,7 +83,7 @@ namespace Solaire{
 
 	// AdvancedMemoryArena
 
-	AdvancedMemoryArena::AdvancedMemoryArena(const uint32_t aInitialSize) :
+	AdvancedMemoryArena::AdvancedMemoryArena(const uint32_t aInitialSize) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
 		mMainBlocks(),
 		mBlocks(),
@@ -94,7 +94,7 @@ namespace Solaire{
 		mBlocks.push_back(block);
 	}
 
-	AdvancedMemoryArena::AdvancedMemoryArena(Allocator& aAllocator, const uint32_t aInitialSize) :
+	AdvancedMemoryArena::AdvancedMemoryArena(Allocator& aAllocator, const uint32_t aInitialSize) throw() :
 		mAllocator(aAllocator),
 		mMainBlocks(),
 		mBlocks(),
@@ -105,34 +105,35 @@ namespace Solaire{
 		mBlocks.push_back(block);
 	}
 
-	AdvancedMemoryArena::~AdvancedMemoryArena() {
+	AdvancedMemoryArena::~AdvancedMemoryArena() throw() {
 		Clear();
 		for(Block i : mBlocks){
 			mAllocator.Deallocate(i.first, i.second);
 		}
 	}
 
-	void AdvancedMemoryArena::Clear() {
+	bool AdvancedMemoryArena::Clear() throw() {
 		mBlocks.clear();
 		MergeBlocks(mMainBlocks);
 		SortBlocks(mMainBlocks);
 		for(Block i : mMainBlocks){
 			mBlocks.push_back(i);
 		}
+		return true;
 	}
 
-	uint32_t AdvancedMemoryArena::GetAllocatedBytes() const {
+	uint32_t AdvancedMemoryArena::GetAllocatedBytes() const throw() {
 		return mAllocatedBytes;
 	}
 
-	uint32_t AdvancedMemoryArena::GetFreeBytes() const {
+	uint32_t AdvancedMemoryArena::GetFreeBytes() const throw() {
 		uint32_t count = 0;
 		for (const Block i : mBlocks) count += i.second;
 
 		return count - mAllocatedBytes;
 	}
 
-	void* AdvancedMemoryArena::Allocate(const size_t aBytes) {
+	void* AdvancedMemoryArena::Allocate(const size_t aBytes) throw() {
 		void* address = AllocateFromBlocks(mBlocks, aBytes);
 
 		if(! address){
@@ -151,10 +152,11 @@ namespace Solaire{
 		return address;
 	}
 
-	void AdvancedMemoryArena::Deallocate(void* const aObject, const size_t aBytes) {
+	bool AdvancedMemoryArena::Deallocate(void* const aObject, const size_t aBytes) throw() {
 		mBlocks.push_back(Block(aObject, aBytes));
 		SortBlocks(mBlocks);
 		mAllocatedBytes -= aBytes;
+		return true;
 	}
 
 }

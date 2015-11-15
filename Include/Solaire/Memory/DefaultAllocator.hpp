@@ -43,11 +43,11 @@ namespace Solaire{
 
 		// Inherited from Allocator
 
-		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const override;
-		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const override;
+		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw()  override;
+		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() override;
 
-		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) override;
-		void SOLAIRE_EXPORT_CALL Deallocate(void* const aObject, const size_t aBytes) override;
+		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() override;
+		bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject, const size_t aBytes) throw() override;
 	};
 
 	static DefaultAllocator DEFAULT_ALLOCATOR;
