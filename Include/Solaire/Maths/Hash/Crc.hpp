@@ -32,7 +32,7 @@ Last Modified	: 1st October 2015
 */
 
 #include "HashFunction.hpp"
-#include "..\..\Core\Maths.hpp"
+#include "..\Reflect.hpp"
 
 namespace Solaire{
 
@@ -127,12 +127,12 @@ namespace Solaire{
 
             while(ptr != end){
                 uint8_t data = *(ptr++);
-                if(REFLECT_DATA) data = Maths::Reflect<uint8_t>(data);
+                if(REFLECT_DATA) data = Reflect<uint8_t>(data);
                 data ^= remainder >> (WIDTH - 8);
                 remainder = CRC_TABLE[data] ^ (remainder << 8);
             }
 
-            return (REFLECT_REMAINDER ? Maths::Reflect<T>(remainder): remainder) ^ FINAL_XOR_VALUE;
+            return (REFLECT_REMAINDER ? Reflect<T>(remainder): remainder) ^ FINAL_XOR_VALUE;
         }
     };
 
