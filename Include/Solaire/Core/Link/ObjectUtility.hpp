@@ -33,7 +33,6 @@ Last Modified	: 15th November 2015
 
 #include <memory>
 #include "Object.hpp"
-#include "Allocator.hpp"
 
 namespace Solaire{ namespace Link{
 
@@ -46,7 +45,7 @@ namespace Solaire{ namespace Link{
 	static void CallDestructorAndDeallocate(Object* const aObject, const uint32_t aSize){
 		if(aObject) {
 			const uint32_t size = aObject->GetObjectSize();
-			LinkAllocator& allocator = aObject->GetAllocator();
+			Allocator& allocator = aObject->GetAllocator();
 			aObject->Destructor();
 			allocator.Deallocate(aObject, size);
 		}

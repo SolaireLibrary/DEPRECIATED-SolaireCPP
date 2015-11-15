@@ -328,6 +328,21 @@ namespace Solaire{
 		return aFirst < aSecond ? aFirst : aSecond;
 	}
 
+	#if SOLAIRE_OS == SOLAIRE_WINDOWS
+		#define SOLAIRE_EXPORT_IMPORT __declspec(dllimport)
+		#define SOLAIRE_EXPORT_EXPORT __declspec(dllexport)
+		#define SOLAIRE_EXPORT_CALL __stdcall
+	#else
+		#define SOLAIRE_EXPORT_IMPORT
+		#define SOLAIRE_EXPORT_EXPORT
+		#define SOLAIRE_EXPORT_CALL
+	#endif
+
+	#ifndef SOLAIRE_EXPORT_API
+		#define SOLAIRE_EXPORT_API SOLAIRE_EXPORT_IMPORT
+	#endif
+
+
 }
 
 #include "Init.inl"

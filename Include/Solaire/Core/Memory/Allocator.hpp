@@ -34,18 +34,19 @@
 #include <limits>
 #include <type_traits>
 #include <cstdint>
+#include "..\Init.hpp"
 
 namespace Solaire{
 
-    class Allocator{
+    class SOLAIRE_EXPORT_API Allocator{
     public:
         virtual ~Allocator(){}
 
-        virtual uint32_t GetAllocatedBytes() const = 0;
-        virtual uint32_t GetFreeBytes() const = 0;
+        virtual uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const = 0;
+        virtual uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const = 0;
 
-        virtual void* Allocate(const size_t aBytes) = 0;
-        virtual void Deallocate(void* const aObject, const size_t aBytes) = 0;
+        virtual void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) = 0;
+        virtual void SOLAIRE_EXPORT_CALL Deallocate(void* const aObject, const size_t aBytes) = 0;
     };
 
 }

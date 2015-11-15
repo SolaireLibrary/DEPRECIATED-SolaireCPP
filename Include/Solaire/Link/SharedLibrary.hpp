@@ -31,7 +31,7 @@ Created			: 11th November 2015
 Last Modified	: 11th November 2015
 */
 
-#include "Link.inl"
+#include "..\Core\Init.hpp"
 
 namespace Solaire{
 	class SharedLibrary{

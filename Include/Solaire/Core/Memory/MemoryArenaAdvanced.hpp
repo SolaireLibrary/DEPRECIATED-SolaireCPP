@@ -64,11 +64,11 @@ namespace Solaire{
 
 		// Inherited from Allocator
 
-		uint32_t GetAllocatedBytes() const override;
-		uint32_t GetFreeBytes() const override;
+		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const override;
+		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const override;
 
-		void* Allocate(const size_t aBytes) override;
-		void Deallocate(void* const aObject, const size_t aBytes) override;
+		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) override;
+		void SOLAIRE_EXPORT_CALL Deallocate(void* const aObject, const size_t aBytes) override;
 	};
 
 }

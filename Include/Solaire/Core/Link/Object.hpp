@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_LINK_INL
-#define SOLAIRE_LINK_INL
+#ifndef SOLAIRE_LINK_OBJECT_HPP
+#define SOLAIRE_LINK_OBJECT_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file Dll.inl
+\file Object.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -28,23 +28,20 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 9th November 2015
-Last Modified	: 9th November 2015
+Last Modified	: 11th November 2015
 */
 
-#include "..\Core\Init.hpp"
+#include <cstdint>
+#include "..\Memory\Allocator.hpp"
 
-#if SOLAIRE_OS == SOLAIRE_WINDOWS
-	#define SOLAIRE_EXPORT_IMPORT __declspec(dllimport)
-	#define SOLAIRE_EXPORT_EXPORT __declspec(dllexport)
-	#define SOLAIRE_EXPORT_CALL __stdcall
-#else
-	#define SOLAIRE_EXPORT_IMPORT
-	#define SOLAIRE_EXPORT_EXPORT
-	#define SOLAIRE_EXPORT_CALL
-#endif
+namespace Solaire{ namespace Link{
 
-#ifndef SOLAIRE_EXPORT_API
-	#define SOLAIRE_EXPORT_API SOLAIRE_EXPORT_IMPORT
-#endif
+	class SOLAIRE_EXPORT_API Object{
+	public:
+		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const = 0;
+		virtual void SOLAIRE_EXPORT_CALL Destructor() = 0;
+		virtual uint32_t GetObjectSize() const = 0;
+	};
+}}
 
 #endif
