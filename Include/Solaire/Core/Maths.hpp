@@ -137,6 +137,41 @@ namespace Solaire{
 
 		LONG_0		= INT_0 | INT_1
 	};
+
+	////
+
+	static constexpr bool IsPowerOfTwo(const uint32_t aValue) throw() {
+		return aValue == 0 ? false : (aValue & (aValue - 1)) == 0;
+	}
+
+	////
+	
+	template<class T>
+	static constexpr T LinearInterpolationAccurate(const T aFirst, const T aSecond, const T aWeight) throw() {
+		return (static_cast<T>(1) - aWeight) * aFirst + aWeight * aSecond;
+	}
+
+	template<class T>
+	static constexpr T LinearInterpolationFast(const T aFirst, const T aSecond, const T aWeight) throw() {
+		return aFirst + aWeight *(aSecond - aFirst);
+	}
+
+	////
+
+	template<class T>
+	static constexpr T CeilToMultiple(const T aValue, const T aMultiple) throw() {
+		return ((aValue + aMultiple - 1) / aMultiple) * aMultiple;
+	}
+
+	template<class T>
+	static constexpr T FloorToMultiple(const T aValue, const T aMultiple) throw() {
+		return aValue % aMultiple == 0 ? aValue : CeilToMultiple<T>(aValue, aMultiple) - aMultiple;
+	}
+
+	template<class T>
+	static constexpr T RoundToClosestMultiple(const T aValue, const T aMultiple) throw() {
+		return CeilToMultiple<T>(aValue, aMultiple) - (((aValue % aMultiple) < 5) && ((aValue % aMultiple) != 0) ? 5 : 0);
+	}
 	
 	/*
 
@@ -390,48 +425,10 @@ namespace Solaire{
 
     // Conditions
 
-    template<class T>
-    static constexpr bool IsPow2(const T aValue) throw() {
-        return aValue == 0 ? false : (aValue & (aValue - 1)) == 0;
-    }
-
     // Rounding
-
-    template<class T>
-    static constexpr T CeilToClosestMultiple(const T aValue, const T aMultiple) throw() {
-        return ((aValue + aMultiple - 1) / aMultiple) * aMultiple;
-    }
-
-    template<class T>
-    static constexpr T CeilToClosestMultiplePow2(const T aValue, const T aMultiple) throw() {
-        return (aValue + aMultiple - 1) & ~(aMultiple - 1);
-    }
-
-    template<class T>
-    static constexpr T FloorToClosestMultiple(const T aValue, const T aMultiple) throw() {
-        return aValue % aMultiple == 0 ? aValue : CeilToClosestMultiple<T>(aValue, aMultiple) - aMultiple;
-    }
-
-    template<class T>
-    static constexpr T FloorToClosestMultiplePow2(const T aValue, const T aMultiple) throw() {
-        return aValue & (aMultiple - 1) == 0 ? aValue : CeilToClosestMultiple<T>(aValue, aMultiple) - aMultiple;
-    }
-
-    template<class T>
-    static constexpr T RoundToClosestMultiple(const T aValue, const T aMultiple) throw() {
-        return CeilToClosestMultiple<T>(aValue, aMultiple) - (((aValue % aMultiple) < 5) && ((aValue % aMultiple) != 0) ? 5 : 0);
-    }
-
-    template<class T>
-    static constexpr T RoundToClosestMultiplePow2(const T aValue, const T aMultiple) throw() {
-        return CeilToClosestMultiple<T>(aValue, aMultiple) - (((aValue & (aMultiple - 1)) < 5) && ((aValue & (aMultiple - 1)) != 0) ? 5 : 0);
-    }
     // Misc
 
-	template<class T>
-    static constexpr T Lerp(const T aFirst, const T aSecond, const T aWeight) throw() {
-        return (static_cast<T>(1) - aWeight) * aFirst + aWeight * aSecond;
-    }*/
+	*/
 
 }
 
