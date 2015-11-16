@@ -47,7 +47,7 @@ namespace Solaire {
         bool ignoreCase;
         uint16_t length;
 
-        constexpr StringComparison(bool aIgnoreCase = true, uint16_t aLength = FULL_LENGTH);
+        StringComparison(bool aIgnoreCase = true, uint16_t aLength = FULL_LENGTH);
 
         int8_t operator()(const ConstStringFragment aFirst, const ConstStringFragment aSecond) const;
     };
@@ -74,22 +74,22 @@ namespace Solaire {
 	public:
 	    friend ConstStringFragment;
 
-		constexpr StringFragment(const Pointer aBegin, const Pointer aEnd);
-		constexpr StringFragment(const Pointer aBegin, const size_t aLength);
+		StringFragment(const Pointer aBegin, const Pointer aEnd);
+		StringFragment(const Pointer aBegin, const size_t aLength);
 		StringFragment(const Pointer aBegin);
 
 		Iterator begin();
-		constexpr ConstIterator begin() const;
+		ConstIterator begin() const;
 		Iterator end();
-		constexpr ConstIterator end() const;
+		ConstIterator end() const;
         ReverseIterator rbegin();
 		ConstReverseIterator rbegin() const;
 		ReverseIterator rend();
 		ConstReverseIterator rend() const;
 
-		constexpr Type operator[](const size_t aIndex) const;
+		Type operator[](const size_t aIndex) const;
 		Reference operator[](const size_t aIndex);
-		constexpr size_t Size() const;
+		size_t Size() const;
 
 		bool operator==(const StringFragment aOther) const;
 		bool operator!=(const StringFragment aOther) const;
@@ -154,18 +154,18 @@ namespace Solaire {
 	private:
 		StringFragment mFragment;
 	public:
-		constexpr ConstStringFragment(const ConstPointer aBegin, const ConstPointer aEnd);
-		constexpr ConstStringFragment(const ConstPointer aBegin, const size_t aLength);
+		ConstStringFragment(const ConstPointer aBegin, const ConstPointer aEnd);
+		ConstStringFragment(const ConstPointer aBegin, const size_t aLength);
 		ConstStringFragment(const ConstPointer aBegin);
-		constexpr ConstStringFragment(const StringFragment aOther);
+		ConstStringFragment(const StringFragment aOther);
 
-		constexpr ConstIterator begin() const;
-		constexpr ConstIterator end() const;
+		ConstIterator begin() const;
+		ConstIterator end() const;
 		ConstReverseIterator rbegin() const;
 		ConstReverseIterator rend() const;
 
-		constexpr Type operator[](const size_t aIndex) const;
-		constexpr size_t Size() const;
+		Type operator[](const size_t aIndex) const;
+		size_t Size() const;
 
 		bool operator==(const ConstStringFragment aOther) const;
 		bool operator!=(const ConstStringFragment aOther) const;
