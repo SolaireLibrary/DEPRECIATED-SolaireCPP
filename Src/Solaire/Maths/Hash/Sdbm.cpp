@@ -22,7 +22,7 @@ namespace Solaire{
 
     // Sdbm
        
-	Sdbm::HashType Sdbm::Hash(const void* const aValue, const size_t aBytes) const{
+	Sdbm::HashType SOLAIRE_EXPORT_CALL Sdbm::Hash(const void* const aValue, const size_t aBytes) const throw() {
         HashType hash = 0;
 		const uint8_t* const data = static_cast<const uint8_t*>(aValue);
 		for(size_t i = 0; i < aBytes; ++i){

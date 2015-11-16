@@ -40,7 +40,7 @@ namespace Solaire{
     {
     public:
         // Inherited from HashFunction
-        HashType Hash(const void* const aValue, const size_t aBytes) const override{
+        HashType SOLAIRE_EXPORT_CALL Hash(const void* const aValue, const size_t aBytes) const throw() override{
 			const uint8_t* const data = static_cast<const uint8_t*>(aValue);
 			HashType s1 = 1;
 			HashType s2 = 0;

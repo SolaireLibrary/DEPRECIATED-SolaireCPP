@@ -37,16 +37,11 @@ Last Modified	: 1st October 2015
 namespace Solaire{
 
     template<class HASH_TYPE, typename Enable = typename std::enable_if<std::is_unsigned<HASH_TYPE>::value, void>::type>
-    class HashFunction
-    {
+    class SOLAIRE_EXPORT_API HashFunction{
     public:
         typedef HASH_TYPE HashType;
 
-        virtual ~HashFunction(){
-
-        }
-
-        virtual HashType Hash(const void* const aValue, const size_t aBytes) const = 0;
+        virtual HashType SOLAIRE_EXPORT_CALL Hash(const void* const aValue, const size_t aBytes) const throw() = 0;
     };
 
     template<class T, class HASH_TYPE>

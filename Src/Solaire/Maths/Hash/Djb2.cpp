@@ -22,7 +22,7 @@ namespace Solaire{
 
     // Djb2
 
-	Djb2::HashType Djb2::Hash(const void* const aValue, const size_t aBytes) const{
+	Djb2::HashType SOLAIRE_EXPORT_CALL Djb2::Hash(const void* const aValue, const size_t aBytes) const throw() {
 		HashType hash = 5381;
 		const uint8_t* const data = static_cast<const uint8_t*>(aValue);
 		for (size_t i = 0; i < aBytes; ++i){

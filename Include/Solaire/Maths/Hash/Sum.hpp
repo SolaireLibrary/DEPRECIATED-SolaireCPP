@@ -41,7 +41,7 @@ namespace Solaire{
     {
     public:
         // Inherited from HashFunction
-        T Hash(const void* const aValue, const size_t aBytes) const override{
+        T SOLAIRE_EXPORT_CALL Hash(const void* const aValue, const size_t aBytes) const throw() override{
             const uint8_t* data = static_cast<const uint8_t*>(data);
 			T hash = 0;
 			size_t bytes = aBytes;
