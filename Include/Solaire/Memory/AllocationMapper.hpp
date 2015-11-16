@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_DEFAULT_ALLOCATOR_HPP
-#define SOLAIRE_DEFAULT_ALLOCATOR_HPP
+#ifndef SOLAIRE_ALLOCATION_MAPPER_HPP
+#define SOLAIRE_ALLOCATION_MAPPER_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,38 +20,35 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file DefaultAllocator.hpp
+	\file AllocationMapper.hpp
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 25th September 2015
-	Last Modified	: 15th November 2015
+	Created			: 16th November 2015
+	Last Modified	: 16th November 2015
 */
 
-#include "Allocator.hpp"
-#include "AllocationMapper.hpp"
+#include <map>
+#include <map>
 
 namespace Solaire{
 
-	class DefaultAllocator : public Allocator {
+    class AllocationMapper{
 	private:
-		AllocationMapper mAllocations;
-	public:
-		DefaultAllocator();
+		std::map<const void*, uint32_t> mMapping;
+		uint32_t mAllocatedBytes;
+    public:
+		AllocationMapper();
 
-		// Inherited from Allocator
-
-		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw()  override;
-		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() override;
-
-		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() override;
-		bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject) throw() override;
-	};
-
-	static DefaultAllocator DEFAULT_ALLOCATOR;
+		bool Allocate(const void* const, const uint32_t) throw();
+		bool Deallocate(const void* const) throw();
+		bool DeallocateAll() throw();
+		uint32_t GetAllocationSize(const void* const) const throw();
+		uint32_t GetAllocatedBytes() const throw();
+    };
 
 }
 

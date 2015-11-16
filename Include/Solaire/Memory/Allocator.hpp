@@ -28,7 +28,7 @@
 	\version 1.0
 	\date
 	Created			: 25th September 2015
-	Last Modified	: 9th November 2015
+	Last Modified	: 16th November 2015
 */
 
 #include <limits>
@@ -44,7 +44,7 @@ namespace Solaire{
         virtual uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() = 0;
 
         virtual void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() = 0;
-        virtual bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject, const size_t aBytes) throw() = 0;
+        virtual bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject) throw() = 0;
     };
 
 }

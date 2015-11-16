@@ -75,7 +75,7 @@ namespace Solaire{
                 address->~Type();
 		    }
 
-            mAllocator->Deallocate(mData, sizeof(Type) * mSize);
+            mAllocator->Deallocate(mData);
             mSize = newSize;
             mData = newData;
         }
@@ -176,7 +176,7 @@ namespace Solaire{
 		~DynamicArray(){
 		    if(mData != nullptr){
                 Clear();
-                mAllocator->Deallocate(mData, sizeof(Type) * mSize);
+                mAllocator->Deallocate(mData);
 		    }
 		}
 
@@ -184,7 +184,7 @@ namespace Solaire{
             Clear();
 
             if(mSize < aOther.mSize){
-                mAllocator->Deallocate(mData, sizeof(Type) * mSize);
+                mAllocator->Deallocate(mData);
                 mSize = aOther.mSize;
                 mData = static_cast<Type*>(mAllocator->Allocate(sizeof(Type) * mSize));
             }

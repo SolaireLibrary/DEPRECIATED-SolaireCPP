@@ -26,46 +26,42 @@ namespace Solaire{
 	BasicMemoryArena::BasicMemoryArena(const uint32_t aBytes) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
 		mBlock(mAllocator.Allocate(aBytes)),
-		mSize(aBytes),
-		mAllocated(0)
+		mSize(aBytes)
 	{}
 
 	BasicMemoryArena::BasicMemoryArena(Allocator& aAllocator, const uint32_t aBytes) throw() :
 		mAllocator(aAllocator),
 		mBlock(mAllocator.Allocate(aBytes)),
-		mSize(aBytes),
-		mAllocated(0) 
+		mSize(aBytes)
 	{}
 
 	BasicMemoryArena::~BasicMemoryArena() throw() {
-		mAllocator.Deallocate(mBlock, mSize);
+		mAllocator.Deallocate(mBlock);
 	}
 
 	bool BasicMemoryArena::Clear() throw() {
-		mAllocated = 0;
+		mAllocations.DeallocateAll();
 		return true;
 	}
 
 	uint32_t BasicMemoryArena::GetAllocatedBytes() const throw() {
-		return mAllocated;
+		return mAllocations.GetAllocatedBytes();
 	}
 
 	uint32_t BasicMemoryArena::GetFreeBytes() const throw() {
-		return mSize - mAllocated;
+		return mSize - GetAllocatedBytes();
 	}
 
 	void* BasicMemoryArena::Allocate(const size_t aBytes) throw() {
-		if(mAllocated + aBytes > mSize) return nullptr;
-		void* const tmp = static_cast<uint8_t*>(mBlock) + mAllocated;
-		mAllocated += aBytes;
+		const uint32_t allocated = GetAllocatedBytes();
+		if(allocated + aBytes > mSize) return nullptr;
+		void* const tmp = static_cast<uint8_t*>(mBlock) + allocated;
+		mAllocations.Allocate(tmp, aBytes);
 		return tmp;
 	}
 
-	bool BasicMemoryArena::Deallocate(void* const aObject, const size_t aBytes) throw() {
-		if(static_cast<uint8_t*>(mBlock) + (mAllocated - aBytes) == aObject){
-			mAllocated -= aBytes;
-		}
-		return true;
+	bool BasicMemoryArena::Deallocate(void* const aObject) throw() {
+		return mAllocations.Deallocate(aObject);
 	}
 
 }

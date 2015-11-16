@@ -309,15 +309,15 @@ namespace Solaire{ namespace Encode{
 		{
 		case TYPE_STRING:
 			mString->~String();
-			mAllocator->Deallocate(mString, sizeof(std::string));
+			mAllocator->Deallocate(mString);
 			break;
 		case TYPE_ARRAY:
 			mArray->~DynamicArray();
-			mAllocator->Deallocate(mString, sizeof(Array));
+			mAllocator->Deallocate(mString);
 			break;
 		case TYPE_OBJECT:
 			mObject->~map();
-			mAllocator->Deallocate(mString, sizeof(Object));
+			mAllocator->Deallocate(mString);
 			break;
 		default:
 			break;

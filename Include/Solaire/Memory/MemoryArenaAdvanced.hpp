@@ -34,6 +34,7 @@ Last Modified	: 9th November 2015
 #include <vector>
 #include "Allocator.hpp"
 #include "MemoryArena.hpp"
+#include "AllocationMapper.hpp"
 
 namespace Solaire{
 
@@ -47,7 +48,7 @@ namespace Solaire{
 		Allocator& mAllocator;
 		std::vector<Block> mMainBlocks;
 		std::vector<Block> mBlocks;
-		uint32_t mAllocatedBytes;
+		AllocationMapper mAllocations;
 	private:
 		AdvancedMemoryArena(const AdvancedMemoryArena&) = delete;
 		AdvancedMemoryArena(AdvancedMemoryArena&&) = delete;
@@ -68,7 +69,7 @@ namespace Solaire{
 		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() override;
 
 		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() override;
-		bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject, const size_t aBytes) throw() override;
+		bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject) throw() override;
 	};
 
 }

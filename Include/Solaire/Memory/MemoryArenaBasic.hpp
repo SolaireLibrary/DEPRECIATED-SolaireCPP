@@ -33,6 +33,7 @@ Last Modified	: 10th November 2015
 
 #include "MemoryArena.hpp"
 #include "Allocator.hpp"
+#include "AllocationMapper.hpp"
 
 namespace Solaire{
 
@@ -44,7 +45,7 @@ namespace Solaire{
         Allocator& mAllocator;
 		void* const mBlock;
 		const uint32_t mSize;
-		uint32_t mAllocated;
+		AllocationMapper mAllocations;
 	private:
 		BasicMemoryArena(const BasicMemoryArena&) = delete;
 		BasicMemoryArena(BasicMemoryArena&&) = delete;
@@ -65,7 +66,7 @@ namespace Solaire{
 		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() override;
 
 		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() override;
-		bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject, const size_t aBytes) throw() override;
+		bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject) throw() override;
     };
 
 }

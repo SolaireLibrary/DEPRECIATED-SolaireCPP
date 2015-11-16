@@ -86,8 +86,7 @@ namespace Solaire{
 	AdvancedMemoryArena::AdvancedMemoryArena(const uint32_t aInitialSize) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
 		mMainBlocks(),
-		mBlocks(),
-		mAllocatedBytes(0)
+		mBlocks()
 	{
 		const Block block(mAllocator.Allocate(aInitialSize), aInitialSize);
 		mMainBlocks.push_back(block);
@@ -97,8 +96,7 @@ namespace Solaire{
 	AdvancedMemoryArena::AdvancedMemoryArena(Allocator& aAllocator, const uint32_t aInitialSize) throw() :
 		mAllocator(aAllocator),
 		mMainBlocks(),
-		mBlocks(),
-		mAllocatedBytes(0)
+		mBlocks()
 	{
 		const Block block(mAllocator.Allocate(aInitialSize), aInitialSize);
 		mMainBlocks.push_back(block);
@@ -108,7 +106,7 @@ namespace Solaire{
 	AdvancedMemoryArena::~AdvancedMemoryArena() throw() {
 		Clear();
 		for(Block i : mBlocks){
-			mAllocator.Deallocate(i.first, i.second);
+			mAllocator.Deallocate(i.first);
 		}
 	}
 
@@ -119,18 +117,19 @@ namespace Solaire{
 		for(Block i : mMainBlocks){
 			mBlocks.push_back(i);
 		}
+		mAllocations.DeallocateAll();
 		return true;
 	}
 
 	uint32_t AdvancedMemoryArena::GetAllocatedBytes() const throw() {
-		return mAllocatedBytes;
+		return mAllocations.GetAllocatedBytes();
 	}
 
 	uint32_t AdvancedMemoryArena::GetFreeBytes() const throw() {
 		uint32_t count = 0;
 		for (const Block i : mBlocks) count += i.second;
 
-		return count - mAllocatedBytes;
+		return count - GetAllocatedBytes();
 	}
 
 	void* AdvancedMemoryArena::Allocate(const size_t aBytes) throw() {
@@ -144,19 +143,20 @@ namespace Solaire{
 
 		if(! address){
 			const Block block(mAllocator.Allocate(aBytes), aBytes);
-			if (!block.first) return nullptr;
+			if(! block.first) return nullptr;
 			mMainBlocks.push_back(block);
 			address = block.first;
 		}
 
+		mAllocations.Allocate(address, aBytes);
+
 		return address;
 	}
 
-	bool AdvancedMemoryArena::Deallocate(void* const aObject, const size_t aBytes) throw() {
-		mBlocks.push_back(Block(aObject, aBytes));
+	bool AdvancedMemoryArena::Deallocate(void* const aObject) throw() {
+		mBlocks.push_back(Block(aObject, mAllocations.GetAllocationSize(aObject)));
 		SortBlocks(mBlocks);
-		mAllocatedBytes -= aBytes;
-		return true;
+		return mAllocations.Deallocate(aObject);
 	}
 
 }
