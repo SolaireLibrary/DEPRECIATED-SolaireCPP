@@ -42,9 +42,11 @@ namespace Solaire{ namespace Link{
 	template<class T, typename ENABLE = std::enable_if_t<std::is_base_of<Object, T>::value>>
 	using UniquePtr = std::unique_ptr<T, void(*)(Object*)>;
 
-	static void DestroyObject(Object* const aObject){
-		if(aObject) {
-			aObject->Free();
+	namespace Implementation {
+		static void DestroyObject(Object* const aObject) {
+			if (aObject) {
+				aObject->Free();
+			}
 		}
 	}
 
@@ -52,7 +54,7 @@ namespace Solaire{ namespace Link{
 	SharedPtr<T> MakeShared(T* const aObject) {
 		return SharedPtr<T>(
 			aObject,
-			&DestroyObject
+			&Implementation::DestroyObject
 		);
 	}
 
@@ -60,7 +62,7 @@ namespace Solaire{ namespace Link{
 	UniquePtr<T> MakeUnique(T* const aObject) {
 		return UniquePtr<T>(
 			aObject,
-			&DestroyObject
+			&Implementation::DestroyObject
 		);
 	}
 }}
