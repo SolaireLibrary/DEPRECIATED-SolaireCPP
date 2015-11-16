@@ -46,7 +46,7 @@ namespace Solaire{
 		virtual bool SOLAIRE_EXPORT_CALL HasPrevious() const = 0;
 		virtual bool SOLAIRE_EXPORT_CALL HasNext() const = 0;
 		virtual uint32_t SOLAIRE_EXPORT_CALL GetIndex() const = 0;
-		virtual PassType SOLAIRE_EXPORT_CALL Peak() const = 0;
+		virtual Type& SOLAIRE_EXPORT_CALL Peak() const = 0;
 		virtual Type& SOLAIRE_EXPORT_CALL Next() = 0;
 		virtual Type& SOLAIRE_EXPORT_CALL Previous() = 0;
 
@@ -80,33 +80,81 @@ namespace Solaire{
 	public:
 		typedef T Type;
 		typedef typename TypeTraits<T>::ConstPassType PassType;
-
 		typedef Iterator<Type> Iterator;
-		typedef Iterator<const Type> ConstIterator;
-		typedef Iterator<Type> ReverseIterator;
-		typedef Iterator<const Type> ConstReverseIterator;
-
 		typedef std::function<bool(PassType)> Condition;
+	protected:
+		virtual Iterator& SOLAIRE_EXPORT_CALL FindIterator(const uint32_t) throw() = 0;
 	public:
 		virtual uint32_t SOLAIRE_EXPORT_CALL Size() const throw() = 0;
 		virtual T& SOLAIRE_EXPORT_CALL operator[](const uint32_t) = 0;
 
-		virtual T& SOLAIRE_EXPORT_CALL Front() throw() = 0;
-		virtual T& SOLAIRE_EXPORT_CALL Back() throw() = 0;
+		virtual Iterator& SOLAIRE_EXPORT_CALL IteratorToIndex(const uint32_t) throw() = 0;
 
-		virtual Iterator& SOLAIRE_EXPORT_CALL Begin() throw() = 0;
-		virtual Iterator& SOLAIRE_EXPORT_CALL End() const throw() = 0;
+		inline Iterator& SOLAIRE_EXPORT_CALL Begin() throw() {
+			return IteratorToIndex(0);
+		}
 
-		virtual ReverseIterator& SOLAIRE_EXPORT_CALL ReverseBegin() throw() = 0;
-		virtual ReverseIterator& SOLAIRE_EXPORT_CALL ReverseEnd() throw() = 0;
+		inline Iterator& SOLAIRE_EXPORT_CALL End() throw() {
+			return IteratorToIndex(Size());
+		}
 
-		virtual Iterator& SOLAIRE_EXPORT_CALL FindFirstOf(PassType) throw() = 0;
-		virtual Iterator& SOLAIRE_EXPORT_CALL FindNextOf(const Iterator&, const PassType) throw() = 0;
-		virtual Iterator& SOLAIRE_EXPORT_CALL FindLastOf(PassType) throw() = 0;
+		inline T& SOLAIRE_EXPORT_CALL Front() throw() {
+			return operator[](0);
+		}
 
-		virtual Iterator& SOLAIRE_EXPORT_CALL FindFirst(const Condition&) throw() = 0;
-		virtual Iterator& SOLAIRE_EXPORT_CALL FindNext(const Iterator&, const Condition&) throw() = 0;
-		virtual Iterator& SOLAIRE_EXPORT_CALL FindLast(const Condition&) throw() = 0;
+		inline T& SOLAIRE_EXPORT_CALL Back() throw() {
+			return operator[](Size() - 1);
+		}
+
+		inline Iterator& SOLAIRE_EXPORT_CALL FindFirstOf(PassType aValue) throw() {
+			return FindNextOf(Begin(), aValue);
+		}
+
+		inline Iterator& SOLAIRE_EXPORT_CALL FindNextOf(const Iterator& aIterator, const PassType aValue) throw() {
+			Iterator& it = FindIterator(aIterator.GetIndex());
+
+			while(it.HasNext()) {
+				if(it.Next() == aValue) return IteratorToIndex(it.GetIndex());
+			}
+
+			return End();
+		}
+
+		inline Iterator& SOLAIRE_EXPORT_CALL FindLastOf(PassType aValue) throw() {
+			Iterator& it = FindIterator(aIterator.GetIndex());
+			uint32_t lastIndex = UINT32_MAX;
+
+			while(it.HasNext()) {
+				if (it.Next() == aValue) lastIndex = it.GetIndex();
+			}
+
+			return lastIndex == UINT32_MAX ? End() : IteratorToIndex(lastIndex);
+		}
+
+		inline Iterator& SOLAIRE_EXPORT_CALL FindFirst(const Condition& aCondition) throw() {
+			return FindNext(Begin(), aCondition);
+		}
+		
+		inline Iterator& SOLAIRE_EXPORT_CALL FindNext(const Iterator& aIterator, const Condition& aCondition) throw() {
+			Iterator& it = FindIterator(aIterator.GetIndex());
+
+			while(it.HasNext()) {
+				if(aCondition(it.Next())) return IteratorToIndex(it.GetIndex());
+			}
+
+			return End();
+		}
+
+		inline Iterator& SOLAIRE_EXPORT_CALL FindLast(const Condition& aCondition) throw() {
+			Iterator& it = FindIterator(aIterator.GetIndex());
+			uint32_t lastIndex = UINT32_MAX;
+
+			while(it.HasNext()) {
+				if(aCondition(it.Next())) lastIndex = it.GetIndex();
+			}
+
+			return lastIndex == UINT32_MAX ? End() : IteratorToIndex(lastIndex);
+		}
 	}; 
 	
 	template<class T>
