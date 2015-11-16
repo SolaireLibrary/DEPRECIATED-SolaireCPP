@@ -16,10 +16,11 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <stdexcept>
 #include "Solaire\Script\CompilerGCC.hpp"
 
 namespace Solaire{
-	
+
 	// CompilerGCC
 
 	CompilerGCC::CompilerGCC() {

@@ -16,14 +16,15 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <stdexcept>
 #include "Solaire\Core\Init.hpp"
-		
+
 #if SOLAIRE_OS == SOLAIRE_WINDOWS
 
 	#include "Solaire\Script\DLL.hpp"
 
 	namespace Solaire{
-	
+
 		// DLL
 
 		DLL::DLL() :
@@ -49,7 +50,8 @@
 		}
 
 		void DLL::DefineFunction(const char* const aName, FunctionPointer& aLocation){
-			mFunctions.emplace(std::string(aName), &aLocation);
+		    //! \todo Fix gcc bug?
+			//mFunctions.emplace(std::string(aName), &aLocation);
 			if(mLibrary){
 				FunctionPointer const tmp = reinterpret_cast<FunctionPointer>(GetProcAddress(mLibrary, aName));
 				if(! tmp) throw std::runtime_error("Solaire::Dll::Library : Failed to load function");

@@ -16,6 +16,7 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <cstring>
 #include "Solaire\Strings\String.hpp"
 
 namespace Solaire{

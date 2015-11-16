@@ -97,48 +97,48 @@ namespace Solaire{
 	static constexpr T Reflect(const T aValue) throw();
 
 	template<>
-	static constexpr uint8_t Reflect<uint8_t>(const uint8_t aValue) throw() {
+	constexpr uint8_t Reflect<uint8_t>(const uint8_t aValue) throw() {
 		return Reflect8(aValue);
 	}
 
 	template<>
-	static constexpr uint16_t Reflect<uint16_t>(const uint16_t aValue) throw() {
+	constexpr uint16_t Reflect<uint16_t>(const uint16_t aValue) throw() {
 		return Reflect16(aValue);
 	}
 
 	template<>
-	static constexpr uint32_t Reflect<uint32_t>(const uint32_t aValue) throw() {
+	constexpr uint32_t Reflect<uint32_t>(const uint32_t aValue) throw() {
 		return Reflect32(aValue);
 	}
 
 	template<>
-	static constexpr uint64_t Reflect<uint64_t>(const uint64_t aValue) throw() {
+	constexpr uint64_t Reflect<uint64_t>(const uint64_t aValue) throw() {
 		return Reflect64(aValue);
 	}
 
 	template<>
-	static constexpr int8_t Reflect<int8_t>(const int8_t aValue) throw() {
+	constexpr int8_t Reflect<int8_t>(const int8_t aValue) throw() {
 		return *reinterpret_cast<const int8_t*>(
 			Reflect8(*reinterpret_cast<const uint8_t*>(&aValue))
 		);
 	}
 
 	template<>
-	static constexpr int16_t Reflect<int16_t>(const int16_t aValue) throw() {
+	constexpr int16_t Reflect<int16_t>(const int16_t aValue) throw() {
 		return *reinterpret_cast<const int16_t*>(
 			Reflect16(*reinterpret_cast<const uint16_t*>(&aValue))
 		);
 	}
 
 	template<>
-	static constexpr int32_t Reflect<int32_t>(const int32_t aValue) throw() {
+	constexpr int32_t Reflect<int32_t>(const int32_t aValue) throw() {
 		return *reinterpret_cast<const int32_t*>(
 			Reflect32(*reinterpret_cast<const uint32_t*>(&aValue))
 		);
 	}
 
 	template<>
-	static constexpr int64_t Reflect<int64_t>(const int64_t aValue) throw() {
+	constexpr int64_t Reflect<int64_t>(const int64_t aValue) throw() {
 		return *reinterpret_cast<const int64_t*>(
 			Reflect64(*reinterpret_cast<const uint64_t*>(&aValue))
 		);

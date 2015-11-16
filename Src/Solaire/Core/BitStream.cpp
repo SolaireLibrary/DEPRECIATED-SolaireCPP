@@ -21,7 +21,7 @@
 namespace Solaire{
 
 	// BitStream
-	
+
 	BitStream::BitStream(void* aByte) throw() :
 		mByte(static_cast<uint8_t*>(aByte)),
 		mMask(1)
@@ -44,7 +44,7 @@ namespace Solaire{
 		*mByte &= ~ mMask;
 	}
 
-	bool BitStream::CheckBit() const {
+	bool BitStream::CheckBit() const throw() {
 		return (*mByte & mMask) != 0;
 	}
 
@@ -169,7 +169,7 @@ namespace Solaire{
 			--aCount;
 		}
 	}
-	
+
 	void BitStream::AlignByteBegin() throw() {
 		mMask = 0;
 	}
@@ -177,5 +177,5 @@ namespace Solaire{
 	void BitStream::AlignByteEnd() throw() {
 		mMask = 128;
 	}
-    
+
 }

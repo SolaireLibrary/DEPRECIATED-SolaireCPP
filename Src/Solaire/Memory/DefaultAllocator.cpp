@@ -26,21 +26,21 @@ namespace Solaire{
 		mAllocatedBytes(0)
 	{}
 
-	uint32_t DefaultAllocator::GetAllocatedBytes() const {
+	uint32_t DefaultAllocator::GetAllocatedBytes() const throw() {
 		return mAllocatedBytes;
 	}
 
-	uint32_t DefaultAllocator::GetFreeBytes() const {
+	uint32_t DefaultAllocator::GetFreeBytes() const throw() {
 		return UINT32_MAX - mAllocatedBytes;
 	}
 
-	void* DefaultAllocator::Allocate(const size_t aBytes) {
+	void* DefaultAllocator::Allocate(const size_t aBytes) throw() {
 		void* const tmp = operator new(aBytes);
 		mAllocatedBytes += aBytes;
 		return tmp;
 	}
 
-	bool DefaultAllocator::Deallocate(void* const aObject, const size_t aBytes) {
+	bool DefaultAllocator::Deallocate(void* const aObject, const size_t aBytes) throw() {
 		operator delete(aObject);
 		mAllocatedBytes -= aBytes;
 		return true;

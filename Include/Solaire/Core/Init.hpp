@@ -143,9 +143,9 @@ namespace Solaire{
 			uint8_t IsSerialisable : 1;
 		};
 
-		constexpr TypeTraitData(
-			const uint16_t aSize, 
-			const uint32_t aFlagsSolaire, 
+		/*constexpr*/ TypeTraitData(
+			const uint16_t aSize,
+			const uint32_t aFlagsSolaire,
 			const uint32_t aFlagsStlPrimary,
 			const uint32_t aFlagsStlComposite,
 			const uint32_t aFlagsStlProperties,
@@ -167,7 +167,7 @@ namespace Solaire{
 			IsUnion(						(aFlagsStlPrimary >> 10) & 1),
 			IsVoid(							(aFlagsStlPrimary >> 11) & 1),
 			IsFloatingPoint(				(aFlagsStlPrimary >> 12) & 1),
-			
+
 			// STL Properties
 			IsAbstract(						(aFlagsStlProperties >> 0) & 1),
 			IsConst(						(aFlagsStlProperties >> 1) & 1),
@@ -259,7 +259,7 @@ namespace Solaire{
 				(static_cast<uint32_t>(std::is_standard_layout<T>::value)					<< 8) |
 				(static_cast<uint32_t>(std::is_trivial<T>::value)							<< 9) |
 				(static_cast<uint32_t>(std::is_volatile<T>::value)							<< 10),
-				
+
 				// STL Features
 				(static_cast<uint32_t>(std::has_virtual_destructor<T>::value)				<< 0) |
 				(static_cast<uint32_t>(std::is_copy_assignable<T>::value)					<< 1) |
@@ -268,17 +268,17 @@ namespace Solaire{
 				(static_cast<uint32_t>(std::is_move_constructible<T>::value)				<< 4) |
 				(static_cast<uint32_t>(std::is_destructible<T>::value)						<< 5) |
 				(static_cast<uint32_t>(std::is_default_constructible<T>::value)				<< 6) |
-				(static_cast<uint32_t>(std::is_trivially_copy_assignable<T>::value)			<< 7) |
-				(static_cast<uint32_t>(std::is_trivially_copy_constructible<T>::value)		<< 8) |
-				(static_cast<uint32_t>(std::is_trivially_move_assignable<T>::value)			<< 9) |
-				(static_cast<uint32_t>(std::is_trivially_move_constructible<T>::value)		<< 10) |
-				(static_cast<uint32_t>(std::is_trivially_destructible<T>::value)			<< 11) |
-				(static_cast<uint32_t>(std::is_trivially_default_constructible<T>::value)	<< 12) |
+				//(static_cast<uint32_t>(std::is_trivially_copy_assignable<T>::value)			<< 7) |
+				//(static_cast<uint32_t>(std::is_trivially_copy_constructible<T>::value)		<< 8) |
+				//(static_cast<uint32_t>(std::is_trivially_move_assignable<T>::value)			<< 9) |
+				//(static_cast<uint32_t>(std::is_trivially_move_constructible<T>::value)		<< 10) |
+				//(static_cast<uint32_t>(std::is_trivially_destructible<T>::value)			<< 11) |
+				//(static_cast<uint32_t>(std::is_trivially_default_constructible<T>::value)	<< 12) |
 				(static_cast<uint32_t>(std::is_nothrow_copy_assignable<T>::value)			<< 13) |
 				(static_cast<uint32_t>(std::is_nothrow_copy_constructible<T>::value)		<< 14) |
 				(static_cast<uint32_t>(std::is_nothrow_move_assignable<T>::value)			<< 15) |
 				(static_cast<uint32_t>(std::is_nothrow_move_constructible<T>::value)		<< 16) |
-				(static_cast<uint32_t>(std::is_nothrow_destructible<T>::value)				<< 17) |
+				//(static_cast<uint32_t>(std::is_nothrow_destructible<T>::value)				<< 17) |
 				(static_cast<uint32_t>(std::is_nothrow_default_constructible<T>::value)		<< 18)
 			);
 		}
@@ -329,9 +329,12 @@ namespace Solaire{
 	}
 
 	#if SOLAIRE_OS == SOLAIRE_WINDOWS
-		#define SOLAIRE_EXPORT_IMPORT __declspec(dllimport)
-		#define SOLAIRE_EXPORT_EXPORT __declspec(dllexport)
-		#define SOLAIRE_EXPORT_CALL __stdcall
+		//#define SOLAIRE_EXPORT_IMPORT __declspec(dllimport)
+		//#define SOLAIRE_EXPORT_EXPORT __declspec(dllexport)
+		//#define SOLAIRE_EXPORT_CALL __stdcall
+		#define SOLAIRE_EXPORT_IMPORT
+		#define SOLAIRE_EXPORT_EXPORT
+		#define SOLAIRE_EXPORT_CALL
 	#else
 		#define SOLAIRE_EXPORT_IMPORT
 		#define SOLAIRE_EXPORT_EXPORT

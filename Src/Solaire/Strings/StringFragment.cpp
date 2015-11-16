@@ -16,6 +16,7 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <stdexcept>
 #include <cstring>
 #include "Solaire\Core\Init.hpp"
 #include "Solaire\Strings\StringFragment.hpp"
@@ -24,7 +25,7 @@ namespace Solaire {
 
     // StringComparison
 
-    constexpr StringComparison::StringComparison(bool aIgnoreCase, uint16_t aLength) :
+    StringComparison::StringComparison(bool aIgnoreCase, uint16_t aLength) :
         ignoreCase(aIgnoreCase),
         length(aLength)
     {}
@@ -69,12 +70,12 @@ namespace Solaire {
 
 	// StringFragment
 
-	constexpr StringFragment::StringFragment(const Pointer aBegin, const Pointer aEnd) :
+	StringFragment::StringFragment(const Pointer aBegin, const Pointer aEnd) :
 		mBegin(aBegin),
 		mEnd(aEnd)
 	{}
 
-	constexpr StringFragment::StringFragment(const Pointer aBegin, const size_t aLength) :
+	StringFragment::StringFragment(const Pointer aBegin, const size_t aLength) :
 		mBegin(aBegin),
 		mEnd(aBegin + aLength)
 	{}
@@ -84,7 +85,7 @@ namespace Solaire {
 		mEnd(aBegin + std::strlen(aBegin))
 	{}
 
-	constexpr size_t StringFragment::Size() const{
+	size_t StringFragment::Size() const{
 		return mEnd - mBegin;
 	}
 
@@ -92,7 +93,7 @@ namespace Solaire {
 		return mBegin;
 	}
 
-	constexpr StringFragment::ConstIterator StringFragment::begin() const{
+	StringFragment::ConstIterator StringFragment::begin() const{
 		return mBegin;
 	}
 
@@ -100,7 +101,7 @@ namespace Solaire {
 		return mEnd;
 	}
 
-	constexpr StringFragment::ConstIterator StringFragment::end() const{
+	StringFragment::ConstIterator StringFragment::end() const{
 		return mEnd;
 	}
 
@@ -124,7 +125,7 @@ namespace Solaire {
 		return mBegin[aIndex];
 	}
 
-	constexpr StringFragment::Type StringFragment::operator[](const size_t aIndex) const{
+	StringFragment::Type StringFragment::operator[](const size_t aIndex) const{
 		return mBegin[aIndex];
 	}
 
@@ -333,11 +334,11 @@ namespace Solaire {
 
 	// ConstStringFragment
 
-	constexpr ConstStringFragment::ConstStringFragment(const ConstPointer aBegin, const ConstPointer aEnd) :
+	ConstStringFragment::ConstStringFragment(const ConstPointer aBegin, const ConstPointer aEnd) :
 		mFragment(const_cast<StringFragment::Pointer>(aBegin), const_cast<StringFragment::Pointer>(aEnd))
 	{}
 
-	constexpr ConstStringFragment::ConstStringFragment(const ConstPointer aBegin, const size_t aLength) :
+	ConstStringFragment::ConstStringFragment(const ConstPointer aBegin, const size_t aLength) :
 		mFragment(const_cast<StringFragment::Pointer>(aBegin), aLength)
 	{}
 
@@ -346,19 +347,19 @@ namespace Solaire {
 	{}
 
 
-    constexpr ConstStringFragment::ConstStringFragment(const StringFragment aOther) :
+    ConstStringFragment::ConstStringFragment(const StringFragment aOther) :
 		mFragment(aOther)
     {}
 
-	constexpr size_t ConstStringFragment::Size() const{
+	size_t ConstStringFragment::Size() const{
 		return mFragment.Size();
 	}
 
-	constexpr ConstStringFragment::ConstIterator ConstStringFragment::begin() const{
+	ConstStringFragment::ConstIterator ConstStringFragment::begin() const{
 		return mFragment.begin();
 	}
 
-	constexpr ConstStringFragment::ConstIterator ConstStringFragment::end() const{
+	ConstStringFragment::ConstIterator ConstStringFragment::end() const{
 		return mFragment.end();
 	}
 
@@ -370,7 +371,7 @@ namespace Solaire {
 		return mFragment.rend();
 	}
 
-	constexpr ConstStringFragment::Type ConstStringFragment::operator[](const size_t aIndex) const{
+	ConstStringFragment::Type ConstStringFragment::operator[](const size_t aIndex) const{
 		return mFragment[aIndex];
 	}
 

@@ -68,7 +68,7 @@ namespace Solaire{
 
 	SourceBase::~SourceBase() {
 		for(ListenerBase* const i : mListeners) {
-			OnListenerRemoved(*i);
+			//OnListenerRemoved(*i);
 			i->OnSourceRemoved(*this);
 		}
 	}

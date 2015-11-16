@@ -67,7 +67,7 @@ namespace Solaire{
 		BIT_28		= BIT_27 << 1L,
 		BIT_29		= BIT_28 << 1L,
 		BIT_30		= BIT_29 << 1L,
-		BIT_31		= BIT_30 << 1L,
+		/*BIT_31		= BIT_30 << 1L,
 		BIT_32		= BIT_31 << 1L,
 		BIT_33		= BIT_32 << 1L,
 		BIT_34		= BIT_33 << 1L,
@@ -99,7 +99,7 @@ namespace Solaire{
 		BIT_60		= BIT_59 << 1L,
 		BIT_61		= BIT_60 << 1L,
 		BIT_62		= BIT_61 << 1L,
-		BIT_63		= BIT_62 << 1L,
+		BIT_63		= BIT_62 << 1L,*/
 
 		NYBBLE_0	= BIT_0 | BIT_1 | BIT_2 | BIT_3,
 		NYBBLE_1	= NYBBLE_0 << 4L,
@@ -108,7 +108,7 @@ namespace Solaire{
 		NYBBLE_4	= NYBBLE_3 << 4L,
 		NYBBLE_5	= NYBBLE_4 << 4L,
 		NYBBLE_6	= NYBBLE_5 << 4L,
-		NYBBLE_7	= NYBBLE_6 << 4L,
+		/*NYBBLE_7	= NYBBLE_6 << 4L,
 		NYBBLE_8	= NYBBLE_7 << 4L,
 		NYBBLE_9	= NYBBLE_8 << 4L,
 		NYBBLE_10	= NYBBLE_9 << 4L,
@@ -116,26 +116,26 @@ namespace Solaire{
 		NYBBLE_12	= NYBBLE_11 << 4L,
 		NYBBLE_13	= NYBBLE_12 << 4L,
 		NYBBLE_14	= NYBBLE_13 << 4L,
-		NYBBLE_15	= NYBBLE_14 << 4L,
+		NYBBLE_15	= NYBBLE_14 << 4L,*/
 
 		BYTE_0		= NYBBLE_0 | NYBBLE_1,
 		BYTE_1		= BYTE_0 << 8L,
 		BYTE_2		= BYTE_1 << 8L,
-		BYTE_3		= BYTE_2 << 8L,
+		/*BYTE_3		= BYTE_2 << 8L,
 		BYTE_4		= BYTE_3 << 8L,
 		BYTE_5		= BYTE_4 << 8L,
 		BYTE_6		= BYTE_5 << 8L,
-		BYTE_7		= BYTE_6 << 8L,
+		BYTE_7		= BYTE_6 << 8L,*/
 
 		SHORT_0		= BYTE_0 | BYTE_1,
-		SHORT_1		= SHORT_0 << 16L,
+		/*SHORT_1		= SHORT_0 << 16L,
 		SHORT_2		= SHORT_1 << 16L,
-		SHORT_3		= SHORT_2 << 16L,
+		SHORT_3		= SHORT_2 << 16L,*/
 
-		INT_0		= SHORT_0 | SHORT_1,
-		INT_1		= SHORT_1 << 32L,
+		INT_0		= UINT32_MAX, //SHORT_0 | SHORT_1,
+		//INT_1		= SHORT_1 << 32L,
 
-		LONG_0		= INT_0 | INT_1
+		//LONG_0		= INT_0 | INT_1
 	};
 
 	////
@@ -145,7 +145,7 @@ namespace Solaire{
 	}
 
 	////
-	
+
 	template<class T>
 	static constexpr T LinearInterpolationAccurate(const T aFirst, const T aSecond, const T aWeight) throw() {
 		return (static_cast<T>(1) - aWeight) * aFirst + aWeight * aSecond;
@@ -172,11 +172,11 @@ namespace Solaire{
 	static constexpr T RoundToClosestMultiple(const T aValue, const T aMultiple) throw() {
 		return CeilToMultiple<T>(aValue, aMultiple) - (((aValue % aMultiple) < 5) && ((aValue % aMultiple) != 0) ? 5 : 0);
 	}
-	
+
 	/*
 
-	
-	
+
+
 	namespace Maths{
 
     namespace MathsInternal{
