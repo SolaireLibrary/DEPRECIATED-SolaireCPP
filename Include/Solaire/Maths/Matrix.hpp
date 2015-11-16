@@ -46,11 +46,11 @@ namespace Solaire{
 	private:
 		Scalar mMatrix[WIDTH * HEIGHT];
 	public:
-		Matrix() {
+		Matrix() throw() {
 
 		}
 
-		Matrix(const std::initializer_list<Row> aRows) {
+		Matrix(const std::initializer_list<Row> aRows) throw() {
 			uint32_t i = 0;
 			for(Row row : aRows) {
 				SetRow(i, row);
@@ -59,39 +59,39 @@ namespace Solaire{
 			}
 		}
 
-		inline bool operator==(const Matrix<Scalar, WIDTH, HEIGHT>& aOther) const {
+		inline bool operator==(const Matrix<Scalar, WIDTH, HEIGHT>& aOther) const throw() {
 			return Solaire::VectorMaths<T, WIDTH * HEIGHT>::Equals(aFirst.mMatrix, aSecond.mMatrix);
 		}
 
-		inline bool operator!=(const Matrix<Scalar, WIDTH, HEIGHT>& aOther) const {
+		inline bool operator!=(const Matrix<Scalar, WIDTH, HEIGHT>& aOther) const throw() {
 			return Solaire::VectorMaths<T, WIDTH * HEIGHT>::NotEquals(aFirst.mMatrix, aSecond.mMatrix);
 		}
 
-		inline const Scalar* operator[](const uint32_t aIndex) const{
+		inline const Scalar* operator[](const uint32_t aIndex) const throw() {
 			return mMatrix + (aIndex * WIDTH);
 		}
 
-		inline Scalar* operator[](const uint32_t aIndex) {
+		inline Scalar* operator[](const uint32_t aIndex) throw() {
 			return mMatrix + (aIndex * WIDTH);
 		}
 
-		inline const Scalar* AsPointer() const {
+		inline const Scalar* AsPointer() const throw() {
 			return mMatrix;
 		}
 
-		inline Scalar* AsPointer() {
+		inline Scalar* AsPointer() throw() {
 			return mMatrix;
 		}
 
-		inline Row GetRow(const uint32_t aIndex) const{
+		inline Row GetRow(const uint32_t aIndex) const throw() {
 			return *reinterpret_cast<const Row*>(operator[](aIndex));
 		}
 
-		inline Row& GetRow(const uint32_t aIndex) {
+		inline Row& GetRow(const uint32_t aIndex) throw() {
 			return *reinterpret_cast<Row*>(operator[](aIndex));
 		}
 
-		Column GetColumn(const uint32_t aIndex) const{
+		Column GetColumn(const uint32_t aIndex) const throw() {
 			Column tmp;
 			for (uint32_t i = 0; i < HEIGHT; ++i) {
 				tmp[i] = mMatrix[i * aIndex];
@@ -99,17 +99,17 @@ namespace Solaire{
 			return tmp;
 		}
 
-		inline void SetRow(const uint32_t aIndex, const Row aRow) {
+		inline void SetRow(const uint32_t aIndex, const Row aRow) throw() {
 			std::memcopy(operator[](aIndex), aRow.AsPointer(), sizeof(Scalar) * WIDTH);
 		}
 
-		void SetColumn(const uint32_t aIndex, const Column aColumn) {
+		void SetColumn(const uint32_t aIndex, const Column aColumn) throw() {
 			for (uint32_t i = 0; i < HEIGHT; ++i) {
 				mMatrix[i * aIndex] = aColumn[i];
 			}
 		}
 
-		Matrix<Scalar, HEIGHT, WIDTH> Transpose() const {
+		Matrix<Scalar, HEIGHT, WIDTH> Transpose() const throw() {
 			Matrix<Scalar, HEIGHT, WIDTH> tmp;
 			for(uint32_t i = 0; i < WIDTH; ++i) {
 				tmp.SetColumn(i, GetRow(i));
@@ -117,7 +117,7 @@ namespace Solaire{
 			return tmp;
 		}
 
-		Matrix<Scalar, HEIGHT, WIDTH> Inverse() const {
+		Matrix<Scalar, HEIGHT, WIDTH> Inverse() const throw() {
 			//! \todo Implement matrix inversion
 			throw std::runtime_error("Solaire::Matrix : Inversion not implemented");
 		}
@@ -156,48 +156,48 @@ namespace Solaire{
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator+=(Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator+=(Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) throw() {
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::AddEq(aFirst.AsPointer(), aSecond.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator-=(Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator-=(Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) throw() {
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::SubEq(aFirst.AsPointer(), aSecond.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static Solaire::Matrix<T, WIDTH, HEIGHT>& operator*=(Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) {
+static Solaire::Matrix<T, WIDTH, HEIGHT>& operator*=(Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) throw() {
 	return aFirst = aFirst * aSecond;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator+=(Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator+=(Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) throw() {
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::AddEq(aMatrix.AsPointer(), aScalar);
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator-=(Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator-=(Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) throw() {
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::SubEq(aMatrix.AsPointer(), aScalar);
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator*=(Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator*=(Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) throw() {
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::MulEq(aMatrix.AsPointer(), aScalar);
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator/=(Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT>& operator/=(Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) throw() {
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::DivEq(aMatrix.AsPointer(), aScalar);
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static Solaire::Vector<T, HEIGHT>& operator+=(Solaire::Vector<T, HEIGHT>& aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+static Solaire::Vector<T, HEIGHT>& operator+=(Solaire::Vector<T, HEIGHT>& aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) throw() {
 	for(uint32_t i = 0; i < HEIGHT) {
 		aVector[i] += aMatrix.GetRow(i).Sum();
 	}
@@ -205,7 +205,7 @@ static Solaire::Vector<T, HEIGHT>& operator+=(Solaire::Vector<T, HEIGHT>& aVecto
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static Solaire::Vector<T, HEIGHT>& operator-=(Solaire::Vector<T, HEIGHT>& aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+static Solaire::Vector<T, HEIGHT>& operator-=(Solaire::Vector<T, HEIGHT>& aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) throw() {
 	for(uint32_t i = 0; i < HEIGHT) {
 		aVector[i] -= aMatrix.GetRow(i).Sum();
 	}
@@ -213,26 +213,26 @@ static Solaire::Vector<T, HEIGHT>& operator-=(Solaire::Vector<T, HEIGHT>& aVecto
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static Solaire::Vector<T, WIDTH>& operator*=(Solaire::Vector<T, WIDTH>& aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+static Solaire::Vector<T, WIDTH>& operator*=(Solaire::Vector<T, WIDTH>& aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) throw() {
 	return aVector = aVector * aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator+(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator+(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) throw() {
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Add(tmp.AsPointer(), aFirst.AsPointer(), aSecond.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator-(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator-(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH, HEIGHT>& aSecond) throw() {
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Sub(tmp.AsPointer(), aFirst.AsPointer(), aSecond.AsPointer());
 	return aFirst;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT, const uint32_t WIDTH2, const uint32_t HEIGHT2, typename ENABLE = typename std::enable_if<WIDTH == HEIGHT2>::type>
-static Solaire::Matrix<T, Solaire::Max(WIDTH, WIDTH2), Solaire::Max(HEIGHT, HEIGHT2)> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH2, HEIGHT2>& aSecond) {
+static Solaire::Matrix<T, Solaire::Max(WIDTH, WIDTH2), Solaire::Max(HEIGHT, HEIGHT2)> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aFirst, const Solaire::Matrix<T, WIDTH2, HEIGHT2>& aSecond) throw() {
 	enum : uint32_t {
 		W = Solaire::Max(WIDTH, WIDTH2),
 		H = Solaire::Max(HEIGHT, HEIGHT2)
@@ -251,63 +251,63 @@ static Solaire::Matrix<T, Solaire::Max(WIDTH, WIDTH2), Solaire::Max(HEIGHT, HEIG
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator+(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator+(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) throw() {
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Add(tmp.AsPointer(), aMatrix.AsPointer(), aScalar);
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator-(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator-(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) throw() {
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Sub(tmp.AsPointer(), aMatrix.AsPointer(), aScalar);
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) throw() {
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Mul(tmp.AsPointer(), aMatrix.AsPointer(), aScalar);
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator/(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator/(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar) throw() {
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Div(tmp.AsPointer(), aMatrix.AsPointer(), aScalar);
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator+(typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator+(typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) throw() {
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Add(tmp.AsPointer(), aScalar, aMatrix.AsPointer());
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator-(typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator-(typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) throw() {
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Sub(tmp.AsPointer(), aScalar, aMatrix.AsPointer());
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator*(typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator*(typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) throw() {
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Mul(tmp.AsPointer(), aScalar, aMatrix.AsPointer());
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator/(typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+static inline Solaire::Matrix<T, WIDTH, HEIGHT> operator/(typename Solaire::Matrix<T, WIDTH, HEIGHT>::ScalarPass aScalar, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) throw() {
 	Solaire::Matrix<T, WIDTH, HEIGHT> tmp;
 	Solaire::VectorMaths<T, WIDTH * HEIGHT>::Div(tmp.AsPointer(), aScalar, aMatrix.AsPointer());
 	return aMatrix;
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static Solaire::Vector<T, HEIGHT> operator+(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, const Solaire::Vector<T, HEIGHT> aVector) {
+static Solaire::Vector<T, HEIGHT> operator+(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, const Solaire::Vector<T, HEIGHT> aVector) throw() {
 	Solaire::Vector<T, HEIGHT> tmp;
 	for(uint32_t i = 0; i < HEIGHT) {
 		tmp[i] = aMatrix.GetRow().Sum() + aVector[i];
@@ -316,7 +316,7 @@ static Solaire::Vector<T, HEIGHT> operator+(const Solaire::Matrix<T, WIDTH, HEIG
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static Solaire::Vector<T, HEIGHT> operator-(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, const Solaire::Vector<T, HEIGHT> aVector) {
+static Solaire::Vector<T, HEIGHT> operator-(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, const Solaire::Vector<T, HEIGHT> aVector) throw() {
 	Solaire::Vector<T, HEIGHT> tmp;
 	for (uint32_t i = 0; i < HEIGHT) {
 		tmp[i] = aMatrix.GetRow().Sum() - aVector[i];
@@ -325,7 +325,7 @@ static Solaire::Vector<T, HEIGHT> operator-(const Solaire::Matrix<T, WIDTH, HEIG
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static Solaire::Vector<T, WIDTH> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, const Solaire::Vector<T, WIDTH> aVector) {
+static Solaire::Vector<T, WIDTH> operator*(const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix, const Solaire::Vector<T, WIDTH> aVector) throw() {
 	Solaire::Vector<T, WIDTH> tmp;
 
 	for(uint32_t i = 0; i < WIDTH) {
@@ -336,7 +336,7 @@ static Solaire::Vector<T, WIDTH> operator*(const Solaire::Matrix<T, WIDTH, HEIGH
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static Solaire::Vector<T, HEIGHT> operator+(const Solaire::Vector<T, HEIGHT> aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+static Solaire::Vector<T, HEIGHT> operator+(const Solaire::Vector<T, HEIGHT> aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) throw() {
 	Solaire::Vector<T, HEIGHT> tmp;
 	for(uint32_t i = 0; i < HEIGHT) {
 		tmp[i] = aVector[i] + aMatrix.GetRow().Sum();
@@ -345,7 +345,7 @@ static Solaire::Vector<T, HEIGHT> operator+(const Solaire::Vector<T, HEIGHT> aVe
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static Solaire::Vector<T, HEIGHT> operator-(const Solaire::Vector<T, HEIGHT> aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+static Solaire::Vector<T, HEIGHT> operator-(const Solaire::Vector<T, HEIGHT> aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) throw() {
 	Solaire::Vector<T, HEIGHT> tmp;
 	for(uint32_t i = 0; i < HEIGHT) {
 		tmp[i] = aVector[i] - aMatrix.GetRow().Sum();
@@ -354,7 +354,7 @@ static Solaire::Vector<T, HEIGHT> operator-(const Solaire::Vector<T, HEIGHT> aVe
 }
 
 template<class T, const uint32_t WIDTH, const uint32_t HEIGHT>
-static Solaire::Vector<T, HEIGHT> operator*(const Solaire::Vector<T, HEIGHT> aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) {
+static Solaire::Vector<T, HEIGHT> operator*(const Solaire::Vector<T, HEIGHT> aVector, const Solaire::Matrix<T, WIDTH, HEIGHT>& aMatrix) throw() {
 	Solaire::Vector<T, HEIGHT> tmp;
 
 	for (uint32_t i = 0; i < HEIGHT) {
