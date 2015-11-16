@@ -31,7 +31,6 @@ Created			: 21st September 2015
 Last Modified	: 10th November 2015
 */
 
-#include <algorithm>
 #include "MemoryArena.hpp"
 #include "Allocator.hpp"
 
@@ -41,8 +40,6 @@ namespace Solaire{
         \detail
     */
     class BasicMemoryArena : public MemoryArena {
-    private:
-        typedef std::pair<void*, uint32_t> Block;
     private:
         Allocator& mAllocator;
 		void* const mBlock;
