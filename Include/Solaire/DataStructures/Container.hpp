@@ -49,6 +49,7 @@ namespace Solaire{
 		virtual Type& SOLAIRE_EXPORT_CALL Peak() const = 0;
 		virtual Type& SOLAIRE_EXPORT_CALL Next() = 0;
 		virtual Type& SOLAIRE_EXPORT_CALL Previous() = 0;
+		virtual Type& SOLAIRE_EXPORT_CALL ToIndex(const uint32_t) = 0;
 
 		inline bool SOLAIRE_EXPORT_CALL operator==(const Iterator& aOther) const {
 			return GetIndex() == aOther.GetIndex();
@@ -155,13 +156,21 @@ namespace Solaire{
 
 			return lastIndex == UINT32_MAX ? End() : IteratorToIndex(lastIndex);
 		}
+
+		inline bool IsEmpty() const {
+			return Size() == 0;
+		}
 	}; 
+
+	//template<class T>
+	//using ConstContainer = Container<const T>;
 	
 	template<class T>
 	class SOLAIRE_EXPORT_API StackContainer : public Container {
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL PushBack(PassType) throw() = 0;
 		virtual T SOLAIRE_EXPORT_CALL PopBack() throw() = 0;
+		virtual void Clear() throw() = 0;
 	};
 
 	template<class T>
