@@ -44,16 +44,13 @@ namespace Solaire{ namespace Link{
 		Object& operator=(const Object&) = delete;
 		Object& operator=(Object&&) = delete;
 		~Object() = delete;
-	protected:
-
-		virtual uint32_t GetClassSize() const throw() = 0;
 	public:
 		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
 		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
 
 		inline void SOLAIRE_EXPORT_CALL Free() throw() {
 			Destructor();
-			GetAllocator().Deallocate(this, GetClassSize());
+			GetAllocator().Deallocate(this);
 		}
 	};
 }}
