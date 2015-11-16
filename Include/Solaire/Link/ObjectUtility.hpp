@@ -42,12 +42,9 @@ namespace Solaire{ namespace Link{
 	template<class T, typename ENABLE = std::enable_if_t<std::is_base_of<Object, T>::value>>
 	using UniquePtr = std::unique_ptr<T, void(*)(Object*)>;
 
-	static void CallDestructorAndDeallocate(Object* const aObject, const uint32_t aSize){
+	static void DestroyObject(Object* const aObject){
 		if(aObject) {
-			const uint32_t size = aObject->GetObjectSize();
-			Allocator& allocator = aObject->GetAllocator();
-			aObject->Destructor();
-			allocator.Deallocate(aObject, size);
+			aObject->Free();
 		}
 	}
 
@@ -55,7 +52,7 @@ namespace Solaire{ namespace Link{
 	SharedPtr<T> MakeShared(T* const aObject) {
 		return SharedPtr<T>(
 			aObject,
-			&CallDestructorAndDeallocate
+			&DestroyObject
 		);
 	}
 
@@ -63,7 +60,7 @@ namespace Solaire{ namespace Link{
 	UniquePtr<T> MakeUnique(T* const aObject) {
 		return UniquePtr<T>(
 			aObject,
-			&CallDestructorAndDeallocate
+			&DestroyObject
 		);
 	}
 }}

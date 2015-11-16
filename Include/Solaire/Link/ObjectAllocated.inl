@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_LINK_OBJECT_HPP
-#define SOLAIRE_LINK_OBJECT_HPP
+#ifndef SOLAIRE_LINK_ALLOCATED_OBJECT_INL
+#define SOLAIRE_LINK_ALLOCATED_OBJECT_INL
 
 //Copyright 2015 Adam Smith
 //
@@ -20,33 +20,35 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file Object.hpp
+\file ObjectAllocated.inl
 \brief
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
 \version 1.0
 \date
-Created			: 9th November 2015
-Last Modified	: 11th November 2015
+Created			: 16th November 2015
+Last Modified	: 16th November 2015
 */
-
-#include <cstdint>
 
 namespace Solaire{ namespace Link{
 
-	class SOLAIRE_EXPORT_API Object{
-	private:
-		Object(const Object&) = delete;
-		Object(Object&&) = delete;
-		Object& operator=(const Object&) = delete;
-		Object& operator=(Object&&) = delete;
-	protected:
-		~Object()  throw() {}
-	public:
-		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
-		virtual void SOLAIRE_EXPORT_CALL Free() throw() = 0;
-	};
+	template<class T>
+	AllocatedObject<T>::AllocatedObject(Allocator& aAllocator) throw() :
+		mAllocator(aAllocator)
+	{}
+
+	template<class T>
+	Allocator& AllocatedObject<T>::GetAllocator() const throw() {
+		return mAllocator;
+	}
+
+	template<class T>
+	AllocatedObject<T>::void SOLAIRE_EXPORT_CALL Free() throw() {
+		Destructor();
+		mAllocator.Deallocate(this, sizeof(T));
+	}
+
 }}
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_LINK_OBJECT_HPP
-#define SOLAIRE_LINK_OBJECT_HPP
+#ifndef SOLAIRE_LINK_ALLOCATED_OBJECT_HPP
+#define SOLAIRE_LINK_ALLOCATED_OBJECT_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,33 +20,37 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file Object.hpp
+\file ObjectAllocated.hpp
 \brief
 \author
 Created			: Adam Smith
 Last modified	: Adam Smith
 \version 1.0
 \date
-Created			: 9th November 2015
-Last Modified	: 11th November 2015
+Created			: 16th November 2015
+Last Modified	: 16th November 2015
 */
 
-#include <cstdint>
+#include "Object.hpp"
+#include "..\Memory\Allocator.hpp"
 
 namespace Solaire{ namespace Link{
 
-	class SOLAIRE_EXPORT_API Object{
+	template<class T>
+	class SOLAIRE_EXPORT_API AllocatedObject : public Object{
 	private:
-		Object(const Object&) = delete;
-		Object(Object&&) = delete;
-		Object& operator=(const Object&) = delete;
-		Object& operator=(Object&&) = delete;
-	protected:
-		~Object()  throw() {}
+		Allocator& mAllocator;
 	public:
-		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
-		virtual void SOLAIRE_EXPORT_CALL Free() throw() = 0;
+		AllocatedObject(Allocator&) throw();
+
+		Allocator& GetAllocator() const throw();
+
+		// Inherited from Object
+
+		virtual void SOLAIRE_EXPORT_CALL Free() throw() override;
 	};
 }}
+
+#include "ObjectAllocated.inl"
 
 #endif
