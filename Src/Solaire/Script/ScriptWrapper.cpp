@@ -17,12 +17,12 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include "Solaire\Script\ScriptWrapper.hpp"
-		
+
 namespace Solaire{
 
 	// ScriptWrapper
 
-	bool ScriptWrapper::GenerateHeaderFile(std::ostream& aOutput, const DynamicArray<String>& aScriptHeaders) {
+	bool ScriptWrapper::GenerateHeaderFile(std::ostream& aOutput, const std::vector<std::string>& aScriptHeaders) {
 		#if SOLAIRE_OS == SOLAIRE_WINDOWS
 			aOutput << "#ifndef SOLAIRE_SCRIPT_MAIN_H" << std::endl;
 			aOutput << "#define SOLAIRE_SCRIPT_MAIN_H" << std::endl;
@@ -30,13 +30,13 @@ namespace Solaire{
 			aOutput << "#include <windows.h>" << std::endl;
 			aOutput << "#include <cstdint>" << std::endl;
 			aOutput << std::endl;
-			aOutput << "		class Script;" << std::endl;
-			aOutput << "		class Allocator;" << std::endl;
+			aOutput << "	class Script;" << std::endl;
+			aOutput << "	class Allocator;" << std::endl;
 			aOutput << std::endl;
-			aOutput << "		extern \"C\" {" << std::endl;
-			aOutput << "			uint32_t __declspec(dllexport) GetScriptCount();" << std::endl;
-			aOutput << "			Script* __declspec(dllexport) CreateScript(Allocator&, const uint32_t);" << std::endl;
-			aOutput << "		}" << std::endl;
+			aOutput << "	extern \"C\" {" << std::endl;
+			aOutput << "		uint32_t __declspec(dllexport) __stdcall GetScriptCount();" << std::endl;
+			aOutput << "		Script* __declspec(dllexport) __stdcall CreateScript(Allocator&, const uint32_t);" << std::endl;
+			aOutput << "	}" << std::endl;
 			return true;
 		#else
 			#error SolaireCPP : ScriptWrapper only implemented for Windows
@@ -44,36 +44,36 @@ namespace Solaire{
 		#endif
 	}
 
-	static ConstStringFragment ParseScriptName(const String& aFileName) {
-		const auto directory = aFileName.FindLast('\\');
-		return ConstStringFragment(
-			directory == aFileName.end() ? aFileName.begin() : (directory + 1),
-			aFileName.FindFirst('.')
+	static std::string ParseScriptName(const std::string& aFileName) {
+		const auto directory = aFileName.find_last_of('\\');
+		return std::string(
+			directory == std::string::npos ? aFileName.begin() : (aFileName.begin() + (directory + 1)),
+			aFileName.begin() + aFileName.find_first_of('.')
 		);
 	}
 
-	bool ScriptWrapper::GenerateSourceFile(std::ostream& aOutput, const DynamicArray<String>& aScriptHeaders) {
+	bool ScriptWrapper::GenerateSourceFile(std::ostream& aOutput, const std::vector<std::string>& aScriptHeaders) {
 		#if SOLAIRE_OS == SOLAIRE_WINDOWS
 			aOutput << "#include \"main.h\"" << std::endl;
-			for(const String& file : aScriptHeaders) {
+			for(const std::string& file : aScriptHeaders) {
 				aOutput << "#include \"" << file << '"' << std::endl;
 			}
 			aOutput << std::endl;
-			aOutput << "uint32_t __declspec(dllexport) GetScriptCount(){" << std::endl;
-			aOutput << "	return " << aScriptHeaders.Size() << ';' << std::endl;
+			aOutput << "uint32_t __declspec(dllexport) __stdcall GetScriptCount(){" << std::endl;
+			aOutput << "	return " << aScriptHeaders.size() << ';' << std::endl;
 			aOutput << "}" << std::endl;
 			aOutput << std::endl;
-			aOutput << "Script* __declspec(dllexport) CreateScript(Allocator& aAllocator, const uint32_t aScriptNo){" << std::endl;
+			aOutput << "Script* __declspec(dllexport) __stdcall CreateScript(Allocator& aAllocator, const uint32_t aScriptNo){" << std::endl;
 			aOutput << "	switch(aScriptNo){" << std::endl;
 			uint32_t i = 0;
-			for(const String& file : aScriptHeaders) {
-				aOutput << "	case " << i << file << ':' << std::endl;
-				const ConstStringFragment scriptClass = ParseScriptName(file);
+			for(const std::string& file : aScriptHeaders) {
+				aOutput << "	case " << i << ':' << std::endl;
+				const std::string scriptClass = ParseScriptName(file);
 				aOutput << "		return new(aAllocator.Allocate(sizeof(" << scriptClass << "))) " << scriptClass << "(aAllocator);" << std::endl;
 				++i;
 			}
 			aOutput << "	default :" << std::endl;
-			aOutput << "		return nullptr;;" << std::endl;
+			aOutput << "		return nullptr;" << std::endl;
 			aOutput << "	}" << std::endl;
 			aOutput << "}" << std::endl;
 			aOutput << std::endl;
@@ -87,5 +87,5 @@ namespace Solaire{
 			return false;
 		#endif
 	}
-	
+
 }

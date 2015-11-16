@@ -32,13 +32,13 @@ Last Modified	: 16th November 2015
 */
 
 #include <ostream>
-#include "..\Strings\String.hpp"
-#include "..\DataStructures\DynamicArray.hpp"
+#include <string>
+#include <vector>
 
 namespace Solaire{
 	struct ScriptWrapper {
-		static bool GenerateHeaderFile(std::ostream&, const DynamicArray<String>&);
-		static bool GenerateSourceFile(std::ostream&, const DynamicArray<String>&);
+		static bool GenerateHeaderFile(std::ostream&, const std::vector<std::string>&);
+		static bool GenerateSourceFile(std::ostream&, const std::vector<std::string>&);
 	};
 }
 
