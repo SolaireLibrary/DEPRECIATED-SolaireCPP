@@ -91,6 +91,8 @@ namespace Solaire{
 
 		virtual Iterator& SOLAIRE_EXPORT_CALL IteratorToIndex(const uint32_t) throw() = 0;
 
+		virtual bool SOLAIRE_EXPORT_CALL IsContiguous() throw() const = 0;
+
 		inline Iterator& SOLAIRE_EXPORT_CALL Begin() throw() {
 			return IteratorToIndex(0);
 		}
@@ -157,8 +159,22 @@ namespace Solaire{
 			return lastIndex == UINT32_MAX ? End() : IteratorToIndex(lastIndex);
 		}
 
-		inline bool IsEmpty() const {
+		inline bool SOLAIRE_EXPORT_CALL IsEmpty() const {
 			return Size() == 0;
+		}
+
+		inline bool SOLAIRE_EXPORT_CALL Contains(PassType aValue) throw() {
+			return FindFirstOf(Begin(), aValue) != End();
+		}
+
+		inline bool SOLAIRE_EXPORT_CALL ContainsAll(const Container<Type>& aOther) throw() {
+			Iterator& it = aOther.FindIterator(0);
+			
+			while(it.HasNext()) {
+				if(! Contains(it.Next())) return false;
+			}
+
+			return true;
 		}
 	}; 
 
