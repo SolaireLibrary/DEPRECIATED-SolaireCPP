@@ -103,12 +103,11 @@ namespace Solaire{
 
 			enum {
 				ELEMENT_BITS = sizeof(Colour::MaxChannel) * 8
-				COLOUR_BYTES = Colour::BITS_TOTAL / 8
 			};
 
-			if((Colour::BITS_TOTAL & 7) == 0) {
-				uint8_t buf[COLOUR_BYTES];
-				std::memcpy(buf, static_cast<const uint8_t*>(mData) + (index * COLOUR_BYTES), COLOUR_BYTES);
+			if(Colour::IS_BYTE_ALIGNED) {
+				uint8_t buf[Colour::BYTES_TOTAL];
+				std::memcpy(buf, static_cast<const uint8_t*>(mData) + (index * Colour::BYTES_TOTAL), Colour::BYTES_TOTAL);
 				return *static_cast<const Colour::Vector*>(buf);
 			}else {
 				BitStream bitStream(mData);
@@ -134,11 +133,10 @@ namespace Solaire{
 
 			enum {
 				ELEMENT_BITS = sizeof(Colour::MaxChannel) * 8
-				COLOUR_BYTES = Colour::BITS_TOTAL / 8
 			};
 
-			if((Colour::BITS_TOTAL & 7) == 0) {
-				std::memcpy(static_cast<uint8_t*>(mData) + (index * COLOUR_BYTES), aColour.AsPointer(), COLOUR_BYTES);
+			if(Colour::IS_BYTE_ALIGNED) {
+				std::memcpy(static_cast<uint8_t*>(mData) + (index * Colour::BYTES_TOTAL), aColour.AsPointer(), Colour::BYTES_TOTAL);
 			}else {
 				BitStream bitStream(mData);
 				bitStream.IncrementBit(index *Colour::BITS_TOTAL);
