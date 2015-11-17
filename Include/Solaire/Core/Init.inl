@@ -31,6 +31,8 @@
 	Last Modified	: 10th November 2015
 */
 
+#include <type_traits>
+
 namespace Solaire{
 
 	template<class T>
@@ -61,6 +63,71 @@ namespace Solaire{
 		static constexpr TypeTraitData GetData() {
 			return TypeTraitData::GetData<T>(false);
 		}
+	};
+
+	template<class T>
+	static constexpr bool LessThan(const T aFirst, const T aSecond) {
+		return aFirst < aSecond;
+	}
+
+	template<class T>
+	static constexpr bool LessThanEquals(const T aFirst, const T aSecond) {
+		return aFirst <= aSecond;
+	}
+
+	template<class T>
+	static constexpr bool GreaterThan(const T aFirst, const T aSecond) {
+		return aFirst > aSecond;
+	}
+
+	template<class T>
+	static constexpr bool GreaterThanEquals(const T aFirst, const T aSecond) {
+		return aFirst >= aSecond;
+	}
+
+	template<const uint32_t BITS>
+	struct BinaryContainerStruct<BITS, std::enable_if_t<BITS == 0>> {
+		typedef uint8_t Type;
+	};
+
+	template<const uint32_t BITS>
+	struct BinaryContainerStruct<BITS, std::enable_if_t<GreaterThan<uint32_t>(BITS, 0) && LessThanEquals<uint32_t>(BITS, 8)>> {
+		typedef uint8_t Type;
+	};
+
+	template<const uint32_t BITS>
+	struct BinaryContainerStruct<BITS, std::enable_if_t<GreaterThan<uint32_t>(BITS, 8) && LessThanEquals<uint32_t>(BITS, 16)>> {
+		typedef uint16_t Type;
+	};
+
+	template<const uint32_t BITS>
+	struct BinaryContainerStruct<BITS, std::enable_if_t<GreaterThan<uint32_t>(BITS, 16) && LessThanEquals<uint32_t>(BITS, 32)>> {
+		typedef uint32_t Type;
+	};
+
+	template<const uint32_t BITS>
+	struct BinaryContainerStruct<BITS, std::enable_if_t<GreaterThan<uint32_t>(BITS, 32) && LessThanEquals<uint32_t>(BITS, 64)>> {
+		typedef uint64_t Type;
+	};
+
+	template<class A, class B>
+	struct MaxClassContainer<A, B, std::enable_if_t<GreaterThan<uint32_t>(sizeof(A), sizeof(B))>> {
+		typedef A Type;
+	};
+
+	template<class A, class B>
+	struct MaxClassContainer<A, B, std::enable_if_t<LessThan<uint32_t>(sizeof(A), sizeof(B))>> {
+		typedef B Type;
+	};
+
+	template<class A, class B>
+	struct MinClassContainer<A, B, std::enable_if_t<GreaterThan<uint32_t>(sizeof(A), sizeof(B))>> {
+		typedef B Type;
+	};
+
+	template<class A, class B>
+	struct MinClassContainer<A, B, std::enable_if_t<LessThan<uint32_t>(sizeof(A), sizeof(B))>> {
+		typedef A Type;
 	};
 
 }

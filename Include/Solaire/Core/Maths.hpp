@@ -173,6 +173,12 @@ namespace Solaire{
 		return CeilToMultiple<T>(aValue, aMultiple) - (((aValue % aMultiple) < 5) && ((aValue % aMultiple) != 0) ? 5 : 0);
 	}
 
+	////
+
+	static constexpr uint64_t Set1(const uint32_t aBits) {
+		return 1 | (Set1(aBits - 1) << 1);
+	}
+
 	/*
 
 

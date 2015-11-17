@@ -345,7 +345,29 @@ namespace Solaire{
 		#define SOLAIRE_EXPORT_API SOLAIRE_EXPORT_IMPORT
 	#endif
 
+	template<const uint32_t BITS, typename ENABLE = void>
+	struct BinaryContainerStruct {
+		typedef void Type;
+	};
 
+	template<const uint32_t BITS>
+	using BinaryContainer = typename BinaryContainerStruct<BITS>::Type;
+
+	template<class A, class B, typename ENABLE = void>
+	struct MaxClassContainer {
+		typedef void Type;
+	};
+
+	template<class A, class B>
+	using MaxClass = typename MaxClassContainer<A, B>::Type;
+
+	template<class A, class B, typename ENABLE = void>
+	struct MinClassContainer {
+		typedef void Type;
+	};
+
+	template<class A, class B>
+	using MinClass = typename MinClassContainer<A, B>::Type;
 }
 
 #include "Init.inl"
