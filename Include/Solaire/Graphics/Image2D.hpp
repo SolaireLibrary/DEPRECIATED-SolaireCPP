@@ -125,30 +125,38 @@ namespace Solaire{
 		}
 
 		_ColourFormat::ColourType SOLAIRE_EXPORT_CALL GetPixel(const uint32_t aX, const uint32_t aY)  const {
-			uint32_t index = 0; //! \todo Calculate index
-			BitStream bitStream(mData);
-			bitStream.IncrementBit(index * _ColourFormat::BITS_TOTAL);
+			const uint32_t index = 0; //! \todo Calculate index
 
-			_ColourFormat::ColourType buf;
-			bitStream.ReadBits(&buf[0], _ColourFormat::BITS_RED);
-			bitStream.ReadBits(&buf[1], _ColourFormat::BITS_GREEN);
-			bitStream.ReadBits(&buf[2], _ColourFormat::BITS_BLUE);
-			bitStream.ReadBits(&buf[3], _ColourFormat::BITS_ALPHA);
+			if(_ColourFormat::BITS_TOTAL == 32 || _ColourFormat::BITS_TOTAL == 64 || _ColourFormat::BITS_TOTAL == 128 || _ColourFormat::BITS_TOTAL == 256) {
+				return static_cast<const _ColourFormat::ColourType*>(mData)[index];
+			}else {
+				BitStream bitStream(mData);
+				bitStream.IncrementBit(index * _ColourFormat::BITS_TOTAL);
 
-			return buf;
+				_ColourFormat::ColourType buf;
+				bitStream.ReadBits(&buf[0], _ColourFormat::BITS_RED);
+				bitStream.ReadBits(&buf[1], _ColourFormat::BITS_GREEN);
+				bitStream.ReadBits(&buf[2], _ColourFormat::BITS_BLUE);
+				bitStream.ReadBits(&buf[3], _ColourFormat::BITS_ALPHA);
+
+				return buf;
+			}
 		}
 
 		void SOLAIRE_EXPORT_CALL SetPixel(const uint32_t aX, const uint32_t aY, const _ColourFormat::ColourType aColour) {
-			uint32_t index = 0; //! \todo Calculate index
-			BitStream bitStream(mData);
-			bitStream.IncrementBit(index *_ColourFormat::BITS_TOTAL);
+			const uint32_t index = 0; //! \todo Calculate index
 
-			bitStream.WriteBits(&aColour[0], _ColourFormat::BITS_RED);
-			bitStream.WriteBits(&aColour[1], _ColourFormat::BITS_GREEN);
-			bitStream.WriteBits(&aColour[2], _ColourFormat::BITS_BLUE);
-			bitStream.WriteBits(&aColour[3], _ColourFormat::BITS_ALPHA);
+			if(_ColourFormat::BITS_TOTAL == 32 || _ColourFormat::BITS_TOTAL == 64 || _ColourFormat::BITS_TOTAL == 128 || _ColourFormat::BITS_TOTAL == 256) {
+				return static_cast<_ColourFormat::ColourType*>(mData)[index] = aColour;
+			}else {
+				BitStream bitStream(mData);
+				bitStream.IncrementBit(index *_ColourFormat::BITS_TOTAL);
 
-			return buf;
+				bitStream.WriteBits(&aColour[0], _ColourFormat::BITS_RED);
+				bitStream.WriteBits(&aColour[1], _ColourFormat::BITS_GREEN);
+				bitStream.WriteBits(&aColour[2], _ColourFormat::BITS_BLUE);
+				bitStream.WriteBits(&aColour[3], _ColourFormat::BITS_ALPHA);
+			}
 		}
 	};
 
