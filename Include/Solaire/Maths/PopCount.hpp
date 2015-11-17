@@ -71,8 +71,37 @@ namespace Solaire{
 			PopCount32(aValue & INT_0);
     }
 
+	static uint32_t PopCount(const void* const aSrc, uint32_t aBytes) {
+		uint32_t count = 0;
+		const uint8_t* src = static_cast<const uint8_t*>(aSrc);
+
+		while(aBytes >= 8) {
+			count += PopCount64(*reinterpret_cast<const uint64_t*>(src));
+			src += 8;
+			aBytes -= 8;
+		}
+
+		if(aBytes >= 4) {
+			count += PopCount32(*reinterpret_cast<const uint32_t*>(src));
+			src += 4;
+			aBytes -= 4;
+		}
+
+		if(aBytes >= 2) {
+			count += PopCount16(*reinterpret_cast<const uint16_t*>(src));
+			src += 2;
+			aBytes -= 2;
+		}
+
+		if(aBytes == 1) {
+			count += PopCount8(*src);
+		}
+
+		return count;
+	}
+
 	template<class T>
-	static constexpr T PopCount(const T aValue) throw();
+	static constexpr uint8_t PopCount(const T aValue) throw();
 
 	template<>
 	constexpr uint8_t PopCount<uint8_t>(const uint8_t aValue) throw() {
@@ -80,43 +109,43 @@ namespace Solaire{
 	}
 
 	template<>
-	constexpr uint16_t PopCount<uint16_t>(const uint16_t aValue) throw() {
+	constexpr uint8_t PopCount<uint16_t>(const uint16_t aValue) throw() {
 		return PopCount16(aValue);
 	}
 
 	template<>
-	constexpr uint32_t PopCount<uint32_t>(const uint32_t aValue) throw() {
+	constexpr uint8_t PopCount<uint32_t>(const uint32_t aValue) throw() {
 		return PopCount32(aValue);
 	}
 
 	template<>
-	constexpr uint64_t PopCount<uint64_t>(const uint64_t aValue) throw() {
+	constexpr uint8_t PopCount<uint64_t>(const uint64_t aValue) throw() {
 		return PopCount64(aValue);
 	}
 
 	template<>
-	constexpr int8_t PopCount<int8_t>(const int8_t aValue) throw() {
+	constexpr uint8_t PopCount<int8_t>(const int8_t aValue) throw() {
 		return *reinterpret_cast<const int8_t*>(
 			PopCount8(*reinterpret_cast<const uint8_t*>(&aValue))
 			);
 	}
 
 	template<>
-	constexpr int16_t PopCount<int16_t>(const int16_t aValue) throw() {
+	constexpr uint8_t PopCount<int16_t>(const int16_t aValue) throw() {
 		return *reinterpret_cast<const int16_t*>(
 			PopCount16(*reinterpret_cast<const uint16_t*>(&aValue))
 			);
 	}
 
 	template<>
-	constexpr int32_t PopCount<int32_t>(const int32_t aValue) throw() {
+	constexpr uint8_t PopCount<int32_t>(const int32_t aValue) throw() {
 		return *reinterpret_cast<const int32_t*>(
 			PopCount32(*reinterpret_cast<const uint32_t*>(&aValue))
 			);
 	}
 
 	template<>
-	constexpr int64_t PopCount<int64_t>(const int64_t aValue) throw() {
+	constexpr uint8_t PopCount<int64_t>(const int64_t aValue) throw() {
 		return *reinterpret_cast<const int64_t*>(
 			PopCount64(*reinterpret_cast<const uint64_t*>(&aValue))
 			);

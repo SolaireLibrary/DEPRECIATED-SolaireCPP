@@ -75,23 +75,53 @@ namespace Solaire{
 		return Reflect8(aValue) >> 4;
 	}
 
-	static constexpr uint8_t Reflect16(const uint16_t aValue) throw() {
+	static constexpr uint16_t Reflect16(const uint16_t aValue) throw() {
 		return
-			Reflect8(aValue >> 8) +
-			Reflect8(aValue & NYBBLE_0);
+			static_cast<uint16_t>(Reflect8(aValue >> 8)) |
+			(static_cast<uint16_t>(Reflect8(aValue & NYBBLE_0)) << 8);
     }
 
-	static constexpr uint8_t Reflect32(const uint32_t aValue) throw() {
+	static constexpr uint32_t Reflect32(const uint32_t aValue) throw() {
 		return
-			Reflect16(aValue >> 16) +
-			Reflect16(aValue & SHORT_0);
+			static_cast<uint32_t>(Reflect16(aValue >> 16)) |
+			(static_cast<uint32_t>(Reflect16(aValue & SHORT_0)) << 16);
     }
 
     static constexpr uint8_t Reflect64(const uint64_t aValue) throw() {
 		return
-			Reflect32(aValue >> 32) +
-			Reflect32(aValue & INT_0);
+			static_cast<uint32_t>(Reflect32(aValue >> 32L)) |
+			(static_cast<uint32_t>(Reflect32(aValue & INT_0)) << 32L);
     }
+
+	static void Reflect(void* const aDst, const void* const aSrc, uint32_t aBytes) {
+		uint8_t* dst = static_cast<uint8_t*>(aDst) + aBytes - 1;
+		const uint8_t* src = static_cast<const uint8_t*>(aSrc);
+
+		while(aBytes >= 8) {
+			*reinterpret_cast<uint64_t*>(dst) = Reflect64(*reinterpret_cast<const uint64_t*>(src));
+			dst -= 8;
+			src += 8;
+			aBytes -= 8;
+		}
+
+		if(aBytes >= 4) {
+			*reinterpret_cast<uint32_t*>(dst) = Reflect32(*reinterpret_cast<const uint32_t*>(src));
+			dst -= 4;
+			src += 4;
+			aBytes -= 4;
+		}
+
+		if(aBytes >= 2) {
+			*reinterpret_cast<uint16_t*>(dst) = Reflect16(*reinterpret_cast<const uint16_t*>(src));
+			dst -= 2;
+			src += 2;
+			aBytes -= 2;
+		}
+
+		if(aBytes == 1) {
+			*dst = Reflect8(*src);
+		}
+	}
 
 	template<class T>
 	static constexpr T Reflect(const T aValue) throw();

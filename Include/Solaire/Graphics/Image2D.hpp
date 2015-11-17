@@ -83,10 +83,10 @@ namespace Solaire{
 		Image2D& operator=(Image2D&&) = delete;
 
 		static uint32_t CalculateAllocationSize(const uint32_t aWidth, const uint32_t aHeight) {
-			float size = aWidth * aHeight;
-			size *= _ColourFormat::BITS_TOTAL;
-			size /= 8;
-			return static_cast<uint32_t>(CeilToMultiple<float>(size, 8.f));
+			return static_cast<uint32_t>(CeilToMultiple<float>(
+				static_cast<float>(aWidth * aHeight * _ColourFormat::BITS_TOTAL),
+				8.f
+			) / 8.f;
 		}
 	public:
 		Image2D(Allocator& aAllocator, const uint32_t aWidth, const uint32_t aHeight) :
@@ -125,7 +125,7 @@ namespace Solaire{
 		}
 
 		_ColourFormat::ColourType SOLAIRE_EXPORT_CALL GetPixel(const uint32_t aX, const uint32_t aY)  const {
-			const uint32_t index = 0; //! \todo Calculate index
+			const uint32_t index = RowMajorOrder::Index<uint32_t>(aX, aY, mWidth, mHeight);
 
 			if(_ColourFormat::BITS_TOTAL == 32 || _ColourFormat::BITS_TOTAL == 64 || _ColourFormat::BITS_TOTAL == 128 || _ColourFormat::BITS_TOTAL == 256) {
 				return static_cast<const _ColourFormat::ColourType*>(mData)[index];
@@ -139,18 +139,37 @@ namespace Solaire{
 				bitStream.ReadBits(&buf[2], _ColourFormat::BITS_BLUE);
 				bitStream.ReadBits(&buf[3], _ColourFormat::BITS_ALPHA);
 
+				enum {
+					ELEMENT_BITS = sizeof(_ColourFormat::ColourType::Element) * 8
+				};
+
+				buf[0] >>= ELEMENT_BITS - _ColourFormat::BITS_RED;
+				buf[1] >>= ELEMENT_BITS - _ColourFormat::BITS_GREEN;
+				buf[2] >>= ELEMENT_BITS - _ColourFormat::BITS_BLUE;
+				buf[3] >>= ELEMENT_BITS - _ColourFormat::BITS_ALPHA;
+
 				return buf;
 			}
 		}
 
-		void SOLAIRE_EXPORT_CALL SetPixel(const uint32_t aX, const uint32_t aY, const _ColourFormat::ColourType aColour) {
-			const uint32_t index = 0; //! \todo Calculate index
+		void SOLAIRE_EXPORT_CALL SetPixel(const uint32_t aX, const uint32_t aY, _ColourFormat::ColourType aColour) {
+			const uint32_t index = RowMajorOrder::Index<uint32_t>(aX, aY, mWidth, mHeight);
 
-			if(_ColourFormat::BITS_TOTAL == 32 || _ColourFormat::BITS_TOTAL == 64 || _ColourFormat::BITS_TOTAL == 128 || _ColourFormat::BITS_TOTAL == 256) {
-				return static_cast<_ColourFormat::ColourType*>(mData)[index] = aColour;
+			enum {
+				ELEMENT_BITS = sizeof(_ColourFormat::ColourType::Element) * 8
+				COLOUR_BYTES = _ColourFormat::BITS_TOTAL / 8
+			};
+
+			if((_ColourFormat::BITS_TOTAL & 7) == 0) {
+				std::memcpy(mData + index, aColour.AsPointer(), COLOUR_BYTES);
 			}else {
 				BitStream bitStream(mData);
 				bitStream.IncrementBit(index *_ColourFormat::BITS_TOTAL);
+
+				aColour[0] <<= ELEMENT_BITS - _ColourFormat::BITS_RED;
+				aColour[1] <<= ELEMENT_BITS - _ColourFormat::BITS_GREEN;
+				aColour[2] <<= ELEMENT_BITS - _ColourFormat::BITS_BLUE;
+				aColour[3] <<= ELEMENT_BITS - _ColourFormat::BITS_ALPHA;
 
 				bitStream.WriteBits(&aColour[0], _ColourFormat::BITS_RED);
 				bitStream.WriteBits(&aColour[1], _ColourFormat::BITS_GREEN);

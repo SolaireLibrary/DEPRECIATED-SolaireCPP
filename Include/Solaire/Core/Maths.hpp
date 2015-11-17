@@ -179,6 +179,38 @@ namespace Solaire{
 		return 1 | (Set1(aBits - 1) << 1);
 	}
 
+	////
+
+	template<class T, typename ENABLE = std::enable_if_t<std::is_integral<T>::value>>
+	struct RowMajorOrder {
+		static constexpr T Index(const T aX, const T aY, const T aWidth, const T aHeight) throw() {
+			return aWidth * aX + aY;
+		}
+
+		static constexpr T X(const T aIndex, const T aWidth, const T aHeight) throw() {
+			return aWidth / aIndex;
+		}
+
+		static constexpr T Y(const T aIndex, const T aWidth, const T aHeight) throw() {
+			return aWidth % aIndex;
+		}
+	};
+
+	template<class T, typename ENABLE = std::enable_if_t<std::is_integral<T>::value>>
+	struct ColumnMajorOrder {
+		static constexpr T Index(const T aX, const T aY, const T aWidth, const T aHeight) throw() {
+			return aHeight * aY + aX;
+		}
+
+		static constexpr T X(const T aIndex, const T aWidth, const T aHeight) throw() {
+			return aHeight % aIndex;
+		}
+
+		static constexpr T Y(const T aIndex, const T aWidth, const T aHeight) throw() {
+			return aHeight / aIndex;
+		}
+	};
+
 	/*
 
 
