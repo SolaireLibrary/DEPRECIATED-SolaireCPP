@@ -127,8 +127,15 @@ namespace Solaire{
 		_ColourFormat::ColourType SOLAIRE_EXPORT_CALL GetPixel(const uint32_t aX, const uint32_t aY)  const {
 			const uint32_t index = RowMajorOrder::Index<uint32_t>(aX, aY, mWidth, mHeight);
 
-			if(_ColourFormat::BITS_TOTAL == 32 || _ColourFormat::BITS_TOTAL == 64 || _ColourFormat::BITS_TOTAL == 128 || _ColourFormat::BITS_TOTAL == 256) {
-				return static_cast<const _ColourFormat::ColourType*>(mData)[index];
+			enum {
+				ELEMENT_BITS = sizeof(_ColourFormat::ColourType::Element) * 8
+				COLOUR_BYTES = _ColourFormat::BITS_TOTAL / 8
+			};
+
+			if((_ColourFormat::BITS_TOTAL & 7) == 0) {
+				uint8_t buf[COLOUR_BYTES];
+				std::memcpy(buf, static_cast<const uint8_t*>(mData) + (index * COLOUR_BYTES), COLOUR_BYTES);
+				return *static_cast<const _ColourFormat::ColourType*>(buf);
 			}else {
 				BitStream bitStream(mData);
 				bitStream.IncrementBit(index * _ColourFormat::BITS_TOTAL);
@@ -138,10 +145,6 @@ namespace Solaire{
 				bitStream.ReadBits(&buf[1], _ColourFormat::BITS_GREEN);
 				bitStream.ReadBits(&buf[2], _ColourFormat::BITS_BLUE);
 				bitStream.ReadBits(&buf[3], _ColourFormat::BITS_ALPHA);
-
-				enum {
-					ELEMENT_BITS = sizeof(_ColourFormat::ColourType::Element) * 8
-				};
 
 				buf[0] >>= ELEMENT_BITS - _ColourFormat::BITS_RED;
 				buf[1] >>= ELEMENT_BITS - _ColourFormat::BITS_GREEN;
@@ -161,7 +164,7 @@ namespace Solaire{
 			};
 
 			if((_ColourFormat::BITS_TOTAL & 7) == 0) {
-				std::memcpy(mData + index, aColour.AsPointer(), COLOUR_BYTES);
+				std::memcpy(static_cast<uint8_t*>(mData) + (index * COLOUR_BYTES), aColour.AsPointer(), COLOUR_BYTES);
 			}else {
 				BitStream bitStream(mData);
 				bitStream.IncrementBit(index *_ColourFormat::BITS_TOTAL);
