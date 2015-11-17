@@ -138,10 +138,10 @@ namespace Solaire { namespace ConvolutionFilter{
 			const int32_t halfWidth = aWidth / 2;
 			const int32_t halfHeight = aHeight / 2;
 
-			const int32_t minX = aEdgeMode = ConvolutionFilter::CROP ? halfWidth : 0;
-			const int32_t minY = aEdgeMode = ConvolutionFilter::CROP ? halfHeight : 0;
-			const int32_t maxX = aEdgeMode = ConvolutionFilter::CROP ? mWidth - halfWidth : mWidth;
-			const int32_t maxY = aEdgeMode = ConvolutionFilter::CROP ? mHeight - halfHeight : mHeight;
+			const int32_t minX = aEdgeMode = EdgeMode::CROP ? halfWidth : 0;
+			const int32_t minY = aEdgeMode = EdgeMode::CROP ? halfHeight : 0;
+			const int32_t maxX = aEdgeMode = EdgeMode::CROP ? mWidth - halfWidth : mWidth;
+			const int32_t maxY = aEdgeMode = EdgeMode::CROP ? mHeight - halfHeight : mHeight;
 
 			uint32_t kernalSum = 0;
 
