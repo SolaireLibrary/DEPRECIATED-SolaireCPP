@@ -63,6 +63,16 @@ namespace Solaire{
 		void ReadBits(void*, const uint8_t, uint32_t) throw();
 		void WriteBits(const void*, const uint8_t, uint32_t) throw();
 
+		uint8_t Read8() throw();
+		uint16_t Read16() throw();
+		uint32_t Read32() throw();
+		uint64_t Read64() throw();
+
+		void Write8(const uint8_t) throw();
+		void Write16(const uint16_t) throw();
+		void Write32(const uint32_t) throw();
+		void Write64(const uint64_t) throw();
+
 		void AlignByteBegin() throw();
 		void AlignByteEnd() throw();
 	};

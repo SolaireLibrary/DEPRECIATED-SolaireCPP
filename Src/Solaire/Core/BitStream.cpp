@@ -38,10 +38,12 @@ namespace Solaire{
 
 	void BitStream::SetBit() throw() {
 		*mByte |= mMask;
+		IncrementBit();
 	}
 
 	void BitStream::ClearBit() throw() {
 		*mByte &= ~ mMask;
+		IncrementBit();
 	}
 
 	bool BitStream::CheckBit() const throw() {
@@ -123,24 +125,33 @@ namespace Solaire{
 	void BitStream::ReadBits(void* aByte, const uint8_t aOffset, uint32_t aCount) throw() {
 		BitStream other(aByte, aOffset);
 
-		if(mMask == 0 && other.mMask == 0){
-			while(aCount > 8) {
-				*other.mByte = *mByte;
-				++mByte;
-				++other.mByte;
-				aCount -= 8;
-			}
+		while(aCount >= 64) {
+			other.Write64(Read64());
+			aCount -= 64;
+		}
+		
+		if(aCount >= 32) {
+			other.Write32(Read32());
+			aCount -= 32;
+		}
+		
+		if(aCount >= 16) {
+			other.Write16(Read16());
+			aCount -= 16;
+		}
+		
+		if(aCount >= 8) {
+			other.Write8(Read8());
+			aCount -= 8;
 		}
 
 		while(aCount != 0) {
-			if(CheckBit()){
+			if(CheckBit()) {
 				other.SetBit();
 			}else {
 				other.ClearBit();
 			}
-
 			IncrementBit();
-			other.IncrementBit();
 			--aCount;
 		}
 	}
@@ -148,13 +159,24 @@ namespace Solaire{
 	void BitStream::WriteBits(const void* aByte, const uint8_t aOffset, uint32_t aCount) throw() {
 		BitStream other(const_cast<void*>(aByte), aOffset);
 
-		if(mMask == 0 && other.mMask == 0) {
-			while(aCount > 8) {
-				*mByte = *other.mByte;
-				++mByte;
-				++other.mByte;
-				aCount -= 8;
-			}
+		while(aCount >= 64) {
+			Write64(other.Read64());
+			aCount -= 64;
+		}
+		
+		if(aCount >= 32) {
+			Write32(other.Read32());
+			aCount -= 32;
+		}
+		
+		if(aCount >= 16) {
+			Write16(other.Read16());
+			aCount -= 16;
+		}
+		
+		if(aCount >= 8) {
+			Write8(other.Read8());
+			aCount -= 8;
 		}
 
 		while(aCount != 0) {
@@ -163,8 +185,6 @@ namespace Solaire{
 			}else {
 				ClearBit();
 			}
-
-			IncrementBit();
 			other.IncrementBit();
 			--aCount;
 		}
@@ -176,6 +196,142 @@ namespace Solaire{
 
 	void BitStream::AlignByteEnd() throw() {
 		mMask = 128;
+	}
+
+	uint8_t BitStream::Read8() throw() {
+		uint8_t buf = 0;
+
+		if(mMask == 0) {
+			buf = *mByte;
+			++mByte;
+		}else {
+			for(uint32_t i = 0; i < 8; ++i) {
+				buf |= static_cast<uint8_t>(CheckBit());
+				IncrementBit();
+				if(i != 7) buf <<= 1;
+			}
+		}
+
+		return buf;
+	}
+
+	uint16_t BitStream::Read16() throw() {
+		uint16_t buf = 0;
+
+		if(mMask == 0) {
+			buf = *reinterpret_cast<const uint16_t*>(mByte);
+			mByte += 2;
+		}else {
+			for(uint32_t i = 0; i < 16; ++i) {
+				buf |= static_cast<uint16_t>(CheckBit());
+				IncrementBit();
+				if (i != 15) buf <<= 1;
+			}
+		}
+
+		return buf;
+	}
+
+	uint32_t BitStream::Read32() throw() {
+		uint32_t buf = 0;
+
+		if(mMask == 0) {
+			buf = *reinterpret_cast<const uint32_t*>(mByte);
+			mByte += 4;
+		}else {
+			for(uint32_t i = 0; i < 32; ++i) {
+				buf |= static_cast<uint32_t>(CheckBit());
+				IncrementBit();
+				if (i != 31) buf <<= 1;
+			}
+		}
+
+		return buf;
+	}
+
+	uint64_t BitStream::Read64() throw() {
+		uint64_t buf = 0;
+
+		if(mMask == 0) {
+			buf = *reinterpret_cast<const uint64_t*>(mByte);
+			mByte += 8;
+		}else {
+			for(uint32_t i = 0; i < 64; ++i) {
+				buf |= static_cast<uint16_t>(CheckBit());
+				IncrementBit();
+				if (i != 63) buf <<= 1;
+			}
+		}
+
+		return buf;
+	}
+
+	void BitStream::Write8(const uint8_t aValue) throw() {
+		if(mMask == 0) {
+			*mByte = aValue;
+			++mByte;
+		}else {
+			uint8_t buf = aValue;
+			for(uint32_t i = 0; i < 8; ++i) {
+				if((aValue & 1) != 0) {
+					SetBit();
+				}else {
+					ClearBit();
+				}
+				buf >>= 1;
+			}
+		}
+	}
+
+	void BitStream::Write16(const uint16_t aValue) throw() {
+		if(mMask == 0) {
+			*reinterpret_cast<uint16_t*>(mByte) = aValue;
+			mByte += 2;
+		}else {
+			uint16_t buf = aValue;
+			for(uint32_t i = 0; i < 16; ++i) {
+				if((aValue & 1) != 0) {
+					SetBit();
+				}else {
+					ClearBit();
+				}
+				buf >>= 1;
+			}
+		}
+	}
+
+	void BitStream::Write32(const uint32_t aValue) throw() {
+		if(mMask == 0) {
+			*reinterpret_cast<uint32_t*>(mByte) = aValue;
+			mByte += 4;
+		}else {
+			uint32_t buf = aValue;
+			for(uint32_t i = 0; i < 32; ++i) {
+				if((aValue & 1) != 0) {
+					SetBit();
+				}else {
+					ClearBit();
+				}
+				buf >>= 1;
+			}
+		}
+	}
+
+	void BitStream::Write64(const uint64_t aValue) throw() {
+		if(mMask == 0) {
+			*reinterpret_cast<uint64_t*>(mByte) = aValue;
+			mByte += 8;
+		}else {
+			uint64_t buf = aValue;
+			for(uint32_t i = 0; i < 64; ++i) {
+				if((aValue & 1) != 0) {
+					SetBit();
+				}else {
+					ClearBit();
+				}
+				buf >>= 1L;
+			}
+		}
 	}
 
 }
