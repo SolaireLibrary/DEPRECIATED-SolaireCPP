@@ -74,10 +74,10 @@ namespace Solaire { namespace ConvolutionFilter{
 
 	namespace Implementation {
 		
-		template<const uint8_t RED_BITS, const uint8_t GREEN_BITS, const uint8_t BLUE_BITS, const uint8_t ALPHA_BITS>
+		template<class COLOUR>
 		struct Functions{
-			typedef Image2D<RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS> _Image;
-			typedef _Image::_ColourFormat::ColourType _Colour;
+			typedef Image2D<RCOLOUR> _Image;
+			typedef typename COLOUR::ColourType _Colour;
 
 			static _Colour GetPixelExtend(const _Image& aImage, int32_t aX, int32_t aY) const {
 				const int32_t w = aImage.Width();
@@ -129,11 +129,11 @@ namespace Solaire { namespace ConvolutionFilter{
 			}
 		};
 
-		template<const uint8_t RED_BITS, const uint8_t GREEN_BITS, const uint8_t BLUE_BITS, const uint8_t ALPHA_BITS>
-		static void SOLAIRE_EXPORT_CALL ApplyConvolutionFilter(const Image2D<RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS>& aImage, const ConstFilter aFilter, const uint32_t aWidth, const uint32_t aHeight, const EdgeMode aEdgeMode) {
+		template<class COLOUR>
+		static void SOLAIRE_EXPORT_CALL ApplyConvolutionFilter(const Image2D<COLOUR>& aImage, const ConstFilter aFilter, const uint32_t aWidth, const uint32_t aHeight, const EdgeMode aEdgeMode, const uint8_t aChannels = Colour::CHANNEL_FLAGS) {
 			
-			typedef Implementation::Functions<RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS> _Functions;
-			typedef _Functions::_Colour Colour;
+			typedef Implementation::Functions<COLOUR> _Functions;
+			typedef _Functions::Colour Colour;
 
 			const int32_t halfWidth = aWidth / 2;
 			const int32_t halfHeight = aHeight / 2;
@@ -151,19 +151,30 @@ namespace Solaire { namespace ConvolutionFilter{
 				}
 			}
 
+			Colour accumulator;
+			Colour pixel;
+
 			for(int32_t x = minX; x < maxX; ++x) {
 				for(int32_t y = minX; y < maxY; ++y) {
-					Colour accumulator = {0, 0, 0, 0};
+					accumulator = {0, 0, 0, 0};
 
 					for(int32_t i = 0; i < aWidth; ++i) {
 						const int32_t i2 = x + i - halfWidth;
 						for(int32_t j = 0; j < aHeight; ++j) {
 							const int32_t j2 = y + j - halfHeight;
-							accumulator += _Functions::GetPixel(aImage, i2, j2, aEdgeMode) * aFilter[RowMajorOrder::Index<int32_t>(i, j, aWidth, aHeight)];
+							pixel = _Functions::GetPixel(aImage, i2, j2, aEdgeMode);
+							accumulator += pixel * aFilter[RowMajorOrder::Index<int32_t>(i, j, aWidth, aHeight)];
 						}
 					}
 
-					SetPixel(x, y, accumulator / kernalSum);
+					accumulator /= kernalSum;
+
+					if(COLOUR::BITS_RED > 0 && (aChannels & COLOUR_RED) > 0)		accumulator[COLOR::INDEX_RED] = pixel[COLOR::INDEX_RED];
+					if(COLOUR::BITS_GREEN > 0 && (aChannels & COLOUR_GREEN) > 0)	accumulator[COLOR::INDEX_GREEN] = pixel[COLOR::INDEX_GREEN];
+					if(COLOUR::BITS_BLUE > 0 && (aChannels & COLOUR_BLUE) > 0)		accumulator[COLOR::INDEX_BLUE] = pixel[COLOR::INDEX_BLUE];
+					if(COLOUR::BITS_ALPHA > 0 &&(aChannels & COLOUR_ALPHA) > 0)		accumulator[COLOR::INDEX_ALPHA] = pixel[COLOR::INDEX_ALPHA];
+
+					SetPixel(x, y, accumulator);
 				}
 			}
 			

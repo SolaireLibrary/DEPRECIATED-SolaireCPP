@@ -36,40 +36,14 @@
 #include "..\Core\BitStream.hpp"
 #include "..\Core\Maths.hpp"
 #include "..\Memory\Allocator.hpp"
+#include "Colour.hpp"
 
 namespace Solaire{
 
-	template<const uint8_t RED_BITS, const uint8_t GREEN_BITS, const uint8_t BLUE_BITS, const uint8_t ALPHA_BITS>
-	struct ColourFormat {
-		enum : uint32_t{
-			BITS_RED		= RED_BITS,
-			BITS_GREEN		= GREEN_BITS,
-			BITS_BLUE		= BLUE_BITS,
-			BITS_ALPHA		= ALPHA_BITS,
-			BITS_TOTAL		= BITS_RED + BITS_BLUE + BITS_GREEN, BITS_ALPHA,
-
-			OFFSET_RED		= 0,
-			OFFSET_GREEN	= OFFSET_RED + BITS_RED,
-			OFFSET_BLUE		= OFFSET_GREEN + BITS_GREEN,
-			OFFSET_ALPHA	= OFFSET_BLUE + BITS_BLUE,
-
-			MASK_RED		= Set1(RED_BITS) << OFFSET_RED,
-			MASK_GREEN		= Set1(OFFSET_GREEN) << OFFSET_GREEN,
-			MASK_BLUE		= Set1(OFFSET_BLUE) << OFFSET_BLUE,
-			MASK_ALPHA		= Set1(OFFSET_ALPHA) << OFFSET_ALPHA
-		}
-
-		typedef BinaryContainer<BITS_RED> RedType;
-		typedef BinaryContainer<BITS_GREEN> GreenType;
-		typedef BinaryContainer<BITS_BLUE> BlueType;
-		typedef BinaryContainer<BITS_ALPHA> AlphaType;
-		typedef Vector4<MaxClass<MaxClass<RedType, GreenType>, MaxClass<BlueType, AlphaType>>> ColourType;
-	};
-
-	template<const uint8_t RED_BITS, const uint8_t GREEN_BITS, const uint8_t BLUE_BITS, const uint8_t ALPHA_BITS>
+	template<class COLOUR>
 	class Image2D {
 	public:
-		typedef ColourFormat<RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS> _ColourFormat;
+		typedef COLOUR Colour;
 		typedef Image2D<RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS> _Image2D;
 	private:
 		Allocator& mAllocator;
@@ -84,7 +58,7 @@ namespace Solaire{
 
 		static uint32_t CalculateAllocationSize(const uint32_t aWidth, const uint32_t aHeight) {
 			return static_cast<uint32_t>(CeilToMultiple<float>(
-				static_cast<float>(aWidth * aHeight * _ColourFormat::BITS_TOTAL),
+				static_cast<float>(aWidth * aHeight * Colour::BITS_TOTAL),
 				8.f
 			) / 8.f;
 		}
@@ -124,66 +98,63 @@ namespace Solaire{
 			return mData;
 		}
 
-		_ColourFormat::ColourType SOLAIRE_EXPORT_CALL GetPixel(const uint32_t aX, const uint32_t aY)  const {
+		Colour::Vector SOLAIRE_EXPORT_CALL GetPixel(const uint32_t aX, const uint32_t aY)  const {
 			const uint32_t index = RowMajorOrder::Index<uint32_t>(aX, aY, mWidth, mHeight);
 
 			enum {
-				ELEMENT_BITS = sizeof(_ColourFormat::ColourType::Element) * 8
-				COLOUR_BYTES = _ColourFormat::BITS_TOTAL / 8
+				ELEMENT_BITS = sizeof(Colour::MaxChannel) * 8
+				COLOUR_BYTES = Colour::BITS_TOTAL / 8
 			};
 
-			if((_ColourFormat::BITS_TOTAL & 7) == 0) {
+			if((Colour::BITS_TOTAL & 7) == 0) {
 				uint8_t buf[COLOUR_BYTES];
 				std::memcpy(buf, static_cast<const uint8_t*>(mData) + (index * COLOUR_BYTES), COLOUR_BYTES);
-				return *static_cast<const _ColourFormat::ColourType*>(buf);
+				return *static_cast<const Colour::Vector*>(buf);
 			}else {
 				BitStream bitStream(mData);
-				bitStream.IncrementBit(index * _ColourFormat::BITS_TOTAL);
+				bitStream.IncrementBit(index * Colour::BITS_TOTAL);
 
-				_ColourFormat::ColourType buf;
-				bitStream.ReadBits(&buf[0], _ColourFormat::BITS_RED);
-				bitStream.ReadBits(&buf[1], _ColourFormat::BITS_GREEN);
-				bitStream.ReadBits(&buf[2], _ColourFormat::BITS_BLUE);
-				bitStream.ReadBits(&buf[3], _ColourFormat::BITS_ALPHA);
+				Colour::Vector buf;
+				if(Colour::BITS_RED > 0)	bitStream.ReadBits(&buf[Colour::INDEX_RED], Colour::BITS_RED);
+				if(Colour::BITS_GREEN > 0)	bitStream.ReadBits(&buf[Colour::INDEX_GREEN], Colour::BITS_GREEN);
+				if(Colour::BITS_BLUE > 0)	bitStream.ReadBits(&buf[Colour::INDEX_BLUE], Colour::BITS_BLUE);
+				if(Colour::BITS_ALPHA > 0)	bitStream.ReadBits(&buf[Colour::INDEX_ALPHA], Colour::BITS_ALPHA);
 
-				buf[0] >>= ELEMENT_BITS - _ColourFormat::BITS_RED;
-				buf[1] >>= ELEMENT_BITS - _ColourFormat::BITS_GREEN;
-				buf[2] >>= ELEMENT_BITS - _ColourFormat::BITS_BLUE;
-				buf[3] >>= ELEMENT_BITS - _ColourFormat::BITS_ALPHA;
+				if(Colour::BITS_RED > 0)	buf[Colour::INDEX_RED] >>= ELEMENT_BITS - Colour::BITS_RED;
+				if(Colour::BITS_GREEN > 0)	buf[Colour::INDEX_GREEN] >>= ELEMENT_BITS - Colour::BITS_GREEN;
+				if(Colour::BITS_BLUE > 0)	buf[Colour::INDEX_BLUE] >>= ELEMENT_BITS - Colour::BITS_BLUE;
+				if(Colour::BITS_ALPHA > 0)	buf[Colour::INDEX_ALPHA] >>= ELEMENT_BITS - Colour::BITS_ALPHA;
 
 				return buf;
 			}
 		}
 
-		void SOLAIRE_EXPORT_CALL SetPixel(const uint32_t aX, const uint32_t aY, _ColourFormat::ColourType aColour) {
+		void SOLAIRE_EXPORT_CALL SetPixel(const uint32_t aX, const uint32_t aY, Colour::Vector aColour) {
 			const uint32_t index = RowMajorOrder::Index<uint32_t>(aX, aY, mWidth, mHeight);
 
 			enum {
-				ELEMENT_BITS = sizeof(_ColourFormat::ColourType::Element) * 8
-				COLOUR_BYTES = _ColourFormat::BITS_TOTAL / 8
+				ELEMENT_BITS = sizeof(Colour::MaxChannel) * 8
+				COLOUR_BYTES = Colour::BITS_TOTAL / 8
 			};
 
-			if((_ColourFormat::BITS_TOTAL & 7) == 0) {
+			if((Colour::BITS_TOTAL & 7) == 0) {
 				std::memcpy(static_cast<uint8_t*>(mData) + (index * COLOUR_BYTES), aColour.AsPointer(), COLOUR_BYTES);
 			}else {
 				BitStream bitStream(mData);
-				bitStream.IncrementBit(index *_ColourFormat::BITS_TOTAL);
+				bitStream.IncrementBit(index *Colour::BITS_TOTAL);
 
-				aColour[0] <<= ELEMENT_BITS - _ColourFormat::BITS_RED;
-				aColour[1] <<= ELEMENT_BITS - _ColourFormat::BITS_GREEN;
-				aColour[2] <<= ELEMENT_BITS - _ColourFormat::BITS_BLUE;
-				aColour[3] <<= ELEMENT_BITS - _ColourFormat::BITS_ALPHA;
+				if(Colour::BITS_RED > 0)	aColour[Colour::INDEX_RED] <<= ELEMENT_BITS - Colour::BITS_RED;
+				if(Colour::BITS_GREEN > 0)	aColour[Colour::INDEX_GREEN] <<= ELEMENT_BITS - Colour::BITS_GREEN;
+				if(Colour::BITS_BLUE > 0)	aColour[Colour::INDEX_BLUE] <<= ELEMENT_BITS - Colour::BITS_BLUE;
+				if(Colour::BITS_ALPHA > 0)	aColour[Colour::INDEX_ALPHA] <<= ELEMENT_BITS - Colour::BITS_ALPHA;
 
-				bitStream.WriteBits(&aColour[0], _ColourFormat::BITS_RED);
-				bitStream.WriteBits(&aColour[1], _ColourFormat::BITS_GREEN);
-				bitStream.WriteBits(&aColour[2], _ColourFormat::BITS_BLUE);
-				bitStream.WriteBits(&aColour[3], _ColourFormat::BITS_ALPHA);
+				if(Colour::BITS_RED > 0)	bitStream.WriteBits(&aColour[Colour::INDEX_RED], Colour::BITS_RED);
+				if(Colour::BITS_GREEN > 0)	bitStream.WriteBits(&aColour[Colour::INDEX_GREEN], Colour::BITS_GREEN);
+				if(Colour::BITS_BLUE > 0)	bitStream.WriteBits(&aColour[Colour::INDEX_BLUE], Colour::BITS_BLUE);
+				if(Colour::BITS_ALPHA > 0)	bitStream.WriteBits(&aColour[Colour::INDEX_ALPHA], Colour::BITS_ALPHA);
 			}
 		}
 	};
-
-	typedef Image2D<8, 8, 8, 0> Image2D_8880;
-	typedef Image2D<8, 8, 8, 8> Image2D_8888;
 }
 
 
