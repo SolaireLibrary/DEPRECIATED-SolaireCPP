@@ -268,10 +268,22 @@ namespace Solaire{
 	static Vector<float, A::CHANNELS_USED> NormaliseColour(const typename A::Vector aColour) {
 		Vector<float, A::CHANNELS_USED> tmp;
 
-		if(A::BITS_RED > 0) tmp[A::INDEX_RED]		= static_cast<float>(aColour[A::INDEX_RED]) / static_cast<float>(aColour[A::MAX_RED]);
-		if(A::BITS_GREEN > 0) tmp[A::INDEX_GREEN]	= static_cast<float>(aColour[A::INDEX_GREEN]) / static_cast<float>(aColour[A::MAX_GREEN]);
-		if(A::BITS_BLUE > 0) tmp[A::INDEX_BLUE]		= static_cast<float>(aColour[A::INDEX_BLUE]) / static_cast<float>(aColour[A::MAX_BLUE]);
-		if(A::BITS_ALPHA > 0) tmp[A::INDEX_ALPHA]	= static_cast<float>(aColour[A::INDEX_ALPHA]) / static_cast<float>(aColour[A::MAX_ALPHA]);
+		if(A::BITS_RED > 0) tmp[A::INDEX_RED]		= static_cast<float>(aColour[A::INDEX_RED]) / static_cast<float>(A::MAX_RED);
+		if(A::BITS_GREEN > 0) tmp[A::INDEX_GREEN]	= static_cast<float>(aColour[A::INDEX_GREEN]) / static_cast<float>(A::MAX_GREEN);
+		if(A::BITS_BLUE > 0) tmp[A::INDEX_BLUE]		= static_cast<float>(aColour[A::INDEX_BLUE]) / static_cast<float>(A::MAX_BLUE);
+		if(A::BITS_ALPHA > 0) tmp[A::INDEX_ALPHA]	= static_cast<float>(aColour[A::INDEX_ALPHA]) / static_cast<float>(A::MAX_ALPHA);
+	
+		return tmp;
+	}
+
+	template<class A>
+	static typename A::Vector DenormaliseColour(const Vector<float, A::CHANNELS_USED> aColour) {
+		typename A::Vector tmp;
+
+		if(A::BITS_RED > 0) tmp[A::INDEX_RED]		= static_cast<typename A::MaxChannel>(aColour[A::INDEX_RED] * static_cast<float>(A::MAX_RED));
+		if(A::BITS_GREEN > 0) tmp[A::INDEX_GREEN]	= static_cast<typename A::MaxChannel>(aColour[A::INDEX_GREEN] * static_cast<float>(A::MAX_GREEN));
+		if(A::BITS_BLUE > 0) tmp[A::INDEX_BLUE]		= static_cast<typename A::MaxChannel>(aColour[A::INDEX_BLUE] * static_cast<float>(A::MAX_BLUE));
+		if(A::BITS_ALPHA > 0) tmp[A::INDEX_ALPHA]	= static_cast<typename A::MaxChannel>(aColour[A::INDEX_ALPHA] * static_cast<float>(A::MAX_ALPHA));
 	
 		return tmp;
 	}
