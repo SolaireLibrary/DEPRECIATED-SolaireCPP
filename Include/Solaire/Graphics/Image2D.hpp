@@ -36,7 +36,7 @@
 #include "..\Core\BitStream.hpp"
 #include "..\Core\Maths.hpp"
 #include "..\Memory\Allocator.hpp"
-#include "Colour.hpp"
+#include "ColourFormat.hpp"
 
 namespace Solaire{
 

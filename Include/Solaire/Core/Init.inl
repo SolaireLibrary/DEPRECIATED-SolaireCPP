@@ -110,26 +110,6 @@ namespace Solaire{
 		typedef uint64_t Type;
 	};
 
-	template<class A, class B>
-	struct MaxClassContainer<A, B, std::enable_if_t<GreaterThan<uint32_t>(sizeof(A), sizeof(B))>> {
-		typedef A Type;
-	};
-
-	template<class A, class B>
-	struct MaxClassContainer<A, B, std::enable_if_t<LessThan<uint32_t>(sizeof(A), sizeof(B))>> {
-		typedef B Type;
-	};
-
-	template<class A, class B>
-	struct MinClassContainer<A, B, std::enable_if_t<GreaterThan<uint32_t>(sizeof(A), sizeof(B))>> {
-		typedef B Type;
-	};
-
-	template<class A, class B>
-	struct MinClassContainer<A, B, std::enable_if_t<LessThan<uint32_t>(sizeof(A), sizeof(B))>> {
-		typedef A Type;
-	};
-
 }
 
 #endif

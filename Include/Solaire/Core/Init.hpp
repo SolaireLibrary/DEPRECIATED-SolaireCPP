@@ -352,22 +352,6 @@ namespace Solaire{
 
 	template<const uint32_t BITS>
 	using BinaryContainer = typename BinaryContainerStruct<BITS>::Type;
-
-	template<class A, class B, typename ENABLE = void>
-	struct MaxClassContainer {
-		typedef void Type;
-	};
-
-	template<class A, class B>
-	using MaxClass = typename MaxClassContainer<A, B>::Type;
-
-	template<class A, class B, typename ENABLE = void>
-	struct MinClassContainer {
-		typedef void Type;
-	};
-
-	template<class A, class B>
-	using MinClass = typename MinClassContainer<A, B>::Type;
 }
 
 #include "Init.inl"

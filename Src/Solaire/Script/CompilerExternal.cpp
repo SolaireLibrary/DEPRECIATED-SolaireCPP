@@ -27,7 +27,7 @@ namespace Solaire{
 	}
 
 	bool ExternalCompiler::Compile() const {
-		#ifdef SOLAIRE_OS == SOLAIRE_WINDOWS
+		#if SOLAIRE_OS == SOLAIRE_WINDOWS
 			STARTUPINFOA si;
 			PROCESS_INFORMATION pi;
 

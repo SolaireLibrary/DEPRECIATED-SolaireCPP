@@ -31,7 +31,9 @@
 	Last Modified	: 17th September 2015
 */
 
+#include "..\Core\Init.hpp"
 #include "..\Core\Maths.hpp"
+#include "..\Maths\Vector.hpp"
 
 namespace Solaire{
 
@@ -43,23 +45,23 @@ namespace Solaire{
 	};
 
 	namespace Implementation {
-		static constexpr uint32_t ColourIndexRed(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
+		static constexpr int32_t ColourIndexRed(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
 			return aRedBits > 0 ? 0 : -1;
 		}
 
-		static constexpr uint32_t ColourIndexGreen(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
+		static constexpr int32_t ColourIndexGreen(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
 			return aGreenBits > 0 ? 
 				aRedBits > 0 ? 1 : 0 :
 				-1;
 		}
 
-		static constexpr uint32_t ColourIndexBlue(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
+		static constexpr int32_t ColourIndexBlue(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
 			return aBlueBits > 0 ?
 				(aRedBits > 0 ? 1 : 0) + (aGreenBits > 0 ? 1 : 0):
 				-1;
 		}
 
-		static constexpr uint32_t ColourIndexAlpha(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
+		static constexpr int32_t ColourIndexAlpha(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
 			return aAlphaBits > 0 ?
 				(aRedBits > 0 ? 1 : 0) + (aGreenBits > 0 ? 1 : 0) + (aBlueBits > 0 ? 1 : 0) :
 				-1;
@@ -68,12 +70,12 @@ namespace Solaire{
 
 	template<const uint8_t RED_BITS, const uint8_t GREEN_BITS, const uint8_t BLUE_BITS, const uint8_t ALPHA_BITS>
 	struct ColourFormat {
-		enum : uint32_t{
+		enum : int32_t {
 			BITS_RED		=	RED_BITS,
 			BITS_GREEN		=	GREEN_BITS,
 			BITS_BLUE		=	BLUE_BITS,
 			BITS_ALPHA		=	ALPHA_BITS,
-			BITS_TOTAL		=	BITS_RED + BITS_BLUE + BITS_GREEN, BITS_ALPHA,
+			BITS_TOTAL		=	BITS_RED + BITS_BLUE + BITS_GREEN + BITS_ALPHA,
 
 			IS_BYTE_ALIGNED	= ((RED_BITS & 7) | (GREEN_BITS & 7) | (BLUE_BITS & 7) | (ALPHA_BITS & 7)) == 0 ? 1 : 0,
 			BYTES_TOTAL		= IS_BYTE_ALIGNED ? BITS_TOTAL / 8 : -1,
@@ -84,9 +86,9 @@ namespace Solaire{
 			OFFSET_ALPHA	=	OFFSET_BLUE + BITS_BLUE,
 
 			MASK_RED		=	Set1(RED_BITS) << OFFSET_RED,
-			MASK_GREEN		=	Set1(OFFSET_GREEN) << OFFSET_GREEN,
-			MASK_BLUE		=	Set1(OFFSET_BLUE) << OFFSET_BLUE,
-			MASK_ALPHA		=	Set1(OFFSET_ALPHA) << OFFSET_ALPHA,
+			MASK_GREEN		=	Set1(BITS_GREEN) << OFFSET_GREEN,
+			MASK_BLUE		=	Set1(BITS_BLUE) << OFFSET_BLUE,
+			MASK_ALPHA		=	Set1(BITS_ALPHA) << OFFSET_ALPHA,
 
 			CHANNELS_USED	=	(BITS_RED > 0 ? 1 : 0) +
 								(GREEN_BITS > 0 ? 1 : 0) +
@@ -102,13 +104,13 @@ namespace Solaire{
 								(GREEN_BITS > 0 ? COLOUR_GREEN : 0) |
 								(BLUE_BITS > 0 ? COLOUR_BLUE : 0) |
 								(ALPHA_BITS > 0 ? COLOUR_ALPHA : 0)
-		}
+		};
 
 		typedef BinaryContainer<BITS_RED> RedChannel;
 		typedef BinaryContainer<BITS_GREEN> GreenChannel;
 		typedef BinaryContainer<BITS_BLUE> BlueChannel;
 		typedef BinaryContainer<BITS_ALPHA> AlphaChannel;
-		typedef MaxClass<MaxClass<RedChannel, GreenChannel>, MaxClass<BlueChannel, AlphaChannel>> MaxChannel;
+		typedef BinaryContainer<Max<int32_t>(Max<int32_t>(BITS_RED, GREEN_BITS), Max<int32_t>(BLUE_BITS, ALPHA_BITS))> MaxChannel;
 		typedef Vector<MaxChannel, CHANNELS_USED> Vector;
 	};
 

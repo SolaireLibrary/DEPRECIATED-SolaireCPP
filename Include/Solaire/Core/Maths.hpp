@@ -176,7 +176,7 @@ namespace Solaire{
 	////
 
 	static constexpr uint64_t Set1(const uint32_t aBits) {
-		return 1 | (Set1(aBits - 1) << 1);
+		return 1 | (aBits == 0 ? 0 : (Set1(aBits - 1) << 1));
 	}
 
 	////
