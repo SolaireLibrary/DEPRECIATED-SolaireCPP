@@ -129,6 +129,29 @@ namespace Solaire{
 	typedef ColourFormat<8, 8, 0, 0> RG_8;
 	typedef ColourFormat<8, 8, 8, 0> RGB_8;
 	typedef ColourFormat<8, 8, 8, 8> RGBA_8;
+
+	template<class A, class B>
+	static typename A::Vector ColourCast(const typename B::Vector aColour) {
+		typename A::Vector tmp;
+
+		if(A::BITS_RED > 0) tmp[A::INDEX_RED] = B::BITS_RED > 0 ? 
+			static_cast<typename A::MaxChannel>((static_cast<float>(aColour[B::INDEX_RED]) / static_cast<float>(B::MAX_RED)) * static_cast<float>(A::MAX_RED)) :
+			A::MIN_RED;
+
+		if(A::BITS_GREEN > 0) tmp[A::INDEX_GREEN] = B::BITS_GREEN > 0 ? 
+			static_cast<typename A::MaxChannel>((static_cast<float>(aColour[B::INDEX_GREEN]) / static_cast<float>(B::MAX_GREEN)) * static_cast<float>(A::MAX_GREEN)) :
+			A::MIN_GREEN;
+
+		if(A::BITS_BLUE > 0) tmp[A::INDEX_BLUE] = B::BITS_BLUE > 0 ? 
+			static_cast<typename A::MaxChannel>((static_cast<float>(aColour[B::INDEX_BLUE]) / static_cast<float>(B::MAX_BLUE)) * static_cast<float>(A::MAX_BLUE)) :
+			A::MIN_BLUE;
+
+		if(A::BITS_ALPHA > 0) tmp[A::INDEX_ALPHA] = B::BITS_ALPHA > 0 ? 
+			static_cast<typename A::MaxChannel>((static_cast<float>(aColour[B::INDEX_ALPHA]) / static_cast<float>(B::MAX_ALPHA)) * static_cast<float>(A::MAX_ALPHA)) :
+			A::MIN_ALPHA;
+
+		return tmp;
+	}
 }
 
 
