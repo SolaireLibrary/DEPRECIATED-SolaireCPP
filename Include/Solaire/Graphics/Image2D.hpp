@@ -27,8 +27,8 @@
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 17th September 2015
-	Last Modified	: 17th September 2015
+	Created			: 17th November 2015
+	Last Modified	: 18th November 2015
 */
 
 #include "..\Core\Init.hpp"
