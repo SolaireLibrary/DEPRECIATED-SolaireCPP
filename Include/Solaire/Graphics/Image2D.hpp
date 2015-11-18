@@ -73,41 +73,35 @@ namespace Solaire{
 			mAllocator.Deallocate(mData);
 		}
 
-		Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const {
+		Allocator& GetAllocator() const {
 			return mAllocator;
 		}
 
-		uint32_t SOLAIRE_EXPORT_CALL Width() const {
+		uint32_t Width() const {
 			return mWidth;
 		}
 
-		uint32_t SOLAIRE_EXPORT_CALL Height() const {
+		uint32_t Height() const {
 			return mHeight;
 		}
 
-		uint32_t SOLAIRE_EXPORT_CALL RawSize() const{
+		uint32_t RawSize() const{
 			return CalculateAllocationSize(mWidth, mHeight);
 		}
 
-		void* SOLAIRE_EXPORT_CALL RawPtr() {
+		void* RawPtr() {
 			return mData;
 		}
 
-		const void* SOLAIRE_EXPORT_CALL ConstRawPtr() const{
+		const void* RawPtr() const{
 			return mData;
 		}
 
-		typename Colour::Vector SOLAIRE_EXPORT_CALL GetPixel(const uint32_t aX, const uint32_t aY)  const {
+		typename Colour::Vector GetPixel(const uint32_t aX, const uint32_t aY)  const {
 			const uint32_t index = RowMajorOrder<uint32_t>::Index(aX, aY, mWidth, mHeight);
 
-			enum {
-				ELEMENT_BITS = sizeof(Colour::MaxChannel) * 8
-			};
-
 			if(Colour::IS_BYTE_ALIGNED) {
-				Colour::Vector tmp;
-				std::memcpy(&tmp, static_cast<const uint8_t*>(mData) + (index * Colour::BYTES_TOTAL), Colour::BYTES_TOTAL);
-				return tmp;
+				return static_cast<const Colour::Vector*>(mData)[index];
 			}else {
 				BitStream bitStream(mData);
 				bitStream.IncrementBit(index * Colour::BITS_TOTAL);
@@ -137,15 +131,11 @@ namespace Solaire{
 			}
 		}
 
-		void SOLAIRE_EXPORT_CALL SetPixel(const uint32_t aX, const uint32_t aY, typename Colour::Vector aColour) {
+		void SetPixel(const uint32_t aX, const uint32_t aY, typename Colour::Vector aColour) {
 			const uint32_t index = RowMajorOrder<uint32_t>::Index(aX, aY, mWidth, mHeight);
 
-			enum {
-				ELEMENT_BITS = sizeof(Colour::MaxChannel) * 8
-			};
-
 			if(Colour::IS_BYTE_ALIGNED) {
-				std::memcpy(static_cast<uint8_t*>(mData) + (index * Colour::BYTES_TOTAL), aColour.AsPointer(), Colour::BYTES_TOTAL);
+				static_cast<Colour::Vector*>(mData)[index] = aColour;
 			}else {
 				BitStream bitStream(mData);
 				bitStream.IncrementBit(index *Colour::BITS_TOTAL);
