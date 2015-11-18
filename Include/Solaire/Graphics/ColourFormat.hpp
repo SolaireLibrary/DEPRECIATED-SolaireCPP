@@ -38,44 +38,104 @@
 namespace Solaire{
 
 	enum {
-		COLOUR_RED = BIT_0,
-		COLOUR_GREEN = BIT_1,
-		COLOUR_BLUE = BIT_2,
-		COLOUR_ALPHA = BIT_3,
+		COLOUR_NONE		= 0,
+		COLOUR_RED		= BIT_0,
+		COLOUR_GREEN	= BIT_1,
+		COLOUR_BLUE		= BIT_2,
+		COLOUR_ALPHA	= BIT_3,
 	};
 
-	namespace Implementation {
-		static constexpr int32_t ColourIndexRed(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
-			return aRedBits > 0 ? 0 : -1;
-		}
+	template<
+		const uint8_t COLOUR_0, const uint8_t COLOUR_1, const uint8_t COLOUR_2, const uint8_t COLOUR_3,
+		const uint8_t COLOUR_0_BITS, const uint8_t COLOUR_1_BITS, const uint8_t COLOUR_2_BITS, const uint8_t COLOUR_3_BITS
+	>
+	class ColourFormat {
+	public:
+		typedef uint8_t ChannelColour;
+		typedef int32_t ChannelIndex;
+	public:
+		enum  : int32_t{
+			INDEX_0		=	COLOUR_0_BITS > 0 ? 0 : -1,
+			INDEX_1		=	COLOUR_1_BITS > 0 ?
+							COLOUR_0_BITS > 0 ? 1 : 0 :
+							-1,
+			INDEX_2		=	COLOUR_2_BITS > 0 ?
+							(COLOUR_0_BITS > 0 ? 1 : 0) + (COLOUR_1_BITS> 0 ? 1 : 0) :
+							-1,
+			INDEX_3		=	COLOUR_3_BITS > 0 ?
+							(COLOUR_0_BITS > 0 ? 1 : 0) + (COLOUR_1_BITS > 0 ? 1 : 0) + (COLOUR_2_BITS> 0 ? 1 : 0) :
+							-1
+		};
 
-		static constexpr int32_t ColourIndexGreen(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
-			return aGreenBits > 0 ? 
-				aRedBits > 0 ? 1 : 0 :
+		static constexpr ChannelColour GetColour(const ChannelIndex aChannel) {
+			return
+				aChannel == 0 ? COLOUR_0 :
+				aChannel == 1 ? COLOUR_1 :
+				aChannel == 2 ? COLOUR_2 :
+				aChannel == 3 ? COLOUR_3 :
 				-1;
 		}
 
-		static constexpr int32_t ColourIndexBlue(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
-			return aBlueBits > 0 ?
-				(aRedBits > 0 ? 1 : 0) + (aGreenBits > 0 ? 1 : 0):
+		static constexpr ChannelIndex GetChannel(const ChannelColour aColour) {
+			return
+				COLOUR_0 == aColour ? 0 :
+				COLOUR_1 == aColour ? 1 :
+				COLOUR_2 == aColour ? 2 :
+				COLOUR_3 == aColour ? 3 :
 				-1;
 		}
 
-		static constexpr int32_t ColourIndexAlpha(const uint8_t aRedBits, const uint8_t aGreenBits, const uint8_t aBlueBits, const uint8_t aAlphaBits) {
-			return aAlphaBits > 0 ?
-				(aRedBits > 0 ? 1 : 0) + (aGreenBits > 0 ? 1 : 0) + (aBlueBits > 0 ? 1 : 0) :
+		static constexpr int32_t GetChannelBits(const ChannelIndex aChannel) {
+			return
+				aChannel == 0	? COLOUR_0_BITS :
+				aChannel == 1	? COLOUR_1_BITS :
+				aChannel == 2	? COLOUR_2_BITS :
+				aChannel == 3	? COLOUR_3_BITS :
 				-1;
 		}
-	}
 
-	template<const uint8_t RED_BITS, const uint8_t GREEN_BITS, const uint8_t BLUE_BITS, const uint8_t ALPHA_BITS>
-	struct ColourFormat {
+		static constexpr int32_t GetColourBits(const ChannelColour aColour) {
+			return GetChannelBits(GetChannel(aColour));
+		}
+
+		static constexpr int32_t GetChannelIndex(const ChannelIndex aChannel) {
+			return
+				aChannel == 0 ? INDEX_0 :
+				aChannel == 1 ? INDEX_1 :
+				aChannel == 2 ? INDEX_2 :
+				aChannel == 3 ? INDEX_3 :
+				-1;
+		}
+
+		static constexpr int32_t GetColourIndex(const ChannelColour aColour) {
+			return GetChannelIndex(GetChannel(aColour));
+		}
+
+		static constexpr int32_t GetChannelOffset(const ChannelIndex aChannel) {
+			return
+				aChannel == 0 ? 0 :
+				aChannel == 1 ? GetChannelBits(0) + GetChannelOffset(0) :
+				aChannel == 2 ? GetChannelBits(1) + GetChannelOffset(1) :
+				aChannel == 3 ? GetChannelBits(2) + GetChannelOffset(2) :
+				-1;
+		}
+
+		static constexpr int32_t GetColourOffset(const ChannelColour aColour) {
+			return GetChannelOffset(GetChannel(aColour));
+		}
+
 		enum : int32_t {
-			BITS_RED		=	RED_BITS,
-			BITS_GREEN		=	GREEN_BITS,
-			BITS_BLUE		=	BLUE_BITS,
-			BITS_ALPHA		=	ALPHA_BITS,
-			BITS_TOTAL		=	BITS_RED + BITS_BLUE + BITS_GREEN + BITS_ALPHA,
+			BITS_RED		=	GetColourBits(COLOUR_RED),
+			BITS_GREEN		=	GetColourBits(COLOUR_GREEN),
+			BITS_BLUE		=	GetColourBits(COLOUR_BLUE),
+			BITS_ALPHA		=	GetColourBits(COLOUR_ALPHA),
+
+			BITS_0			=	GetChannelBits(0),
+			BITS_1			=	GetChannelBits(1),
+			BITS_2			=	GetChannelBits(2),
+			BITS_3			=	GetChannelBits(3),
+
+			BITS_TOTAL		=	BITS_0 + BITS_1 + BITS_2 + BITS_3,
 
 			MIN_RED			=	0,
 			MIN_GREEN		=	0,
@@ -87,48 +147,80 @@ namespace Solaire{
 			MAX_BLUE		=	MaxValue(BITS_BLUE),
 			MAX_ALPHA		=	MaxValue(BITS_ALPHA),
 
-			IS_BYTE_ALIGNED	= ((RED_BITS & 7) | (GREEN_BITS & 7) | (BLUE_BITS & 7) | (ALPHA_BITS & 7)) == 0 ? 1 : 0,
-			BYTES_TOTAL		= IS_BYTE_ALIGNED ? BITS_TOTAL / 8 : -1,
+			MIN_0			=	0,
+			MIN_1			=	0,
+			MIN_2			=	0,
+			MIN_3			=	0,
 
-			OFFSET_RED		=	0,
-			OFFSET_GREEN	=	OFFSET_RED + BITS_RED,
-			OFFSET_BLUE		=	OFFSET_GREEN + BITS_GREEN,
-			OFFSET_ALPHA	=	OFFSET_BLUE + BITS_BLUE,
+			MAX_0			=	MaxValue(BITS_0),
+			MAX_1			=	MaxValue(BITS_1),
+			MAX_2			=	MaxValue(BITS_2),
+			MAX_3			=	MaxValue(BITS_3),
 
-			MASK_RED		=	Set1(RED_BITS) << OFFSET_RED,
+			IS_BYTE_ALIGNED	=	((BITS_0 & 7) | (BITS_1 & 7) | (BITS_2 & 7) | (BITS_3 & 7)) == 0 ? 1 : 0,
+			BYTES_TOTAL		=	IS_BYTE_ALIGNED ? BITS_TOTAL / 8 : -1,
+
+			INDEX_RED		=	GetColourIndex(COLOUR_RED),
+			INDEX_GREEN		=	GetColourIndex(COLOUR_GREEN),
+			INDEX_BLUE		=	GetColourIndex(COLOUR_BLUE),
+			INDEX_ALPHA		=	GetColourIndex(COLOUR_ALPHA),
+
+			OFFSET_RED		=	GetColourOffset(COLOUR_RED),
+			OFFSET_GREEN	=	GetColourOffset(COLOUR_GREEN),
+			OFFSET_BLUE		=	GetColourOffset(COLOUR_BLUE),
+			OFFSET_ALPHA	=	GetColourOffset(COLOUR_ALPHA),
+
+			OFFSET_0		=	GetChannelOffset(0),
+			OFFSET_1		=	GetChannelOffset(1),
+			OFFSET_2		=	GetChannelOffset(2),
+			OFFSET_3		=	GetChannelOffset(3),
+
+			MASK_RED		=	Set1(BITS_RED) << OFFSET_RED,
 			MASK_GREEN		=	Set1(BITS_GREEN) << OFFSET_GREEN,
 			MASK_BLUE		=	Set1(BITS_BLUE) << OFFSET_BLUE,
 			MASK_ALPHA		=	Set1(BITS_ALPHA) << OFFSET_ALPHA,
 
-			CHANNELS_USED	=	(BITS_RED > 0 ? 1 : 0) +
-								(GREEN_BITS > 0 ? 1 : 0) +
-								(BLUE_BITS > 0 ? 1 : 0)+
-								(ALPHA_BITS > 0 ? 1 : 0),
+			MASK_0			=	Set1(BITS_0) << OFFSET_0,
+			MASK_1			=	Set1(BITS_1) << OFFSET_1,
+			MASK_2			=	Set1(BITS_2) << OFFSET_2,
+			MASK_3			=	Set1(BITS_3) << OFFSET_3,
 
-			INDEX_RED		=	Implementation::ColourIndexRed(BITS_RED, BITS_GREEN, BITS_BLUE, BITS_ALPHA),
-			INDEX_GREEN		=	Implementation::ColourIndexGreen(BITS_RED, BITS_GREEN, BITS_BLUE, BITS_ALPHA),
-			INDEX_BLUE		=	Implementation::ColourIndexBlue(BITS_RED, BITS_GREEN, BITS_BLUE, BITS_ALPHA),
-			INDEX_ALPHA		=	Implementation::ColourIndexAlpha(BITS_RED, BITS_GREEN, BITS_BLUE, BITS_ALPHA),
-
-			CHANNEL_FLAGS	=	(BITS_RED > 0 ? COLOUR_RED : 0) |
-								(GREEN_BITS > 0 ? COLOUR_GREEN : 0) |
-								(BLUE_BITS > 0 ? COLOUR_BLUE : 0) |
-								(ALPHA_BITS > 0 ? COLOUR_ALPHA : 0)
+			CHANNELS_USED	=	(BITS_0 > 0 ? 1 : 0) +
+								(BITS_1 > 0 ? 1 : 0) +
+								(BITS_2 > 0 ? 1 : 0)+
+								(BITS_3 > 0 ? 1 : 0)
 		};
 
-		typedef BinaryContainer<BITS_RED> RedChannel;
-		typedef BinaryContainer<BITS_GREEN> GreenChannel;
-		typedef BinaryContainer<BITS_BLUE> BlueChannel;
-		typedef BinaryContainer<BITS_ALPHA> AlphaChannel;
-		typedef BinaryContainer<Max<int32_t>(Max<int32_t>(BITS_RED, GREEN_BITS), Max<int32_t>(BLUE_BITS, ALPHA_BITS))> MaxChannel;
+		typedef BinaryContainer<BITS_RED>	ContainerRed;
+		typedef BinaryContainer<BITS_GREEN> ContainerGreen;
+		typedef BinaryContainer<BITS_BLUE>	ContainerBlue;
+		typedef BinaryContainer<BITS_ALPHA> ContainerAlpha;
+
+		typedef BinaryContainer<BITS_0>	Container0;
+		typedef BinaryContainer<BITS_1> Container1;
+		typedef BinaryContainer<BITS_2>	Container2;
+		typedef BinaryContainer<BITS_3> Container3;
+
+		typedef BinaryContainer<Max<int32_t>(Max<int32_t>(BITS_0, BITS_1), Max<int32_t>(BITS_2, BITS_3))> MaxChannel;
 		typedef Vector<MaxChannel, CHANNELS_USED> Vector;
 	};
 
-	typedef ColourFormat<1, 0, 0, 0> R_1;
-	typedef ColourFormat<8, 0, 0, 0> R_8;
-	typedef ColourFormat<8, 8, 0, 0> RG_8;
-	typedef ColourFormat<8, 8, 8, 0> RGB_8;
-	typedef ColourFormat<8, 8, 8, 8> RGBA_8;
+	template<const uint8_t BITS>
+	using ColourFormatRGB = ColourFormat<COLOUR_RED, COLOUR_GREEN, COLOUR_BLUE, COLOUR_NONE, BITS, BITS, BITS, 0>;
+
+	template<const uint8_t BITS>
+	using ColourFormatRGBA = ColourFormat<COLOUR_RED, COLOUR_GREEN, COLOUR_BLUE, COLOUR_ALPHA, BITS, BITS BITS, BITS>;
+
+	template<const uint8_t BITS>
+	using ColourFormatRBG = ColourFormat<COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN, COLOUR_NONE, BITS, BITS, BITS, 0>;
+
+	template<const uint8_t BITS>
+	using ColourFormatRBGA = ColourFormat<COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN, COLOUR_ALPHA, BITS, BITS, BITS, BITS>;
+
+	typedef ColourFormatRGB<8>		RGB_8;
+	typedef ColourFormatRGBA<8>		RGBA_8;
+	typedef ColourFormatRBG<8>		RBG_8;
+	typedef ColourFormatRBGA<8>		RBGA_8;
 
 	template<class A, class B>
 	static typename A::Vector ColourCast(const typename B::Vector aColour) {
