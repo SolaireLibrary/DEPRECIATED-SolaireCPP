@@ -50,6 +50,25 @@ namespace Solaire{
 		const uint8_t COLOUR_0_BITS, const uint8_t COLOUR_1_BITS, const uint8_t COLOUR_2_BITS, const uint8_t COLOUR_3_BITS
 	>
 	class ColourFormat {
+	private:
+		static_assert(COLOUR_0 != COLOUR_NONE, "SolaireCPP : channel 0 cannot be COLOUR_NONE");
+		static_assert(COLOUR_0_BITS > 0, "SolaireCPP : channel 0 must have bits");
+		static_assert(! (COLOUR_1_BITS == 0 && COLOUR_2_BITS > 0), "SolaireCPP : ColourFormat channel 1 cannot be empty when channel 2 is not empty");
+		static_assert(! (COLOUR_1_BITS == 0 && COLOUR_3_BITS > 0), "SolaireCPP : ColourFormat channel 1 cannot be empty when channel 3 is not empty");
+		static_assert(! (COLOUR_2_BITS == 0 && COLOUR_3_BITS > 0), "SolaireCPP : ColourFormat channel 2 cannot be empty when channel 3 is not empty");
+
+		static_assert(! (COLOUR_1 == COLOUR_NONE && COLOUR_1_BITS > 0), "SolaireCPP : ColourFormat channel 1 cannot be COLOUR_NONE when it has bits");
+		static_assert(! (COLOUR_2 == COLOUR_NONE && COLOUR_2_BITS > 0), "SolaireCPP : ColourFormat channel 2 cannot be COLOUR_NONE when it has bits");
+		static_assert(! (COLOUR_3 == COLOUR_NONE && COLOUR_3_BITS > 0), "SolaireCPP : ColourFormat channel 3 cannot be COLOUR_NONE when it has bits");
+
+		static_assert(! (COLOUR_1 != COLOUR_NONE && COLOUR_1_BITS == 0), "SolaireCPP : ColourFormat channel 1 must be COLOUR_NONE when it has no bits");
+		static_assert(! (COLOUR_2 != COLOUR_NONE && COLOUR_2_BITS == 0), "SolaireCPP : ColourFormat channel 2 must be COLOUR_NONE when it has no bits");
+		static_assert(! (COLOUR_3 != COLOUR_NONE && COLOUR_3_BITS == 0), "SolaireCPP : ColourFormat channel 3 must be COLOUR_NONE when it has no bits");
+
+		static_assert(((COLOUR_0 == COLOUR_RED) + (COLOUR_1 == COLOUR_RED) + (COLOUR_2 == COLOUR_RED) + (COLOUR_3 == COLOUR_RED)) <= 1, "SolaireCPP : ColourFormat only one channel can be COLOUR_RED");
+		static_assert(((COLOUR_0 == COLOUR_GREEN) + (COLOUR_1 == COLOUR_GREEN) + (COLOUR_2 == COLOUR_GREEN) + (COLOUR_3 == COLOUR_GREEN)) <= 1, "SolaireCPP : ColourFormat only one channel can be COLOUR_GREEN");
+		static_assert(((COLOUR_0 == COLOUR_BLUE) + (COLOUR_1 == COLOUR_BLUE) + (COLOUR_2 == COLOUR_BLUE) + (COLOUR_3 == COLOUR_BLUE)) <= 1, "SolaireCPP : ColourFormat only one channel can be COLOUR_BLUE");
+		static_assert(((COLOUR_0 == COLOUR_ALPHA) + (COLOUR_1 == COLOUR_ALPHA) + (COLOUR_2 == COLOUR_ALPHA) + (COLOUR_3 == COLOUR_ALPHA)) <= 1, "SolaireCPP : ColourFormat only one channel can be COLOUR_RED");
 	public:
 		typedef uint8_t ChannelColour;
 		typedef int32_t ChannelIndex;
@@ -91,7 +110,7 @@ namespace Solaire{
 				aChannel == 1	? COLOUR_1_BITS :
 				aChannel == 2	? COLOUR_2_BITS :
 				aChannel == 3	? COLOUR_3_BITS :
-				-1;
+				0;
 		}
 
 		static constexpr int32_t GetColourBits(const ChannelColour aColour) {
