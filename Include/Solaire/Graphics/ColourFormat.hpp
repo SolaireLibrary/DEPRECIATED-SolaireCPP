@@ -209,7 +209,7 @@ namespace Solaire{
 	using ColourFormatRGB = ColourFormat<COLOUR_RED, COLOUR_GREEN, COLOUR_BLUE, COLOUR_NONE, BITS, BITS, BITS, 0>;
 
 	template<const uint8_t BITS>
-	using ColourFormatRGBA = ColourFormat<COLOUR_RED, COLOUR_GREEN, COLOUR_BLUE, COLOUR_ALPHA, BITS, BITS BITS, BITS>;
+	using ColourFormatRGBA = ColourFormat<COLOUR_RED, COLOUR_GREEN, COLOUR_BLUE, COLOUR_ALPHA, BITS, BITS, BITS, BITS>;
 
 	template<const uint8_t BITS>
 	using ColourFormatRBG = ColourFormat<COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN, COLOUR_NONE, BITS, BITS, BITS, 0>;
