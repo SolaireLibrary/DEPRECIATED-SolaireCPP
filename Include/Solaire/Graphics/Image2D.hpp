@@ -44,28 +44,27 @@ namespace Solaire{
 	class Image2D {
 	public:
 		typedef COLOUR Colour;
-		typedef Image2D<RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS> _Image2D;
 	private:
 		Allocator& mAllocator;
 		void* const mData;
 		const uint16_t mWidth;
 		const uint16_t mHeight;
 	private:
-		Image2D(const Image2D&) = delete;
-		Image2D(Image2D&&) = delete;
-		Image2D& operator=(const Image2D&) = delete;
-		Image2D& operator=(Image2D&&) = delete;
+		Image2D(const Image2D<COLOUR>&) = delete;
+		Image2D(Image2D<COLOUR>&&) = delete;
+		Image2D<COLOUR>& operator=(const Image2D<COLOUR>&) = delete;
+		Image2D<COLOUR>& operator=(Image2D<COLOUR>&&) = delete;
 
 		static uint32_t CalculateAllocationSize(const uint32_t aWidth, const uint32_t aHeight) {
 			return static_cast<uint32_t>(CeilToMultiple<float>(
 				static_cast<float>(aWidth * aHeight * Colour::BITS_TOTAL),
 				8.f
-			) / 8.f;
+			) / 8.f);
 		}
 	public:
 		Image2D(Allocator& aAllocator, const uint32_t aWidth, const uint32_t aHeight) :
 			mAllocator(aAllocator),
-			mData(aAllocator.Allocate(CalculateAllocationSize(aWidth, aHeight)),
+			mData(aAllocator.Allocate(CalculateAllocationSize(aWidth, aHeight))),
 			mWidth(aWidth),
 			mHeight(aHeight)
 		{}
@@ -86,7 +85,7 @@ namespace Solaire{
 			return mHeight;
 		}
 
-		static SOLAIRE_EXPORT_CALL uint32_t RawSize() const{
+		uint32_t SOLAIRE_EXPORT_CALL RawSize() const{
 			return CalculateAllocationSize(mWidth, mHeight);
 		}
 
@@ -98,7 +97,7 @@ namespace Solaire{
 			return mData;
 		}
 
-		Colour::Vector SOLAIRE_EXPORT_CALL GetPixel(const uint32_t aX, const uint32_t aY)  const {
+		typename Colour::Vector SOLAIRE_EXPORT_CALL GetPixel(const uint32_t aX, const uint32_t aY)  const {
 			const uint32_t index = RowMajorOrder::Index<uint32_t>(aX, aY, mWidth, mHeight);
 
 			enum {
@@ -128,7 +127,7 @@ namespace Solaire{
 			}
 		}
 
-		void SOLAIRE_EXPORT_CALL SetPixel(const uint32_t aX, const uint32_t aY, Colour::Vector aColour) {
+		void SOLAIRE_EXPORT_CALL SetPixel(const uint32_t aX, const uint32_t aY, typename Colour::Vector aColour) {
 			const uint32_t index = RowMajorOrder::Index<uint32_t>(aX, aY, mWidth, mHeight);
 
 			enum {
