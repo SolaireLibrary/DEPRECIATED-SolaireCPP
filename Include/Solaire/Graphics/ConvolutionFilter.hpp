@@ -147,7 +147,7 @@ namespace Solaire { namespace ConvolutionFilter{
 
 			for(int32_t i = 0; i < aWidth; ++i) {
 				for(int32_t j = 0; j < aHeight; ++j) {
-					kernalSum += aFilter[RowMajorOrder::Index<int32_t>(i, j, aWidth, aHeight)];
+					kernalSum += aFilter[RowMajorOrder<int32_t>::Index(i, j, aWidth, aHeight)];
 				}
 			}
 
@@ -163,7 +163,7 @@ namespace Solaire { namespace ConvolutionFilter{
 						for(int32_t j = 0; j < aHeight; ++j) {
 							const int32_t j2 = y + j - halfHeight;
 							pixel = _Functions::GetPixel(aImage, i2, j2, aEdgeMode);
-							accumulator += pixel * aFilter[RowMajorOrder::Index<int32_t>(i, j, aWidth, aHeight)];
+							accumulator += pixel * aFilter[RowMajorOrder<int32_t>::Index>(i, j, aWidth, aHeight)];
 						}
 					}
 

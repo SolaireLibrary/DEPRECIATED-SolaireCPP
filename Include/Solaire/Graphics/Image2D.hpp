@@ -98,16 +98,16 @@ namespace Solaire{
 		}
 
 		typename Colour::Vector SOLAIRE_EXPORT_CALL GetPixel(const uint32_t aX, const uint32_t aY)  const {
-			const uint32_t index = RowMajorOrder::Index<uint32_t>(aX, aY, mWidth, mHeight);
+			const uint32_t index = RowMajorOrder<uint32_t>::Index(aX, aY, mWidth, mHeight);
 
 			enum {
 				ELEMENT_BITS = sizeof(Colour::MaxChannel) * 8
 			};
 
 			if(Colour::IS_BYTE_ALIGNED) {
-				uint8_t buf[Colour::BYTES_TOTAL];
-				std::memcpy(buf, static_cast<const uint8_t*>(mData) + (index * Colour::BYTES_TOTAL), Colour::BYTES_TOTAL);
-				return *static_cast<const Colour::Vector*>(buf);
+				Colour::Vector tmp;
+				std::memcpy(&tmp, static_cast<const uint8_t*>(mData) + (index * Colour::BYTES_TOTAL), Colour::BYTES_TOTAL);
+				return tmp;
 			}else {
 				BitStream bitStream(mData);
 				bitStream.IncrementBit(index * Colour::BITS_TOTAL);
@@ -128,7 +128,7 @@ namespace Solaire{
 		}
 
 		void SOLAIRE_EXPORT_CALL SetPixel(const uint32_t aX, const uint32_t aY, typename Colour::Vector aColour) {
-			const uint32_t index = RowMajorOrder::Index<uint32_t>(aX, aY, mWidth, mHeight);
+			const uint32_t index = RowMajorOrder<uint32_t>::Index(aX, aY, mWidth, mHeight);
 
 			enum {
 				ELEMENT_BITS = sizeof(Colour::MaxChannel) * 8

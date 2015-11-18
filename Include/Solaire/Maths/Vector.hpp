@@ -56,7 +56,7 @@ namespace Solaire{
 		Vector(const std::initializer_list<Scalar> aScalars) throw() {
 			uint32_t i = 0;
 
-			for(ScalarPass i scalar : aScalars) {
+			for(ScalarPass scalar : aScalars) {
 				mVector[i] = scalar;
 				++i;
 				if(i == LENGTH) return;
