@@ -113,15 +113,25 @@ namespace Solaire{
 				bitStream.IncrementBit(index * Colour::BITS_TOTAL);
 
 				Colour::Vector buf;
-				if(Colour::BITS_RED > 0)	bitStream.ReadBits(&buf[Colour::INDEX_RED], Colour::BITS_RED);
-				if(Colour::BITS_GREEN > 0)	bitStream.ReadBits(&buf[Colour::INDEX_GREEN], Colour::BITS_GREEN);
-				if(Colour::BITS_BLUE > 0)	bitStream.ReadBits(&buf[Colour::INDEX_BLUE], Colour::BITS_BLUE);
-				if(Colour::BITS_ALPHA > 0)	bitStream.ReadBits(&buf[Colour::INDEX_ALPHA], Colour::BITS_ALPHA);
+				if(Colour::BITS_RED > 0) {
+					buf[Colour::INDEX_RED] = 0;
+					bitStream.ReadBits(&buf[Colour::INDEX_RED], Colour::BITS_RED);
+				}
 
-				if(Colour::BITS_RED > 0)	buf[Colour::INDEX_RED] >>= ELEMENT_BITS - Colour::BITS_RED;
-				if(Colour::BITS_GREEN > 0)	buf[Colour::INDEX_GREEN] >>= ELEMENT_BITS - Colour::BITS_GREEN;
-				if(Colour::BITS_BLUE > 0)	buf[Colour::INDEX_BLUE] >>= ELEMENT_BITS - Colour::BITS_BLUE;
-				if(Colour::BITS_ALPHA > 0)	buf[Colour::INDEX_ALPHA] >>= ELEMENT_BITS - Colour::BITS_ALPHA;
+				if(Colour::BITS_GREEN > 0) {
+					buf[Colour::INDEX_GREEN] = 0;
+					bitStream.ReadBits(&buf[Colour::INDEX_GREEN], Colour::BITS_GREEN);
+				}
+
+				if(Colour::BITS_BLUE > 0) {
+					buf[Colour::INDEX_BLUE] = 0;
+					bitStream.ReadBits(&buf[Colour::INDEX_BLUE], Colour::BITS_BLUE);
+				}
+
+				if(Colour::BITS_ALPHA > 0) {
+					buf[Colour::INDEX_ALPHA] = 0;
+					bitStream.ReadBits(&buf[Colour::INDEX_ALPHA], Colour::BITS_ALPHA);
+				}
 
 				return buf;
 			}
@@ -139,11 +149,6 @@ namespace Solaire{
 			}else {
 				BitStream bitStream(mData);
 				bitStream.IncrementBit(index *Colour::BITS_TOTAL);
-
-				if(Colour::BITS_RED > 0)	aColour[Colour::INDEX_RED] <<= ELEMENT_BITS - Colour::BITS_RED;
-				if(Colour::BITS_GREEN > 0)	aColour[Colour::INDEX_GREEN] <<= ELEMENT_BITS - Colour::BITS_GREEN;
-				if(Colour::BITS_BLUE > 0)	aColour[Colour::INDEX_BLUE] <<= ELEMENT_BITS - Colour::BITS_BLUE;
-				if(Colour::BITS_ALPHA > 0)	aColour[Colour::INDEX_ALPHA] <<= ELEMENT_BITS - Colour::BITS_ALPHA;
 
 				if(Colour::BITS_RED > 0)	bitStream.WriteBits(&aColour[Colour::INDEX_RED], Colour::BITS_RED);
 				if(Colour::BITS_GREEN > 0)	bitStream.WriteBits(&aColour[Colour::INDEX_GREEN], Colour::BITS_GREEN);

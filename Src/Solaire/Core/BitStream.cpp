@@ -191,7 +191,7 @@ namespace Solaire{
 	}
 
 	void BitStream::AlignByteBegin() throw() {
-		mMask = 0;
+		mMask = 1;
 	}
 
 	void BitStream::AlignByteEnd() throw() {
@@ -201,7 +201,7 @@ namespace Solaire{
 	uint8_t BitStream::Read8() throw() {
 		uint8_t buf = 0;
 
-		if(mMask == 0) {
+		if(mMask == 1) {
 			buf = *mByte;
 			++mByte;
 		}else {
@@ -218,7 +218,7 @@ namespace Solaire{
 	uint16_t BitStream::Read16() throw() {
 		uint16_t buf = 0;
 
-		if(mMask == 0) {
+		if(mMask == 1) {
 			buf = *reinterpret_cast<const uint16_t*>(mByte);
 			mByte += 2;
 		}else {
@@ -235,7 +235,7 @@ namespace Solaire{
 	uint32_t BitStream::Read32() throw() {
 		uint32_t buf = 0;
 
-		if(mMask == 0) {
+		if(mMask == 1) {
 			buf = *reinterpret_cast<const uint32_t*>(mByte);
 			mByte += 4;
 		}else {
@@ -252,7 +252,7 @@ namespace Solaire{
 	uint64_t BitStream::Read64() throw() {
 		uint64_t buf = 0;
 
-		if(mMask == 0) {
+		if(mMask == 1) {
 			buf = *reinterpret_cast<const uint64_t*>(mByte);
 			mByte += 8;
 		}else {
@@ -267,7 +267,7 @@ namespace Solaire{
 	}
 
 	void BitStream::Write8(const uint8_t aValue) throw() {
-		if(mMask == 0) {
+		if(mMask == 1) {
 			*mByte = aValue;
 			++mByte;
 		}else {
@@ -284,7 +284,7 @@ namespace Solaire{
 	}
 
 	void BitStream::Write16(const uint16_t aValue) throw() {
-		if(mMask == 0) {
+		if(mMask == 1) {
 			*reinterpret_cast<uint16_t*>(mByte) = aValue;
 			mByte += 2;
 		}else {
@@ -301,7 +301,7 @@ namespace Solaire{
 	}
 
 	void BitStream::Write32(const uint32_t aValue) throw() {
-		if(mMask == 0) {
+		if(mMask == 1) {
 			*reinterpret_cast<uint32_t*>(mByte) = aValue;
 			mByte += 4;
 		}else {
@@ -318,7 +318,7 @@ namespace Solaire{
 	}
 
 	void BitStream::Write64(const uint64_t aValue) throw() {
-		if(mMask == 0) {
+		if(mMask == 1) {
 			*reinterpret_cast<uint64_t*>(mByte) = aValue;
 			mByte += 8;
 		}else {
