@@ -77,6 +77,16 @@ namespace Solaire{
 			BITS_ALPHA		=	ALPHA_BITS,
 			BITS_TOTAL		=	BITS_RED + BITS_BLUE + BITS_GREEN + BITS_ALPHA,
 
+			MIN_RED			=	0,
+			MIN_GREEN		=	0,
+			MIN_BLUE		=	0,
+			MIN_ALPHA		=	0,
+
+			MAX_RED			=	MaxValue(BITS_RED),
+			MAX_GREEN		=	MaxValue(BITS_GREEN),
+			MAX_BLUE		=	MaxValue(BITS_BLUE),
+			MAX_ALPHA		=	MaxValue(BITS_ALPHA),
+
 			IS_BYTE_ALIGNED	= ((RED_BITS & 7) | (GREEN_BITS & 7) | (BLUE_BITS & 7) | (ALPHA_BITS & 7)) == 0 ? 1 : 0,
 			BYTES_TOTAL		= IS_BYTE_ALIGNED ? BITS_TOTAL / 8 : -1,
 
