@@ -56,37 +56,37 @@ namespace Solaire{
 		};
 
 		template<class T>
-		static constexpr int8_t BorrowPosition(const T aA, const T aB);
+		static constexpr int8_t BorrowPosition(const T aValueA, const T aB);
 
 		template<>
-		constexpr int8_t BorrowPosition<uint8_t>(const uint8_t aByteA, const uint8_t aByteB) {
+		constexpr int8_t BorrowPosition<uint8_t>(const uint8_t aValueA, const uint8_t aValueB) {
 			return
-				BORROW_TABLE[aByteA & 15][aByteB & 15] != -1 ? BORROW_TABLE[aByteA & 15][aByteB & 15] :
-				BORROW_TABLE[aByteA >> 4][aByteB >> 4] != -1 ? BORROW_TABLE[aByteA >> 4][aByteB >> 4] + 4 :
+				BORROW_TABLE[aValueA & 15][aValueB & 15] != -1 ? BORROW_TABLE[aValueA & 15][aValueB & 15] :
+				BORROW_TABLE[aValueA >> 4][aValueB >> 4] != -1 ? BORROW_TABLE[aValueA >> 4][aValueB >> 4] + 4 :
 				-1;
 		}
 
 		template<>
-		constexpr int8_t BorrowPosition<uint16_t>(const uint16_t aByteA, const uint16_t aByteB) {
+		constexpr int8_t BorrowPosition<uint16_t>(const uint16_t aValueA, const uint16_t aValueB) {
 			return
-				BorrowPosition<uint8_t>(aByteA & UINT8_MAX, aByteB & UINT8_MAX) != -1 ? BorrowPosition<uint8_t>(aByteA & 255, aByteB & 255) :
-				BorrowPosition<uint8_t>(aByteA >> 8, aByteB >> 8) != -1 ? BorrowPosition<uint8_t>(aByteA >> 8, aByteB >> 8) + 8 :
+				BorrowPosition<uint8_t>(aValueA & UINT8_MAX, aValueB & UINT8_MAX) != -1 ? BorrowPosition<uint8_t>(aValueA & 255, aValueB & 255) :
+				BorrowPosition<uint8_t>(aValueA >> 8, aValueB >> 8) != -1 ? BorrowPosition<uint8_t>(aValueA >> 8, aValueB >> 8) + 8 :
 				-1;
 		}
 
 		template<>
-		constexpr int8_t BorrowPosition<uint32_t>(const uint32_t aByteA, const uint32_t aByteB) {
+		constexpr int8_t BorrowPosition<uint32_t>(const uint32_t aValueA, const uint32_t aValueB) {
 			return
-				BorrowPosition<uint16_t>(aByteA & UINT16_MAX, aByteB & UINT16_MAX) != -1 ? BorrowPosition<uint16_t>(aByteA & UINT16_MAX, aByteB & UINT16_MAX) :
-				BorrowPosition<uint16_t>(aByteA >> 16, aByteB >> 16) != -1 ? BorrowPosition<uint16_t>(aByteA >> 16, aByteB >> 16) + 16 :
+				BorrowPosition<uint16_t>(aValueA & UINT16_MAX, aValueB & UINT16_MAX) != -1 ? BorrowPosition<uint16_t>(aValueA & UINT16_MAX, aValueB & UINT16_MAX) :
+				BorrowPosition<uint16_t>(aValueA >> 16, aValueB >> 16) != -1 ? BorrowPosition<uint16_t>(aValueA >> 16, aValueB >> 16) + 16 :
 				-1;
 		}
 
 		template<>
-		constexpr int8_t BorrowPosition<uint64_t>(const uint64_t aByteA, const uint64_t aByteB) {
+		constexpr int8_t BorrowPosition<uint64_t>(const uint64_t aValueA, const uint64_t aValueB) {
 			return
-				BorrowPosition<uint32_t>(aByteA & UINT32_MAX, aByteB & UINT32_MAX) != -1 ? BorrowPosition<uint32_t>(aByteA & UINT32_MAX, aByteB & UINT32_MAX) :
-				BorrowPosition<uint32_t>(aByteA >> 32L, aByteB >> 32L) != -1 ? BorrowPosition<uint32_t>(aByteA >> 32L, aByteB >> 32L) + 32 :
+				BorrowPosition<uint32_t>(aValueA & UINT32_MAX, aValueB & UINT32_MAX) != -1 ? BorrowPosition<uint32_t>(aValueA & UINT32_MAX, aValueB & UINT32_MAX) :
+				BorrowPosition<uint32_t>(aValueA >> 32L, aValueB >> 32L) != -1 ? BorrowPosition<uint32_t>(aValueA >> 32L, aValueB >> 32L) + 32 :
 				-1;
 		}
 	}
