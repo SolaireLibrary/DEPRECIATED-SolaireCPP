@@ -55,6 +55,10 @@ namespace Solaire{
 		inline bool DetachFrom(Composite& aComposite) {
 			return aComposite.Detach(*this);
 		}
+
+		inline bool IsAttachedTo(const Composite& aComposite) const {
+			return aComposite.IsAttached(*this);
+		}
 	};
 
 }

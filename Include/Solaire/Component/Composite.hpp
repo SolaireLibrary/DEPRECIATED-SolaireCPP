@@ -43,6 +43,7 @@ namespace Solaire{
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Attach(Component&) = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Detach(Component&) = 0;
+		virtual bool SOLAIRE_EXPORT_CALL IsAttached(const Component&) const = 0;
 
 		virtual uint32_t SOLAIRE_EXPORT_CALL GetComponentCount() const = 0;
 		virtual Component& SOLAIRE_EXPORT_CALL GetComponent(const uint32_t) const = 0;
