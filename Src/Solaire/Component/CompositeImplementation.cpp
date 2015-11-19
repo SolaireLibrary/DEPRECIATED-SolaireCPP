@@ -69,7 +69,7 @@ namespace Solaire{
 	}
 
 	Component* SOLAIRE_EXPORT_CALL CompositeImplementation::GetComponent(const uint32_t aIndex) const throw() {
-		return aIndex >= mComponents.Size() ? nullptr : mComponents[i].Get();
+		return aIndex >= mComponents.Size() ? nullptr : mComponents[aIndex];
 	}
 
 	Component* SOLAIRE_EXPORT_CALL CompositeImplementation::GetComponentWithID(const ComponentID aID) const throw() {

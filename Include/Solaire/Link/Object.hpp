@@ -39,11 +39,10 @@ namespace Solaire{ namespace Link{
 
 	class SOLAIRE_EXPORT_API Object{
 	private:
-		Object(const Object&) = delete;
-		Object(Object&&) = delete;
-		Object& operator=(const Object&) = delete;
-		Object& operator=(Object&&) = delete;
-		~Object() = delete;
+		//Object(const Object&) = delete;
+		//Object(Object&&) = delete;
+		//Object& operator=(const Object&) = delete;
+		//Object& operator=(Object&&) = delete;
 	public:
 		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
 		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
