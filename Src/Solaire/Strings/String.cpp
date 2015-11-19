@@ -138,7 +138,9 @@ namespace Solaire{
     }
 
     String::Reference String::PushBack(Type aChar){
-        return mContainer.InsertBefore(mContainer.end() - 1, aChar);
+		Reference ref = mContainer.Back() = aChar;
+		mContainer.PushBack('\0');
+		return ref;
     }
 
     String::Reference String::PushFront(Type aChar){

@@ -137,13 +137,13 @@ namespace Solaire{
             return *this;
         }
 
-        template<class T>
+        /*template<class T>
         String& operator+=(const T& aValue){
             std::stringstream ss;
             ss << aValue;
             ss >> *this;
             return *this;
-        }
+        }*/
 
         //C-String conversion
         ConstPointer CString() const;

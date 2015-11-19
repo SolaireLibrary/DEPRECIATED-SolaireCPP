@@ -70,9 +70,10 @@ namespace Solaire{
             Type* newData = static_cast<Type*>(mAllocator->Allocate(sizeof(Type) * newSize));
 
             for(Index i = 0; i < mHead; ++i){
-                Type* const address = mData + i;
-                new(newData + i) Type(std::move(*address));
-                address->~Type();
+                Type* const oldAddress = mData + i;
+				Type* const newAddress = newData + i;
+                new(newAddress) Type(std::move(*oldAddress));
+				oldAddress->~Type();
 		    }
 
             mAllocator->Deallocate(mData);
@@ -91,15 +92,20 @@ namespace Solaire{
 
         void ShiftUp(const ConstPointer aPosition){
             if(aPosition < mData || aPosition >= mData + mHead) throw std::runtime_error("DynamicArray : Position is out of bounds");
-            if(mHead >= mSize) IncreaseSize();
-            ++mHead;
+			const Index position = aPosition - mData;
+            if(mHead >= mSize) IncreaseSize();	//! \bug Inserts wrong value when array resizes
+			++mHead;
 
-            const Index end = aPosition - mData;
+			Type* i = mData + mHead - 1;
+			Type* j = i - 1;
+			Type* const end = mData + position;
 
-            new(mData + mHead - 1) Type(std::move(mData[mHead - 2]));
-            for(Index i = mHead - 2; i != end; --i){
-                mData[i] = std::move(mData[i - 1]);
-            }
+			while(j > end) {
+				new(i) Type(std::move(*j));
+				j->~Type();
+				--i;
+				--j;
+			}
         }
 	public:
 		static Index MaxCapacity(){
