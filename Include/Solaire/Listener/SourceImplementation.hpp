@@ -47,11 +47,11 @@ namespace Solaire{
 
 		// Inherited from Source
 
-		bool SOLAIRE_EXPORT_API AddListener(Listener&) throw() override;
-		bool SOLAIRE_EXPORT_API RemoveListener(Listener&) throw() override;
-		bool SOLAIRE_EXPORT_API HasListener(const Listener&)const throw() override;
-		uint32_t SOLAIRE_EXPORT_API GetListenerCount() const throw() override;
-		Listener& SOLAIRE_EXPORT_API GetListener(const uint32_t) const throw() override;
+		bool SOLAIRE_EXPORT_CALL AddListener(Listener&) throw() override;
+		bool SOLAIRE_EXPORT_CALL RemoveListener(Listener&) throw() override;
+		bool SOLAIRE_EXPORT_CALL HasListener(const Listener&)const throw() override;
+		uint32_t SOLAIRE_EXPORT_CALL GetListenerCount() const throw() override;
+		Listener& SOLAIRE_EXPORT_CALL GetListener(const uint32_t) const throw() override;
 	};
 
 }

@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_LISTENER_HPP
-#define SOLAIRE_LISTENER_HPP
+#ifndef SOLAIRE_COMPONENT_COMPONENT_HPP
+#define SOLAIRE_COMPONENT_COMPONENT_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -27,33 +27,34 @@
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 26th September 2015
+	Created			: 19th November 2015
 	Last Modified	: 19th November 2015
 */
 
-#include "Source.hpp"
+#include "Composite.hpp"
 
 namespace Solaire{
 
-	class Source;
-
-	class SOLAIRE_EXPORT_API Listener {
+	class SOLAIRE_EXPORT_API Component : public Link::Object {
 	public:
-		inline bool SOLAIRE_EXPORT_CALL Listen(Source& aSource) throw() {
-			return aSource.AddListener(*this);
+		virtual Composite& SOLAIRE_EXPORT_CALL GetComposite() const = 0;
+		virtual bool SOLAIRE_EXPORT_CALL HasComposite() const = 0;
+
+		virtual ComponentID SOLAIRE_EXPORT_CALL GetClassID() const = 0;
+
+		virtual bool SOLAIRE_EXPORT_CALL CanAttachTo(const Composite&) const = 0;
+		virtual bool SOLAIRE_EXPORT_CALL CanDetachFrom(const Composite&) const = 0;
+
+		virtual void SOLAIRE_EXPORT_CALL OnAttachment(Composite&) = 0;
+		virtual void SOLAIRE_EXPORT_CALL OnDetachment(Composite&) = 0;
+
+		inline bool AttachTo(Composite& aComposite) {
+			return aComposite.Attach(*this);
 		}
 
-		inline bool SOLAIRE_EXPORT_CALL Unlisten(Source& aSource) throw() {
-			return aSource.RemoveListener(*this);
+		inline bool DetachFrom(Composite& aComposite) {
+			return aComposite.Detach(*this);
 		}
-
-		inline bool SOLAIRE_EXPORT_CALL IsListening(const Source& aSource) const throw() {
-			return aSource.HasListener(*this);
-		}
-
-		virtual bool SOLAIRE_EXPORT_CALL CanAcceptSource(const Source&) const throw() = 0;
-		virtual void SOLAIRE_EXPORT_CALL OnListen(Source&) throw() = 0;
-		virtual void SOLAIRE_EXPORT_CALL OnUnlisten(const Source&) throw() = 0;
 	};
 
 }

@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_LISTENER_HPP
-#define SOLAIRE_LISTENER_HPP
+#ifndef SOLAIRE_COMPONENT_COMPOSITE_HPP
+#define SOLAIRE_COMPONENT_COMPOSITE_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,40 +20,35 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file Listener.hpp
+	\file Source.hpp
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 26th September 2015
+	Created			: 19th November 2015
 	Last Modified	: 19th November 2015
 */
 
-#include "Source.hpp"
+#include "..\Core\Init.hpp"
+#include "..\Link\Object.hpp"
 
 namespace Solaire{
 
-	class Source;
+	class Component;
+	typedef uint64_t ComponentID;
 
-	class SOLAIRE_EXPORT_API Listener {
+	class SOLAIRE_EXPORT_API Composite : public Link::Object {
 	public:
-		inline bool SOLAIRE_EXPORT_CALL Listen(Source& aSource) throw() {
-			return aSource.AddListener(*this);
-		}
+		virtual bool SOLAIRE_EXPORT_CALL Attach(Component&) = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Detach(Component&) = 0;
 
-		inline bool SOLAIRE_EXPORT_CALL Unlisten(Source& aSource) throw() {
-			return aSource.RemoveListener(*this);
-		}
+		virtual uint32_t SOLAIRE_EXPORT_CALL GetComponentCount() const = 0;
+		virtual Component& SOLAIRE_EXPORT_CALL GetComponent(const uint32_t) const = 0;
 
-		inline bool SOLAIRE_EXPORT_CALL IsListening(const Source& aSource) const throw() {
-			return aSource.HasListener(*this);
-		}
-
-		virtual bool SOLAIRE_EXPORT_CALL CanAcceptSource(const Source&) const throw() = 0;
-		virtual void SOLAIRE_EXPORT_CALL OnListen(Source&) throw() = 0;
-		virtual void SOLAIRE_EXPORT_CALL OnUnlisten(const Source&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL HasComponentWithID(const ComponentID) const = 0;
+		virtual Component& SOLAIRE_EXPORT_CALL GetComponentWithID(const ComponentID) const = 0;
 	};
 
 }

@@ -39,16 +39,16 @@ namespace Solaire{
 
 	class SOLAIRE_EXPORT_API Source {
 	protected:
-		virtual bool SOLAIRE_EXPORT_API CanAcceptListener(const Listener&) throw() = 0;
-		virtual void SOLAIRE_EXPORT_API OnListen(Listener&) throw() = 0;
-		virtual void SOLAIRE_EXPORT_API OnUnlisten(const Listener&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL CanAcceptListener(const Listener&) throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL OnListen(Listener&) throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL OnUnlisten(const Listener&) throw() = 0;
 	public:
-		virtual bool SOLAIRE_EXPORT_API AddListener(Listener&) throw() = 0;
-		virtual bool SOLAIRE_EXPORT_API RemoveListener(Listener&) throw() = 0;
-		virtual bool SOLAIRE_EXPORT_API HasListener(const Listener&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL AddListener(Listener&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL RemoveListener(Listener&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL HasListener(const Listener&) const throw() = 0;
 
-		virtual uint32_t SOLAIRE_EXPORT_API GetListenerCount() const throw() = 0;
-		virtual Listener& SOLAIRE_EXPORT_API GetListener(const uint32_t) const throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL GetListenerCount() const throw() = 0;
+		virtual Listener& SOLAIRE_EXPORT_CALL GetListener(const uint32_t) const throw() = 0;
 	};
 
 }

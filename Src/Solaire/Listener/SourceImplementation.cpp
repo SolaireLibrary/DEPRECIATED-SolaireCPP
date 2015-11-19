@@ -35,7 +35,7 @@ namespace Solaire{
 
 	}
 
-	bool SOLAIRE_EXPORT_API SourceImplementation::AddListener(Listener& aListener) throw() {
+	bool SOLAIRE_EXPORT_CALL SourceImplementation::AddListener(Listener& aListener) throw() {
 		auto it = mListeners.FindFirst(&aListener);
 		if(it != mListeners.end()) return false;
 		if(! CanAcceptListener(aListener)) return false;
@@ -48,7 +48,7 @@ namespace Solaire{
 		return true;
 	}
 
-	bool SOLAIRE_EXPORT_API SourceImplementation::RemoveListener(Listener& aListener) throw() {
+	bool SOLAIRE_EXPORT_CALL SourceImplementation::RemoveListener(Listener& aListener) throw() {
 		auto it = mListeners.FindFirst(&aListener);
 
 		if(it == mListeners.end()) return false;
@@ -57,15 +57,15 @@ namespace Solaire{
 		return true;
 	}
 
-	bool SOLAIRE_EXPORT_API SourceImplementation::HasListener(const Listener& aListener) const throw() {
+	bool SOLAIRE_EXPORT_CALL SourceImplementation::HasListener(const Listener& aListener) const throw() {
 		return mListeners.FindFirst(const_cast<Listener*>(&aListener)) != mListeners.end();
 	}
 
-	uint32_t SOLAIRE_EXPORT_API  SourceImplementation::GetListenerCount() const throw() {
+	uint32_t SOLAIRE_EXPORT_CALL  SourceImplementation::GetListenerCount() const throw() {
 		return mListeners.Size();
 	}
 
-	Listener& SOLAIRE_EXPORT_API  SourceImplementation::GetListener(const uint32_t aIndex) const throw() {
+	Listener& SOLAIRE_EXPORT_CALL  SourceImplementation::GetListener(const uint32_t aIndex) const throw() {
 		return *mListeners[aIndex];
 	}
 
