@@ -55,12 +55,39 @@ namespace Solaire{
 			{ -1,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	-1 }
 		};
 
-		static constexpr int32_t BorrowPosition(const uint8_t aByteA, const uint8_t aByteB) {
-			return
-				BORROW_TABLE[aByteA & 15][aByteB & 15] != -1 ?
-				BORROW_TABLE[aByteA >> 4][aByteB >> 4] + 4 :
-				-1;
+		template<class T>
+		static constexpr int8_t BorrowPosition(const T aA, const T aB);
 
+		template<>
+		constexpr int8_t BorrowPosition<uint8_t>(const uint8_t aByteA, const uint8_t aByteB) {
+			return
+				BORROW_TABLE[aByteA & 15][aByteB & 15] != -1 ? BORROW_TABLE[aByteA & 15][aByteB & 15] :
+				BORROW_TABLE[aByteA >> 4][aByteB >> 4] != -1 ? BORROW_TABLE[aByteA >> 4][aByteB >> 4] + 4 :
+				-1;
+		}
+
+		template<>
+		constexpr int8_t BorrowPosition<uint16_t>(const uint16_t aByteA, const uint16_t aByteB) {
+			return
+				BorrowPosition<uint8_t>(aByteA & UINT8_MAX, aByteB & UINT8_MAX) != -1 ? BorrowPosition<uint8_t>(aByteA & 255, aByteB & 255) :
+				BorrowPosition<uint8_t>(aByteA >> 8, aByteB >> 8) != -1 ? BorrowPosition<uint8_t>(aByteA >> 8, aByteB >> 8) + 8 :
+				-1;
+		}
+
+		template<>
+		constexpr int8_t BorrowPosition<uint32_t>(const uint32_t aByteA, const uint32_t aByteB) {
+			return
+				BorrowPosition<uint16_t>(aByteA & UINT16_MAX, aByteB & UINT16_MAX) != -1 ? BorrowPosition<uint16_t>(aByteA & UINT16_MAX, aByteB & UINT16_MAX) :
+				BorrowPosition<uint16_t>(aByteA >> 16, aByteB >> 16) != -1 ? BorrowPosition<uint16_t>(aByteA >> 16, aByteB >> 16) + 16 :
+				-1;
+		}
+
+		template<>
+		constexpr int8_t BorrowPosition<uint64_t>(const uint64_t aByteA, const uint64_t aByteB) {
+			return
+				BorrowPosition<uint32_t>(aByteA & UINT32_MAX, aByteB & UINT32_MAX) != -1 ? BorrowPosition<uint32_t>(aByteA & UINT32_MAX, aByteB & UINT32_MAX) :
+				BorrowPosition<uint32_t>(aByteA >> 32L, aByteB >> 32L) != -1 ? BorrowPosition<uint32_t>(aByteA >> 32L, aByteB >> 32L) + 32 :
+				-1;
 		}
 	}
 
@@ -184,10 +211,10 @@ namespace Solaire{
 				uint8_t& a = thisBytes[i];
 				const uint8_t& b = otherBytes[i];
 
-				const int32_t borrowPos;
+				const int8_t borrowPos;
 				
 				CHECK_BORROW:
-				borrowPos = Implementation::BorrowPosition(a, b);
+				borrowPos = Implementation::BorrowPosition<uint8_t>(a, b);
 
 				if(borrowPos != -1) {
 					//! \todo borrow bit from left
