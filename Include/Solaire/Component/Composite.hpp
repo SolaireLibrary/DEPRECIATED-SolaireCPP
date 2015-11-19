@@ -48,6 +48,15 @@ namespace Solaire{
 		virtual uint32_t SOLAIRE_EXPORT_CALL GetComponentCount() const throw() = 0;
 		virtual Component* SOLAIRE_EXPORT_CALL GetComponent(const uint32_t) const throw() = 0;
 		virtual Component* SOLAIRE_EXPORT_CALL GetComponentWithID(const ComponentID) const throw() = 0;
+
+		inline bool SOLAIRE_EXPORT_CALL DetachAndDestroy(Component& aComponent) throw() {
+			if(! Detach(aComponent)) {
+				return false;
+			}else {
+				reinterpret_cast<Link::Object&>(aComponent).Free();
+				return true;
+			}
+		}
 	};
 
 }
