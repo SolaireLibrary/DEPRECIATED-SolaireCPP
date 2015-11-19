@@ -36,7 +36,7 @@
 namespace Solaire{
 
 	namespace Implementation {
-		static constexpr int8_t BORROW_TABLE[16][16] = {
+		static constexpr int8_t BORROW_POSITION_TABLE[16][16] = {
 			{ -1,	0,	1,	0,	2,	0,	1,	0,	3,	0,	1,	0,	2,	0,	1,	0 },
 			{ -1,	-1,	1,	1,	2,	2,	1,	1,	3,	3,	1,	1,	2,	2,	1,	1 },
 			{ -1,	0,	-1,	0,	2,	0,	2,	0,	3,	0,	3,	0,	2,	0,	2,	0 },
@@ -56,18 +56,18 @@ namespace Solaire{
 		};
 
 		template<class T>
-		static constexpr int8_t BorrowPosition(const T aValueA, const T aB);
+		static constexpr int8_t BorrowPosition(const T aValueA, const T aB) throw();
 
 		template<>
-		constexpr int8_t BorrowPosition<uint8_t>(const uint8_t aValueA, const uint8_t aValueB) {
+		constexpr int8_t BorrowPosition<uint8_t>(const uint8_t aValueA, const uint8_t aValueB) throw() {
 			return
-				BORROW_TABLE[aValueA & 15][aValueB & 15] != -1 ? BORROW_TABLE[aValueA & 15][aValueB & 15] :
-				BORROW_TABLE[aValueA >> 4][aValueB >> 4] != -1 ? BORROW_TABLE[aValueA >> 4][aValueB >> 4] + 4 :
+				BORROW_POSITION_TABLE[aValueA & 15][aValueB & 15] != -1 ? BORROW_POSITION_TABLE[aValueA & 15][aValueB & 15] :
+				BORROW_POSITION_TABLE[aValueA >> 4][aValueB >> 4] != -1 ? BORROW_POSITION_TABLE[aValueA >> 4][aValueB >> 4] + 4 :
 				-1;
 		}
 
 		template<>
-		constexpr int8_t BorrowPosition<uint16_t>(const uint16_t aValueA, const uint16_t aValueB) {
+		constexpr int8_t BorrowPosition<uint16_t>(const uint16_t aValueA, const uint16_t aValueB) throw() {
 			return
 				BorrowPosition<uint8_t>(aValueA & UINT8_MAX, aValueB & UINT8_MAX) != -1 ? BorrowPosition<uint8_t>(aValueA & 255, aValueB & 255) :
 				BorrowPosition<uint8_t>(aValueA >> 8, aValueB >> 8) != -1 ? BorrowPosition<uint8_t>(aValueA >> 8, aValueB >> 8) + 8 :
@@ -75,7 +75,7 @@ namespace Solaire{
 		}
 
 		template<>
-		constexpr int8_t BorrowPosition<uint32_t>(const uint32_t aValueA, const uint32_t aValueB) {
+		constexpr int8_t BorrowPosition<uint32_t>(const uint32_t aValueA, const uint32_t aValueB) throw() {
 			return
 				BorrowPosition<uint16_t>(aValueA & UINT16_MAX, aValueB & UINT16_MAX) != -1 ? BorrowPosition<uint16_t>(aValueA & UINT16_MAX, aValueB & UINT16_MAX) :
 				BorrowPosition<uint16_t>(aValueA >> 16, aValueB >> 16) != -1 ? BorrowPosition<uint16_t>(aValueA >> 16, aValueB >> 16) + 16 :
@@ -83,7 +83,7 @@ namespace Solaire{
 		}
 
 		template<>
-		constexpr int8_t BorrowPosition<uint64_t>(const uint64_t aValueA, const uint64_t aValueB) {
+		constexpr int8_t BorrowPosition<uint64_t>(const uint64_t aValueA, const uint64_t aValueB) throw() {
 			return
 				BorrowPosition<uint32_t>(aValueA & UINT32_MAX, aValueB & UINT32_MAX) != -1 ? BorrowPosition<uint32_t>(aValueA & UINT32_MAX, aValueB & UINT32_MAX) :
 				BorrowPosition<uint32_t>(aValueA >> 32L, aValueB >> 32L) != -1 ? BorrowPosition<uint32_t>(aValueA >> 32L, aValueB >> 32L) + 32 :
@@ -95,7 +95,7 @@ namespace Solaire{
 	class BinaryContainer {
 	private:
 		template<class T, const uint32_t COUNT>
-		static void AddFn(void*& aFirst, const void*& aSecond, bool& aCarryBit) {
+		static void AddFn(void*& aFirst, const void*& aSecond, bool& aCarryBit) throw() {
 			T*& first = reinterpret_cast<T*&>(aFirst);
 			const T*& second = reinterpret_cast<const T*&>(aSecond);
 
@@ -130,7 +130,7 @@ namespace Solaire{
 		}
 
 		template<class T, const uint32_t COUNT>
-		static void OrFn(void*& aFirst, const void*& aSecond) {
+		static void OrFn(void*& aFirst, const void*& aSecond) throw() {
 			T*& first = reinterpret_cast<T*&>(aFirst);
 			const T*& second = reinterpret_cast<const T*&>(aSecond);
 
@@ -143,7 +143,7 @@ namespace Solaire{
 		}
 
 		template<class T, const uint32_t COUNT>
-		static void AndFn(void*& aFirst, const void*& aSecond) {
+		static void AndFn(void*& aFirst, const void*& aSecond) throw() {
 			T*& first = reinterpret_cast<T*&>(aFirst);
 			const T*& second = reinterpret_cast<const T*&>(aSecond);
 
@@ -156,7 +156,7 @@ namespace Solaire{
 		}
 
 		template<class T, const uint32_t COUNT>
-		static void XorFn(void*& aFirst, const void*& aSecond) {
+		static void XorFn(void*& aFirst, const void*& aSecond) throw() {
 			T*& first = reinterpret_cast<T*&>(aFirst);
 			const T*& second = reinterpret_cast<const T*&>(aSecond);
 
@@ -180,17 +180,17 @@ namespace Solaire{
 	private:
 		uint8_t mBytes[TOTAL_BYTES / 8];
 	public:
-		BinaryContainer() {
+		BinaryContainer() throw() {
 
 		}
 
-		BinaryContainer(const uint8_t aByte) {
+		BinaryContainer(const uint8_t aByte) throw() {
 			for(uint32_t i = 0; i < TOTAL_BYTES; ++i) {
 				mBytes[i] = aByte;
 			}
 		}
 
-		BinaryContainer<BYTES>& operator+=(const BinaryContainer<BYTES>& aOther) {
+		BinaryContainer<BYTES>& operator+=(const BinaryContainer<BYTES>& aOther) throw() {
 			void* thisBytes = mBytes;
 			void* const otherBytes = aOther.mBytes;
 			bool carryBit = false;
@@ -203,7 +203,7 @@ namespace Solaire{
 			return *this;
 		}
 
-		BinaryContainer<BYTES>& operator-=(const BinaryContainer<BYTES>& aOther) {
+		BinaryContainer<BYTES>& operator-=(const BinaryContainer<BYTES>& aOther) throw() {
 			uint8_t* thisBytes = mBytes;
 			uint8_t* const otherBytes = aOther.mBytes;
 
@@ -211,27 +211,46 @@ namespace Solaire{
 				uint8_t& a = thisBytes[i];
 				const uint8_t& b = otherBytes[i];
 
-				const int8_t borrowPos;
-				
-				CHECK_BORROW:
-				borrowPos = Implementation::BorrowPosition<uint8_t>(a, b);
+				const int8_t borrowPos = Implementation::BorrowPosition<uint8_t>(a, b);
 
 				if(borrowPos != -1) {
-					//! \todo borrow bit from left
-					if(false /*no bits*/){
-
+					bool borrowed = false;
+					//! borrow bit from current byte
+					for(uint32_t j = borrowPos; j < 8; ++i) {
+						const uint8_t mask = 1 << j;
+						if((a & mask) != 0) {
+							a -= mask;
+							borrowed = true;
+							break;
+						}
 					}
-					goto SUBTRACTION;
-				}
 
-				SUBTRACTION:
-				a -= b;
+					// borrow bit from left byte
+					if(! borrowed) {
+						for (uint32_t j = i; j < TOTAL_BYTES; ++i) {
+							uint8_t& byte = thisBytes[j];
+							if (byte != 0) {
+								--byte;
+								borrowed = true;
+								break;
+							}
+						}
+					}
+					
+					if(borrowed) {
+						//! \todo perform subtraction with borrowed bit
+					}else{
+						a -= b;
+					}
+				}else {
+					a -= b;
+				}
 			}
 
 			return *this;
 		}
 
-		BinaryContainer<BYTES>& operator|=(const BinaryContainer<BYTES>& aOther) {
+		BinaryContainer<BYTES>& operator|=(const BinaryContainer<BYTES>& aOther) throw() {
 			void* thisBytes = mBytes;
 			void* const otherBytes = aOther.mBytes;
 
@@ -243,7 +262,7 @@ namespace Solaire{
 			return *this;
 		}
 
-		BinaryContainer<BYTES>& operator&=(const BinaryContainer<BYTES>& aOther) {
+		BinaryContainer<BYTES>& operator&=(const BinaryContainer<BYTES>& aOther) throw() {
 			void* thisBytes = mBytes;
 			void* const otherBytes = aOther.mBytes;
 
@@ -255,7 +274,7 @@ namespace Solaire{
 			return *this;
 		}
 
-		BinaryContainer<BYTES>& operator^=(const BinaryContainer<BYTES>& aOther) {
+		BinaryContainer<BYTES>& operator^=(const BinaryContainer<BYTES>& aOther) throw() {
 			void* thisBytes = mBytes;
 			void* const otherBytes = aOther.mBytes;
 
@@ -267,47 +286,47 @@ namespace Solaire{
 			return *this;
 		}
 
-		bool operator==(const BinaryContainer<BYTES>& aOther) const {
+		bool operator==(const BinaryContainer<BYTES>& aOther) const throw() {
 			return std::memcmp(mBytes, aOther.mBytes, TOTAL_BYTES) == 0;
 		}
 
-		bool operator!=(const BinaryContainer<BYTES>& aOther) const {
+		bool operator!=(const BinaryContainer<BYTES>& aOther) const throw() {
 			return std::memcmp(mBytes, aOther.mBytes, TOTAL_BYTES) != 0;
 		}
 
-		bool operator<(const BinaryContainer<BYTES>& aOther) const {
+		bool operator<(const BinaryContainer<BYTES>& aOther) const throw() {
 			return std::memcmp(mBytes, aOther.mBytes, TOTAL_BYTES) < 0;
 		}
 
-		bool operator>(const BinaryContainer<BYTES>& aOther) const {
+		bool operator>(const BinaryContainer<BYTES>& aOther) const throw() {
 			return std::memcmp(mBytes, aOther.mBytes, TOTAL_BYTES) > 0;
 		}
 
-		bool operator<=(const BinaryContainer<BYTES>& aOther) const {
+		bool operator<=(const BinaryContainer<BYTES>& aOther) const throw() {
 			return std::memcmp(mBytes, aOther.mBytes, TOTAL_BYTES) <= 0;
 		}
 
-		bool operator>=(const BinaryContainer<BYTES>& aOther) const {
+		bool operator>=(const BinaryContainer<BYTES>& aOther) const throw() {
 			return std::memcmp(mBytes, aOther.mBytes, TOTAL_BYTES) >= 0;
 		}
 
-		BinaryContainer<BYTES> operator+(const BinaryContainer<BYTES>& aOther) const {
+		BinaryContainer<BYTES> operator+(const BinaryContainer<BYTES>& aOther) const throw() {
 			return BinaryContainer<BYTES>(*this) += aOther;
 		}
 
-		BinaryContainer<BYTES> operator-(const BinaryContainer<BYTES>& aOther) const {
+		BinaryContainer<BYTES> operator-(const BinaryContainer<BYTES>& aOther) const throw() {
 			return BinaryContainer<BYTES>(*this) -= aOther;
 		}
 
-		BinaryContainer<BYTES> operator|(const BinaryContainer<BYTES>& aOther) const {
+		BinaryContainer<BYTES> operator|(const BinaryContainer<BYTES>& aOther) const throw() {
 			return BinaryContainer<BYTES>(*this) |= aOther;
 		}
 
-		BinaryContainer<BYTES> operator&(const BinaryContainer<BYTES>& aOther) const {
+		BinaryContainer<BYTES> operator&(const BinaryContainer<BYTES>& aOther) const throw() {
 			return BinaryContainer<BYTES>(*this) &= aOther;
 		}
 
-		BinaryContainer<BYTES> operator^(const BinaryContainer<BYTES>& aOther) const {
+		BinaryContainer<BYTES> operator^(const BinaryContainer<BYTES>& aOther) const throw() {
 			return BinaryContainer<BYTES>(*this) ^= aOther;
 		}
 
