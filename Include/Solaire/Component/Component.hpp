@@ -37,27 +37,27 @@ namespace Solaire{
 
 	class SOLAIRE_EXPORT_API Component : public Link::Object {
 	public:
-		virtual Composite& SOLAIRE_EXPORT_CALL GetComposite() const = 0;
-		virtual bool SOLAIRE_EXPORT_CALL HasComposite() const = 0;
+		virtual Composite& SOLAIRE_EXPORT_CALL GetComposite() const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL IsAttached() const throw() = 0;
 
-		virtual ComponentID SOLAIRE_EXPORT_CALL GetClassID() const = 0;
+		virtual ComponentID SOLAIRE_EXPORT_CALL GetClassID() const throw() = 0;
 
-		virtual bool SOLAIRE_EXPORT_CALL CanAttachTo(const Composite&) const = 0;
-		virtual bool SOLAIRE_EXPORT_CALL CanDetachFrom(const Composite&) const = 0;
+		virtual bool SOLAIRE_EXPORT_CALL CanAttachTo(const Composite&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL CanDetach() const throw() = 0;
 
-		virtual void SOLAIRE_EXPORT_CALL OnAttachment(Composite&) = 0;
-		virtual void SOLAIRE_EXPORT_CALL OnDetachment(Composite&) = 0;
+		virtual void SOLAIRE_EXPORT_CALL OnAttachment(Composite&) throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL OnDetachment(Composite&) throw() = 0;
 
-		inline bool AttachTo(Composite& aComposite) {
+		inline bool SOLAIRE_EXPORT_CALL AttachTo(Composite& aComposite) throw() {
 			return aComposite.Attach(*this);
 		}
 
-		inline bool DetachFrom(Composite& aComposite) {
-			return aComposite.Detach(*this);
+		inline bool SOLAIRE_EXPORT_CALL Detach() throw() {
+			return GetComposite().Detach(*this);
 		}
 
-		inline bool IsAttachedTo(const Composite& aComposite) const {
-			return aComposite.IsAttached(*this);
+		inline bool SOLAIRE_EXPORT_CALL IsAttachedTo(const Composite& aComposite) const throw() {
+			return IsAttached() ? &GetComposite() == &aComposite : false;
 		}
 	};
 

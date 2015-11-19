@@ -41,15 +41,13 @@ namespace Solaire{
 
 	class SOLAIRE_EXPORT_API Composite : public Link::Object {
 	public:
-		virtual bool SOLAIRE_EXPORT_CALL Attach(Component&) = 0;
-		virtual bool SOLAIRE_EXPORT_CALL Detach(Component&) = 0;
-		virtual bool SOLAIRE_EXPORT_CALL IsAttached(const Component&) const = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Attach(Component&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Detach(Component&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL IsAttached(const Component&) const throw() = 0;
 
-		virtual uint32_t SOLAIRE_EXPORT_CALL GetComponentCount() const = 0;
-		virtual Component& SOLAIRE_EXPORT_CALL GetComponent(const uint32_t) const = 0;
-
-		virtual bool SOLAIRE_EXPORT_CALL HasComponentWithID(const ComponentID) const = 0;
-		virtual Component& SOLAIRE_EXPORT_CALL GetComponentWithID(const ComponentID) const = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL GetComponentCount() const throw() = 0;
+		virtual Component* SOLAIRE_EXPORT_CALL GetComponent(const uint32_t) const throw() = 0;
+		virtual Component* SOLAIRE_EXPORT_CALL GetComponentWithID(const ComponentID) const throw() = 0;
 	};
 
 }
