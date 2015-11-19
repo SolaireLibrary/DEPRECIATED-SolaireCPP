@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_SOURCE_BASE_HPP
-#define SOLAIRE_SOURCE_BASE_HPP
+#ifndef SOLAIRE_SOURCE_IMPLEMENTATION_HPP
+#define SOLAIRE_SOURCE_IMPLEMENTATION_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file SourceBase.hpp
+	\file SourceImplementation.hpp
 	\brief
 	\author
 	Created			: Adam Smith
@@ -28,39 +28,31 @@
 	\version 1.0
 	\date
 	Created			: 26th September 2015
-	Last Modified	: 26th September 2015
+	Last Modified	: 19th November 2015
 */
 
+#include "Source.hpp"
+#include "Listener.hpp"
 #include "..\DataStructures\DynamicArray.hpp"
 
 namespace Solaire{
 
-    class ListenerBase;
+	class SourceImplementation : public Source {
+	private:
+		DynamicArray<Listener*> mListeners;
+	public:
+		SourceImplementation();
+		SourceImplementation(Allocator&);
+		virtual ~SourceImplementation();
 
-    class SourceBase{
-    private:
-        DynamicArray<ListenerBase*> mListeners;
-    protected:
-        virtual void OnListenerAdded(ListenerBase& aListener) = 0;
-        virtual void OnListenerRemoved(ListenerBase& aListener) = 0;
+		// Inherited from Source
 
-        typedef DynamicArray<ListenerBase*>::Iterator ListenerIterator;
-        typedef DynamicArray<ListenerBase*>::ConstIterator ConstListenerIterator;
-
-		ListenerIterator ListenerBegin();
-		ConstListenerIterator ListenerBegin() const;
-		ListenerIterator ListenerEnd();
-		ConstListenerIterator ListenerEnd() const;
-
-        bool AddListener(ListenerBase&);
-        bool RemoveListener(ListenerBase&);
-    public:
-        friend ListenerBase;
-
-		SourceBase();
-		SourceBase(Allocator&);
-        virtual ~SourceBase();
-    };
+		bool SOLAIRE_EXPORT_API AddListener(Listener&) throw() override;
+		bool SOLAIRE_EXPORT_API RemoveListener(Listener&) throw() override;
+		bool SOLAIRE_EXPORT_API HasListener(const Listener&)const throw() override;
+		uint32_t SOLAIRE_EXPORT_API GetListenerCount() const throw() override;
+		Listener& SOLAIRE_EXPORT_API GetListener(const uint32_t) const throw() override;
+	};
 
 }
 

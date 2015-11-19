@@ -28,78 +28,28 @@
 	\version 1.0
 	\date
 	Created			: 26th September 2015
-	Last Modified	: 26th September 2015
+	Last Modified	: 19th November 2015
 */
 
-#include "SourceBase.hpp"
-#include "ListenerBase.hpp"
+#include "..\Core\Init.hpp"
 
 namespace Solaire{
 
-    template<class SourceType, class ListenerType>
-    class Source : private SourceBase
-    {
-    protected:
-        virtual void OnListenerAdded(ListenerType& aListener) = 0;
-        virtual void OnListenerRemoved(ListenerType& aListener) = 0;
+	class Listener;
 
-        typedef typename DynamicArray<ListenerType*>::Iterator ListenerIterator;
-        typedef typename DynamicArray<ListenerType*>::ConstIterator ConstListenerIterator;
+	class SOLAIRE_EXPORT_API Source {
+	protected:
+		virtual bool SOLAIRE_EXPORT_API CanAcceptListener(const Listener&) throw() = 0;
+		virtual void SOLAIRE_EXPORT_API OnListen(Listener&) throw() = 0;
+		virtual void SOLAIRE_EXPORT_API OnUnlisten(const Listener&) throw() = 0;
+	public:
+		virtual bool SOLAIRE_EXPORT_API AddListener(Listener&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_API RemoveListener(Listener&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_API HasListener(const Listener&) const throw() = 0;
 
-        ListenerIterator ListenerBegin(){
-            return reinterpret_cast<ListenerIterator>(SourceBase::ListenerBegin());
-        }
-
-        ConstListenerIterator ListenerBegin() const{
-            return reinterpret_cast<ConstListenerIterator>(SourceBase::ListenerBegin());
-        }
-
-        ListenerIterator ListenerEnd(){
-            return reinterpret_cast<ListenerIterator>(SourceBase::ListenerEnd());
-        }
-
-        ConstListenerIterator ListenerEnd() const{
-            return reinterpret_cast<ConstListenerIterator>(SourceBase::ListenerEnd());
-        }
-
-        // Inherited from SourceBase
-
-        void OnListenerAdded(ListenerBase& aListener){
-            OnListenerAdded(reinterpret_cast<ListenerType&>(aListener));
-        }
-
-        void OnListenerRemoved(ListenerBase& aListener){
-            OnListenerRemoved(reinterpret_cast<ListenerType&>(aListener));
-        }
-    public:
-        friend ListenerType;
-
-		Source() :
-			SourceBase(DEFAULT_ALLOCATOR)
-		{
-			static_assert(std::is_base_of<SourceBase, SourceType>::value, "Ui::Source : SourceType must inherit SourceBase");
-			static_assert(std::is_base_of<ListenerBase, ListenerType>::value, "Ui::Source : ListenerType must inherit ListenerBase");
-		}
-
-        Source(Allocator& aAllocator = GetDefaultAllocator()) :
-            SourceBase(aAllocator)
-        {
-            static_assert(std::is_base_of<SourceBase, SourceType>::value, "Ui::Source : SourceType must inherit SourceBase");
-            static_assert(std::is_base_of<ListenerBase, ListenerType>::value, "Ui::Source : ListenerType must inherit ListenerBase");
-        }
-
-        bool AddListener(ListenerType& aListener){
-            return SourceBase::AddListener(aListener);
-        }
-
-        bool RemoveListener(ListenerType& aListener){
-            return SourceBase::RemoveListener(aListener);
-        }
-
-        virtual ~Source(){
-
-        }
-    };
+		virtual uint32_t SOLAIRE_EXPORT_API GetListenerCount() const throw() = 0;
+		virtual Listener& SOLAIRE_EXPORT_API GetListener(const uint32_t) const throw() = 0;
+	};
 
 }
 
