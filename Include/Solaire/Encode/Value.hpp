@@ -28,22 +28,17 @@
 	\version 1.0
 	\date
 	Created			: 12th November 2015
-	Last Modified	: 12th November 2015
+	Last Modified	: 21st November 2015
 */
 
-#include <map>
-#include <memory>
-#include "..\DataStructures\DynamicArray.hpp"
+#include "..\Core\Init.hpp"
 #include "..\Strings\String.hpp"
-
 #undef GetObject
 
 namespace Solaire{ namespace Encode{
-
-	class Value;
-
-	typedef DynamicArray<Value> Array;
-	typedef std::map<String, Value> Object;
+	
+	class Array;
+	class Object;
 
 	class Value{
 	private:
@@ -59,7 +54,7 @@ namespace Solaire{ namespace Encode{
 			TYPE_OBJECT
 		};
 	private:
-		Allocator* mAllocator;
+		Allocator& mAllocator;
 		union{
 			uint64_t mUint;
 			int64_t mInt;
@@ -70,54 +65,75 @@ namespace Solaire{ namespace Encode{
 		};
 		uint8_t mType;
 	public:
-		Value(Allocator&);
-		Value(const Value&);
-		Value(Value&&);
-		Value(Allocator&, const bool);
-		Value(Allocator&, const uint8_t);
-		Value(Allocator&, const uint16_t);
-		Value(Allocator&, const uint32_t);
-		Value(Allocator&, const uint64_t);
-		Value(Allocator&, const int8_t);
-		Value(Allocator&, const int16_t);
-		Value(Allocator&, const int32_t);
-		Value(Allocator&, const int64_t);
-		Value(Allocator&, const float);
-		Value(Allocator&, const double);
-		Value(Allocator&, const std::string&);
-		~Value();
+		Value(const Value&) throw();
+		Value(Value&&) throw();
 
-		Value& operator=(const Value&);
-		Value& operator=(Value&&);
+		Value() throw();
+		Value(const char) throw();
+		Value(const bool) throw();
+		Value(const uint8_t) throw();
+		Value(const uint16_t) throw();
+		Value(const uint32_t) throw();
+		Value(const uint64_t) throw();
+		Value(const int8_t) throw();
+		Value(const int16_t) throw();
+		Value(const int32_t) throw();
+		Value(const int64_t) throw();
+		Value(const float) throw();
+		Value(const double) throw();
+		Value(const String&) throw();
 
-		bool IsNull() const;
-		bool IsBool() const;
-		bool IsChar() const;
-		bool IsUint() const;
-		bool IsInt() const;
-		bool IsDouble() const;
-		bool IsString() const;
-		bool IsArray() const;
-		bool IsObject() const;
+		Value(Allocator&) throw();
+		Value(Allocator&, const char) throw();
+		Value(Allocator&, const bool) throw();
+		Value(Allocator&, const uint8_t) throw();
+		Value(Allocator&, const uint16_t) throw();
+		Value(Allocator&, const uint32_t) throw();
+		Value(Allocator&, const uint64_t) throw();
+		Value(Allocator&, const int8_t) throw();
+		Value(Allocator&, const int16_t) throw();
+		Value(Allocator&, const int32_t) throw();
+		Value(Allocator&, const int64_t) throw();
+		Value(Allocator&, const float) throw();
+		Value(Allocator&, const double) throw();
+		Value(Allocator&, const String&) throw();
 
-		bool GetBool() const;
-		char GetChar() const;
-		uint64_t GetUint() const;
-		int64_t GetInt() const;
-		double GetDouble() const;
-		ConstStringFragment GetString() const;
-		const Array& GetArray() const;
-		const Object& GetObject() const;
+		~Value() throw();
 
-		void SetNull();
-		void SetBool(const bool);
-		void SetChar(const char);
-		void SetUint(const uint64_t);
-		void SetInt(const int64_t);
-		void SetDouble(const double);
-		String& SetString();
-		Array& SetArray();
-		Object& SetObject();
+		Value& operator=(const Value&) throw();
+		Value& operator=(Value&&) throw();
+
+		bool IsNull() const throw();
+		bool IsBool() const throw();
+		bool IsChar() const throw();
+		bool IsUint() const throw();
+		bool IsInt() const throw();
+		bool IsDouble() const throw();
+		bool IsString() const throw();
+		bool IsArray() const throw();
+		bool IsObject() const throw();
+
+		bool GetBool() const throw();
+		char GetChar() const throw();
+		uint64_t GetUint() const throw();
+		int64_t GetInt() const throw();
+		double GetDouble() const throw();
+		String& GetString() throw();
+		const String& GetString() const throw();
+		const Array& GetArray() const throw();
+		const Object& GetObject() const throw();
+		Array& GetArray() throw();
+		Object& GetObject() throw();
+
+		void SetNull() throw();
+		void SetBool(const bool) throw();
+		void SetChar(const char) throw();
+		void SetUint(const uint64_t) throw();
+		void SetInt(const int64_t) throw();
+		void SetDouble(const double) throw();
+		String& SetString() throw();
+		Array& SetArray() throw();
+		Object& SetObject() throw();
 	};
 }}
 
