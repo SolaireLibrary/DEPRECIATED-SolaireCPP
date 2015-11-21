@@ -38,8 +38,6 @@ namespace Solaire{ namespace Encode{
 
 	class SOLAIRE_EXPORT_API System{
 	public:
-		virtual ~System(){}
-
 		virtual bool SOLAIRE_EXPORT_CALL Encode(const Value&, WriteStream&) const = 0;
 		virtual Value SOLAIRE_EXPORT_CALL Decode(ReadStream&) const = 0;
 	};

@@ -32,6 +32,7 @@
 */
 
 #include <memory>
+#include "..\Core\Init.hpp"
 
 namespace Solaire{ 
 
@@ -60,6 +61,12 @@ namespace Encode{
 	static Value Encode(typename Encoder<T>::EncodeType aValue, Allocator& aAllocator) {
 		return Encoder<T>::Encode(aValue, aAllocator);
 	}
+
+	class SOLAIRE_EXPORT_API Encodable {
+	public:
+		virtual Value SOLAIRE_EXPORT_CALL Encode() const = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Decode(const Value&) = 0;
+	};
 
 }}
 
