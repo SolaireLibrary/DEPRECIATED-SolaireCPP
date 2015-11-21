@@ -216,8 +216,7 @@ namespace Solaire{ namespace Encode{
 	}
 
 	Value& Value::operator=(const Value& aOther) throw() {
-		switch(aOther.mType)
-		{
+		switch(aOther.mType) {
 		case TYPE_BOOL:
 		case TYPE_CHAR:
 		case TYPE_UINT:
@@ -250,8 +249,35 @@ namespace Solaire{ namespace Encode{
 	}
 
 	Value& Value::operator=(Value&& aOther) throw() {
-		const Value& ref = aOther;
-		return operator=(ref);
+		
+		if(&mAllocator != &aOther.mAllocator) {
+			return operator=(static_cast<const Value&>(aOther));
+		}
+
+		SetNull();
+		
+		switch(aOther.mType) {
+		case TYPE_BOOL:
+		case TYPE_CHAR:
+		case TYPE_UINT:
+		case TYPE_INT:
+			mUint = aOther.mUint;
+			break;
+		case TYPE_DOUBLE:
+			mDouble = aOther.mDouble;
+			break;
+		case TYPE_STRING:
+		case TYPE_ARRAY:
+		case TYPE_OBJECT:
+			mString = aOther.mString;
+			break;
+		default:
+			return *this;
+		}
+
+		mType = aOther.mType;
+		aOther.mType = TYPE_NULL;
+		return *this;
 	}
 
 	bool Value::IsNull() const throw() {
