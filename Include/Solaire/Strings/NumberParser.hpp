@@ -31,10 +31,7 @@
 	Last Modified	: 28th September 2015
 */
 
-#include <algorithm>
 #include <cmath>
-//#include "..\Strings\StringFragment.hpp"
-//#include "..\DataStructures\DynamicArray.hpp"
 
 namespace Solaire {
 	namespace Implementation {
@@ -242,6 +239,7 @@ namespace Solaire {
 	template<>
 	const char* ParseNumber<double>(const char* const aBegin, const char* const aEnd, double& aValue) {
 		uint32_t zeros;
+		//! \bug 123.-456 is treated as a valid number
 		const char* const end = Implementation::ParseDecimal<
 			double,
 			double,
@@ -296,28 +294,4 @@ namespace Solaire {
 		return end;
 	}
 }
-//    template<class T, class Iterator>
-//    T ParseNumber(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd){
-//        typename NumericParser<T>::Type parser;
-//
-//        aParseEnd = aBegin;
-//        while(aParseEnd != aEnd){
-//
-//            if(! parser.Accept(*aParseEnd)){
-//                break;
-//            }
-//        }
-//
-//        try{
-//            const T tmp = parser.Get();
-//            return tmp;
-//        }catch(...){
-//            aParseEnd = aBegin;
-//            return static_cast<T>(0);
-//        }
-//    }
-//
-//}
-//
-//
 #endif
