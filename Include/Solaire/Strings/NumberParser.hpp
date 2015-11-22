@@ -33,352 +33,291 @@
 
 #include <algorithm>
 #include <cmath>
-#include "..\Strings\StringFragment.hpp"
-#include "..\DataStructures\DynamicArray.hpp"
+//#include "..\Strings\StringFragment.hpp"
+//#include "..\DataStructures\DynamicArray.hpp"
 
-namespace Solaire{
+namespace Solaire {
+	namespace Implementation {
 
-    namespace NumericParse{
+		static const char* ParseUint(const char* const aBegin, const char* const aEnd, uint32_t& aValue, uint32_t& aZeros) {
+			const char* i = aBegin;
+			aZeros = 0;
+			bool nonZero = false;
 
-        class UnsignedValue{
-        public:
-            typedef uint32_t NumericType;
-        private:
-            char mChars[16];
-            uint8_t mCount;
-        public:
-            UnsignedValue():
-                mCount(0)
-            {}
+			while(i != aEnd) {
+				const char c = *i;
+				if(c == '0') {
+					if (! nonZero) ++aZeros;
+				}else if(c >= '1' && c <= '9') {
+					nonZero = true;
+				}else {
+					break;
+				}
+				++i;
+			}
 
-            uint8_t PrecedingZeros() const{
-                uint8_t count = 0;
-                for(uint8_t i = 0; i < mCount; ++i){
-                    if(mChars[i] == '0'){
-                        ++count;
-                    }else{
-                        break;
-                    }
-                }
-                return count;
-            }
+			if(i == aBegin) return aBegin;
 
-            // Inherited from value
+			const uint32_t offset = i - aBegin;
+			if(offset == 0) return aBegin;
+			aValue = 0;
 
-            void Reset(){
-                mCount = 0;
-            }
+			uint32_t index = 0;
+			const char* j = i - 1;
+			const char* const end = aBegin - 1;
+			while (j != end) {
+				aValue += static_cast<uint32_t>(std::pow(10, index)) * (*j - '0');
+				++index;
+				--j;
+			}
+			return i;
+		}
 
-            bool Accept(const char aChar){
-                if(aChar < '0' || aChar > '9') return false;
-                mChars[mCount++] = aChar;
-                return true;
-            }
+		static const char* ParseInt(const char* const aBegin, const char* const aEnd, int32_t& aValue, uint32_t& aZeros) {
+			int32_t sign = 1;
+			uint32_t tmp;
+			const char* begin = aBegin;
 
-            NumericType Get() const{
-                if(mCount == 0) throw std::runtime_error("NumericParse::UnsignedValue : Cannot parse 0 length value");
-                double val = 0;
+			if(*begin == '-') {
+				++begin;
+				sign = -1;
+			}
 
-                uint32_t index = 0;
-                const char* i = mChars + mCount - 1;
-                const char* const end = mChars - 1;
-                while(i != end){
-                    val += std::pow(10, index) * static_cast<double>(*i - '0');
-                    ++index;
-                    --i;
-                }
+			const char* const end = ParseUint(begin, aEnd, tmp, aZeros);
+			if(end != begin) {
+				aValue = static_cast<int32_t>(tmp) * sign;
+			}
+			return end;
+		}
 
-                return static_cast<NumericType>(val);
-            }
-        };
+		template<
+			class T1, 
+			class T2, 
+			class R, 
+			const char*(*F1)(const char* const, const char* const, T1&, uint32_t&),
+			const char*(*F2)(const char* const, const char* const, T1&, uint32_t&)
+		>
+		static const char* ParseExponent(const char* const aBegin, const char* const aEnd, R& aValue, uint32_t& aZeros) {
+			T1 tmp1;
+			T2 tmp2;
+			uint32_t zero2;
 
-        class SignedValue{
-        public:
-            typedef int32_t NumericType;
-        private:
-            UnsignedValue mValue;
-            int8_t mSign;
-            bool mIsFirst;
-        public:
-            SignedValue():
-                mValue(),
-                mSign(1),
-                mIsFirst(true)
-            {}
+			const char* end = F1(aBegin, aEnd, tmp1, aZeros);
+			if(end == aBegin) return aBegin;
 
-            uint8_t PrecedingZeros() const{
-                return mValue.PrecedingZeros();
-            }
+			if(end != aEnd && (*end == 'e' || *end == 'E')) {
+				++end;
+				if(*end == '+') ++end;
+				const char* const end2 = F2(end, aEnd, tmp2, zero2);
+				if(end2 == end) return end2;
 
-            // Inherited from Value
+				aValue = static_cast<R>(tmp1) * static_cast<R>(std::pow(10, tmp2));
 
-            void Reset(){
-                mValue.Reset();
-                mIsFirst = true;
-            }
+				return end2;
+			}else {
+				aValue = static_cast<R>(tmp1);
+				return end;
+			}
+		}
 
-            bool Accept(const char aChar){
-                if(mIsFirst){
-                     if(aChar == '-'){
-                        mSign = -1;
-                        mIsFirst = false;
-                        return true;
-                    }else{
-                        mSign = 1;
-                    }
-                }
-                mIsFirst = false;
-                return mValue.Accept(aChar);
-            }
+		template<
+			class T1, 
+			class T2, 
+			class R, 
+			const char*(*F1)(const char* const, const char* const, T1&, uint32_t&),
+			const char*(*F2)(const char* const, const char* const, T1&, uint32_t&)
+		>
+		static const char* ParseDecimal(const char* const aBegin, const char* const aEnd, R& aValue, uint32_t& aZeros) {
+			T1 tmp1;
+			T2 tmp2;
+			uint32_t zero2;
 
-            NumericType Get() const{
-                return static_cast<NumericType>(mValue.Get()) * static_cast<NumericType>(mSign);
-            }
-        };
+			const char* end = F1(aBegin, aEnd, tmp1, aZeros);
+			if(end == aBegin) return aBegin;
 
-        template<class Body, class Decimal>
-        class DecimalValue{
-        public:
-            typedef double NumericType;
-        private:
-            Body mBody;
-            Decimal mDecimal;
-            bool mDecimalFlag;
-        public:
-            DecimalValue():
-                mBody(),
-                mDecimal(),
-                mDecimalFlag(false)
-            {}
+			if(end != aEnd && *end == '.'){
+				++end;
+				if(*end == '+') ++end;
+				const char* const end2 = F2(end, aEnd, tmp2, zero2);
+				if(end2 == end) return end2;
 
-            uint8_t PrecedingZeros() const{
-                return mBody.PrecedingZeros();
-            }
+				aValue = static_cast<R>(tmp2);
+				while(aValue >= static_cast<R>(1) && aValue != static_cast<R>(0)){
+					aValue /= static_cast<R>(10);
+				}
 
-            // Inherited from Value
+				uint32_t zeros = zero2;
+				while(zeros > 0 && aValue != static_cast<R>(0)){
+					aValue /= static_cast<R>(10);
+					--zeros;
+				}
 
-            void Reset(){
-                mBody.Reset();
-                mDecimal.Reset();
-                mDecimalFlag = false;
-            }
+				aValue = static_cast<R>(tmp1) + aValue;
 
-            bool Accept(const char aChar){
-                if(aChar == '.' && ! mDecimalFlag){
-                    mDecimalFlag = true;
-                    return true;
-                }
+				return end2;
+			}else {
+				aValue = static_cast<R>(tmp1);
+				return end;
+			}
+		}
+	}
 
-                return mDecimalFlag ? mDecimal.Accept(aChar) : mBody.Accept(aChar);
-            }
+	template<class T>
+	static const char* ParseNumber(const char* const aBegin, const char* const aEnd, T& aValue);
 
-            NumericType Get() const{
-                if(mDecimalFlag){
-                    double decimal = mDecimal.Get();
-                    while(decimal >= 1.0 && decimal != 0.0){
-                        decimal /= 10.0;
-                    }
-                    int8_t zeros = mDecimal.PrecedingZeros();
-                    while(zeros > 0 && decimal != 0.0){
-                        decimal /= 10.0;
-                        --zeros;
-                    }
-                    return mBody.Get() + decimal;
-                }else{
-                    return mBody.Get();
-                }
-            }
-        };
+	template<>
+	const char* ParseNumber<uint32_t>(const char* const aBegin, const char* const aEnd, uint32_t& aValue) {
+		uint32_t zeros;
+		const char* const end = Implementation::ParseExponent<
+			uint32_t, 
+			uint32_t, 
+			uint32_t, 
+			&Implementation::ParseUint, 
+			&Implementation::ParseUint
+		>(aBegin, aEnd, aValue, zeros);
+		return end;
+	}
 
-        template<class Body, class Exponent>
-        class ExponentValue{
-        public:
-            typedef typename Body::NumericType NumericType;
-        private:
-            Body mBody;
-            Exponent mExponent;
-            struct{
-                uint8_t mExponentFlag : 1;
-                uint8_t mExponentLastFlag : 1;
-            };
-        public:
-            ExponentValue():
-                mBody(),
-                mExponent(),
-                mExponentFlag(0),
-                mExponentLastFlag(0)
-            {}
+	template<>
+	const char* ParseNumber<uint8_t>(const char* const aBegin, const char* const aEnd, uint8_t& aValue) {
+		uint32_t tmp;
+		const char* const end = ParseNumber<uint32_t>(aBegin, aEnd, tmp);
+		aValue = static_cast<uint8_t>(tmp);
+		return end;
+	}
 
-            uint8_t PrecedingZeros() const{
-                return mBody.PrecedingZeros();
-            }
+	template<>
+	const char* ParseNumber<uint16_t>(const char* const aBegin, const char* const aEnd, uint16_t& aValue) {
+		uint32_t tmp;
+		const char* const end = ParseNumber<uint32_t>(aBegin, aEnd, tmp);
+		aValue = static_cast<uint16_t>(tmp);
+		return end;
+	}
 
-            // Inherited from Value
+	template<>
+	const char* ParseNumber<uint64_t>(const char* const aBegin, const char* const aEnd, uint64_t& aValue) {
+		uint32_t tmp;
+		const char* const end = ParseNumber<uint32_t>(aBegin, aEnd, tmp);
+		aValue = static_cast<uint64_t>(tmp);
+		return end;
+	}
 
-            void Reset(){
-                mBody.Reset();
-                mExponent.Reset();
-                mExponentFlag = 0;
-                mExponentLastFlag = 0;
-            }
+	template<>
+	const char* ParseNumber<int32_t>(const char* const aBegin, const char* const aEnd, int32_t& aValue) {
+		uint32_t zeros;
+		const char*  end = Implementation::ParseExponent<
+			int32_t, 
+			int32_t, 
+			int32_t, 
+			&Implementation::ParseInt, 
+			&Implementation::ParseInt
+		>(aBegin, aEnd, aValue, zeros);
+		return end;
+	}
 
-            bool Accept(const char aChar){
-                if((aChar == 'e' || aChar == 'E') && ! mExponentFlag){
-                    mExponentFlag = 1;
-                    mExponentLastFlag = 1;
-                    return true;
-                }else if(aChar == '+' && mExponentLastFlag){
-                    mExponentLastFlag = 0;
-                    return true;
-                }
-                mExponentLastFlag = 0;
+	template<>
+	const char* ParseNumber<int8_t>(const char* const aBegin, const char* const aEnd, int8_t& aValue) {
+		int32_t tmp;
+		const char* const end = ParseNumber<int32_t>(aBegin, aEnd, tmp);
+		aValue = static_cast<int8_t>(tmp);
+		return end;
+	}
 
-                return mExponentFlag ? mExponent.Accept(aChar) : mBody.Accept(aChar);
-            }
+	template<>
+	const char* ParseNumber<int16_t>(const char* const aBegin, const char* const aEnd, int16_t& aValue) {
+		int32_t tmp;
+		const char* const end = ParseNumber<int32_t>(aBegin, aEnd, tmp);
+		aValue = static_cast<int16_t>(tmp);
+		return end;
+	}
 
-            NumericType Get() const{
-                if(mExponentFlag){
-                    return mBody.Get() * static_cast<NumericType>(std::pow(10.0, mExponent.Get()));
-                }else{
-                    return mBody.Get();
-                }
-            }
-        };
+	template<>
+	const char* ParseNumber<int64_t>(const char* const aBegin, const char* const aEnd, int64_t& aValue) {
+		int32_t tmp;
+		const char* const end = ParseNumber<int32_t>(aBegin, aEnd, tmp);
+		aValue = static_cast<int64_t>(tmp);
+		return end;
+	}
 
-        StringFragment::Pointer ToString(StringFragment::Pointer aBegin, double aValue){
-            const auto ParseUint = [](char* const aBegin, uint32_t aValue)->char*{
-                uint8_t digit;
-                uint8_t count = 0;
+	template<>
+	const char* ParseNumber<double>(const char* const aBegin, const char* const aEnd, double& aValue) {
+		uint32_t zeros;
+		const char* const end = Implementation::ParseDecimal<
+			double,
+			double,
+			double,
+			&Implementation::ParseExponent<
+				double,
+				double,
+				double,
+				&Implementation::ParseDecimal<
+					int32_t,
+					int32_t,
+					double,
+					&Implementation::ParseInt,
+					&Implementation::ParseInt
+				>,
+				&Implementation::ParseDecimal<
+					int32_t,
+					int32_t,
+					double,
+					&Implementation::ParseInt,
+					&Implementation::ParseInt
+				>
+			>, 
+			&Implementation::ParseExponent<
+				double,
+				double,
+				double,
+				&Implementation::ParseDecimal<
+					int32_t,
+					int32_t,
+					double,
+					&Implementation::ParseInt,
+					&Implementation::ParseInt
+				>,
+				&Implementation::ParseDecimal<
+					int32_t,
+					int32_t,
+					double,
+					&Implementation::ParseInt,
+					&Implementation::ParseInt
+				>
+			>
+		>(aBegin, aEnd, aValue, zeros);
+		return end;
+	}
 
-                if(aValue == 0){
-                    aBegin[count++] = '0';
-                }else{
-                    while(aValue > 0){
-                        digit = (aValue % 10);
-                        aBegin[count++] = '0' + digit;
-                        aValue /= 10;
-                    }
-                }
-
-                std::reverse(aBegin, aBegin + count);
-
-                return aBegin + count;
-            };
-
-            int32_t body = static_cast<int32_t>(aValue);
-            const bool negative = body < 0.0;
-            double decimal = aValue - body;
-
-            if(negative){
-                body *= -1;
-                *aBegin = '-';
-                ++aBegin;
-            }
-
-            aBegin = ParseUint(aBegin, static_cast<uint32_t>(body));
-
-            if(decimal != 0.0){
-                for(uint8_t i = 0; i < 8; ++i){
-                    if(decimal - std::floor(decimal) > 0.01){
-                         decimal *= 10.0;
-                    }else{
-                        break;
-                    }
-                }
-                *aBegin = '.';
-                ++aBegin;
-                aBegin = ParseUint(aBegin, static_cast<uint32_t>(decimal));
-            }
-
-            return aBegin;
-
-            // Shift the body down
-
-            /*if(body == 0.0){
-                *aBegin = '0';
-                ++aBegin;
-            }else{
-                while(body >= 1.0){
-                     body /= 10.0;
-                }
-
-                if(negative){
-                    *aBegin = '-';
-                    ++aBegin;
-                }
-
-                while(body != 0.0){
-                    body *= 10;
-                    const double digit = std::floor(body);
-                    body -= digit;
-                    *aBegin = '0' + digit;
-                    ++aBegin;
-                }
-            }
-
-            if(decimal != 0.0){
-                *aBegin = '.';
-                ++aBegin;
-            }
-
-            while(decimal != 0.0){
-                decimal *= 10;
-                const double digit = std::floor(decimal);
-                decimal -= digit;
-                *aBegin = '0' + digit;
-                ++aBegin;
-            }*/
-        }
-
-
-    }
-
-    typedef NumericParse::ExponentValue<NumericParse::UnsignedValue, NumericParse::UnsignedValue> NumericParserU8;
-    typedef NumericParserU8 NumericParserU16;
-    typedef NumericParserU8 NumericParserU32;
-    typedef NumericParserU8 NumericParserU64;
-    typedef NumericParse::ExponentValue<NumericParse::SignedValue, NumericParse::SignedValue> NumericParserI8;
-    typedef NumericParserI8 NumericParserI16;
-    typedef NumericParserI8 NumericParserI32;
-    typedef NumericParserI8 NumericParserI64;
-    typedef NumericParse::ExponentValue<NumericParse::DecimalValue<NumericParse::SignedValue, NumericParse::UnsignedValue>, NumericParse::DecimalValue<NumericParse::SignedValue, NumericParse::UnsignedValue>> NumericParserF;
-    typedef NumericParserF NumericParserD;
-
-    template<class T> struct NumericParser{typedef void Type;};
-    template<> struct NumericParser<uint8_t>{typedef NumericParserU8 Type;};
-    template<> struct NumericParser<uint16_t>{typedef NumericParserU16 Type;};
-    template<> struct NumericParser<uint32_t>{typedef NumericParserU32 Type;};
-    template<> struct NumericParser<uint64_t>{typedef NumericParserU64 Type;};
-
-    template<> struct NumericParser<int8_t>{typedef NumericParserI8 Type;};
-    template<> struct NumericParser<int16_t>{typedef NumericParserI16 Type;};
-    template<> struct NumericParser<int32_t>{typedef NumericParserI32 Type;};
-    template<> struct NumericParser<int64_t>{typedef NumericParserI64 Type;};
-    template<> struct NumericParser<float>{typedef NumericParserF Type;};
-    template<> struct NumericParser<double>{typedef NumericParserD Type;};
-
-    template<class T, class Iterator>
-    T ParseNumber(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd){
-        typename NumericParser<T>::Type parser;
-
-        aParseEnd = aBegin;
-        while(aParseEnd != aEnd){
-
-            if(! parser.Accept(*aParseEnd)){
-                break;
-            }
-        }
-
-        try{
-            const T tmp = parser.Get();
-            return tmp;
-        }catch(...){
-            aParseEnd = aBegin;
-            return static_cast<T>(0);
-        }
-    }
-
+	template<>
+	const char* ParseNumber<float>(const char* const aBegin, const char* const aEnd, float& aValue) {
+		double tmp;
+		const char* const end = ParseNumber<double>(aBegin, aEnd, tmp);
+		aValue = static_cast<float>(tmp);
+		return end;
+	}
 }
-
-
+//    template<class T, class Iterator>
+//    T ParseNumber(const Iterator aBegin, const Iterator aEnd, Iterator& aParseEnd){
+//        typename NumericParser<T>::Type parser;
+//
+//        aParseEnd = aBegin;
+//        while(aParseEnd != aEnd){
+//
+//            if(! parser.Accept(*aParseEnd)){
+//                break;
+//            }
+//        }
+//
+//        try{
+//            const T tmp = parser.Get();
+//            return tmp;
+//        }catch(...){
+//            aParseEnd = aBegin;
+//            return static_cast<T>(0);
+//        }
+//    }
+//
+//}
+//
+//
 #endif
