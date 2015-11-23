@@ -283,38 +283,4 @@ namespace Solaire{ namespace Encode{
 		}
 	}
 
-	/*bool SOLAIRE_EXPORT_CALL Json::Write(const Value& aValue, Writer& aWriter){
-
-		switch(aValue.GetType()) {
-		case Value::TYPE_ARRAY:
-			{
-				const Array& _array = aValue.GetArray();
-				const uint32_t length = _array.Size();
-				
-				if(! aWriter.BeginArray()) return false;
-				for(uint32_t i = 0; i < length; ++i) {
-					if (! WriteArray(_array[i], aWriter)) return false;
-				}
-				if(! aWriter.EndArray()) return false;
-
-				return true;
-			}
-		case Value::TYPE_OBJECT:
-			{
-				const Object& object = aValue.GetObject();
-				const uint32_t length = object.Size();
-				
-				if(! aWriter.BeginObject()) return false;
-				for(uint32_t i = 0; i < length; ++i) {
-					if (!WriteObject(object.GetMemberName(i), object[i], aWriter)) return false;
-				}
-				if(! aWriter.EndObject()) return false;
-
-				return true;
-			}
-		default:
-			return false;
-		}
-	}*/
-
 }}
