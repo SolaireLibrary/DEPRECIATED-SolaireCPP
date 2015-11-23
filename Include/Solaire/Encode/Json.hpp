@@ -83,7 +83,7 @@ namespace Solaire{ namespace Encode{
 			bool EndObject(const ConstStringFragment) throw();
 
 			bool AddValueNull(const ConstStringFragment) throw();
-			bool AddValueNull(const ConstStringFragment, const bool) throw();
+			bool AddValueBool(const ConstStringFragment, const bool) throw();
 			bool AddValueNumber(const ConstStringFragment, const double) throw();
 			bool AddValueString(const ConstStringFragment, const ConstStringFragment) throw();
 		};

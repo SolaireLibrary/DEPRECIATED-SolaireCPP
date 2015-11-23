@@ -19,10 +19,10 @@
 #include "Solaire\Encode\Json.hpp"
 #include "Solaire\Strings\NumberParser.hpp"
 #include "Solaire\Memory\DefaultAllocator.hpp"
+#include "Solaire\Encode\Array.hpp"
+#include "Solaire\Encode\Object.hpp"
 
 namespace Solaire{ namespace Encode{
-
-	// Json
 
 	// Writer
 
@@ -173,9 +173,11 @@ namespace Solaire{ namespace Encode{
 		buf += String(DEFAULT_ALLOCATOR, aName);
 		buf +=  "\" : null,";
 		mOutputStream.Write(buf.CString(), sizeof(char) * buf.Size());
+
+		return true;
 	}
 
-	bool Json::Writer::AddValueNull(const ConstStringFragment aName, const bool aValue) throw() {
+	bool Json::Writer::AddValueBool(const ConstStringFragment aName, const bool aValue) throw() {
 		if((! mState.IsEmpty()) || mState.Back() != STATE_OBJECT) return false;
 
 		String buf(DEFAULT_ALLOCATOR, "\"");
@@ -215,6 +217,125 @@ namespace Solaire{ namespace Encode{
 		mOutputStream.Write(buf.CString(), sizeof(char) * buf.Size());
 
 		return true;
+	}
+
+	// Json
+
+	static bool WriteArray(const Value& aValue, Json::Writer& aWriter);
+
+	static bool WriteObject(const String& aName, const Value& aValue, Json::Writer& aWriter) {
+		switch (aValue.GetType()) {
+		case Value::TYPE_BOOL:
+			return aWriter.AddValueBool(aName, aValue.GetBool());
+		case Value::TYPE_CHAR:
+			{
+				const char buf = aValue.GetChar();
+				return aWriter.AddValueString(aName, String(DEFAULT_ALLOCATOR, &buf, 1));
+			}
+		case Value::TYPE_INT:
+		case Value::TYPE_UINT:
+		case Value::TYPE_DOUBLE:
+			return aWriter.AddValueNumber(aName, aValue.GetDouble());
+		case Value::TYPE_STRING:
+			return aWriter.AddValueString(aName, aValue.GetString());
+		case Value::TYPE_ARRAY:
+			{
+				const Array& _array = aValue.GetArray();
+				const uint32_t length = _array.Size();
+
+				for(uint32_t i = 0; i < length; ++i) {
+					if (!WriteArray(_array[i], aWriter)) return false;
+				}
+
+				return true;
+			}
+		case Value::TYPE_OBJECT:
+			{
+				const Object& object = aValue.GetObject();
+				const uint32_t length = object.Size();
+
+				for(uint32_t i = 0; i < length; ++i) {
+					if (!WriteObject(object.GetMemberName(i), object[i], aWriter)) return false;
+				}
+
+				return true;
+			}
+		default:
+			return false;
+		}
+	}
+
+	static bool WriteArray(const Value& aValue, Json::Writer& aWriter) {
+		switch (aValue.GetType()) {
+		case Value::TYPE_BOOL:
+			return aWriter.AddValueBool(aValue.GetBool());
+		case Value::TYPE_CHAR:
+			{
+				const char buf = aValue.GetChar();
+				return aWriter.AddValueString(String(DEFAULT_ALLOCATOR, &buf, 1));
+			}
+		case Value::TYPE_INT:
+		case Value::TYPE_UINT:
+		case Value::TYPE_DOUBLE:
+			return aWriter.AddValueNumber(aValue.GetDouble());
+		case Value::TYPE_STRING:
+			return aWriter.AddValueString(aValue.GetString());
+		case Value::TYPE_ARRAY:
+			{
+				const Array& _array = aValue.GetArray();
+				const uint32_t length = _array.Size();
+
+				for(uint32_t i = 0; i < length; ++i) {
+					if (! WriteArray(_array[i], aWriter)) return false;
+				}
+
+				return true;
+			}
+		case Value::TYPE_OBJECT:
+			{
+				const Object& object = aValue.GetObject();
+				const uint32_t length = object.Size();
+
+				for(uint32_t i = 0; i < length; ++i) {
+					if (!WriteObject(object.GetMemberName(i), object[i], aWriter)) return false;
+				}
+
+				return true;
+			}
+		default:
+			return false;
+		}
+	}
+
+	bool SOLAIRE_EXPORT_CALL Json::Write(const Value& aValue, WriteStream& aOutputStream){
+		Writer writer(aOutputStream);
+
+		switch(aValue.GetType()) {
+		case Value::TYPE_ARRAY:
+			{
+				const Array& _array = aValue.GetArray();
+				const uint32_t length = _array.Size();
+
+				for(uint32_t i = 0; i < length; ++i) {
+					if (! WriteArray(_array[i], writer)) return false;
+				}
+
+				return true;
+			}
+		case Value::TYPE_OBJECT:
+			{
+				const Object& object = aValue.GetObject();
+				const uint32_t length = object.Size();
+
+				for(uint32_t i = 0; i < length; ++i) {
+					if (!WriteObject(object.GetMemberName(i), object[i], writer)) return false;
+				}
+
+				return true;
+			}
+		default:
+			return false;
+		}
 	}
 
 }}
