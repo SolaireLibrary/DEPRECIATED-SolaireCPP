@@ -61,11 +61,50 @@ namespace Solaire{ namespace Encode{
 	}
 
 	bool Xml::Writer::EndElement() {
+		static const auto WriteElement = [](const Xml::Writer::ElementData& aData, WriteStream& aStream)->bool {
+			char buf;
+			
+			buf = '<';
+			aStream.Write(&buf, sizeof(char));
+			aStream.Write(aData.name.CString(), sizeof(char) * aData.name.Size());
+
+			if(aData.attributeNames.Size() != 0) {
+				buf = ' ';
+				aStream.Write(&buf, sizeof(char));
+
+				//! \todo Write attribute
+			}
+
+			if(aData.body.Size() == 0 && aData.children.Size() == 0) {
+				buf = '/';
+				aStream.Write(&buf, sizeof(char));
+				buf = '>';
+				aStream.Write(&buf, sizeof(char));
+			}else{
+				buf = '>';
+				aStream.Write(&buf, sizeof(char));
+
+				//! \todo Write body
+				//! \todo Write children
+			
+				buf = '<';
+				aStream.Write(&buf, sizeof(char));
+				buf = '/';
+				aStream.Write(&buf, sizeof(char));
+				aStream.Write(aData.name.CString(), sizeof(char) * aData.name.Size());
+				buf = '>';
+				aStream.Write(&buf, sizeof(char));
+			}
+			
+			return true;
+		};
+
 		if(mHead.IsEmpty()) return false;
 		mHead.PopBack();
 
 		if(mHead.IsEmpty()) {
-			// Write
+			if(! WriteElement(mRoot, mOutputStream)) return false;
+			mOutputStream.Flush();
 		}
 
 		return true;
