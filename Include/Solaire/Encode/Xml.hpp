@@ -52,7 +52,19 @@ namespace Solaire { namespace Encode {
 
 		class Writer {
 		private:
+			struct ElementData {
+				String name;
+				String body;
+				DynamicArray<String> attributeNames;
+				DynamicArray<String> attributeValues;
+				DynamicArray<ElementData> children;
+
+				ElementData();
+			};
+		private:
 			WriteStream& mOutputStream;
+			ElementData mRoot;
+			DynamicArray<ElementData*> mHead;
 		public:
 			Writer(WriteStream&);
 			~Writer();

@@ -24,7 +24,68 @@
 
 namespace Solaire{ namespace Encode{
 
+	// ElementData
+	
+	Xml::Writer::ElementData::ElementData() : 
+		name(DEFAULT_ALLOCATOR),
+		body(DEFAULT_ALLOCATOR),
+		attributeNames(DEFAULT_ALLOCATOR),
+		attributeValues(DEFAULT_ALLOCATOR),
+		children(DEFAULT_ALLOCATOR)
+	{}
+
 	// Writer
+	
+	Xml::Writer::Writer(WriteStream& aStream) :
+		mOutputStream(aStream),
+		mHead(DEFAULT_ALLOCATOR)
+	{}
+
+	Xml::Writer::~Writer() {
+
+	}
+
+	bool Xml::Writer::BeginElement(const ConstStringFragment aName) {
+		if(mHead.IsEmpty()) {
+			mRoot.name = aName;
+			mHead.PushBack(&mRoot);
+			return true;
+		}else {
+			ElementData& parent = *mHead.Back();
+			if(parent.body.Size() != 0) return false;
+			ElementData& child = parent.children.PushBack(ElementData());
+			child.name = aName;
+			mHead.PushBack(&child);
+			return true;
+		}
+	}
+
+	bool Xml::Writer::EndElement() {
+		if(mHead.IsEmpty()) return false;
+		mHead.PopBack();
+
+		if(mHead.IsEmpty()) {
+			// Write
+		}
+
+		return true;
+	}
+
+	bool Xml::Writer::SetBody(const ConstStringFragment aValue) {
+		if(mHead.IsEmpty()) return false;
+		ElementData& element = *mHead.Back();
+		if(element.children.Size() != 0) return false;
+		element.body = aValue;
+		return true;
+	}
+
+	bool Xml::Writer::AddAttribute(const ConstStringFragment aName, const ConstStringFragment aValue) {
+		if(mHead.IsEmpty()) return false;
+		ElementData& element = *mHead.Back();
+		element.attributeNames.PushBack(String(DEFAULT_ALLOCATOR, aName));
+		element.attributeValues.PushBack(String(DEFAULT_ALLOCATOR, aValue));
+		return true;
+	}
 
 	static bool WriteObject(const ConstStringFragment aName, const Value& aValue, Xml::Writer& aWriter) {
 		switch (aValue.GetType()) {
