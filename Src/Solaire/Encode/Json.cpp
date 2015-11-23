@@ -191,35 +191,31 @@ namespace Solaire{ namespace Encode{
 		return true;
 	}
 
-	// Json
-
-	static bool WriteArray(const Value& aValue, Json::Writer& aWriter);
-
-	static bool WriteObject(const String& aName, const Value& aValue, Json::Writer& aWriter) {
+	bool Json::Writer::AddValue(const ConstStringFragment aName, const Value& aValue) throw() {
 		switch (aValue.GetType()) {
 		case Value::TYPE_BOOL:
-			return aWriter.AddValueBool(aName, aValue.GetBool());
+			return AddValueBool(aName, aValue.GetBool());
 		case Value::TYPE_CHAR:
 			{
 				const char buf = aValue.GetChar();
-				return aWriter.AddValueString(aName, String(DEFAULT_ALLOCATOR, &buf, 1));
+				return AddValueString(aName, String(DEFAULT_ALLOCATOR, &buf, 1));
 			}
 		case Value::TYPE_INT:
 		case Value::TYPE_UINT:
 		case Value::TYPE_DOUBLE:
-			return aWriter.AddValueNumber(aName, aValue.GetDouble());
+			return AddValueNumber(aName, aValue.GetDouble());
 		case Value::TYPE_STRING:
-			return aWriter.AddValueString(aName, aValue.GetString());
+			return AddValueString(aName, aValue.GetString());
 		case Value::TYPE_ARRAY:
 			{
 				const Array& _array = aValue.GetArray();
 				const uint32_t length = _array.Size();
 				
-				if(! aWriter.BeginArray(aName)) return false;
+				if(! BeginArray(aName)) return false;
 				for(uint32_t i = 0; i < length; ++i) {
-					if (!WriteArray(_array[i], aWriter)) return false;
+					if(! AddValue(_array[i])) return false;
 				}
-				if(! aWriter.EndArray()) return false;
+				if(! EndArray()) return false;
 
 				return true;
 			}
@@ -228,11 +224,11 @@ namespace Solaire{ namespace Encode{
 				const Object& object = aValue.GetObject();
 				const uint32_t length = object.Size();
 				
-				if(! aWriter.BeginObject(aName)) return false;
+				if(! BeginObject(aName)) return false;
 				for(uint32_t i = 0; i < length; ++i) {
-					if (!WriteObject(object.GetMemberName(i), object[i], aWriter)) return false;
+					if(! AddValue(object.GetMemberName(i), object[i])) return false;
 				}
-				if(! aWriter.EndObject()) return false;
+				if(! EndObject()) return false;
 
 				return true;
 			}
@@ -241,31 +237,31 @@ namespace Solaire{ namespace Encode{
 		}
 	}
 
-	static bool WriteArray(const Value& aValue, Json::Writer& aWriter) {
+	bool Json::Writer::AddValue(const Value& aValue) throw() {
 		switch (aValue.GetType()) {
 		case Value::TYPE_BOOL:
-			return aWriter.AddValueBool(aValue.GetBool());
+			return AddValueBool(aValue.GetBool());
 		case Value::TYPE_CHAR:
 			{
 				const char buf = aValue.GetChar();
-				return aWriter.AddValueString(String(DEFAULT_ALLOCATOR, &buf, 1));
+				return AddValueString(String(DEFAULT_ALLOCATOR, &buf, 1));
 			}
 		case Value::TYPE_INT:
 		case Value::TYPE_UINT:
 		case Value::TYPE_DOUBLE:
-			return aWriter.AddValueNumber(aValue.GetDouble());
+			return AddValueNumber(aValue.GetDouble());
 		case Value::TYPE_STRING:
-			return aWriter.AddValueString(aValue.GetString());
+			return AddValueString(aValue.GetString());
 		case Value::TYPE_ARRAY:
 			{
 				const Array& _array = aValue.GetArray();
 				const uint32_t length = _array.Size();
 
-				if(! aWriter.BeginArray()) return false;
+				if(! BeginArray()) return false;
 				for(uint32_t i = 0; i < length; ++i) {
-					if(! WriteArray(_array[i], aWriter)) return false;
+					if(! AddValue(_array[i])) return false;
 				}
-				if(! aWriter.EndArray()) return false;
+				if(! EndArray()) return false;
 
 				return true;
 			}
@@ -274,11 +270,11 @@ namespace Solaire{ namespace Encode{
 				const Object& object = aValue.GetObject();
 				const uint32_t length = object.Size();
 				
-				if(! aWriter.BeginObject()) return false;
+				if(! BeginObject()) return false;
 				for(uint32_t i = 0; i < length; ++i) {
-					if (!WriteObject(object.GetMemberName(i), object[i], aWriter)) return false;
+					if(! AddValue(object.GetMemberName(i), object[i])) return false;
 				}
-				if(! aWriter.EndObject()) return false;
+				if(! EndObject()) return false;
 
 				return true;
 			}
@@ -287,7 +283,7 @@ namespace Solaire{ namespace Encode{
 		}
 	}
 
-	bool SOLAIRE_EXPORT_CALL Json::Write(const Value& aValue, Writer& aWriter){
+	/*bool SOLAIRE_EXPORT_CALL Json::Write(const Value& aValue, Writer& aWriter){
 
 		switch(aValue.GetType()) {
 		case Value::TYPE_ARRAY:
@@ -319,6 +315,6 @@ namespace Solaire{ namespace Encode{
 		default:
 			return false;
 		}
-	}
+	}*/
 
 }}

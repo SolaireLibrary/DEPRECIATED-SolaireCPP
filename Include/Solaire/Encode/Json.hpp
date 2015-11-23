@@ -84,9 +84,12 @@ namespace Solaire{ namespace Encode{
 			bool AddValueBool(const ConstStringFragment, const bool) throw();
 			bool AddValueNumber(const ConstStringFragment, const double) throw();
 			bool AddValueString(const ConstStringFragment, const ConstStringFragment) throw();
+
+
+			bool AddValue(const Value&) throw();
+			bool AddValue(const ConstStringFragment, const Value&) throw();
 		};
 
-		static bool SOLAIRE_EXPORT_CALL Write(const Value&, Writer&);
 		static bool SOLAIRE_EXPORT_CALL Read(WriteStream&, Reader&);
 		static Value SOLAIRE_EXPORT_CALL Read(ReadStream&);
 		static Value SOLAIRE_EXPORT_CALL Read(Allocator&, ReadStream&);
