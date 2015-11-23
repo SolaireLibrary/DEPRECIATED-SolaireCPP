@@ -39,7 +39,7 @@ Last Modified	: 23rd November 2015
 namespace Solaire { namespace Encode {
 
 	struct Xml {
-		class SOLAIRE_EXPORT_API Parser {
+		class SOLAIRE_EXPORT_API Reader {
 			virtual bool SOLAIRE_EXPORT_CALL BeginElement(const ConstStringFragment) const = 0;
 			virtual bool SOLAIRE_EXPORT_CALL EndElement() const = 0;
 
@@ -50,8 +50,23 @@ namespace Solaire { namespace Encode {
 
 		};
 
+		class Writer {
+		private:
+			WriteStream& mOutputStream;
+		public:
+			Writer(WriteStream&);
+			~Writer();
+
+			bool BeginElement(const ConstStringFragment);
+			bool EndElement();
+
+			bool SetBody(const ConstStringFragment);
+			bool AddAttribute(const ConstStringFragment, const ConstStringFragment);
+
+		};
+
 		static bool SOLAIRE_EXPORT_CALL Write(const Value&, WriteStream&);
-		static bool SOLAIRE_EXPORT_CALL Read(WriteStream&, Parser&);
+		static bool SOLAIRE_EXPORT_CALL Read(WriteStream&, Reader&);
 		static Value SOLAIRE_EXPORT_CALL Read(Allocator&, ReadStream&);
 		static Value SOLAIRE_EXPORT_CALL Read(ReadStream&);
 	};

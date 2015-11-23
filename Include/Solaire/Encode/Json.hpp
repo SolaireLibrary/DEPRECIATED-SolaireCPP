@@ -39,7 +39,7 @@
 namespace Solaire{ namespace Encode{ 
 	
 	struct Json {
-		class SOLAIRE_EXPORT_API Parser {
+		class SOLAIRE_EXPORT_API Reader {
 			virtual bool SOLAIRE_EXPORT_CALL BeginArray() throw() = 0;
 			virtual bool SOLAIRE_EXPORT_CALL EndArray() throw() = 0;
 
@@ -54,8 +54,42 @@ namespace Solaire{ namespace Encode{
 			virtual bool SOLAIRE_EXPORT_CALL ValueString(const ConstStringFragment) throw() = 0;
 		};
 
+		class Writer {
+		private:
+			enum State : uint8_t {
+				STATE_ARRAY,
+				STATE_OBJECT
+			};
+		private:
+			WriteStream& mOutputStream;
+			DynamicArray<State> mState;
+		public:
+			Writer(WriteStream&);
+			~Writer();
+
+			bool BeginArray() throw();
+			bool EndArray() throw();
+			bool BeginObject() throw();
+			bool EndObject() throw();
+
+			bool AddValueNull() throw();
+			bool AddValueBool(const bool) throw();
+			bool AddValueNumber(const double) throw();
+			bool AddValueString(const ConstStringFragment) throw();
+
+			bool BeginArray(const ConstStringFragment) throw();
+			bool EndArray(const ConstStringFragment) throw();
+			bool BeginObject(const ConstStringFragment) throw();
+			bool EndObject(const ConstStringFragment) throw();
+
+			bool AddValueNull(const ConstStringFragment) throw();
+			bool AddValueNull(const ConstStringFragment, const bool) throw();
+			bool AddValueNumber(const ConstStringFragment, const double) throw();
+			bool AddValueString(const ConstStringFragment, const ConstStringFragment) throw();
+		};
+
 		static bool SOLAIRE_EXPORT_CALL Write(const Value&, WriteStream&);
-		static bool SOLAIRE_EXPORT_CALL Read(WriteStream&, Parser&);
+		static bool SOLAIRE_EXPORT_CALL Read(WriteStream&, Reader&);
 		static Value SOLAIRE_EXPORT_CALL Read(ReadStream&);
 		static Value SOLAIRE_EXPORT_CALL Read(Allocator&, ReadStream&);
 	};
