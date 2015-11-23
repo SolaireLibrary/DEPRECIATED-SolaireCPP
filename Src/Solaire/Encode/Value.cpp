@@ -20,6 +20,7 @@
 #include "Solaire\Encode\Array.hpp"
 #include "Solaire\Encode\Object.hpp"
 #include "Solaire\Memory\DefaultAllocator.hpp"
+#include "Solaire\Strings\NumberParser.hpp"
 
 namespace Solaire{ namespace Encode{
 
@@ -50,61 +51,61 @@ namespace Solaire{ namespace Encode{
 
 	Value::Value(const char aValue) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_CHAR)
 	{}
 
 	Value::Value(const bool aValue) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_BOOL)
 	{}
 
 	Value::Value(const uint8_t aValue) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(const uint16_t aValue) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(const uint32_t aValue) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(const uint64_t aValue) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(const int8_t aValue) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
-		mInt(static_cast<int64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
 	Value::Value(const int16_t aValue) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
-		mInt(static_cast<int64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
 	Value::Value(const int32_t aValue) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
-		mInt(static_cast<int64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
 	Value::Value(const int64_t aValue) throw() :
 		mAllocator(DEFAULT_ALLOCATOR),
-		mInt(static_cast<int64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
@@ -134,61 +135,61 @@ namespace Solaire{ namespace Encode{
 
 	Value::Value(Allocator& aAllocator, const char aValue) throw() :
 		mAllocator(aAllocator),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_CHAR)
 	{}
 
 	Value::Value(Allocator& aAllocator, const bool aValue) throw() :
 		mAllocator(aAllocator),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_BOOL)
 	{}
 
 	Value::Value(Allocator& aAllocator, const uint8_t aValue) throw() :
 		mAllocator(aAllocator),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(Allocator& aAllocator, const uint16_t aValue) throw() :
 		mAllocator(aAllocator),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(Allocator& aAllocator, const uint32_t aValue) throw() :
 		mAllocator(aAllocator),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(Allocator& aAllocator, const uint64_t aValue) throw() :
 		mAllocator(aAllocator),
-		mUint(static_cast<uint64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(Allocator& aAllocator, const int8_t aValue) throw() :
 		mAllocator(aAllocator),
-		mInt(static_cast<int64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
 	Value::Value(Allocator& aAllocator, const int16_t aValue) throw() :
 		mAllocator(aAllocator),
-		mInt(static_cast<int64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
 	Value::Value(Allocator& aAllocator, const int32_t aValue) throw() :
 		mAllocator(aAllocator),
-		mInt(static_cast<int64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
 	Value::Value(Allocator& aAllocator, const int64_t aValue) throw() :
 		mAllocator(aAllocator),
-		mInt(static_cast<int64_t>(aValue)),
+		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
@@ -220,13 +221,6 @@ namespace Solaire{ namespace Encode{
 		case TYPE_BOOL:
 		case TYPE_CHAR:
 		case TYPE_UINT:
-			SetNull();
-			mUint = aOther.mUint;
-			break;
-		case TYPE_INT:
-			SetNull();
-			mInt = aOther.mInt;
-			break;
 		case TYPE_DOUBLE:
 			SetNull();
 			mDouble = aOther.mDouble;
@@ -261,8 +255,6 @@ namespace Solaire{ namespace Encode{
 		case TYPE_CHAR:
 		case TYPE_UINT:
 		case TYPE_INT:
-			mUint = aOther.mUint;
-			break;
 		case TYPE_DOUBLE:
 			mDouble = aOther.mDouble;
 			break;
@@ -281,31 +273,154 @@ namespace Solaire{ namespace Encode{
 	}
 
 	bool Value::IsNull() const throw() {
-		return mType == TYPE_NULL;
+		switch(mType) {
+		case TYPE_NULL:
+			return true;
+		case TYPE_STRING:
+			return mString->Size() == 0 || *mString == "null";
+		default:
+			return false;
+		}
 	}
 
 	bool Value::IsBool() const throw() {
-		return mType == TYPE_BOOL;
+		switch(mType) {
+		case TYPE_BOOL:
+			return true;
+		case TYPE_UINT:
+		case TYPE_INT:
+		case TYPE_DOUBLE:
+			return mDouble >= 0.0 && mDouble == std::floor(mDouble);
+		case TYPE_STRING:
+			return *mString == "true" || *mString == "false";
+		default:
+			return false;
+		}
 	}
 
 	bool Value::IsChar() const throw() {
-		return mType == TYPE_CHAR;
+		switch (mType) {
+		case TYPE_BOOL:
+		case TYPE_CHAR:
+			return true;
+		case TYPE_UINT:
+		case TYPE_INT:
+		case TYPE_DOUBLE:
+			return mDouble >= 0.0 && mDouble <= 9.0 && mDouble == std::floor(mDouble);
+		case TYPE_STRING:
+			return mString->Size() == 1;
+		default:
+			return false;
+		}
 	}
 
 	bool Value::IsUint() const throw() {
-		return mType == TYPE_UINT || (mType == TYPE_INT && mInt >= 0) || (mType == TYPE_DOUBLE && mDouble >= 0.0 && mDouble == std::floor(mDouble));
+		switch(mType) {
+		case TYPE_BOOL:
+			return true;
+		case TYPE_CHAR:
+			{
+				const char c = static_cast<char>(mDouble);
+				return c >= '0' && c <= '9';
+			}
+		case TYPE_UINT:
+			return true;
+		case TYPE_INT:
+		case TYPE_DOUBLE:
+			return mDouble >= 0.0 && mDouble == std::floor(mDouble);
+		case TYPE_STRING:
+			{
+				const char* const begin = mString->CString();
+				const char* const end = begin + mString->Size();
+				uint32_t value;
+				const char* const tmp = ReadNumber<uint32_t>(begin, end, value);
+				if(begin != end && tmp == end) {
+					const_cast<Value*>(this)->SetUint(value);
+					return true;
+				}else {
+					return false;
+				}
+			}
+		default:
+			return false;
+		}
 	}
 
 	bool Value::IsInt() const throw() {
-		return mType == TYPE_UINT || mType == TYPE_INT || (mType == TYPE_DOUBLE && mDouble == std::floor(mDouble));
+		switch(mType) {
+		case TYPE_BOOL:
+			return true;
+		case TYPE_CHAR:
+			{
+				const char c = static_cast<char>(mDouble);
+				return c >= '0' && c <= '9';
+			}
+		case TYPE_UINT:
+		case TYPE_INT:
+			return true;
+		case TYPE_DOUBLE:
+			return mDouble == std::floor(mDouble);
+		case TYPE_STRING:
+			{
+				const char* const begin = mString->CString();
+				const char* const end = begin + mString->Size();
+				int32_t value;
+				const char* const tmp = ReadNumber<int32_t>(begin, end, value);
+				if(begin != end && tmp == end) {
+					const_cast<Value*>(this)->SetInt(value);
+					return true;
+				}else {
+					return false;
+				}
+			}
+		default:
+			return false;
+		}
 	}
 
 	bool Value::IsDouble() const throw() {
-		return mType == TYPE_UINT || mType == TYPE_INT || mType == TYPE_DOUBLE;
+		switch(mType) {
+		case TYPE_BOOL:
+			return true;
+		case TYPE_CHAR:
+			{
+				const char c = static_cast<char>(mDouble);
+				return c >= '0' && c <= '9';
+			}
+		case TYPE_UINT:
+		case TYPE_INT:
+		case TYPE_DOUBLE:
+			return true;
+		case TYPE_STRING:
+			{
+				const char* const begin = mString->CString();
+				const char* const end = begin + mString->Size();
+				double value;
+				const char* const tmp = ReadNumber<double>(begin, end, value);
+				if(begin != end && tmp == end) {
+					const_cast<Value*>(this)->SetDouble(value);
+					return true;
+				}else {
+					return false;
+				}
+			}
+		default:
+			return false;
+		}
 	}
 
 	bool Value::IsString() const throw() {
-		return mType == TYPE_STRING;
+		switch(mType) {
+		case TYPE_BOOL:
+		case TYPE_CHAR:
+		case TYPE_UINT:
+		case TYPE_INT:
+		case TYPE_DOUBLE:
+		case TYPE_STRING:
+			return true;
+		default:
+			return false;
+		}
 	}
 
 	bool Value::IsArray() const throw() {
@@ -317,88 +432,143 @@ namespace Solaire{ namespace Encode{
 	}
 
 	bool Value::GetBool() const throw() {
-		switch(mType)
-		{
+		switch(mType) {
 		case TYPE_BOOL:
-		case TYPE_CHAR:
 		case TYPE_UINT:
-			return static_cast<bool>(mUint);
 		case TYPE_INT:
-			return static_cast<bool>(mInt);
 		case TYPE_DOUBLE:
-			return static_cast<bool>(mDouble);
+			return mDouble > 0.0;
+		case TYPE_STRING:
+			return *mString == "true";
 		default:
 			return false;
 		}
 	}
 
 	char Value::GetChar() const throw() {
-		switch (mType)
-		{
+		switch(mType) {
 		case TYPE_BOOL:
+			return mDouble > 0.0 ? '1' : '0';
 		case TYPE_CHAR:
-		case TYPE_UINT:
-			return static_cast<char>(mUint);
-		case TYPE_INT:
-			return static_cast<char>(mInt);
-		case TYPE_DOUBLE:
 			return static_cast<char>(mDouble);
+		case TYPE_UINT:
+		case TYPE_INT:
+		case TYPE_DOUBLE:
+			return mDouble >= 0.0 && mDouble <= 9.0 && mDouble == std::floor(mDouble) ? '0' + static_cast<char>(mDouble) : '\0';
+		case TYPE_STRING:
+			return mString->Size() == 1 ? mString->operator[](0) : '\0';
 		default:
 			return '\0';
 		}
 	}
 
 	uint64_t Value::GetUint() const throw() {
-		switch (mType)
-		{
-		case TYPE_BOOL:
+		switch(mType) {
 		case TYPE_CHAR:
+			{
+				const char c = static_cast<char>(mDouble);
+				return c >= '0' && c <= '9' ? static_cast<uint64_t>(c - '0') : 0;
+			}
+		case TYPE_BOOL:
 		case TYPE_UINT:
-			return static_cast<uint64_t>(mUint);
 		case TYPE_INT:
-			return static_cast<uint64_t>(mInt);
 		case TYPE_DOUBLE:
-			return static_cast<uint64_t>(mDouble);
+			return static_cast<uint32_t>(mDouble);
+		case TYPE_STRING:
+			{
+				const char* const begin = mString->CString();
+				const char* const end = begin + mString->Size();
+				uint32_t value;
+				const char* const tmp = ReadNumber<uint32_t>(begin, end, value);
+				if(begin != end && tmp == end) {
+					const_cast<Value*>(this)->SetUint(value);
+					return value;
+				}else {
+					return 0;
+				}
+			}
 		default:
 			return 0;
 		}
 	}
 
 	int64_t Value::GetInt() const throw() {
-		switch (mType)
-		{
-		case TYPE_BOOL:
+		switch(mType) {
 		case TYPE_CHAR:
+			{
+				const char c = static_cast<char>(mDouble);
+				return c >= '0' && c <= '9' ? static_cast<int64_t>(c - '0') : 0;
+			}
+		case TYPE_BOOL:
 		case TYPE_UINT:
-			return static_cast<int64_t>(mUint);
 		case TYPE_INT:
-			return static_cast<int64_t>(mInt);
 		case TYPE_DOUBLE:
-			return static_cast<int64_t>(mDouble);
+			return static_cast<int32_t>(mDouble);
+		case TYPE_STRING:
+			{
+				const char* const begin = mString->CString();
+				const char* const end = begin + mString->Size();
+				int32_t value;
+				const char* const tmp = ReadNumber<int32_t>(begin, end, value);
+				if(begin != end && tmp == end) {
+					const_cast<Value*>(this)->SetInt(value);
+					return value;
+				}else {
+					return 0;
+				}
+			}
 		default:
 			return 0;
 		}
 	}
 
 	double Value::GetDouble() const throw() {
-		switch (mType)
-		{
-		case TYPE_BOOL:
+		switch(mType) {
 		case TYPE_CHAR:
+			{
+				const char c = static_cast<char>(mDouble);
+				return c >= '0' && c <= '9' ? static_cast<double>(c - '0') : 0;
+			}
+		case TYPE_BOOL:
 		case TYPE_UINT:
-			return static_cast<double>(mUint);
 		case TYPE_INT:
-			return static_cast<double>(mInt);
 		case TYPE_DOUBLE:
-			return static_cast<double>(mDouble);
+			return static_cast<uint32_t>(mDouble);
+		case TYPE_STRING:
+			{
+				const char* const begin = mString->CString();
+				const char* const end = begin + mString->Size();
+				double value;
+				const char* const tmp = ReadNumber<double>(begin, end, value);
+				if(begin != end && tmp == end) {
+					const_cast<Value*>(this)->SetDouble(value);
+					return value;
+				}else {
+					return 0;
+				}
+			}
 		default:
-			return 0.0;
+			return 0;
 		}
 	}
 
 	String& Value::GetString() throw() {
-		switch (mType)
-		{
+		switch(mType) {
+		case TYPE_CHAR:
+			{
+				const char c = static_cast<char>(mDouble);
+				SetString() += c;
+				return *mString;
+			}
+		case TYPE_BOOL:
+		case TYPE_UINT:
+		case TYPE_INT:
+		case TYPE_DOUBLE:
+			{
+				const double num = mDouble;
+				SetString() += num;
+				return *mString;
+			}
 		case TYPE_STRING:
 			return *mString;
 		default:
@@ -407,13 +577,7 @@ namespace Solaire{ namespace Encode{
 	}
 
 	const String& Value::GetString() const throw() {
-		switch (mType)
-		{
-		case TYPE_STRING:
-			return *mString;
-		default:
-			return DEFAULT_STRING;
-		}
+		return const_cast<Value*>(this)->GetString();
 	}
 
 	Array& Value::GetArray() throw() {
@@ -480,25 +644,25 @@ namespace Solaire{ namespace Encode{
 	void Value::SetBool(const bool aValue) throw() {
 		SetNull();
 		mType = TYPE_BOOL;
-		mUint = static_cast<uint64_t>(aValue);
+		mDouble = static_cast<double>(aValue);
 	}
 
 	void Value::SetChar(const char aValue) throw() {
 		SetNull();
 		mType = TYPE_CHAR;
-		mUint = static_cast<uint64_t>(aValue);
+		mDouble = static_cast<double>(aValue);
 	}
 
 	void Value::SetUint(const uint64_t aValue) throw() {
 		SetNull();
 		mType = TYPE_UINT;
-		mUint = aValue;
+		mDouble = static_cast<double>(aValue);
 	}
 
 	void Value::SetInt(const int64_t aValue) throw() {
 		SetNull();
 		mType = TYPE_INT;
-		mInt = aValue;
+		mDouble = static_cast<double>(aValue);
 	}
 
 	void Value::SetDouble(const double aValue) throw() {

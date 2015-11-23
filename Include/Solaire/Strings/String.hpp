@@ -130,6 +130,16 @@ namespace Solaire{
         String& operator+=(const char* aValue);
         String& operator+=(const String& aValue);
         String& operator+=(const ConstStringFragment aValue);
+		String& operator+=(const uint8_t aValue);
+		String& operator+=(const uint16_t aValue);
+		String& operator+=(const uint32_t aValue);
+		String& operator+=(const uint64_t aValue);
+		String& operator+=(const int8_t aValue);
+		String& operator+=(const int16_t aValue);
+		String& operator+=(const int32_t aValue);
+		String& operator+=(const int64_t aValue);
+		String& operator+=(const float aValue);
+		String& operator+=(const double aValue);
 
         template<class T>
         String& operator+=(const std::basic_string<T>& aValue){

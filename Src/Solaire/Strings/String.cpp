@@ -18,6 +18,7 @@
 
 #include <cstring>
 #include "Solaire\Strings\String.hpp"
+#include "Solaire\Strings\NumberParser.hpp"
 
 namespace Solaire{
 
@@ -212,6 +213,46 @@ namespace Solaire{
         for(const Type c : aValue) PushBack(c);
         return *this;
     }
+
+	String& String::operator+=(const uint8_t aValue) {
+		return operator+=(WriteNumber(GetAllocator(), static_cast<uint32_t>(aValue)));
+	}
+
+	String& String::operator+=(const uint16_t aValue) {
+		return operator+=(WriteNumber(GetAllocator(), static_cast<uint32_t>(aValue)));
+	}
+
+	String& String::operator+=(const uint32_t aValue) {
+		return operator+=(WriteNumber(GetAllocator(), aValue));
+	}
+
+	String& String::operator+=(const uint64_t aValue) {
+		return operator+=(WriteNumber(GetAllocator(), static_cast<uint32_t>(aValue)));
+	}
+
+	String& String::operator+=(const int8_t aValue) {
+		return operator+=(WriteNumber(GetAllocator(), static_cast<int32_t>(aValue)));
+	}
+
+	String& String::operator+=(const int16_t aValue) {
+		return operator+=(WriteNumber(GetAllocator(), static_cast<int32_t>(aValue)));
+	}
+
+	String& String::operator+=(const int32_t aValue) {
+		return operator+=(WriteNumber(GetAllocator(), aValue));
+	}
+
+	String& String::operator+=(const int64_t aValue) {
+		return operator+=(WriteNumber(GetAllocator(), static_cast<int32_t>(aValue)));
+	}
+
+	String& String::operator+=(const float aValue) {
+		return operator+=(WriteNumber(GetAllocator(), static_cast<double>(aValue)));
+	}
+
+	String& String::operator+=(const double aValue) {
+		return operator+=(WriteNumber(GetAllocator(), aValue));
+	}
 
     String::ConstPointer String::CString() const{
         return &const_cast<Container&>(mContainer)[0];

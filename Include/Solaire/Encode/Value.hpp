@@ -41,7 +41,7 @@ namespace Solaire{ namespace Encode{
 	class Object;
 
 	class Value{
-	private:
+	public:
 		enum : uint8_t {
 			TYPE_NULL,
 			TYPE_BOOL,
@@ -56,8 +56,6 @@ namespace Solaire{ namespace Encode{
 	private:
 		Allocator& mAllocator;
 		union{
-			uint64_t mUint;
-			int64_t mInt;
 			double mDouble;
 			Object* mObject;
 			Array* mArray;

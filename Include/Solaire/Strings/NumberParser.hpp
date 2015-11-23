@@ -32,6 +32,8 @@
 */
 
 #include <cmath>
+#include "String.hpp"
+#include "..\Memory\DefaultAllocator.hpp"
 
 namespace Solaire {
 	namespace Implementation {
@@ -160,10 +162,10 @@ namespace Solaire {
 	}
 
 	template<class T>
-	static const char* ParseNumber(const char* const aBegin, const char* const aEnd, T& aValue);
+	static const char* ReadNumber(const char* const aBegin, const char* const aEnd, T& aValue);
 
 	template<>
-	const char* ParseNumber<uint32_t>(const char* const aBegin, const char* const aEnd, uint32_t& aValue) {
+	const char* ReadNumber<uint32_t>(const char* const aBegin, const char* const aEnd, uint32_t& aValue) {
 		uint32_t zeros;
 		const char* const end = Implementation::ParseExponent<
 			uint32_t, 
@@ -176,31 +178,31 @@ namespace Solaire {
 	}
 
 	template<>
-	const char* ParseNumber<uint8_t>(const char* const aBegin, const char* const aEnd, uint8_t& aValue) {
+	const char* ReadNumber<uint8_t>(const char* const aBegin, const char* const aEnd, uint8_t& aValue) {
 		uint32_t tmp;
-		const char* const end = ParseNumber<uint32_t>(aBegin, aEnd, tmp);
+		const char* const end = ReadNumber<uint32_t>(aBegin, aEnd, tmp);
 		aValue = static_cast<uint8_t>(tmp);
 		return end;
 	}
 
 	template<>
-	const char* ParseNumber<uint16_t>(const char* const aBegin, const char* const aEnd, uint16_t& aValue) {
+	const char* ReadNumber<uint16_t>(const char* const aBegin, const char* const aEnd, uint16_t& aValue) {
 		uint32_t tmp;
-		const char* const end = ParseNumber<uint32_t>(aBegin, aEnd, tmp);
+		const char* const end = ReadNumber<uint32_t>(aBegin, aEnd, tmp);
 		aValue = static_cast<uint16_t>(tmp);
 		return end;
 	}
 
 	template<>
-	const char* ParseNumber<uint64_t>(const char* const aBegin, const char* const aEnd, uint64_t& aValue) {
+	const char* ReadNumber<uint64_t>(const char* const aBegin, const char* const aEnd, uint64_t& aValue) {
 		uint32_t tmp;
-		const char* const end = ParseNumber<uint32_t>(aBegin, aEnd, tmp);
+		const char* const end = ReadNumber<uint32_t>(aBegin, aEnd, tmp);
 		aValue = static_cast<uint64_t>(tmp);
 		return end;
 	}
 
 	template<>
-	const char* ParseNumber<int32_t>(const char* const aBegin, const char* const aEnd, int32_t& aValue) {
+	const char* ReadNumber<int32_t>(const char* const aBegin, const char* const aEnd, int32_t& aValue) {
 		uint32_t zeros;
 		const char*  end = Implementation::ParseExponent<
 			int32_t, 
@@ -213,31 +215,31 @@ namespace Solaire {
 	}
 
 	template<>
-	const char* ParseNumber<int8_t>(const char* const aBegin, const char* const aEnd, int8_t& aValue) {
+	const char* ReadNumber<int8_t>(const char* const aBegin, const char* const aEnd, int8_t& aValue) {
 		int32_t tmp;
-		const char* const end = ParseNumber<int32_t>(aBegin, aEnd, tmp);
+		const char* const end = ReadNumber<int32_t>(aBegin, aEnd, tmp);
 		aValue = static_cast<int8_t>(tmp);
 		return end;
 	}
 
 	template<>
-	const char* ParseNumber<int16_t>(const char* const aBegin, const char* const aEnd, int16_t& aValue) {
+	const char* ReadNumber<int16_t>(const char* const aBegin, const char* const aEnd, int16_t& aValue) {
 		int32_t tmp;
-		const char* const end = ParseNumber<int32_t>(aBegin, aEnd, tmp);
+		const char* const end = ReadNumber<int32_t>(aBegin, aEnd, tmp);
 		aValue = static_cast<int16_t>(tmp);
 		return end;
 	}
 
 	template<>
-	const char* ParseNumber<int64_t>(const char* const aBegin, const char* const aEnd, int64_t& aValue) {
+	const char* ReadNumber<int64_t>(const char* const aBegin, const char* const aEnd, int64_t& aValue) {
 		int32_t tmp;
-		const char* const end = ParseNumber<int32_t>(aBegin, aEnd, tmp);
+		const char* const end = ReadNumber<int32_t>(aBegin, aEnd, tmp);
 		aValue = static_cast<int64_t>(tmp);
 		return end;
 	}
 
 	template<>
-	const char* ParseNumber<double>(const char* const aBegin, const char* const aEnd, double& aValue) {
+	const char* ReadNumber<double>(const char* const aBegin, const char* const aEnd, double& aValue) {
 		uint32_t zeros;
 		//! \bug 123.-456 is treated as a valid number
 		const char* const end = Implementation::ParseDecimal<
@@ -287,11 +289,61 @@ namespace Solaire {
 	}
 
 	template<>
-	const char* ParseNumber<float>(const char* const aBegin, const char* const aEnd, float& aValue) {
+	const char* ReadNumber<float>(const char* const aBegin, const char* const aEnd, float& aValue) {
 		double tmp;
-		const char* const end = ParseNumber<double>(aBegin, aEnd, tmp);
+		const char* const end = ReadNumber<double>(aBegin, aEnd, tmp);
 		aValue = static_cast<float>(tmp);
 		return end;
+	}
+
+	static String WriteNumber(Allocator& aAllocator, const double aValue) {
+		double highPart = std::floor(aValue);
+		double lowPart = aValue - highPart;
+
+		String tmp(aAllocator);
+
+		if(highPart == 0.0) {
+			tmp += '0';
+		}else {
+			while(highPart != 0.0) {
+				const double digit = highPart / 10.0;
+				highPart = std::floor(digit);
+
+				tmp += '0' + static_cast<char>((digit - highPart) * 10.0);
+			}
+		}
+
+		if(lowPart != 0.0) {
+			tmp += '.';
+			while(highPart != 0.0) {
+				const double digit = highPart * 10.0;
+				highPart = highPart - std::floor(digit);
+
+				tmp += '0' + static_cast<char>(digit);
+			}
+		}
+
+		return tmp;
+	}
+
+	static String WriteNumber(Allocator& aAllocator, const uint32_t aValue) {
+		return WriteNumber(aAllocator, static_cast<double>(aValue));
+	}
+
+	static String WriteNumber(Allocator& aAllocator, const int32_t aValue) {
+		return WriteNumber(aAllocator, static_cast<double>(aValue));
+	}
+
+	static String WriteNumber(const double aValue) {
+		return WriteNumber(DEFAULT_ALLOCATOR, static_cast<double>(aValue));
+	}
+
+	static String WriteNumber(const uint32_t aValue) {
+		return WriteNumber(DEFAULT_ALLOCATOR, static_cast<uint32_t>(aValue));
+	}
+
+	static String WriteNumber(const int32_t aValue) {
+		return WriteNumber(DEFAULT_ALLOCATOR, static_cast<int32_t>(aValue));
 	}
 }
 #endif

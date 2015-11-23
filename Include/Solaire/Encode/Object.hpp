@@ -38,7 +38,7 @@ namespace Solaire{ namespace Encode{
 
 	class Object {
 	private:
-		std::map<String, Value> mValues;
+		std::map<String, Value> mValues; /// Bad
 		Allocator& mAllocator;
 	public:
 		Object() throw();
