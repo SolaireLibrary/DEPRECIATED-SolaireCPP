@@ -45,6 +45,59 @@ namespace Solaire{ namespace Encode{
 
 	}
 
+	bool Xml::Writer::WriteElement(const Xml::Writer::ElementData& aData) throw(){
+		char buf;
+
+		buf = '<';
+		mOutputStream.Write(&buf, sizeof(char));
+		mOutputStream.Write(aData.name.CString(), sizeof(char) * aData.name.Size());
+
+		const uint32_t attributeCount = aData.attributeNames.Size();
+		for (uint32_t i = 0; i < attributeCount; ++i) {
+			buf = ' ';
+			mOutputStream.Write(&buf, sizeof(char));
+			mOutputStream.Write(aData.attributeNames[i].CString(), sizeof(char) * aData.attributeNames[i].Size());
+			buf = '=';
+			mOutputStream.Write(&buf, sizeof(char));
+			buf = '"';
+			mOutputStream.Write(&buf, sizeof(char));
+			mOutputStream.Write(aData.attributeValues[i].CString(), sizeof(char) * aData.attributeValues[i].Size());
+			buf = '"';
+			mOutputStream.Write(&buf, sizeof(char));
+		}
+
+		if (aData.body.Size() == 0 && aData.children.Size() == 0) {
+			buf = '/';
+			mOutputStream.Write(&buf, sizeof(char));
+			buf = '>';
+			mOutputStream.Write(&buf, sizeof(char));
+		}
+		else {
+			buf = '>';
+			mOutputStream.Write(&buf, sizeof(char));
+
+			if (aData.body.Size() != 0) {
+				mOutputStream.Write(aData.body.CString(), sizeof(char) * aData.body.Size());
+			}
+			else {
+				const uint32_t childCount = aData.children.Size();
+				for (uint32_t i = 0; i < childCount; ++i) {
+					if (!WriteElement(aData.children[i])) return false;
+				}
+			}
+
+			buf = '<';
+			mOutputStream.Write(&buf, sizeof(char));
+			buf = '/';
+			mOutputStream.Write(&buf, sizeof(char));
+			mOutputStream.Write(aData.name.CString(), sizeof(char) * aData.name.Size());
+			buf = '>';
+			mOutputStream.Write(&buf, sizeof(char));
+		}
+
+		return true;
+	}
+
 	bool Xml::Writer::BeginElement(const ConstStringFragment aName) {
 		if(mHead.IsEmpty()) {
 			mRoot.name = aName;
@@ -61,49 +114,11 @@ namespace Solaire{ namespace Encode{
 	}
 
 	bool Xml::Writer::EndElement() {
-		static const auto WriteElement = [](const Xml::Writer::ElementData& aData, WriteStream& aStream)->bool {
-			char buf;
-			
-			buf = '<';
-			aStream.Write(&buf, sizeof(char));
-			aStream.Write(aData.name.CString(), sizeof(char) * aData.name.Size());
-
-			if(aData.attributeNames.Size() != 0) {
-				buf = ' ';
-				aStream.Write(&buf, sizeof(char));
-
-				//! \todo Write attribute
-			}
-
-			if(aData.body.Size() == 0 && aData.children.Size() == 0) {
-				buf = '/';
-				aStream.Write(&buf, sizeof(char));
-				buf = '>';
-				aStream.Write(&buf, sizeof(char));
-			}else{
-				buf = '>';
-				aStream.Write(&buf, sizeof(char));
-
-				//! \todo Write body
-				//! \todo Write children
-			
-				buf = '<';
-				aStream.Write(&buf, sizeof(char));
-				buf = '/';
-				aStream.Write(&buf, sizeof(char));
-				aStream.Write(aData.name.CString(), sizeof(char) * aData.name.Size());
-				buf = '>';
-				aStream.Write(&buf, sizeof(char));
-			}
-			
-			return true;
-		};
-
 		if(mHead.IsEmpty()) return false;
 		mHead.PopBack();
 
 		if(mHead.IsEmpty()) {
-			if(! WriteElement(mRoot, mOutputStream)) return false;
+			if(! WriteElement(mRoot)) return false;
 			mOutputStream.Flush();
 		}
 

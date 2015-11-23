@@ -62,6 +62,8 @@ namespace Solaire { namespace Encode {
 				ElementData();
 			};
 		private:
+			bool WriteElement(const ElementData&) throw();
+		private:
 			WriteStream& mOutputStream;
 			ElementData mRoot;
 			DynamicArray<ElementData*> mHead;
