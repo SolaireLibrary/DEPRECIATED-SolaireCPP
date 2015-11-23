@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_ENCODE_XML_HPP
-#define SOLAIRE_ENCODE_XML_HPP
+#ifndef SOLAIRE_ENCODE_BINARY_HPP
+#define SOLAIRE_ENCODE_BINARY_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file Xml.hpp
+\file Binary.hpp
 \brief
 \author
 Created			: Adam Smith
@@ -32,26 +32,14 @@ Last Modified	: 23rd November 2015
 */
 
 #include "..\Core\Init.hpp"
-#include "..\Strings\StringFragment.hpp"
 #include "..\IO\Stream.hpp"
 #include "Value.hpp"
 
 namespace Solaire { namespace Encode {
 
-	struct Xml {
-		class SOLAIRE_EXPORT_API Parser {
-			virtual bool SOLAIRE_EXPORT_CALL BeginElement(const ConstStringFragment) const = 0;
-			virtual bool SOLAIRE_EXPORT_CALL EndElement() const = 0;
-
-			virtual bool SOLAIRE_EXPORT_CALL ElementBody(const ConstStringFragment) const = 0;
-
-			virtual bool SOLAIRE_EXPORT_CALL AttributeName(const ConstStringFragment) const = 0;
-			virtual bool SOLAIRE_EXPORT_CALL AttributeValue(const ConstStringFragment) const = 0;
-
-		};
+	struct Binary {
 
 		static bool SOLAIRE_EXPORT_CALL Write(const Value, WriteStream&);
-		static bool SOLAIRE_EXPORT_CALL Read(WriteStream&, Parser&);
 		static Value SOLAIRE_EXPORT_CALL Read(ReadStream&);
 	};
 

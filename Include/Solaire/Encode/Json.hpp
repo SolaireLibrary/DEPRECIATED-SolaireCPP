@@ -57,7 +57,7 @@ namespace Solaire{ namespace Encode{
 		static bool SOLAIRE_EXPORT_CALL Write(const Value, WriteStream&);
 		static bool SOLAIRE_EXPORT_CALL Read(WriteStream&, Parser&);
 		static Value SOLAIRE_EXPORT_CALL Read(ReadStream&);
-	}
+	};
 
 
 }}
