@@ -272,6 +272,10 @@ namespace Solaire{ namespace Encode{
 		return *this;
 	}
 
+	Value::Type Value::GetType() const throw() {
+		return mType;
+	}
+
 	bool Value::IsNull() const throw() {
 		switch(mType) {
 		case TYPE_NULL:

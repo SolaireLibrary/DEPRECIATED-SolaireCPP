@@ -42,7 +42,7 @@ namespace Solaire{ namespace Encode{
 
 	class Value{
 	public:
-		enum : uint8_t {
+		enum Type : uint8_t {
 			TYPE_NULL,
 			TYPE_BOOL,
 			TYPE_CHAR,
@@ -61,7 +61,7 @@ namespace Solaire{ namespace Encode{
 			Array* mArray;
 			String* mString;
 		};
-		uint8_t mType;
+		Type mType;
 	public:
 		Value(const Value&) throw();
 		Value(Value&&) throw();
@@ -100,6 +100,8 @@ namespace Solaire{ namespace Encode{
 
 		Value& operator=(const Value&) throw();
 		Value& operator=(Value&&) throw();
+
+		Type GetType() const throw();
 
 		bool IsNull() const throw();
 		bool IsBool() const throw();

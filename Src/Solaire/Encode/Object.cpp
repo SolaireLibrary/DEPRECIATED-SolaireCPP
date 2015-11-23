@@ -37,6 +37,10 @@ namespace Solaire{ namespace Encode{
 		return mNames.Size();
 	}
 
+	const String& Object::GetMemberName(const uint32_t aIndex) const throw() {
+		return mNames[aIndex];
+	}
+
 	const Value& Object::operator[](const uint32_t aIndex) const throw() {
 		return mValues[aIndex];
 	}

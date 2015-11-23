@@ -44,6 +44,8 @@ namespace Solaire{ namespace Encode{
 		Object() throw();
 		Object(Allocator&) throw();
 
+		const String& GetMemberName(const uint32_t) const throw();
+
 		uint32_t Size() const throw();
 		const Value& operator[](const uint32_t) const throw();
 		Value& operator[](const uint32_t) throw();
