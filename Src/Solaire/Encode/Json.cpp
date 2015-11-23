@@ -128,40 +128,12 @@ namespace Solaire{ namespace Encode{
 		return true;
 	}
 
-	bool Json::Writer::EndArray(const ConstStringFragment aValue) throw() {
-		if(mState.IsEmpty() || mState.Back() != STATE_OBJECT) return false;
-		mState.PopBack();
-
-		char buf = ']';
-		mOutputStream.Write(&buf, sizeof(char));
-		if(! mState.IsEmpty()) {
-			buf = ',';
-			mOutputStream.Write(&buf, sizeof(char));
-		}
-
-		return true;
-	}
-
 	bool Json::Writer::BeginObject(const ConstStringFragment aName) throw() {
 		if(mState.IsEmpty() || mState.Back() != STATE_OBJECT) return false;
 		mState.PushBack(STATE_OBJECT);
 
 		char buf = '{';
 		mOutputStream.Write(&buf, sizeof(char));
-
-		return true;
-	}
-
-	bool Json::Writer::EndObject(const ConstStringFragment aName) throw() {
-		if(mState.IsEmpty() || mState.Back() != STATE_OBJECT) return false;
-		mState.PopBack();
-
-		char buf = '}';
-		mOutputStream.Write(&buf, sizeof(char));
-		if(! mState.IsEmpty()) {
-			buf = ',';
-			mOutputStream.Write(&buf, sizeof(char));
-		}
 
 		return true;
 	}
@@ -242,10 +214,12 @@ namespace Solaire{ namespace Encode{
 			{
 				const Array& _array = aValue.GetArray();
 				const uint32_t length = _array.Size();
-
+				
+				if(! aWriter.BeginArray(aName)) return false;
 				for(uint32_t i = 0; i < length; ++i) {
 					if (!WriteArray(_array[i], aWriter)) return false;
 				}
+				if(! aWriter.EndArray()) return false;
 
 				return true;
 			}
@@ -253,10 +227,12 @@ namespace Solaire{ namespace Encode{
 			{
 				const Object& object = aValue.GetObject();
 				const uint32_t length = object.Size();
-
+				
+				if(! aWriter.BeginObject(aName)) return false;
 				for(uint32_t i = 0; i < length; ++i) {
 					if (!WriteObject(object.GetMemberName(i), object[i], aWriter)) return false;
 				}
+				if(! aWriter.EndObject()) return false;
 
 				return true;
 			}
@@ -285,9 +261,11 @@ namespace Solaire{ namespace Encode{
 				const Array& _array = aValue.GetArray();
 				const uint32_t length = _array.Size();
 
+				if(! aWriter.BeginArray()) return false;
 				for(uint32_t i = 0; i < length; ++i) {
-					if (! WriteArray(_array[i], aWriter)) return false;
+					if(! WriteArray(_array[i], aWriter)) return false;
 				}
+				if(! aWriter.EndArray()) return false;
 
 				return true;
 			}
@@ -295,10 +273,12 @@ namespace Solaire{ namespace Encode{
 			{
 				const Object& object = aValue.GetObject();
 				const uint32_t length = object.Size();
-
+				
+				if(! aWriter.BeginObject()) return false;
 				for(uint32_t i = 0; i < length; ++i) {
 					if (!WriteObject(object.GetMemberName(i), object[i], aWriter)) return false;
 				}
+				if(! aWriter.EndObject()) return false;
 
 				return true;
 			}
@@ -307,18 +287,19 @@ namespace Solaire{ namespace Encode{
 		}
 	}
 
-	bool SOLAIRE_EXPORT_CALL Json::Write(const Value& aValue, WriteStream& aOutputStream){
-		Writer writer(aOutputStream);
+	bool SOLAIRE_EXPORT_CALL Json::Write(const Value& aValue, Writer& aWriter){
 
 		switch(aValue.GetType()) {
 		case Value::TYPE_ARRAY:
 			{
 				const Array& _array = aValue.GetArray();
 				const uint32_t length = _array.Size();
-
+				
+				if(! aWriter.BeginArray()) return false;
 				for(uint32_t i = 0; i < length; ++i) {
-					if (! WriteArray(_array[i], writer)) return false;
+					if (! WriteArray(_array[i], aWriter)) return false;
 				}
+				if(! aWriter.EndArray()) return false;
 
 				return true;
 			}
@@ -326,10 +307,12 @@ namespace Solaire{ namespace Encode{
 			{
 				const Object& object = aValue.GetObject();
 				const uint32_t length = object.Size();
-
+				
+				if(! aWriter.BeginObject()) return false;
 				for(uint32_t i = 0; i < length; ++i) {
-					if (!WriteObject(object.GetMemberName(i), object[i], writer)) return false;
+					if (!WriteObject(object.GetMemberName(i), object[i], aWriter)) return false;
 				}
+				if(! aWriter.EndObject()) return false;
 
 				return true;
 			}
