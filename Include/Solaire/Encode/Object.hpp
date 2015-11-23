@@ -31,50 +31,48 @@
 	Last Modified	: 21st November 2015
 */
 
-#include <map>
 #include "Value.hpp"
+#include "..\DataStructures\DynamicArray.hpp"
 
 namespace Solaire{ namespace Encode{
 
 	class Object {
 	private:
-		std::map<String, Value> mValues; /// Bad
-		Allocator& mAllocator;
+		DynamicArray<String> mNames;
+		DynamicArray<Value> mValues;
 	public:
 		Object() throw();
 		Object(Allocator&) throw();
-
-		Object& operator=(const Object&) throw();
 
 		uint32_t Size() const throw();
 		const Value& operator[](const uint32_t) const throw();
 		Value& operator[](const uint32_t) throw();
 
-		bool ContainsValue(const String&) const throw();
+		bool ContainsValue(const ConstStringFragment) const throw();
 
-		const Value& operator[](const String&) const throw();
-		Value& operator[](const String&) throw();
+		const Value& operator[](const ConstStringFragment) const throw();
+		Value& operator[](const ConstStringFragment) throw();
 
-		Value& Add(const String&, Value&) throw();
+		Value& Add(const ConstStringFragment, Value&) throw();
 		void Erase(const uint32_t) throw();
-		void Erase(const String&) throw();
+		void Erase(const ConstStringFragment) throw();
 
 		void Clear() throw();
 
-		Value& Add(const String&) throw();
-		Value& Add(const String&, const char) throw();
-		Value& Add(const String&, const bool) throw();
-		Value& Add(const String&, const uint8_t) throw();
-		Value& Add(const String&, const uint16_t) throw();
-		Value& Add(const String&, const uint32_t) throw();
-		Value& Add(const String&, const uint64_t) throw();
-		Value& Add(const String&, const int8_t) throw();
-		Value& Add(const String&, const int16_t) throw();
-		Value& Add(const String&, const int32_t) throw();
-		Value& Add(const String&, const int64_t) throw();
-		Value& Add(const String&, const float) throw();
-		Value& Add(const String&, const double) throw();
-		Value& Add(const String&, const String&) throw();
+		Value& Add(const ConstStringFragment) throw();
+		Value& Add(const ConstStringFragment, const char) throw();
+		Value& Add(const ConstStringFragment, const bool) throw();
+		Value& Add(const ConstStringFragment, const uint8_t) throw();
+		Value& Add(const ConstStringFragment, const uint16_t) throw();
+		Value& Add(const ConstStringFragment, const uint32_t) throw();
+		Value& Add(const ConstStringFragment, const uint64_t) throw();
+		Value& Add(const ConstStringFragment, const int8_t) throw();
+		Value& Add(const ConstStringFragment, const int16_t) throw();
+		Value& Add(const ConstStringFragment, const int32_t) throw();
+		Value& Add(const ConstStringFragment, const int64_t) throw();
+		Value& Add(const ConstStringFragment, const float) throw();
+		Value& Add(const ConstStringFragment, const double) throw();
+		Value& Add(const ConstStringFragment, const String&) throw();
 	};
 }}
 

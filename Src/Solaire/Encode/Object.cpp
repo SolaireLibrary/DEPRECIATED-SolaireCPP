@@ -24,124 +24,136 @@ namespace Solaire{ namespace Encode{
 	// Object 
 	
 	Object::Object() throw() :
-		mAllocator(DEFAULT_ALLOCATOR)
+		mNames(DEFAULT_ALLOCATOR),
+		mValues(DEFAULT_ALLOCATOR)
 	{}
 
 	Object::Object(Allocator& aAllocator) throw() :
-		mAllocator(aAllocator)
+		mNames(aAllocator),
+		mValues(aAllocator)
 	{}
 
-	Object& Object::operator=(const Object& aOther) throw(){
-		mValues = aOther.mValues;
-		return *this;
-	}
-
 	uint32_t Object::Size() const {
-		return mValues.size();
+		return mNames.Size();
 	}
 
 	const Value& Object::operator[](const uint32_t aIndex) const throw() {
-		auto it = mValues.begin();
-		for(uint32_t i = 0; i < aIndex; ++i) {
-			++it;
-		}
-		return it->second;
+		return mValues[aIndex];
 	}
 
 	Value& Object::operator[](const uint32_t aIndex) throw() {
-		auto it = mValues.begin();
-		for (uint32_t i = 0; i < aIndex; ++i) {
-			++it;
+		return mValues[aIndex];
+	}
+
+	bool Object::ContainsValue(const ConstStringFragment aName) const throw() {
+		const uint32_t size = mNames.Size();
+		for(uint32_t i = 0; i < size; ++i){
+			if(mNames[i] == aName) return true;
 		}
-		return it->second;
+		return false;
 	}
 
-	bool Object::ContainsValue(const String& aName) const throw() {
-		return mValues.find(aName) != mValues.end();
+	const Value& Object::operator[](const ConstStringFragment aName) const {
+		const uint32_t size = mNames.Size();
+		for(uint32_t i = 0; i < size; ++i){
+			if(mNames[i] == aName) return mValues[i];
+		}
+		return mValues[-1];
 	}
 
-	const Value& Object::operator[](const String& aName) const {
-		return mValues.find(aName)->second;
+	Value& Object::operator[](const ConstStringFragment aName) throw() {
+		const uint32_t size = mNames.Size();
+		for(uint32_t i = 0; i < size; ++i) {
+			if(mNames[i] == aName) return mValues[i];
+		}
+		return mValues[-1];
 	}
 
-	Value& Object::operator[](const String& aName) throw() {
-		return mValues.find(aName)->second;
-	}
-
-	Value& Object::Add(const String& aName, Value& aValue) throw() {
-		return mValues.emplace(aName, aValue).first->second;
+	Value& Object::Add(const ConstStringFragment aName, Value& aValue) throw() {
+		const uint32_t size = mNames.Size();
+		for(uint32_t i = 0; i < size; ++i) {
+			if(mNames[i] == aName) {
+				return mValues[i] = aValue;
+			}
+		}
+		mNames.PushBack(String(mNames.GetAllocator(), aName));
+		return mValues.PushBack(aValue);
 	}
 
 	void Object::Erase(const uint32_t aIndex) throw() {
-		auto it = mValues.begin();
-		for (uint32_t i = 0; i < aIndex; ++i) {
-			++it;
-		}
-		mValues.erase(it);
+		mNames.Erase(mNames.begin() + aIndex);
+		mNames.Erase(mNames.end() + aIndex);
 	}
 
-	void Object::Erase(const String& aName) throw() {
-		mValues.erase(mValues.find(aName));
+	void Object::Erase(const ConstStringFragment aName) throw() {
+		const uint32_t size = mNames.Size();
+		for(uint32_t i = 0; i < size; ++i) {
+			if(mNames[i] == aName) {
+				Erase(i);
+				return;
+			}
+		}
 	}
 
 	void Object::Clear() throw() {
-		mValues.clear();
+		mNames.Clear();
+		mValues.Clear();
 	}
 
-	Value& Object::Add(const String& aName) throw() {
-		return Add(aName, Value(mAllocator));
+	Value& Object::Add(const ConstStringFragment aName) throw() {
+		return Add(aName, Value(mNames.GetAllocator()));
 	}
 
-	Value& Object::Add(const String& aName, const char aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const char aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const bool aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const bool aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const uint8_t aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const uint8_t aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const uint16_t aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const uint16_t aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const uint32_t aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const uint32_t aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const uint64_t aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const uint64_t aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const int8_t aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const int8_t aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const int16_t aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const int16_t aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const int32_t aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const int32_t aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const int64_t aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const int64_t aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const float aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const float aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const double aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const double aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const String& aName, const String& aValue) throw() {
-		return Add(aName, Value(mAllocator, aValue));
+	Value& Object::Add(const ConstStringFragment aName, const String& aValue) throw() {
+		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
 }}
