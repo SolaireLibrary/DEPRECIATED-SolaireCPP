@@ -18,6 +18,8 @@
 
 #include "Solaire\Encode\Json.hpp"
 #include "Solaire\Strings\NumberParser.hpp"
+#include "Solaire\Encode\Array.hpp"
+#include "Solaire\Encode\Object.hpp"
 
 namespace Solaire{ namespace Encode{
 
@@ -289,6 +291,105 @@ namespace Solaire{ namespace Encode{
 	const char* JsonParseObject(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
 		return aBegin;// ObjectParser::Parse(aBegin, aEnd, aReader);
 	}
+
+	// Json
+
+	class ValueReader : public Json::Reader {
+	private:
+		struct State{
+			Value* value;
+			String objectName;
+			bool objectMode;
+		};
+
+		Value mRoot;
+		DynamicArray<State> mHead;
+	private:
+		bool ValueValue(const Value& aValue) throw() {
+			if(mHead.IsEmpty()) return false;
+			State& state = mHead.Back();
+
+			if(state.objectMode) {
+				if(state.objectName.Size() == 0) return false;
+				state.value->GetObject().Add(state.objectName, aValue);
+			}else {
+				state.value->GetArray().Add(aValue);
+			}
+			return true;
+		}
+	public:
+		ValueReader(Allocator& aAllocator) :
+			mRoot(aAllocator),
+			mHead(aAllocator)
+		{}
+
+		Value GetValue() const throw() {
+			return mRoot;
+		}
+
+		// Inherited from Reader
+
+		bool SOLAIRE_EXPORT_CALL BeginArray() throw() override {
+			//! \todo Implement BeginArray
+			return false;
+		}
+
+		bool SOLAIRE_EXPORT_CALL EndArray() throw() override {
+			//! \todo Implement EndArray
+			return false;
+		}
+
+		bool SOLAIRE_EXPORT_CALL BeginObject() throw() override {
+			//! \todo Implement BeginObject
+			return false;
+		}
+
+		bool SOLAIRE_EXPORT_CALL EndObject() throw() override {
+			//! \todo Implement EndObject
+			return false;
+		}
+
+		bool SOLAIRE_EXPORT_CALL MemberName(const ConstStringFragment aName) throw() override {
+			if(mHead.IsEmpty()) return false;
+			State& state = mHead.Back();
+			if(! state.objectMode) return false;
+			state.objectName = aName;
+			return true;
+		}
+
+		bool SOLAIRE_EXPORT_CALL ValueNull() throw() override {
+			return ValueValue(Value(mHead.GetAllocator()));
+		}
+
+		bool SOLAIRE_EXPORT_CALL ValueBool(const bool aValue) throw() override {
+			return ValueValue(Value(mHead.GetAllocator(), aValue));
+		}
+
+		bool SOLAIRE_EXPORT_CALL ValueNumber(const double aValue) throw() override {
+			return ValueValue(Value(mHead.GetAllocator(), aValue));
+		}
+
+		bool SOLAIRE_EXPORT_CALL ValueString(const ConstStringFragment aValue) throw() override {
+			return ValueValue(Value(mHead.GetAllocator(), String(mHead.GetAllocator(), aValue)));
+		}
+
+	};
+
+	bool SOLAIRE_EXPORT_CALL Json::Read(ReadStream& aInputStream, Reader& aReader) {
+		//! \todo Implement Read
+		return false;
+	}
+
+	Value SOLAIRE_EXPORT_CALL Json::Read(ReadStream& aInputStream) {
+		return Read(DEFAULT_ALLOCATOR, aInputStream);
+	}
+
+	Value SOLAIRE_EXPORT_CALL Json::Read(Allocator& aAllocator, ReadStream& aInputStream) {
+		ValueReader reader(aAllocator);
+		if(! Read(aInputStream, reader)) return Value(aAllocator);
+		return reader.GetValue();
+	}
+
 
 
 	//class ArrayParser : public Parser {
