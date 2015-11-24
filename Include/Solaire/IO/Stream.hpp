@@ -47,28 +47,64 @@ namespace Solaire {
 		virtual uint32_t SOLAIRE_EXPORT_CALL Read(void* const, const uint32_t) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL End() const throw() = 0;
 
-		inline uint8_t SOLAIRE_EXPORT_CALL Read8() throw() {
-			uint8_t tmp;
-			if(Read(&tmp, 1) != 1) return 0;
-			return tmp;
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(bool& aValue) throw() {
+			Read(&aValue, sizeof(bool));
+			return *this;
 		}
 
-		inline uint16_t SOLAIRE_EXPORT_CALL Read16() throw() {
-			uint16_t tmp;
-			if(Read(&tmp, 2) != 2) return 0;
-			return tmp;
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(char& aValue) throw() {
+			Read(&aValue, sizeof(char));
+			return *this;
 		}
 
-		inline uint32_t SOLAIRE_EXPORT_CALL Read32() throw() {
-			uint32_t tmp;
-			if(Read(&tmp, 4) != 4) return 0;
-			return tmp;
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(uint8_t& aValue) throw() {
+			Read(&aValue, sizeof(uint8_t));
+			return *this;
 		}
 
-		inline uint64_t SOLAIRE_EXPORT_CALL Read64() throw() {
-			uint64_t tmp;
-			if(Read(&tmp, 8) != 8) return 0;
-			return tmp;
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(uint16_t& aValue) throw() {
+			Read(&aValue, sizeof(uint16_t));
+			return *this;
+		}
+
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(uint32_t& aValue) throw() {
+			Read(&aValue, sizeof(uint32_t));
+			return *this;
+		}
+
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(uint64_t& aValue) throw() {
+			Read(&aValue, sizeof(uint64_t));
+			return *this;
+		}
+
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(int8_t& aValue) throw() {
+			Read(&aValue, sizeof(int8_t));
+			return *this;
+		}
+
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(int16_t& aValue) throw() {
+			Read(&aValue, sizeof(int16_t));
+			return *this;
+		}
+
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(int32_t& aValue) throw() {
+			Read(&aValue, sizeof(int32_t));
+			return *this;
+		}
+
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(int64_t& aValue) throw() {
+			Read(&aValue, sizeof(int64_t));
+			return *this;
+		}
+
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(float& aValue) throw() {
+			Read(&aValue, sizeof(float));
+			return *this;
+		}
+
+		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(double& aValue) throw() {
+			Read(&aValue, sizeof(double));
+			return *this;
 		}
 	};
 
@@ -77,24 +113,69 @@ namespace Solaire {
 		virtual uint32_t SOLAIRE_EXPORT_CALL Write(const void* const, const uint32_t) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Flush() throw() = 0;
 
-		inline bool SOLAIRE_EXPORT_CALL Write8(const uint8_t aValue) throw() {
-			if(Write(&aValue, 1) == 1) return true;
-			return false;
+		inline bool SOLAIRE_EXPORT_CALL WriteCString(const char* const aString) throw() {
+			const uint32_t length = std::strlen(aString);
+			return Write(aString, length) == length;
 		}
 
-		inline bool SOLAIRE_EXPORT_CALL Write16(const uint16_t aValue) throw() {
-			if(Write(&aValue, 2) == 2) return true;
-			return false;
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const bool aValue) throw() {
+			Write(&aValue, sizeof(bool));
+			return *this;
 		}
 
-		inline bool SOLAIRE_EXPORT_CALL Write32(const uint32_t aValue) throw() {
-			if(Write(&aValue, 4) == 4) return true;
-			return false;
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const char aValue) throw() {
+			Write(&aValue, sizeof(char));
+			return *this;
 		}
 
-		inline bool SOLAIRE_EXPORT_CALL Write64(const uint64_t aValue) throw() {
-			if(Write(&aValue, 8) == 8) return true;
-			return false;
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const uint8_t aValue) throw() {
+			Write(&aValue, sizeof(uint8_t));
+			return *this;
+		}
+
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const uint16_t aValue) throw() {
+			Write(&aValue, sizeof(uint16_t));
+			return *this;
+		}
+
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const uint32_t aValue) throw() {
+			Write(&aValue, sizeof(uint32_t));
+			return *this;
+		}
+
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const uint64_t aValue) throw() {
+			Write(&aValue, sizeof(uint64_t));
+			return *this;
+		}
+
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const int8_t aValue) throw() {
+			Write(&aValue, sizeof(int8_t));
+			return *this;
+		}
+
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const int16_t aValue) throw() {
+			Write(&aValue, sizeof(int16_t));
+			return *this;
+		}
+
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const int32_t aValue) throw() {
+			Write(&aValue, sizeof(int32_t));
+			return *this;
+		}
+
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const int64_t aValue) throw() {
+			Write(&aValue, sizeof(int64_t));
+			return *this;
+		}
+
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const float aValue) throw() {
+			Write(&aValue, sizeof(float));
+			return *this;
+		}
+
+		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const double aValue) throw() {
+			Write(&aValue, sizeof(double));
+			return *this;
 		}
 	};
 }

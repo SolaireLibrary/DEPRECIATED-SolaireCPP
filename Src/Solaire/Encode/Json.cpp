@@ -38,19 +38,16 @@ namespace Solaire{ namespace Encode{
 	bool Json::Writer::BeginArray() throw() {
 		if(mState.IsEmpty() || mState.Back() != STATE_ARRAY) return false;
 		mState.PushBack(STATE_ARRAY);
-		char buf = '[';
-		mOutputStream.Write(&buf, sizeof(char));
+		mOutputStream << '[';
 		return true;
 	}
 
 	bool Json::Writer::EndArray() throw() {
 		if(mState.IsEmpty() || mState.Back() != STATE_ARRAY) return false;
 		mState.PopBack();
-		char buf = ']';
-		mOutputStream.Write(&buf, sizeof(char));
+		mOutputStream << ']';
 		if(! mState.IsEmpty()) {
-			buf = ',';
-			mOutputStream.Write(&buf, sizeof(char));
+			mOutputStream << ',';
 		}
 		return true;
 	}
@@ -58,19 +55,16 @@ namespace Solaire{ namespace Encode{
 	bool Json::Writer::BeginObject() throw() {
 		if(mState.IsEmpty() || mState.Back() != STATE_ARRAY) return false;
 		mState.PushBack(STATE_OBJECT);
-		char buf = '{';
-		mOutputStream.Write(&buf, sizeof(char));
+		mOutputStream << '{';
 		return true;
 	}
 
 	bool Json::Writer::EndObject() throw() {
 		if(mState.IsEmpty() || mState.Back() != STATE_OBJECT) return false;
 		mState.PopBack();
-		char buf = '}';
-		mOutputStream.Write(&buf, sizeof(char));
+		mOutputStream << '}';
 		if(! mState.IsEmpty()) {
-			buf = ',';
-			mOutputStream.Write(&buf, sizeof(char));
+			mOutputStream << ',';
 		}
 		return true;
 	}
@@ -78,8 +72,7 @@ namespace Solaire{ namespace Encode{
 	bool Json::Writer::AddValueNull() throw() {
 		if((!mState.IsEmpty()) || mState.Back() != STATE_ARRAY) return false;
 
-		char buf[] = "null,";
-		mOutputStream.Write(&buf, sizeof(char) * std::strlen(buf));
+		mOutputStream.WriteCString("null,");
 
 		return true;
 	}
@@ -88,11 +81,9 @@ namespace Solaire{ namespace Encode{
 		if((!mState.IsEmpty()) || mState.Back() != STATE_ARRAY) return false;
 
 		if(aValue) {
-			char buf[] = "true,";
-			mOutputStream.Write(&buf, sizeof(char) * std::strlen(buf));
+			mOutputStream.WriteCString("true,");
 		}else {
-			char buf[] = "false,";
-			mOutputStream.Write(&buf, sizeof(char) * std::strlen(buf));
+			mOutputStream.WriteCString("false,");
 		}
 
 		return true;
@@ -103,7 +94,7 @@ namespace Solaire{ namespace Encode{
 
 		String buf = WriteNumber(aValue);
 		buf += ',';
-		mOutputStream.Write(buf.CString(), sizeof(char) * buf.Size());
+		mOutputStream.WriteCString(buf.CString());
 
 		return true;
 	}
@@ -113,7 +104,7 @@ namespace Solaire{ namespace Encode{
 
 		String buf = String(DEFAULT_ALLOCATOR, aValue);
 		buf += ',';
-		mOutputStream.Write(buf.CString(), sizeof(char) * buf.Size());
+		mOutputStream.WriteCString(buf.CString());
 
 		return true;
 	}
@@ -122,8 +113,7 @@ namespace Solaire{ namespace Encode{
 		if(mState.IsEmpty() || mState.Back() != STATE_OBJECT) return false;
 		mState.PushBack(STATE_ARRAY);
 
-		char buf = '[';
-		mOutputStream.Write(&buf, sizeof(char));
+		mOutputStream << '[';
 
 		return true;
 	}
@@ -132,8 +122,7 @@ namespace Solaire{ namespace Encode{
 		if(mState.IsEmpty() || mState.Back() != STATE_OBJECT) return false;
 		mState.PushBack(STATE_OBJECT);
 
-		char buf = '{';
-		mOutputStream.Write(&buf, sizeof(char));
+		mOutputStream << '{';
 
 		return true;
 	}
@@ -144,7 +133,7 @@ namespace Solaire{ namespace Encode{
 		String buf(DEFAULT_ALLOCATOR, "\""); 
 		buf += String(DEFAULT_ALLOCATOR, aName);
 		buf +=  "\" : null,";
-		mOutputStream.Write(buf.CString(), sizeof(char) * buf.Size());
+		mOutputStream.WriteCString(buf.CString());
 
 		return true;
 	}
@@ -160,7 +149,7 @@ namespace Solaire{ namespace Encode{
 		}else {
 			buf += "\" : false,";
 		}
-		mOutputStream.Write(buf.CString(), sizeof(char) * buf.Size());
+		mOutputStream.WriteCString(buf.CString());
 
 		return true;
 	}
@@ -173,7 +162,7 @@ namespace Solaire{ namespace Encode{
 		buf += "\" : ";
 		buf += WriteNumber(aValue);
 		buf += ',';
-		mOutputStream.Write(buf.CString(), sizeof(char) * buf.Size());
+		mOutputStream.WriteCString(buf.CString());
 
 		return true;
 	}
@@ -186,7 +175,7 @@ namespace Solaire{ namespace Encode{
 		buf += "\" : ";
 		buf += aValue;
 		buf += ',';
-		mOutputStream.Write(buf.CString(), sizeof(char) * buf.Size());
+		mOutputStream.WriteCString(buf.CString());
 
 		return true;
 	}
