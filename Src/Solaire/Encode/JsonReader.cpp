@@ -243,24 +243,30 @@ namespace Solaire{ namespace Encode{
 	//	}
 	//};
 
-	//class NullParser : public BaseParser {
-	//private:
-	//	static const char* StateValue(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		if(aBegin + 4 >= aEnd) return aBegin;
-	//		if(aBegin[0] != 'n') return aBegin;
-	//		if(aBegin[1] != 'u') return aBegin;
-	//		if(aBegin[2] != 'l') return aBegin;
-	//		if(aBegin[3] != 'l') return aBegin;
-	//		aReader.ValueNull();
-	//		return aBegin + 4;
-	//	}
-	//public:
-	//	static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
-	//		const char* const e2 = StateValue(e1, aEnd, aReader);
-	//		return e2 == e1 ? aBegin : e2;
-	//	}
-	//};
+	class NullParser : public BaseParser {
+	private:
+		static bool StateValue(ReadStream& aStream, Json::Reader& aReader) {
+			char buf[4];
+			if(aStream.Read(buf, 4) != 4) return false;
+			if(std::memcmp(buf, "null", 4) != 0) return false;
+			if (!aReader.ValueNull()) return false;
+			return true;
+		}
+	public:
+		static bool Parse(ReadStream& aStream, Json::Reader& aReader) {
+			const uint32_t offset = aStream.GetOffset();
+
+			if(! StateSkipWhitespace(aStream)) {
+				aStream.SetOffset(aStream.GetOffset());
+				return false;
+			}
+
+			if(! StateValue(aStream, aReader)) {
+				aStream.SetOffset(aStream.GetOffset());
+				return false;
+			}
+		}
+	};
 
 	///*class ArrayParser : public BaseParser {
 	//private:
