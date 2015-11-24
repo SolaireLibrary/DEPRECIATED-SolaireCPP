@@ -141,15 +141,15 @@ namespace Solaire{ namespace Encode{
 	bool Json::Writer::AddValueBool(const ConstStringFragment aName, const bool aValue) throw() {
 		if((! mState.IsEmpty()) || mState.Back() != STATE_OBJECT) return false;
 
+		mOutputStream << '"';
 		String buf(DEFAULT_ALLOCATOR, "\"");
-		buf += String(DEFAULT_ALLOCATOR, aName);
-
+		mOutputStream.WriteCString(String(DEFAULT_ALLOCATOR, aName).CString());
+		
 		if(aValue) {
-			buf += "\" : true,";
+			mOutputStream.WriteCString("\" : true,");
 		}else {
-			buf += "\" : false,";
+			mOutputStream.WriteCString("\" : false,");
 		}
-		mOutputStream.WriteCString(buf.CString());
 
 		return true;
 	}
@@ -157,12 +157,11 @@ namespace Solaire{ namespace Encode{
 	bool Json::Writer::AddValueNumber(const ConstStringFragment aName, const double aValue) throw() {
 		if((! mState.IsEmpty()) || mState.Back() != STATE_OBJECT) return false;
 
-		String buf(DEFAULT_ALLOCATOR, "\"");
-		buf += String(DEFAULT_ALLOCATOR, aName);
-		buf += "\" : ";
-		buf += WriteNumber(aValue);
-		buf += ',';
-		mOutputStream.WriteCString(buf.CString());
+		mOutputStream << '"';
+		mOutputStream.WriteCString(String(DEFAULT_ALLOCATOR, aName).CString());
+		mOutputStream.WriteCString("\" : ");
+		mOutputStream.WriteCString(WriteNumber(aValue).CString());
+		mOutputStream << ',';
 
 		return true;
 	}
@@ -170,12 +169,12 @@ namespace Solaire{ namespace Encode{
 	bool Json::Writer::AddValueString(const ConstStringFragment aName, const ConstStringFragment aValue) throw() {
 		if((! mState.IsEmpty()) || mState.Back() != STATE_OBJECT) return false;
 
-		String buf(DEFAULT_ALLOCATOR, "\"");
-		buf += String(DEFAULT_ALLOCATOR, aName);
-		buf += "\" : ";
-		buf += aValue;
-		buf += ',';
-		mOutputStream.WriteCString(buf.CString());
+		mOutputStream << '"';
+		mOutputStream.WriteCString(String(DEFAULT_ALLOCATOR, aName).CString());
+		mOutputStream.WriteCString("\" : \"");
+		mOutputStream.WriteCString(String(DEFAULT_ALLOCATOR, aValue).CString());
+		mOutputStream << '"';
+		mOutputStream << ',';
 
 		return true;
 	}
