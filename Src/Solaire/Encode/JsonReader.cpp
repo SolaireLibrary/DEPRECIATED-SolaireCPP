@@ -371,19 +371,19 @@ namespace Solaire{ namespace Encode{
 	//};*/
 
 	bool JsonParseNull(ReadStream& aStream, Json::Reader& aReader) {
-		return false;// NullParser::Parse(aBegin, aEnd, aReader);
+		return NullParser::Parse(aStream, aReader);
 	}
 
 	bool JsonParseBool(ReadStream& aStream, Json::Reader& aReader) {
-		return false;// BoolParser::Parse(aBegin, aEnd, aReader);
+		return BoolParser::Parse(aStream, aReader);
 	}
 
 	bool JsonParseNumber(ReadStream& aStream, Json::Reader& aReader) {
-		return false;// NumberParser::Parse(aBegin, aEnd, aReader);
+		return NumberParser::Parse(aStream, aReader);
 	}
 
 	bool JsonParseString(ReadStream& aStream, Json::Reader& aReader){
-		return false;// StringParser::Parse(aBegin, aEnd, aReader);
+		return StringParser::Parse(aStream, aReader);
 	}
 
 	bool JsonParseArray(ReadStream& aStream, Json::Reader& aReader) {
