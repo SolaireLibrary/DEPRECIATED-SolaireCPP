@@ -55,7 +55,7 @@ namespace Solaire{ namespace Encode{
 		const Value& operator[](const ConstStringFragment) const throw();
 		Value& operator[](const ConstStringFragment) throw();
 
-		Value& Add(const ConstStringFragment, Value&) throw();
+		Value& Add(const ConstStringFragment, const Value&) throw();
 		void Erase(const uint32_t) throw();
 		void Erase(const ConstStringFragment) throw();
 

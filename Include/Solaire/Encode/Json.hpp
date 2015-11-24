@@ -91,7 +91,7 @@ namespace Solaire{ namespace Encode{
 			bool AddValue(const ConstStringFragment, const Value&) throw();
 		};
 
-		static bool SOLAIRE_EXPORT_CALL Read(WriteStream&, Reader&);
+		static bool SOLAIRE_EXPORT_CALL Read(ReadStream&, Reader&);
 		static Value SOLAIRE_EXPORT_CALL Read(ReadStream&);
 		static Value SOLAIRE_EXPORT_CALL Read(Allocator&, ReadStream&);
 	};

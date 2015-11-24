@@ -73,7 +73,7 @@ namespace Solaire{ namespace Encode{
 		return mValues[-1];
 	}
 
-	Value& Object::Add(const ConstStringFragment aName, Value& aValue) throw() {
+	Value& Object::Add(const ConstStringFragment aName, const Value& aValue) throw() {
 		const uint32_t size = mNames.Size();
 		for(uint32_t i = 0; i < size; ++i) {
 			if(mNames[i] == aName) {

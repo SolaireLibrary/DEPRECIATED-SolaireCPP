@@ -47,7 +47,7 @@ namespace Solaire{ namespace Encode{
 		const Value& operator[](const uint32_t) const throw();
 		Value& operator[](const uint32_t) throw();
 
-		Value& Add(Value&) throw();
+		Value& Add(const Value&) throw();
 		void Erase(const uint32_t) throw();
 
 		void Clear() throw();

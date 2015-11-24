@@ -47,7 +47,7 @@ namespace Solaire{ namespace Encode{
 		mValues.Clear();
 	}
 
-	Value& Array::Add(Value& aValue) throw() {
+	Value& Array::Add(const Value& aValue) throw() {
 		return mValues.PushBack(aValue);
 	}
 
