@@ -40,6 +40,7 @@ namespace Solaire{ namespace Encode{
 	
 	struct Json {
 		class SOLAIRE_EXPORT_API Reader {
+		public:
 			virtual bool SOLAIRE_EXPORT_CALL BeginArray() throw() = 0;
 			virtual bool SOLAIRE_EXPORT_CALL EndArray() throw() = 0;
 

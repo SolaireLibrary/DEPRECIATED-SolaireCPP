@@ -17,11 +17,60 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include "Solaire\Encode\Json.hpp"
+#include "Solaire\Strings\NumberParser.hpp"
 
 namespace Solaire{ namespace Encode{
 
+	static const char* JsonParseNull(const char* const, const char*, Json::Reader&);
+	static const char* JsonParseBool(const char* const, const char*, Json::Reader&);
+	static const char* JsonParseNumber(const char* const, const char*, Json::Reader&);
+	static const char* JsonParseString(const char* const, const char*, Json::Reader&);
+	static const char* JsonParseArray(const char* const, const char*, Json::Reader&);
+	static const char* JsonParseObject(const char* const, const char*, Json::Reader&);
+
 	class BaseParser {
 	protected :
+		enum Type {
+			TYPE_NULL,
+			TYPE_BOOL,
+			TYPE_NUMBER,
+			TYPE_STRING,
+			TYPE_ARRAY,
+			TYPE_OBJECT
+		};
+
+		static const char* StateParseValue(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+			const char* i = StateSkipWhitespace(aBegin, aEnd);
+			switch (*i)
+			{
+			case 'n':
+				return JsonParseNull(aBegin, aEnd, aReader);
+			case 't':
+			case 'f':
+				return JsonParseBool(aBegin, aEnd, aReader);
+			case '-':
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+				return JsonParseNumber(aBegin, aEnd, aReader);
+			case '"':
+				return JsonParseString(aBegin, aEnd, aReader);
+			case '[':
+				return JsonParseArray(aBegin, aEnd, aReader);
+			case '{':
+				return JsonParseObject(aBegin, aEnd, aReader);
+			default:
+				return aBegin;
+			}
+		}
+
 		static const char* StateSkipWhitespace(const char* const aBegin, const char* aEnd) {
 			const char* i = aBegin;
 
@@ -59,9 +108,11 @@ namespace Solaire{ namespace Encode{
 			return aBegin;
 		}
 
-		static const char* StateBody(const char* const aBegin, const char* aEnd, String& aString) {
+		static const char* StateBody(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
 			bool escaped = false;
 			const char* i = aBegin;
+
+			String string(DEFAULT_ALLOCATOR);
 
 			while (i != aEnd) {
 				switch (*i)
@@ -69,16 +120,17 @@ namespace Solaire{ namespace Encode{
 				case '"':
 					if(escaped) {
 						escaped = false;
-						aString += *i;
+						string += *i;
 						++i;
 					}else{
+						aReader.ValueString(string);
 						return i + 1;
 					}
 					break;
 				case '\\':
 					if(escaped) {
 						escaped = false;
-						aString += '\\';
+						string += '\\';
 					}else{
 						escaped = true;
 					}
@@ -86,7 +138,7 @@ namespace Solaire{ namespace Encode{
 					break;
 				default:
 					escaped = false;
-					aString += *i;
+					string += *i;
 					++i;
 					break;
 				}
@@ -95,32 +147,31 @@ namespace Solaire{ namespace Encode{
 			return aBegin;
 		}
 	public:
-		static const char* Parse(const char* const aBegin, const char* aEnd, String& aString) {
+		static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
 			const char* const e1 = StateFirstQuote(aBegin, aEnd);
 			if (e1 == aBegin) return aBegin;
-			const char* const e2 = StateBody(aBegin, aEnd, aString);
+			const char* const e2 = StateBody(aBegin, aEnd, aReader);
 			if (e2 == e1) return aBegin;
 
 			return e2;
 		}
 	};
 
-	/*class NumberParser : public BaseParser {
+	class NumberParser : public BaseParser {
 	public:
-		static const char* Parse(const char* const aBegin, const char* aEnd, double& aValue) {
-			const char* i = aBegin;
-			while(i != aEnd && (*i == ' ' || *i == '\t' || *i == '\n')) {
-				++i;
-				break;
-			}
-
-			return ReadNumber<double>(i, aEnd, aValue);
+		static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+			const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
+			double value;
+			const char* const e2 = ReadNumber<double>(e1, aEnd, value);
+			if(e2 == e1) return aBegin;
+			aReader.ValueNumber(value);
+			return e2;
 		}
-	};*/
+	};
 
 	class BoolParser : public BaseParser {
 	private:
-		static const char* StateValue(const char* const aBegin, const char* aEnd, bool& aValue) {
+		static const char* StateValue(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
 			switch(aBegin[0]) {
 			case 'f':
 				if(aBegin + 5 >= aEnd) return aBegin;
@@ -128,44 +179,117 @@ namespace Solaire{ namespace Encode{
 				if(aBegin[2] != 'l') return aBegin;
 				if(aBegin[3] != 's') return aBegin;
 				if(aBegin[4] != 'e') return aBegin;
-				aValue = false;
+				aReader.ValueBool(false);
 				return aBegin + 5;
 			case 't':
 				if(aBegin + 4 >= aEnd) return aBegin;
 				if(aBegin[1] != 'r') return aBegin;
 				if(aBegin[2] != 'u') return aBegin;
 				if(aBegin[3] != 'e') return aBegin;
-				aValue = true;
+				aReader.ValueBool(true);
 				return aBegin + 4;
 			default:
 				return aBegin;
 			}
 		}
 	public:
-		static const char* Parse(const char* const aBegin, const char* aEnd, bool& aValue) {
+		static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
 			const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
-			const char* const e2 = StateValue(e1, aEnd, aValue);
+			const char* const e2 = StateValue(e1, aEnd, aReader);
 			return e2 == e1 ? aBegin : e2;
 		}
 	};
 
 	class NullParser : public BaseParser {
 	private:
-		static const char* StateValue(const char* const aBegin, const char* aEnd) {
+		static const char* StateValue(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
 			if(aBegin + 4 >= aEnd) return aBegin;
 			if(aBegin[0] != 'n') return aBegin;
 			if(aBegin[1] != 'u') return aBegin;
 			if(aBegin[2] != 'l') return aBegin;
 			if(aBegin[3] != 'l') return aBegin;
+			aReader.ValueNull();
 			return aBegin + 4;
 		}
 	public:
-		static const char* Parse(const char* const aBegin, const char* aEnd) {
+		static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
 			const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
-			const char* const e2 = StateValue(e1, aEnd);
+			const char* const e2 = StateValue(e1, aEnd, aReader);
 			return e2 == e1 ? aBegin : e2;
 		}
 	};
+
+	/*class ArrayParser : public BaseParser {
+	private:
+		static const char* StateOpenArray(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+			const char* i = StateSkipWhitespace(aBegin, aEnd);
+			if(*i != '[') return aBegin;
+			aReader.BeginArray();
+			return i + 1;
+		}
+
+		static const char* StateCloseArray(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+			const char* i = StateSkipWhitespace(aBegin, aEnd);
+			if (*i != ']') return aBegin;
+			aReader.EndArray();
+			return i + 1;
+		}
+
+		static const char* StateIdentifyChild(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+			return aBegin;
+		}
+
+		static const char* StateParseChild(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+			return aBegin;
+		}
+
+		static const char* StateChildSeperator(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+			const char* i = StateSkipWhitespace(aBegin, aEnd);
+			while(i != aEnd) {
+				switch(*i) {
+				case ',':
+					return i + 1;
+				case ']':
+					return StateCloseArray(aBegin, aEnd, aReader);
+				default:
+					return aBegin;
+				}
+			}
+			return aBegin;
+		}
+	public:
+		static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+			return aBegin; 
+			//const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
+			//const char* const e2 = StateValue(e1, aEnd);
+			//return e2 == e1 ? aBegin : e2;
+		}
+	};*/
+
+	const char* JsonParseNull(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+		return NullParser::Parse(aBegin, aEnd, aReader);
+	}
+
+	const char* JsonParseBool(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+		return BoolParser::Parse(aBegin, aEnd, aReader);
+	}
+
+	const char* JsonParseNumber(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+		return NumberParser::Parse(aBegin, aEnd, aReader);
+	}
+
+	const char* JsonParseString(const char* const aBegin, const char* aEnd, Json::Reader& aReader){
+		return StringParser::Parse(aBegin, aEnd, aReader);
+	}
+
+	const char* JsonParseArray(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+		return aBegin;// ArrayParser::Parse(aBegin, aEnd, aReader);
+	}
+
+	const char* JsonParseObject(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+		return aBegin;// ObjectParser::Parse(aBegin, aEnd, aReader);
+	}
+
 
 	//class ArrayParser : public Parser {
 	//private:
