@@ -143,7 +143,7 @@ namespace Solaire{ namespace Encode{
 
 		mOutputStream << '"';
 		String buf(DEFAULT_ALLOCATOR, "\"");
-		mOutputStream.WriteCString(String(DEFAULT_ALLOCATOR, aName).CString());
+		mOutputStream.Write(aName.begin(), aName.Size());
 		
 		if(aValue) {
 			mOutputStream.WriteCString("\" : true,");
@@ -158,7 +158,7 @@ namespace Solaire{ namespace Encode{
 		if((! mState.IsEmpty()) || mState.Back() != STATE_OBJECT) return false;
 
 		mOutputStream << '"';
-		mOutputStream.WriteCString(String(DEFAULT_ALLOCATOR, aName).CString());
+		mOutputStream.Write(aName.begin(), aName.Size());
 		mOutputStream.WriteCString("\" : ");
 		mOutputStream.WriteCString(WriteNumber(aValue).CString());
 		mOutputStream << ',';
@@ -170,9 +170,9 @@ namespace Solaire{ namespace Encode{
 		if((! mState.IsEmpty()) || mState.Back() != STATE_OBJECT) return false;
 
 		mOutputStream << '"';
-		mOutputStream.WriteCString(String(DEFAULT_ALLOCATOR, aName).CString());
+		mOutputStream.Write(aName.begin(), aName.Size());
 		mOutputStream.WriteCString("\" : \"");
-		mOutputStream.WriteCString(String(DEFAULT_ALLOCATOR, aValue).CString());
+		mOutputStream.Write(aValue.begin(), aValue.Size());
 		mOutputStream << '"';
 		mOutputStream << ',';
 
