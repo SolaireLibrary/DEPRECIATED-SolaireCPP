@@ -200,17 +200,63 @@ namespace Solaire{ namespace Encode{
 	//	}
 	//};
 
-	//class NumberParser : public BaseParser {
-	//public:
-	//	static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
-	//		double value;
-	//		const char* const e2 = ReadNumber<double>(e1, aEnd, value);
-	//		if(e2 == e1) return aBegin;
-	//		aReader.ValueNumber(value);
-	//		return e2;
-	//	}
-	//};
+	class NumberParser : public BaseParser {
+	private:
+		static bool StateValue(ReadStream& aStream, Json::Reader& aReader) {
+			String buf(DEFAULT_ALLOCATOR);
+			double value;
+
+			while(true) {
+				if(aStream.End()) return false;
+				char c;
+				aStream >> c;
+				buf += c;
+
+				switch(c)
+				{
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+				case '.':
+				case '-':
+				case 'E':
+				case 'e':
+					break;
+				default:
+					const char* end = ReadNumber<double>(buf.CString(), buf.CString() + buf.Size(), value);
+					if(end == buf.CString()) return false;
+					if (!aReader.ValueNumber(value)) return false;
+					aStream.SetOffset(aStream.GetOffset() - 1);
+					return true;
+				}
+			}
+
+			return false;
+		}
+	public:
+		static bool Parse(ReadStream& aStream, Json::Reader& aReader) {
+			const uint32_t offset = aStream.GetOffset();
+
+			if(! StateSkipWhitespace(aStream)) {
+				aStream.SetOffset(offset);
+				return false;
+			}
+
+			if(! StateValue(aStream, aReader)) {
+				aStream.SetOffset(offset);
+				return false;
+			}
+
+			return true;
+		}
+	};
 
 	class BoolParser : public BaseParser {
 	private:
