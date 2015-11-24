@@ -212,36 +212,41 @@ namespace Solaire{ namespace Encode{
 	//	}
 	//};
 
-	//class BoolParser : public BaseParser {
-	//private:
-	//	static const char* StateValue(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		switch(aBegin[0]) {
-	//		case 'f':
-	//			if(aBegin + 5 >= aEnd) return aBegin;
-	//			if(aBegin[1] != 'a') return aBegin;
-	//			if(aBegin[2] != 'l') return aBegin;
-	//			if(aBegin[3] != 's') return aBegin;
-	//			if(aBegin[4] != 'e') return aBegin;
-	//			aReader.ValueBool(false);
-	//			return aBegin + 5;
-	//		case 't':
-	//			if(aBegin + 4 >= aEnd) return aBegin;
-	//			if(aBegin[1] != 'r') return aBegin;
-	//			if(aBegin[2] != 'u') return aBegin;
-	//			if(aBegin[3] != 'e') return aBegin;
-	//			aReader.ValueBool(true);
-	//			return aBegin + 4;
-	//		default:
-	//			return aBegin;
-	//		}
-	//	}
-	//public:
-	//	static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
-	//		const char* const e2 = StateValue(e1, aEnd, aReader);
-	//		return e2 == e1 ? aBegin : e2;
-	//	}
-	//};
+	class BoolParser : public BaseParser {
+	private:
+		static bool StateValue(ReadStream& aStream, Json::Reader& aReader) {
+			char buf[4];
+			aStream >> buf[0];
+
+			if(buf[0] == 'f') {
+				if(aStream.Read(buf, 4) != 4) return false;
+				if(std::memcmp(buf, "alse", 4) != 0) return false;
+				if(! aReader.ValueBool(false)) return false;
+			}else if(buf[0] == 't') {
+				if(aStream.Read(buf, 3) != 3) return false;
+				if(std::memcmp(buf, "rue", 3) != 0) return false;
+				if(! aReader.ValueBool(false)) return false;
+			}else {
+				return false;
+			}
+		}
+	public:
+		static bool Parse(ReadStream& aStream, Json::Reader& aReader) {
+			const uint32_t offset = aStream.GetOffset();
+
+			if(! StateSkipWhitespace(aStream)) {
+				aStream.SetOffset(offset);
+				return false;
+			}
+
+			if(! StateValue(aStream, aReader)) {
+				aStream.SetOffset(offset);
+				return false;
+			}
+
+			return true;
+		}
+	};
 
 	class NullParser : public BaseParser {
 	private:
@@ -249,7 +254,7 @@ namespace Solaire{ namespace Encode{
 			char buf[4];
 			if(aStream.Read(buf, 4) != 4) return false;
 			if(std::memcmp(buf, "null", 4) != 0) return false;
-			if (!aReader.ValueNull()) return false;
+			if(! aReader.ValueNull()) return false;
 			return true;
 		}
 	public:
@@ -257,14 +262,16 @@ namespace Solaire{ namespace Encode{
 			const uint32_t offset = aStream.GetOffset();
 
 			if(! StateSkipWhitespace(aStream)) {
-				aStream.SetOffset(aStream.GetOffset());
+				aStream.SetOffset(offset);
 				return false;
 			}
 
 			if(! StateValue(aStream, aReader)) {
-				aStream.SetOffset(aStream.GetOffset());
+				aStream.SetOffset(offset);
 				return false;
 			}
+
+			return true;
 		}
 	};
 
