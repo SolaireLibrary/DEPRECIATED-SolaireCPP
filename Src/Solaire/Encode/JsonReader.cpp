@@ -134,71 +134,73 @@ namespace Solaire{ namespace Encode{
 		}
 	};
 
-	//class StringParser : public BaseParser {
-	//private:
-	//	static const char* StateFirstQuote(const char* const aBegin, const char* aEnd) {
-	//		const char* i = StateSkipWhitespace(aBegin , aEnd);
-	//		while(i != aEnd) {
-	//			switch(*i)
-	//			{
-	//			case '"':
-	//				return i + 1;
-	//			default:
-	//				return aBegin;
-	//			}
-	//		}
+	class StringParser : public BaseParser {
+	private:
+		static bool StateFirstQuote(ReadStream& aStream) {
+			if (!StateSkipWhitespace(aStream)) return false;
+			char buf;
+			while(! aStream.End()) {
+				aStream >> buf;
+				if(buf == '"') {
+					return true;
+				}else{
+					return false;
+				}
+			}
+			return false;
+		}
 
-	//		return aBegin;
-	//	}
+		static bool StateBody(ReadStream& aStream, Json::Reader& aReader) {
+			bool escaped = false;
+			String buffer(DEFAULT_ALLOCATOR);
+			char c;
 
-	//	static const char* StateBody(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		bool escaped = false;
-	//		const char* i = aBegin;
+			while(! aStream.End()) {
+				aStream >> c;
+				switch(c) {
+				case '"' :
+					if(escaped) {
+						escaped = false;
+						buffer += c;
+					}else {
+						if(! aReader.ValueString(buffer)) return false;
+						return true;
+					}
+					break;
+				case '\\' :
+					if(escaped) {
+						escaped = false;
+						buffer += c;
+					}else {
+						escaped = true;
+					}
+					break;
+				default :
+					escaped = false;
+					buffer += c;
+					break;
+				}
+			}
 
-	//		String string(DEFAULT_ALLOCATOR);
+			return false;
+		}
+	public:
+		static bool Parse(ReadStream& aStream, Json::Reader& aReader) {
+			const uint32_t offset = aStream.GetOffset();
 
-	//		while (i != aEnd) {
-	//			switch (*i)
-	//			{
-	//			case '"':
-	//				if(escaped) {
-	//					escaped = false;
-	//					string += *i;
-	//					++i;
-	//				}else{
-	//					aReader.ValueString(string);
-	//					return i + 1;
-	//				}
-	//				break;
-	//			case '\\':
-	//				if(escaped) {
-	//					escaped = false;
-	//					string += '\\';
-	//				}else{
-	//					escaped = true;
-	//				}
-	//				++i;
-	//				break;
-	//			default:
-	//				escaped = false;
-	//				string += *i;
-	//				++i;
-	//				break;
-	//			}
-	//		}
+			if(! StateFirstQuote(aStream)) {
+				aStream.SetOffset(offset);
+				return false;
+			}
 
-	//		return aBegin;
-	//	}
-	//public:
-	//	static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		const char* const e1 = StateFirstQuote(aBegin, aEnd);
-	//		if (e1 == aBegin) return aBegin;
-	//		const char* const e2 = StateBody(aBegin, aEnd, aReader);
-	//		if (e2 == e1) return aBegin;
+			if(! StateBody(aStream, aReader)) {
+				aStream.SetOffset(offset);
+				return false;
+			}
 
-	//		return e2;
-	//	}
-	//};
+			return true;
+		}
+	};
 
 	class NumberParser : public BaseParser {
 	private:
