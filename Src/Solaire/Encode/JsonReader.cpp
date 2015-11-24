@@ -23,12 +23,12 @@
 
 namespace Solaire{ namespace Encode{
 
-	static const char* JsonParseNull(const char* const, const char*, Json::Reader&);
-	static const char* JsonParseBool(const char* const, const char*, Json::Reader&);
-	static const char* JsonParseNumber(const char* const, const char*, Json::Reader&);
-	static const char* JsonParseString(const char* const, const char*, Json::Reader&);
-	static const char* JsonParseArray(const char* const, const char*, Json::Reader&);
-	static const char* JsonParseObject(const char* const, const char*, Json::Reader&);
+	static bool JsonParseNull(ReadStream&, Json::Reader&);
+	static bool JsonParseBool(ReadStream&, Json::Reader&);
+	static bool JsonParseNumber(ReadStream&, Json::Reader&);
+	static bool JsonParseString(ReadStream&, Json::Reader&);
+	static bool JsonParseArray(ReadStream&, Json::Reader&);
+	static bool JsonParseObject(ReadStream&, Json::Reader&);
 
 	class BaseParser {
 	protected :
@@ -41,15 +41,51 @@ namespace Solaire{ namespace Encode{
 			TYPE_OBJECT
 		};
 
-		static const char* StateParseValue(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			const char* i = StateSkipWhitespace(aBegin, aEnd);
-			switch (*i)
+		static bool StateSkipWhitespace(ReadStream& aStream) {
+			char buf;
+			while(! aStream.End()) {
+				aStream >> buf;
+				switch(buf)
+				{
+				case ' ':
+				case '\t':
+				case '\n':
+					break;
+				default:
+					aStream.SetOffset(aStream.GetOffset() - 1);
+					return true;
+				}
+			}
+
+			return true;
+		}
+
+		static bool StateParseValue(ReadStream& aStream, Json::Reader& aReader) {
+			const uint32_t offset = aStream.GetOffset();
+			StateSkipWhitespace(aStream);
+
+			char buf;
+			aStream >> buf;
+
+			switch (buf)
 			{
 			case 'n':
-				return JsonParseNull(aBegin, aEnd, aReader);
+				if(JsonParseNull(aStream, aReader)) {
+					aStream.SetOffset(aStream.GetOffset() - 1);
+					return true;
+				}else{
+					aStream.SetOffset(offset);
+					return false;
+				}
 			case 't':
 			case 'f':
-				return JsonParseBool(aBegin, aEnd, aReader);
+				if(JsonParseBool(aStream, aReader)) {
+					aStream.SetOffset(aStream.GetOffset() - 1);
+					return true;
+				}else{
+					aStream.SetOffset(offset);
+					return false;
+				}
 			case '-':
 			case '0':
 			case '1':
@@ -61,334 +97,339 @@ namespace Solaire{ namespace Encode{
 			case '7':
 			case '8':
 			case '9':
-				return JsonParseNumber(aBegin, aEnd, aReader);
+				if(JsonParseNumber(aStream, aReader)) {
+					aStream.SetOffset(aStream.GetOffset() - 1);
+					return true;
+				}else{
+					aStream.SetOffset(offset);
+					return false;
+				}
 			case '"':
-				return JsonParseString(aBegin, aEnd, aReader);
+				if(JsonParseString(aStream, aReader)) {
+					aStream.SetOffset(aStream.GetOffset() - 1);
+					return true;
+				}else{
+					aStream.SetOffset(offset);
+					return false;
+				}
 			case '[':
-				return JsonParseArray(aBegin, aEnd, aReader);
+				if(JsonParseArray(aStream, aReader)) {
+					aStream.SetOffset(aStream.GetOffset() - 1);
+					return true;
+				}else{
+					aStream.SetOffset(offset);
+					return false;
+				}
 			case '{':
-				return JsonParseObject(aBegin, aEnd, aReader);
+				if(JsonParseObject(aStream, aReader)) {
+					aStream.SetOffset(aStream.GetOffset() - 1);
+					return true;
+				}else{
+					aStream.SetOffset(offset);
+					return false;
+				}
 			default:
-				return aBegin;
+				return false;
 			}
-		}
-
-		static const char* StateSkipWhitespace(const char* const aBegin, const char* aEnd) {
-			const char* i = aBegin;
-
-			while(i != aEnd) {
-				switch(*i)
-				{
-				case ' ':
-				case '\t':
-				case '\n':
-					++i;
-					break;
-				default:
-					return i;
-				}
-			}
-
-			return aBegin;
 		}
 	};
 
-	class StringParser : public BaseParser {
-	private:
-		static const char* StateFirstQuote(const char* const aBegin, const char* aEnd) {
-			const char* i = StateSkipWhitespace(aBegin , aEnd);
-			while(i != aEnd) {
-				switch(*i)
-				{
-				case '"':
-					return i + 1;
-				default:
-					return aBegin;
-				}
-			}
+	//class StringParser : public BaseParser {
+	//private:
+	//	static const char* StateFirstQuote(const char* const aBegin, const char* aEnd) {
+	//		const char* i = StateSkipWhitespace(aBegin , aEnd);
+	//		while(i != aEnd) {
+	//			switch(*i)
+	//			{
+	//			case '"':
+	//				return i + 1;
+	//			default:
+	//				return aBegin;
+	//			}
+	//		}
 
-			return aBegin;
-		}
+	//		return aBegin;
+	//	}
 
-		static const char* StateBody(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			bool escaped = false;
-			const char* i = aBegin;
+	//	static const char* StateBody(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		bool escaped = false;
+	//		const char* i = aBegin;
 
-			String string(DEFAULT_ALLOCATOR);
+	//		String string(DEFAULT_ALLOCATOR);
 
-			while (i != aEnd) {
-				switch (*i)
-				{
-				case '"':
-					if(escaped) {
-						escaped = false;
-						string += *i;
-						++i;
-					}else{
-						aReader.ValueString(string);
-						return i + 1;
-					}
-					break;
-				case '\\':
-					if(escaped) {
-						escaped = false;
-						string += '\\';
-					}else{
-						escaped = true;
-					}
-					++i;
-					break;
-				default:
-					escaped = false;
-					string += *i;
-					++i;
-					break;
-				}
-			}
+	//		while (i != aEnd) {
+	//			switch (*i)
+	//			{
+	//			case '"':
+	//				if(escaped) {
+	//					escaped = false;
+	//					string += *i;
+	//					++i;
+	//				}else{
+	//					aReader.ValueString(string);
+	//					return i + 1;
+	//				}
+	//				break;
+	//			case '\\':
+	//				if(escaped) {
+	//					escaped = false;
+	//					string += '\\';
+	//				}else{
+	//					escaped = true;
+	//				}
+	//				++i;
+	//				break;
+	//			default:
+	//				escaped = false;
+	//				string += *i;
+	//				++i;
+	//				break;
+	//			}
+	//		}
 
-			return aBegin;
-		}
-	public:
-		static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			const char* const e1 = StateFirstQuote(aBegin, aEnd);
-			if (e1 == aBegin) return aBegin;
-			const char* const e2 = StateBody(aBegin, aEnd, aReader);
-			if (e2 == e1) return aBegin;
+	//		return aBegin;
+	//	}
+	//public:
+	//	static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		const char* const e1 = StateFirstQuote(aBegin, aEnd);
+	//		if (e1 == aBegin) return aBegin;
+	//		const char* const e2 = StateBody(aBegin, aEnd, aReader);
+	//		if (e2 == e1) return aBegin;
 
-			return e2;
-		}
-	};
+	//		return e2;
+	//	}
+	//};
 
-	class NumberParser : public BaseParser {
-	public:
-		static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
-			double value;
-			const char* const e2 = ReadNumber<double>(e1, aEnd, value);
-			if(e2 == e1) return aBegin;
-			aReader.ValueNumber(value);
-			return e2;
-		}
-	};
+	//class NumberParser : public BaseParser {
+	//public:
+	//	static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
+	//		double value;
+	//		const char* const e2 = ReadNumber<double>(e1, aEnd, value);
+	//		if(e2 == e1) return aBegin;
+	//		aReader.ValueNumber(value);
+	//		return e2;
+	//	}
+	//};
 
-	class BoolParser : public BaseParser {
-	private:
-		static const char* StateValue(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			switch(aBegin[0]) {
-			case 'f':
-				if(aBegin + 5 >= aEnd) return aBegin;
-				if(aBegin[1] != 'a') return aBegin;
-				if(aBegin[2] != 'l') return aBegin;
-				if(aBegin[3] != 's') return aBegin;
-				if(aBegin[4] != 'e') return aBegin;
-				aReader.ValueBool(false);
-				return aBegin + 5;
-			case 't':
-				if(aBegin + 4 >= aEnd) return aBegin;
-				if(aBegin[1] != 'r') return aBegin;
-				if(aBegin[2] != 'u') return aBegin;
-				if(aBegin[3] != 'e') return aBegin;
-				aReader.ValueBool(true);
-				return aBegin + 4;
-			default:
-				return aBegin;
-			}
-		}
-	public:
-		static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
-			const char* const e2 = StateValue(e1, aEnd, aReader);
-			return e2 == e1 ? aBegin : e2;
-		}
-	};
+	//class BoolParser : public BaseParser {
+	//private:
+	//	static const char* StateValue(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		switch(aBegin[0]) {
+	//		case 'f':
+	//			if(aBegin + 5 >= aEnd) return aBegin;
+	//			if(aBegin[1] != 'a') return aBegin;
+	//			if(aBegin[2] != 'l') return aBegin;
+	//			if(aBegin[3] != 's') return aBegin;
+	//			if(aBegin[4] != 'e') return aBegin;
+	//			aReader.ValueBool(false);
+	//			return aBegin + 5;
+	//		case 't':
+	//			if(aBegin + 4 >= aEnd) return aBegin;
+	//			if(aBegin[1] != 'r') return aBegin;
+	//			if(aBegin[2] != 'u') return aBegin;
+	//			if(aBegin[3] != 'e') return aBegin;
+	//			aReader.ValueBool(true);
+	//			return aBegin + 4;
+	//		default:
+	//			return aBegin;
+	//		}
+	//	}
+	//public:
+	//	static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
+	//		const char* const e2 = StateValue(e1, aEnd, aReader);
+	//		return e2 == e1 ? aBegin : e2;
+	//	}
+	//};
 
-	class NullParser : public BaseParser {
-	private:
-		static const char* StateValue(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			if(aBegin + 4 >= aEnd) return aBegin;
-			if(aBegin[0] != 'n') return aBegin;
-			if(aBegin[1] != 'u') return aBegin;
-			if(aBegin[2] != 'l') return aBegin;
-			if(aBegin[3] != 'l') return aBegin;
-			aReader.ValueNull();
-			return aBegin + 4;
-		}
-	public:
-		static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
-			const char* const e2 = StateValue(e1, aEnd, aReader);
-			return e2 == e1 ? aBegin : e2;
-		}
-	};
+	//class NullParser : public BaseParser {
+	//private:
+	//	static const char* StateValue(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		if(aBegin + 4 >= aEnd) return aBegin;
+	//		if(aBegin[0] != 'n') return aBegin;
+	//		if(aBegin[1] != 'u') return aBegin;
+	//		if(aBegin[2] != 'l') return aBegin;
+	//		if(aBegin[3] != 'l') return aBegin;
+	//		aReader.ValueNull();
+	//		return aBegin + 4;
+	//	}
+	//public:
+	//	static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
+	//		const char* const e2 = StateValue(e1, aEnd, aReader);
+	//		return e2 == e1 ? aBegin : e2;
+	//	}
+	//};
 
-	/*class ArrayParser : public BaseParser {
-	private:
-		static const char* StateOpenArray(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			const char* i = StateSkipWhitespace(aBegin, aEnd);
-			if(*i != '[') return aBegin;
-			aReader.BeginArray();
-			return i + 1;
-		}
+	///*class ArrayParser : public BaseParser {
+	//private:
+	//	static const char* StateOpenArray(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		const char* i = StateSkipWhitespace(aBegin, aEnd);
+	//		if(*i != '[') return aBegin;
+	//		aReader.BeginArray();
+	//		return i + 1;
+	//	}
 
-		static const char* StateCloseArray(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			const char* i = StateSkipWhitespace(aBegin, aEnd);
-			if (*i != ']') return aBegin;
-			aReader.EndArray();
-			return i + 1;
-		}
+	//	static const char* StateCloseArray(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		const char* i = StateSkipWhitespace(aBegin, aEnd);
+	//		if (*i != ']') return aBegin;
+	//		aReader.EndArray();
+	//		return i + 1;
+	//	}
 
-		static const char* StateIdentifyChild(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			return aBegin;
-		}
+	//	static const char* StateIdentifyChild(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		return aBegin;
+	//	}
 
-		static const char* StateParseChild(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			return aBegin;
-		}
+	//	static const char* StateParseChild(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		return aBegin;
+	//	}
 
-		static const char* StateChildSeperator(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			const char* i = StateSkipWhitespace(aBegin, aEnd);
-			while(i != aEnd) {
-				switch(*i) {
-				case ',':
-					return i + 1;
-				case ']':
-					return StateCloseArray(aBegin, aEnd, aReader);
-				default:
-					return aBegin;
-				}
-			}
-			return aBegin;
-		}
-	public:
-		static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-			return aBegin; 
-			//const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
-			//const char* const e2 = StateValue(e1, aEnd);
-			//return e2 == e1 ? aBegin : e2;
-		}
-	};*/
+	//	static const char* StateChildSeperator(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		const char* i = StateSkipWhitespace(aBegin, aEnd);
+	//		while(i != aEnd) {
+	//			switch(*i) {
+	//			case ',':
+	//				return i + 1;
+	//			case ']':
+	//				return StateCloseArray(aBegin, aEnd, aReader);
+	//			default:
+	//				return aBegin;
+	//			}
+	//		}
+	//		return aBegin;
+	//	}
+	//public:
+	//	static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
+	//		return aBegin; 
+	//		//const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
+	//		//const char* const e2 = StateValue(e1, aEnd);
+	//		//return e2 == e1 ? aBegin : e2;
+	//	}
+	//};*/
 
-	const char* JsonParseNull(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-		return NullParser::Parse(aBegin, aEnd, aReader);
+	bool JsonParseNull(ReadStream& aStream, Json::Reader& aReader) {
+		return false;// NullParser::Parse(aBegin, aEnd, aReader);
 	}
 
-	const char* JsonParseBool(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-		return BoolParser::Parse(aBegin, aEnd, aReader);
+	bool JsonParseBool(ReadStream& aStream, Json::Reader& aReader) {
+		return false;// BoolParser::Parse(aBegin, aEnd, aReader);
 	}
 
-	const char* JsonParseNumber(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-		return NumberParser::Parse(aBegin, aEnd, aReader);
+	bool JsonParseNumber(ReadStream& aStream, Json::Reader& aReader) {
+		return false;// NumberParser::Parse(aBegin, aEnd, aReader);
 	}
 
-	const char* JsonParseString(const char* const aBegin, const char* aEnd, Json::Reader& aReader){
-		return StringParser::Parse(aBegin, aEnd, aReader);
+	bool JsonParseString(ReadStream& aStream, Json::Reader& aReader){
+		return false;// StringParser::Parse(aBegin, aEnd, aReader);
 	}
 
-	const char* JsonParseArray(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-		return aBegin;// ArrayParser::Parse(aBegin, aEnd, aReader);
+	bool JsonParseArray(ReadStream& aStream, Json::Reader& aReader) {
+		return false;// ArrayParser::Parse(aBegin, aEnd, aReader);
 	}
 
-	const char* JsonParseObject(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-		return aBegin;// ObjectParser::Parse(aBegin, aEnd, aReader);
+	bool JsonParseObject(ReadStream& aStream, Json::Reader& aReader) {
+		return false;// ObjectParser::Parse(aBegin, aEnd, aReader);
 	}
 
-	// Json
+	//// Json
 
-	class ValueReader : public Json::Reader {
-	private:
-		struct State{
-			Value* value;
-			String objectName;
-			bool objectMode;
-		};
+	//class ValueReader : public Json::Reader {
+	//private:
+	//	struct State{
+	//		Value* value;
+	//		String objectName;
+	//		bool objectMode;
+	//	};
 
-		Value mRoot;
-		DynamicArray<State> mHead;
-	private:
-		bool ValueValue(const Value& aValue) throw() {
-			if(mHead.IsEmpty()) return false;
-			State& state = mHead.Back();
+	//	Value mRoot;
+	//	DynamicArray<State> mHead;
+	//private:
+	//	bool ValueValue(const Value& aValue) throw() {
+	//		if(mHead.IsEmpty()) return false;
+	//		State& state = mHead.Back();
 
-			if(state.objectMode) {
-				if(state.objectName.Size() == 0) return false;
-				state.value->GetObject().Add(state.objectName, aValue);
-			}else {
-				state.value->GetArray().Add(aValue);
-			}
-			return true;
-		}
-	public:
-		ValueReader(Allocator& aAllocator) :
-			mRoot(aAllocator),
-			mHead(aAllocator)
-		{}
+	//		if(state.objectMode) {
+	//			if(state.objectName.Size() == 0) return false;
+	//			state.value->GetObject().Add(state.objectName, aValue);
+	//		}else {
+	//			state.value->GetArray().Add(aValue);
+	//		}
+	//		return true;
+	//	}
+	//public:
+	//	ValueReader(Allocator& aAllocator) :
+	//		mRoot(aAllocator),
+	//		mHead(aAllocator)
+	//	{}
 
-		Value GetValue() const throw() {
-			return mRoot;
-		}
+	//	Value GetValue() const throw() {
+	//		return mRoot;
+	//	}
 
-		// Inherited from Reader
+	//	// Inherited from Reader
 
-		bool SOLAIRE_EXPORT_CALL BeginArray() throw() override {
-			//! \todo Implement BeginArray
-			return false;
-		}
+	//	bool SOLAIRE_EXPORT_CALL BeginArray() throw() override {
+	//		//! \todo Implement BeginArray
+	//		return false;
+	//	}
 
-		bool SOLAIRE_EXPORT_CALL EndArray() throw() override {
-			//! \todo Implement EndArray
-			return false;
-		}
+	//	bool SOLAIRE_EXPORT_CALL EndArray() throw() override {
+	//		//! \todo Implement EndArray
+	//		return false;
+	//	}
 
-		bool SOLAIRE_EXPORT_CALL BeginObject() throw() override {
-			//! \todo Implement BeginObject
-			return false;
-		}
+	//	bool SOLAIRE_EXPORT_CALL BeginObject() throw() override {
+	//		//! \todo Implement BeginObject
+	//		return false;
+	//	}
 
-		bool SOLAIRE_EXPORT_CALL EndObject() throw() override {
-			//! \todo Implement EndObject
-			return false;
-		}
+	//	bool SOLAIRE_EXPORT_CALL EndObject() throw() override {
+	//		//! \todo Implement EndObject
+	//		return false;
+	//	}
 
-		bool SOLAIRE_EXPORT_CALL MemberName(const ConstStringFragment aName) throw() override {
-			if(mHead.IsEmpty()) return false;
-			State& state = mHead.Back();
-			if(! state.objectMode) return false;
-			state.objectName = aName;
-			return true;
-		}
+	//	bool SOLAIRE_EXPORT_CALL MemberName(const ConstStringFragment aName) throw() override {
+	//		if(mHead.IsEmpty()) return false;
+	//		State& state = mHead.Back();
+	//		if(! state.objectMode) return false;
+	//		state.objectName = aName;
+	//		return true;
+	//	}
 
-		bool SOLAIRE_EXPORT_CALL ValueNull() throw() override {
-			return ValueValue(Value(mHead.GetAllocator()));
-		}
+	//	bool SOLAIRE_EXPORT_CALL ValueNull() throw() override {
+	//		return ValueValue(Value(mHead.GetAllocator()));
+	//	}
 
-		bool SOLAIRE_EXPORT_CALL ValueBool(const bool aValue) throw() override {
-			return ValueValue(Value(mHead.GetAllocator(), aValue));
-		}
+	//	bool SOLAIRE_EXPORT_CALL ValueBool(const bool aValue) throw() override {
+	//		return ValueValue(Value(mHead.GetAllocator(), aValue));
+	//	}
 
-		bool SOLAIRE_EXPORT_CALL ValueNumber(const double aValue) throw() override {
-			return ValueValue(Value(mHead.GetAllocator(), aValue));
-		}
+	//	bool SOLAIRE_EXPORT_CALL ValueNumber(const double aValue) throw() override {
+	//		return ValueValue(Value(mHead.GetAllocator(), aValue));
+	//	}
 
-		bool SOLAIRE_EXPORT_CALL ValueString(const ConstStringFragment aValue) throw() override {
-			return ValueValue(Value(mHead.GetAllocator(), String(mHead.GetAllocator(), aValue)));
-		}
+	//	bool SOLAIRE_EXPORT_CALL ValueString(const ConstStringFragment aValue) throw() override {
+	//		return ValueValue(Value(mHead.GetAllocator(), String(mHead.GetAllocator(), aValue)));
+	//	}
 
-	};
+	//};
 
-	bool SOLAIRE_EXPORT_CALL Json::Read(ReadStream& aInputStream, Reader& aReader) {
-		//! \todo Implement Read
-		return false;
-	}
+	//bool SOLAIRE_EXPORT_CALL Json::Read(ReadStream& aInputStream, Reader& aReader) {
+	//	//! \todo Implement Read
+	//	return false;
+	//}
 
-	Value SOLAIRE_EXPORT_CALL Json::Read(ReadStream& aInputStream) {
-		return Read(DEFAULT_ALLOCATOR, aInputStream);
-	}
+	//Value SOLAIRE_EXPORT_CALL Json::Read(ReadStream& aInputStream) {
+	//	return Read(DEFAULT_ALLOCATOR, aInputStream);
+	//}
 
-	Value SOLAIRE_EXPORT_CALL Json::Read(Allocator& aAllocator, ReadStream& aInputStream) {
-		ValueReader reader(aAllocator);
-		if(! Read(aInputStream, reader)) return Value(aAllocator);
-		return reader.GetValue();
-	}
+	//Value SOLAIRE_EXPORT_CALL Json::Read(Allocator& aAllocator, ReadStream& aInputStream) {
+	//	ValueReader reader(aAllocator);
+	//	if(! Read(aInputStream, reader)) return Value(aAllocator);
+	//	return reader.GetValue();
+	//}
 
 
 
