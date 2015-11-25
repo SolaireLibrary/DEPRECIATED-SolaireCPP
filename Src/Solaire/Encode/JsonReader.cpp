@@ -330,6 +330,7 @@ namespace Solaire{ namespace Encode{
 			char c;
 			aStream >> c;
 			if(c != '[') return false;
+			if(! aReader.BeginArray()) return false;
 			return StateCloseArray(aStream, aReader);
 		}
 
@@ -341,7 +342,7 @@ namespace Solaire{ namespace Encode{
 			switch(c)
 			{
 			case ']':
-				return true;
+				return aReader.EndArray();
 			default:
 				aStream.SetOffset(aStream.GetOffset() - 1);
 				if(! StateParseValue(aStream, aReader)) return false;
@@ -357,7 +358,7 @@ namespace Solaire{ namespace Encode{
 			switch(c) 
 			{
 			case ']':
-				return true;
+				return aReader.EndArray();
 			case ',':
 				if(! StateParseValue(aStream, aReader)) return false;
 				return StateChildSeperator(aStream, aReader);
@@ -370,6 +371,88 @@ namespace Solaire{ namespace Encode{
 			const uint32_t offset = aStream.GetOffset();
 
 			if(! StateOpenArray(aStream, aReader)) {
+				aStream.SetOffset(offset);
+				return false;
+			}
+
+			return true;
+		}
+	};
+
+	class ObjectParser : public BaseParser {
+	private:
+		static bool StateOpenObject(ReadStream& aStream, Json::Reader& aReader) {
+			if(! StateSkipWhitespace(aStream)) return false;
+			char c;
+			aStream >> c;
+			if(c != '{') return false;
+			if(! aReader.BeginObject()) return false;
+			return StateCloseObject(aStream, aReader);
+		}
+
+		static bool StateCloseObject(ReadStream& aStream, Json::Reader& aReader) {
+			if(! StateSkipWhitespace(aStream)) return false;
+			char c;
+			aStream >> c;
+
+			switch(c)
+			{
+			case '}':
+				return aReader.EndObject();
+			case '"':
+				return StateMemberName(aStream, aReader);
+			default:
+				return false;
+			}
+		}
+
+		static bool StateMemberName(ReadStream& aStream, Json::Reader& aReader) {
+			String name(DEFAULT_ALLOCATOR);
+			char c;
+			while(! aStream.End()) {
+				aStream >> c;
+				if(c == '"') {
+					if(! aReader.MemberName(name)) return false;
+					return StateNameSeperator(aStream, aReader);
+				}else {
+					name += c;
+				}
+			}
+			return false;
+		}
+
+		static bool StateNameSeperator(ReadStream& aStream, Json::Reader& aReader) {
+			if(! StateSkipWhitespace(aStream)) return false;
+			char c;
+			aStream >> c;
+			if(c != ':') return false;
+			if(! StateParseValue(aStream, aReader)) return false;
+			return StateChildSeperator(aStream, aReader);
+		}
+
+		static bool StateChildSeperator(ReadStream& aStream, Json::Reader& aReader) {
+			if(! StateSkipWhitespace(aStream)) return false;
+			char c;
+			aStream >> c;
+
+			switch(c)
+			{
+			case '}':
+				return aReader.EndObject();
+			case ',':
+				if(! StateSkipWhitespace(aStream)) return false;
+				aStream >> c;
+				if(c != '"') return false;
+				return StateMemberName(aStream, aReader);
+			default:
+				return false;
+			}
+		}
+	public:
+		static bool Parse(ReadStream& aStream, Json::Reader& aReader) {
+			const uint32_t offset = aStream.GetOffset();
+
+			if(! StateOpenObject(aStream, aReader)) {
 				aStream.SetOffset(offset);
 				return false;
 			}
@@ -399,476 +482,7 @@ namespace Solaire{ namespace Encode{
 	}
 
 	bool JsonParseObject(ReadStream& aStream, Json::Reader& aReader) {
-		return false;// ObjectParser::Parse(aBegin, aEnd, aReader);
+		return ObjectParser::Parse(aStream, aReader);
 	}
-
-	//// Json
-
-	//class ValueReader : public Json::Reader {
-	//private:
-	//	struct State{
-	//		Value* value;
-	//		String objectName;
-	//		bool objectMode;
-	//	};
-
-	//	Value mRoot;
-	//	DynamicArray<State> mHead;
-	//private:
-	//	bool ValueValue(const Value& aValue) throw() {
-	//		if(mHead.IsEmpty()) return false;
-	//		State& state = mHead.Back();
-
-	//		if(state.objectMode) {
-	//			if(state.objectName.Size() == 0) return false;
-	//			state.value->GetObject().Add(state.objectName, aValue);
-	//		}else {
-	//			state.value->GetArray().Add(aValue);
-	//		}
-	//		return true;
-	//	}
-	//public:
-	//	ValueReader(Allocator& aAllocator) :
-	//		mRoot(aAllocator),
-	//		mHead(aAllocator)
-	//	{}
-
-	//	Value GetValue() const throw() {
-	//		return mRoot;
-	//	}
-
-	//	// Inherited from Reader
-
-	//	bool SOLAIRE_EXPORT_CALL BeginArray() throw() override {
-	//		//! \todo Implement BeginArray
-	//		return false;
-	//	}
-
-	//	bool SOLAIRE_EXPORT_CALL EndArray() throw() override {
-	//		//! \todo Implement EndArray
-	//		return false;
-	//	}
-
-	//	bool SOLAIRE_EXPORT_CALL BeginObject() throw() override {
-	//		//! \todo Implement BeginObject
-	//		return false;
-	//	}
-
-	//	bool SOLAIRE_EXPORT_CALL EndObject() throw() override {
-	//		//! \todo Implement EndObject
-	//		return false;
-	//	}
-
-	//	bool SOLAIRE_EXPORT_CALL MemberName(const ConstStringFragment aName) throw() override {
-	//		if(mHead.IsEmpty()) return false;
-	//		State& state = mHead.Back();
-	//		if(! state.objectMode) return false;
-	//		state.objectName = aName;
-	//		return true;
-	//	}
-
-	//	bool SOLAIRE_EXPORT_CALL ValueNull() throw() override {
-	//		return ValueValue(Value(mHead.GetAllocator()));
-	//	}
-
-	//	bool SOLAIRE_EXPORT_CALL ValueBool(const bool aValue) throw() override {
-	//		return ValueValue(Value(mHead.GetAllocator(), aValue));
-	//	}
-
-	//	bool SOLAIRE_EXPORT_CALL ValueNumber(const double aValue) throw() override {
-	//		return ValueValue(Value(mHead.GetAllocator(), aValue));
-	//	}
-
-	//	bool SOLAIRE_EXPORT_CALL ValueString(const ConstStringFragment aValue) throw() override {
-	//		return ValueValue(Value(mHead.GetAllocator(), String(mHead.GetAllocator(), aValue)));
-	//	}
-
-	//};
-
-	//bool SOLAIRE_EXPORT_CALL Json::Read(ReadStream& aInputStream, Reader& aReader) {
-	//	//! \todo Implement Read
-	//	return false;
-	//}
-
-	//Value SOLAIRE_EXPORT_CALL Json::Read(ReadStream& aInputStream) {
-	//	return Read(DEFAULT_ALLOCATOR, aInputStream);
-	//}
-
-	//Value SOLAIRE_EXPORT_CALL Json::Read(Allocator& aAllocator, ReadStream& aInputStream) {
-	//	ValueReader reader(aAllocator);
-	//	if(! Read(aInputStream, reader)) return Value(aAllocator);
-	//	return reader.GetValue();
-	//}
-
-
-
-	//class ArrayParser : public Parser {
-	//private:
-	//	DynamicArray<std::shared_ptr<Parser>> mParsers;
-	//	Allocator& mAllocator;
-	//	enum {
-	//		STATE_OPEN_ARRAY,
-	//		STATE_CLOSE_ARRAY,
-	//		STATE_IDENTIFY_CHILD,
-	//		STATE_PARSE_CHILD,
-	//		STATE_CHILD_SEPARATOR
-	//	};
-	//	uint8_t mState;
-	//public:
-	//	ArrayParser(Allocator& aAllocator) :
-	//		mParsers(32, aAllocator),
-	//		mAllocator(aAllocator),
-	//		mState(STATE_OPEN_ARRAY)
-	//	{}
-
-	//	// Inherited from aAllocator
-
-	//	Status Accept(const Flags aFlags, const char aChar) override {
-	//	LABEL_START:
-	//		switch (mState) {
-	//		case STATE_OPEN_ARRAY:
-	//			goto LABEL_OPEN_ARRAY;
-	//		case STATE_CLOSE_ARRAY:
-	//			goto LABEL_CLOSE_ARRAY;
-	//		case STATE_IDENTIFY_CHILD:
-	//			goto LABEL_IDENTIFY_CHILD;
-	//		case STATE_PARSE_CHILD:
-	//			goto LABEL_PARSE_CHILD;
-	//		case STATE_CHILD_SEPARATOR:
-	//			goto LABEL_CHILD_SEPARATOR;
-	//		default:
-	//			throw std::runtime_error("Json::ArrayParser : Invalid State");
-	//		}
-
-
-	//	LABEL_OPEN_ARRAY:
-	//		switch (aChar) {
-	//		case ' ':
-	//		case '\t':
-	//		case '\n':
-	//			return STATUS_SUCCESS;
-	//		case '[':
-	//			mState = STATE_IDENTIFY_CHILD;
-	//			return STATUS_SUCCESS;
-	//		default:
-	//			return STATUS_FAIL;
-	//		}
-
-	//	LABEL_CLOSE_ARRAY:
-	//		return STATUS_COMPLETE;
-
-	//	LABEL_PARSE_CHILD:
-	//		{
-	//			const Status  status = mParsers.Back()->Accept(aChar);
-	//			if (status == STATUS_SUCCESS) {
-	//				return STATUS_SUCCESS;
-	//			}
-	//			else if (status == STATUS_FAIL) {
-	//				return STATUS_FAIL;
-	//			}
-	//			else if (aChar == ']') {
-	//				mState = STATE_CLOSE_ARRAY;
-	//				goto LABEL_START;
-	//			}
-	//			else {
-	//				mState = STATE_CHILD_SEPARATOR;
-	//				return STATUS_SUCCESS;
-	//			}
-	//		}
-
-	//	LABEL_CHILD_SEPARATOR:
-	//		switch (aChar) {
-	//		case ' ':
-	//		case '\t':
-	//		case '\n':
-	//			return STATUS_SUCCESS;
-	//		case ',':
-	//			mState = STATE_IDENTIFY_CHILD;
-	//			return STATUS_SUCCESS;
-	//		case ']':
-	//			mState = STATE_CLOSE_ARRAY;
-	//			goto LABEL_START;
-	//		default:
-	//			return STATUS_FAIL;
-	//		}
-
-	//	LABEL_IDENTIFY_CHILD:
-	//		switch (aChar) {
-	//		case ' ':
-	//		case '\t':
-	//		case '\n':
-	//			return STATUS_SUCCESS;
-	//		case ']':
-	//			if (mParsers.IsEmpty()) {
-	//				mState = STATE_CLOSE_ARRAY;
-	//				goto LABEL_START;
-	//			}
-	//			else {
-	//				return STATUS_FAIL;
-	//			}
-	//		default:
-	//			TypeID id;
-	//			try {
-	//				id = IdentifyTypeID(aChar);
-	//			}
-	//			catch (...) {
-	//				return STATUS_FAIL;
-	//			}
-	//			mParsers.PushBack(AllocateParser(mAllocator, id));
-
-	//			mState = STATE_PARSE_CHILD;
-	//			goto LABEL_START;
-	//		}
-	//	}
-
-	//	std::shared_ptr<Value> Get(Allocator& aParseAllocator, Allocator& aDocAllocator) const override {
-	//		if (mState != STATE_CLOSE_ARRAY) return nullptr;
-	//		std::shared_ptr<Value> ptr = aParseAllocator.SharedAllocate<Value>(TYPE_ARRAY, aDocAllocator);
-	//		Array& array_ = *ptr;
-	//		for (std::shared_ptr<Parser> i : mParsers) {
-	//			array_.PushBack(i->Get(aParseAllocator, aDocAllocator));
-	//		}
-	//		return ptr;
-	//	}
-	//};
-
-	//class ObjectParser : public Parser {
-	//private:
-	//	DynamicArray<std::pair<String, std::shared_ptr<Parser>>> mParsers;
-	//	Allocator& mAllocator;
-	//	String mName;
-	//	struct {
-	//		uint8_t openFound : 1;
-	//		uint8_t closeFound : 1;
-	//		uint8_t nameParsed : 1;
-	//		uint8_t nameOpen : 1;
-	//		uint8_t nameClose : 1;
-	//		uint8_t parseChild : 1;
-	//	};
-	//	enum {
-	//		STATE_OPEN_OBJECT,
-	//		STATE_CLOSE_OBJECT,
-	//		STATE_OPEN_NAME,
-	//		STATE_PARSE_NAME,
-	//		STATE_NAME_SEPERATOR,
-	//		STATE_IDENTIFY_CHILD,
-	//		STATE_PARSE_CHILD,
-	//		STATE_CHILD_SEPARATOR
-	//	};
-	//	uint8_t mState;
-	//public:
-	//	ObjectParser(Allocator& aAllocator) :
-	//		mParsers(32, aAllocator),
-	//		mAllocator(aAllocator),
-	//		mName(aAllocator),
-	//		mState(STATE_OPEN_OBJECT)
-	//	{}
-
-	//	// Inherited from aAllocator
-
-	//	Status Accept(const Flags aFlags, const char aChar) override {
-	//	LABEL_START:
-	//		switch (mState) {
-	//		case STATE_OPEN_OBJECT:
-	//			goto LABEL_OPEN_OBJECT;
-	//		case STATE_CLOSE_OBJECT:
-	//			goto LABEL_CLOSE_OBJECT;
-	//		case STATE_OPEN_NAME:
-	//			goto LABEL_OPEN_NAME;
-	//		case STATE_PARSE_NAME:
-	//			goto LABEL_PARSE_NAME;
-	//		case STATE_NAME_SEPERATOR:
-	//			goto LABEL_NAME_SEPERATOR;
-	//		case STATE_IDENTIFY_CHILD:
-	//			goto LABEL_IDENTIFY_CHILD;
-	//		case STATE_PARSE_CHILD:
-	//			goto LABEL_PARSE_CHILD;
-	//		case STATE_CHILD_SEPARATOR:
-	//			goto LABEL_CHILD_SEPARATOR;
-	//		default:
-	//			throw std::runtime_error("Json::ObjectParser : Invalid state");
-	//		}
-
-
-	//	LABEL_OPEN_OBJECT:
-	//		switch (aChar) {
-	//		case ' ':
-	//		case '\t':
-	//		case '\n':
-	//			return STATUS_SUCCESS;
-	//		case '{':
-	//			mState = STATE_OPEN_NAME;
-	//			return STATUS_SUCCESS;
-	//		default:
-	//			return STATUS_FAIL;
-	//		}
-
-	//	LABEL_CLOSE_OBJECT:
-	//		return STATUS_COMPLETE;
-
-	//	LABEL_OPEN_NAME:
-	//		switch (aChar) {
-	//		case ' ':
-	//		case '\t':
-	//		case '\n':
-	//			return STATUS_SUCCESS;
-	//		case '"':
-	//			mState = STATE_PARSE_NAME;
-	//			return STATUS_SUCCESS;
-	//		case '}':
-	//			if (mParsers.IsEmpty()) {
-	//				mState = STATE_CLOSE_OBJECT;
-	//				goto LABEL_START;
-	//			}
-	//			else {
-	//				return STATUS_FAIL;
-	//			}
-	//		default:
-	//			return STATUS_FAIL;
-	//		}
-
-	//	LABEL_PARSE_NAME:
-	//		if (aChar == '"' && !(aFlags & FLAG_IS_ESCAPED)) {
-	//			mState = STATE_NAME_SEPERATOR;
-	//			return STATUS_SUCCESS;
-	//		}
-	//		mName += aChar;
-	//		return STATUS_SUCCESS;
-
-	//	LABEL_NAME_SEPERATOR:
-	//		switch (aChar) {
-	//		case ' ':
-	//		case '\t':
-	//		case '\n':
-	//			return STATUS_SUCCESS;
-	//		case ':':
-	//			mState = STATE_IDENTIFY_CHILD;
-	//			return STATUS_SUCCESS;
-	//		default:
-	//			return STATUS_FAIL;
-	//		}
-
-	//	LABEL_PARSE_CHILD:
-	//		{
-	//			const Status status = mParsers.Back().second->Accept(aChar);
-	//			if (status == STATUS_SUCCESS) {
-	//				return STATUS_SUCCESS;
-	//			}
-	//			else if (status == STATUS_FAIL) {
-	//				return STATUS_FAIL;
-	//			}
-	//			else if (aChar == '}') {
-	//				mState = STATE_CLOSE_OBJECT;
-	//				goto LABEL_START;
-	//			}
-	//			else {
-	//				mState = STATE_CHILD_SEPARATOR;
-	//				goto LABEL_START;
-	//			}
-	//		}
-
-	//	LABEL_CHILD_SEPARATOR:
-	//		switch (aChar) {
-	//		case ' ':
-	//		case '\t':
-	//		case '\n':
-	//			return STATUS_SUCCESS;
-	//		case ',':
-	//			mState = STATE_OPEN_NAME;
-	//			return STATUS_SUCCESS;
-	//		case '}':
-	//			mState = STATE_CLOSE_OBJECT;
-	//			goto LABEL_START;
-	//		default:
-	//			return STATUS_FAIL;
-	//		}
-
-	//	LABEL_IDENTIFY_CHILD:
-	//		switch (aChar) {
-	//		case ' ':
-	//		case '\t':
-	//		case '\n':
-	//			return STATUS_SUCCESS;
-	//		case '}':
-	//			mState = STATE_CLOSE_OBJECT;
-	//			goto LABEL_START;
-	//		default:
-	//			TypeID id;
-	//			try {
-	//				id = IdentifyTypeID(aChar);
-	//			}
-	//			catch (...) {
-	//				return STATUS_FAIL;
-	//			}
-
-	//			mParsers.PushBack(std::pair<String, std::shared_ptr<Parser>>(mName, AllocateParser(mAllocator, id)));
-	//			mName.Clear();
-
-	//			mState = STATE_PARSE_CHILD;
-	//			goto LABEL_START;
-	//		}
-	//	}
-
-	//	std::shared_ptr<Value> Get(Allocator& aParseAllocator, Allocator& aDocAllocator) const override {
-	//		if (mState != STATE_CLOSE_OBJECT) return nullptr;
-
-	//		std::shared_ptr<Value> ptr = aParseAllocator.SharedAllocate<Value>(TYPE_OBJECT, aDocAllocator);
-	//		Object& object = *ptr;
-	//		for (auto& i : mParsers) {
-	//			object.emplace(i.first, i.second->Get(aParseAllocator, aDocAllocator));
-	//		}
-	//		return ptr;
-	//	}
-	//};
-
-	//static TypeID IdentifyTypeID(const String::Type aChar) {
-	//	switch (aChar) {
-	//	case '[':
-	//		return GetTypeID<Array>();
-	//	case '{':
-	//		return GetTypeID<Object>();
-	//	case '"':
-	//		return GetTypeID<String>();
-	//	case '-':
-	//	case '0':
-	//	case '1':
-	//	case '2':
-	//	case '3':
-	//	case '4':
-	//	case '5':
-	//	case '6':
-	//	case '7':
-	//	case '8':
-	//	case '9':
-	//		return GetTypeID<Number>();
-	//	case 't':
-	//	case 'f':
-	//		return GetTypeID<Bool>();
-	//	case 'n':
-	//		return GetTypeID<Null>();
-	//	default:
-	//		break;
-	//	}
-	//	throw std::runtime_error("Json::IdentifyTypeID : Could not identify TypeID");
-	//}
-
-	//static std::shared_ptr<Parser> AllocateParser(Allocator& aAllocator, const TypeID aID) {
-	//	switch (aID) {
-	//	case GetTypeID<Null>() :
-	//		return aAllocator.SharedAllocate<NullParser>();
-	//	case GetTypeID<Bool>() :
-	//		return aAllocator.SharedAllocate<BoolParser>();
-	//	case GetTypeID<Number>() :
-	//		return aAllocator.SharedAllocate<NumberParser>();
-	//	case GetTypeID<String>() :
-	//		return aAllocator.SharedAllocate<StringParser>(aAllocator);
-	//	case GetTypeID<Array>() :
-	//		return aAllocator.SharedAllocate<ArrayParser>(aAllocator);
-	//	case GetTypeID<Object>() :
-	//		return aAllocator.SharedAllocate<ObjectParser>(aAllocator);
-	//	default:
-	//		return nullptr;
-	//	}
-	//}
 
 }}
