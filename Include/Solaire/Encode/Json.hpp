@@ -79,6 +79,9 @@ namespace Solaire{ namespace Encode{
 			Writer(Allocator& aAllocator, WriteStream&);
 			~Writer();
 
+			bool IsArray() const throw();
+			bool IsObject() const throw();
+
 			bool BeginArray() throw();
 			bool EndArray() throw();
 			bool BeginObject() throw();
@@ -96,7 +99,6 @@ namespace Solaire{ namespace Encode{
 			bool AddValueBool(const ConstStringFragment, const bool) throw();
 			bool AddValueNumber(const ConstStringFragment, const double) throw();
 			bool AddValueString(const ConstStringFragment, const ConstStringFragment) throw();
-
 
 			bool AddValue(const Value&) throw();
 			bool AddValue(const ConstStringFragment, const Value&) throw();

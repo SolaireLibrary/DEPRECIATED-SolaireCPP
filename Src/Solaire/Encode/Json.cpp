@@ -47,6 +47,14 @@ namespace Solaire{ namespace Encode{
 		mOutputStream.Flush();
 	}
 
+	bool Json::Writer::IsArray() const throw() {
+		return mState.IsEmpty() ? true : mState.Back().type == STATE_ARRAY;
+	}
+
+	bool Json::Writer::IsObject() const throw() {
+		return mState.IsEmpty() ? false : mState.Back().type == STATE_OBJECT;
+	}
+
 	bool Json::Writer::AddValueInternal(const ConstStringFragment aValue) throw() {
 		if(mState.IsEmpty()) return false;
 		State& state = mState.Back();
@@ -154,6 +162,7 @@ namespace Solaire{ namespace Encode{
 
 	bool Json::Writer::AddValueString(const ConstStringFragment aValue) throw() {
 		String buffer(mState.GetAllocator());
+		//! \todo Escape quotes in aValue
 		buffer += '"';
 		buffer += aValue;
 		buffer += '"';
@@ -196,6 +205,7 @@ namespace Solaire{ namespace Encode{
 
 	bool Json::Writer::AddValueString(const ConstStringFragment aName, const ConstStringFragment aValue) throw() {
 		String buffer(mState.GetAllocator());
+		//! \todo Escape quotes in aValue
 		buffer += '"';
 		buffer += aValue;
 		buffer += '"';
