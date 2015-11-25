@@ -323,52 +323,60 @@ namespace Solaire{ namespace Encode{
 		}
 	};
 
-	///*class ArrayParser : public BaseParser {
-	//private:
-	//	static const char* StateOpenArray(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		const char* i = StateSkipWhitespace(aBegin, aEnd);
-	//		if(*i != '[') return aBegin;
-	//		aReader.BeginArray();
-	//		return i + 1;
-	//	}
+	class ArrayParser : public BaseParser {
+	private:
+		static bool StateOpenArray(ReadStream& aStream, Json::Reader& aReader) {
+			if(! StateSkipWhitespace(aStream)) return false;
+			char c;
+			aStream >> c;
+			if(c != '[') return false;
+			return StateCloseArray(aStream, aReader);
+		}
 
-	//	static const char* StateCloseArray(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		const char* i = StateSkipWhitespace(aBegin, aEnd);
-	//		if (*i != ']') return aBegin;
-	//		aReader.EndArray();
-	//		return i + 1;
-	//	}
+		static bool StateCloseArray(ReadStream& aStream, Json::Reader& aReader) {
+			if(! StateSkipWhitespace(aStream)) return false;
+			char c;
+			aStream >> c;
 
-	//	static const char* StateIdentifyChild(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		return aBegin;
-	//	}
+			switch(c)
+			{
+			case ']':
+				return true;
+			default:
+				aStream.SetOffset(aStream.GetOffset() - 1);
+				if(! StateParseValue(aStream, aReader)) return false;
+				return StateChildSeperator(aStream, aReader);
+			}
+		}
 
-	//	static const char* StateParseChild(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		return aBegin;
-	//	}
+		static bool StateChildSeperator(ReadStream& aStream, Json::Reader& aReader) {
+			if(! StateSkipWhitespace(aStream)) return false;
+			char c;
+			aStream >> c;
 
-	//	static const char* StateChildSeperator(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		const char* i = StateSkipWhitespace(aBegin, aEnd);
-	//		while(i != aEnd) {
-	//			switch(*i) {
-	//			case ',':
-	//				return i + 1;
-	//			case ']':
-	//				return StateCloseArray(aBegin, aEnd, aReader);
-	//			default:
-	//				return aBegin;
-	//			}
-	//		}
-	//		return aBegin;
-	//	}
-	//public:
-	//	static const char* Parse(const char* const aBegin, const char* aEnd, Json::Reader& aReader) {
-	//		return aBegin; 
-	//		//const char* const e1 = StateSkipWhitespace(aBegin, aEnd);
-	//		//const char* const e2 = StateValue(e1, aEnd);
-	//		//return e2 == e1 ? aBegin : e2;
-	//	}
-	//};*/
+			switch(c) 
+			{
+			case ']':
+				return true;
+			case ',':
+				if(! StateParseValue(aStream, aReader)) return false;
+				return StateChildSeperator(aStream, aReader);
+			default:
+				return false;
+			}
+		}
+	public:
+		static bool Parse(ReadStream& aStream, Json::Reader& aReader) {
+			const uint32_t offset = aStream.GetOffset();
+
+			if(! StateOpenArray(aStream, aReader)) {
+				aStream.SetOffset(offset);
+				return false;
+			}
+
+			return true;
+		}
+	};
 
 	bool JsonParseNull(ReadStream& aStream, Json::Reader& aReader) {
 		return NullParser::Parse(aStream, aReader);
@@ -387,7 +395,7 @@ namespace Solaire{ namespace Encode{
 	}
 
 	bool JsonParseArray(ReadStream& aStream, Json::Reader& aReader) {
-		return false;// ArrayParser::Parse(aBegin, aEnd, aReader);
+		return ArrayParser::Parse(aStream, aReader);
 	}
 
 	bool JsonParseObject(ReadStream& aStream, Json::Reader& aReader) {
