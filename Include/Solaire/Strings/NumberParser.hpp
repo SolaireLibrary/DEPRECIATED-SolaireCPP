@@ -300,30 +300,34 @@ namespace Solaire {
 		double highPart = std::floor(aValue);
 		double lowPart = aValue - highPart;
 
-		String tmp(aAllocator);
+		char buf[32];
+		uint8_t head = 0;
 
 		if(highPart == 0.0) {
-			tmp += '0';
+			buf[head++] = '0';
 		}else {
 			while(highPart != 0.0) {
 				const double digit = highPart / 10.0;
 				highPart = std::floor(digit);
 
-				tmp += '0' + static_cast<char>((digit - highPart) * 10.0);
+				const char inc = static_cast<char>((digit - highPart) * 10.0);
+				buf[head++] = ('0' + inc);
 			}
 		}
 
 		if(lowPart != 0.0) {
-			tmp += '.';
+			buf[head++] = '.';
 			while(highPart != 0.0) {
 				const double digit = highPart * 10.0;
 				highPart = highPart - std::floor(digit);
 
-				tmp += '0' + static_cast<char>(digit);
+				buf[head++] = '0' + static_cast<char>(digit);
 			}
 		}
 
-		return tmp;
+		buf[head] = '\0';
+
+		return String(aAllocator, buf);
 	}
 
 	static String WriteNumber(Allocator& aAllocator, const uint32_t aValue) {

@@ -144,8 +144,7 @@ namespace Solaire{ namespace Encode{
 	}
 
 	bool Json::Writer::AddValueNumber(const double aValue) throw() {
-		//return AddValueInternal(WriteNumber(aValue));
-		return AddValueInternal("number_here");
+		return AddValueInternal(WriteNumber(aValue));
 	}
 
 	bool Json::Writer::AddValueString(const ConstStringFragment aValue) throw() {
@@ -187,8 +186,7 @@ namespace Solaire{ namespace Encode{
 	}
 
 	bool Json::Writer::AddValueNumber(const ConstStringFragment aName, const double aValue) throw() {
-		//return AddValueInternal(aName, WriteNumber(aValue));
-		return AddValueInternal(aName, "number_here");
+		return AddValueInternal(aName, WriteNumber(aValue));
 	}
 
 	bool Json::Writer::AddValueString(const ConstStringFragment aName, const ConstStringFragment aValue) throw() {
