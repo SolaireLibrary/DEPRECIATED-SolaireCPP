@@ -73,7 +73,6 @@ namespace Solaire{
 			DynamicArray<State> mState;
 		private:
 			bool AddValueInternal(const ConstStringFragment) throw();
-			bool AddValueInternal(const ConstStringFragment, const ConstStringFragment) throw();
 		public:
 			Writer(WriteStream&);
 			Writer(Allocator& aAllocator, WriteStream&);
@@ -82,23 +81,26 @@ namespace Solaire{
 			bool IsArray() const throw();
 			bool IsObject() const throw();
 
-			bool BeginArray() throw();
+			bool AddName(const ConstStringFragment);
 			bool EndArray() throw();
-			bool BeginObject() throw();
 			bool EndObject() throw();
 
-			bool AddValueNull() throw();
-			bool AddValueBool(const bool) throw();
-			bool AddValueNumber(const double) throw();
-			bool AddValueString(const ConstStringFragment) throw();
+			bool BeginArray() throw();
+			bool BeginObject() throw();
+
+			bool AddNull() throw();
+			bool AddBool(const bool) throw();
+			bool AddNumber(const double) throw();
+			bool AddString(const ConstStringFragment) throw();
 
 			bool BeginArray(const ConstStringFragment) throw();
 			bool BeginObject(const ConstStringFragment) throw();
 
-			bool AddValueNull(const ConstStringFragment) throw();
-			bool AddValueBool(const ConstStringFragment, const bool) throw();
-			bool AddValueNumber(const ConstStringFragment, const double) throw();
-			bool AddValueString(const ConstStringFragment, const ConstStringFragment) throw();
+			bool AddNull(const ConstStringFragment) throw();
+			bool AddNumber(const ConstStringFragment) throw();
+			bool AddBool(const ConstStringFragment, const bool) throw();
+			bool AddNumber(const ConstStringFragment, const double) throw();
+			bool AddString(const ConstStringFragment, const ConstStringFragment) throw();
 
 			bool AddValue(const Encode::Value&) throw();
 			bool AddValue(const ConstStringFragment, const Encode::Value&) throw();

@@ -55,28 +55,21 @@ namespace Solaire{
 		return mState.IsEmpty() ? false : mState.Back().type == STATE_OBJECT;
 	}
 
-	bool Json::Writer::AddValueInternal(const ConstStringFragment aValue) throw() {
-		if(mState.IsEmpty()) return false;
-		State& state = mState.Back();
-		if(state.type != STATE_ARRAY) return false;
-		state.values.PushBack(String(mState.GetAllocator(), aValue));
-		return true;
-	}
-
-	bool Json::Writer::AddValueInternal(const ConstStringFragment aName, const ConstStringFragment aValue) throw() {
+	bool Json::Writer::AddName(const ConstStringFragment aName) {
 		if(mState.IsEmpty()) return false;
 		State& state = mState.Back();
 		if(state.type != STATE_OBJECT) return false;
 		state.names.PushBack(String(mState.GetAllocator(), aName));
+	}
+
+	bool Json::Writer::AddValueInternal(const ConstStringFragment aValue) throw() {
+		if(mState.IsEmpty()) return false;
+		State& state = mState.Back();
 		state.values.PushBack(String(mState.GetAllocator(), aValue));
 		return true;
 	}
 
 	bool Json::Writer::BeginArray() throw() {
-		if(! mState.IsEmpty()) {
-			State& state = mState.Back();
-			if(state.type != STATE_ARRAY) return false;
-		}
 		State& state = mState.PushBack(State(mState.GetAllocator()));
 		state.type = STATE_ARRAY;
 		return true;
@@ -109,10 +102,6 @@ namespace Solaire{
 	}
 
 	bool Json::Writer::BeginObject() throw() {
-		if(! mState.IsEmpty()) {
-			State& state = mState.Back();
-			if(state.type != STATE_ARRAY) return false;
-		}
 		State& state = mState.PushBack(State(mState.GetAllocator()));
 		state.type = STATE_OBJECT;
 		return true;
@@ -125,6 +114,7 @@ namespace Solaire{
 
 		String buffer(mState.GetAllocator());
 		const uint32_t size = state.values.Size();
+		if(state.names.Size() != size) return false;
 
 		buffer += '{';
 		for(uint32_t i = 0; i < size; ++i) {
@@ -148,19 +138,19 @@ namespace Solaire{
 		return true;
 	}
 
-	bool Json::Writer::AddValueNull() throw() {
+	bool Json::Writer::AddNull() throw() {
 		return AddValueInternal("null");
 	}
 
-	bool Json::Writer::AddValueBool(const bool aValue) throw() {
+	bool Json::Writer::AddBool(const bool aValue) throw() {
 		return AddValueInternal(aValue ? "true" : "false");
 	}
 
-	bool Json::Writer::AddValueNumber(const double aValue) throw() {
+	bool Json::Writer::AddNumber(const double aValue) throw() {
 		return AddValueInternal(WriteNumber(mState.GetAllocator(), aValue));
 	}
 
-	bool Json::Writer::AddValueString(const ConstStringFragment aValue) throw() {
+	bool Json::Writer::AddString(const ConstStringFragment aValue) throw() {
 		String buffer(mState.GetAllocator());
 		//! \todo Escape quotes in aValue
 		buffer += '"';
@@ -170,109 +160,55 @@ namespace Solaire{
 	}
 
 	bool Json::Writer::BeginArray(const ConstStringFragment aName) throw() {
-		if(mState.IsEmpty()) return false; 
-		State* state = &mState.Back();
-		if(state->type != STATE_OBJECT) return false;
-		state->names.PushBack(String(mState.GetAllocator(), aName));
-
-		state = &mState.PushBack(State(mState.GetAllocator()));
-		state->type = STATE_ARRAY;
-		return true;
+		if(! AddName(aName)) return false;
+		return BeginArray();
 	}
 
 	bool Json::Writer::BeginObject(const ConstStringFragment aName) throw() {
-		if(mState.IsEmpty()) return false; 
-		State* state = &mState.Back();
-		if(state->type != STATE_OBJECT) return false;
-		state->names.PushBack(String(mState.GetAllocator(), aName));
-
-		state = &mState.PushBack(State(mState.GetAllocator()));
-		state->type = STATE_OBJECT;
-		return true;
+		if(! AddName(aName)) return false;
+		return BeginObject();
 	}
 
-	bool Json::Writer::AddValueNull(const ConstStringFragment aName) throw() {
-		return AddValueInternal(aName, "null");
+	bool Json::Writer::AddNull(const ConstStringFragment aName) throw() {
+		if(! AddName(aName)) return false;
+		return AddNull();
 	}
 
-	bool Json::Writer::AddValueBool(const ConstStringFragment aName, const bool aValue) throw() {
-		return AddValueInternal(aName, aValue ? "true" : "false");
+	bool Json::Writer::AddBool(const ConstStringFragment aName, const bool aValue) throw() {
+		if(! AddName(aName)) return false;
+		return AddBool(aValue);
 	}
 
-	bool Json::Writer::AddValueNumber(const ConstStringFragment aName, const double aValue) throw() {
-		return AddValueInternal(aName, WriteNumber(mState.GetAllocator(), aValue));
+	bool Json::Writer::AddNumber(const ConstStringFragment aName, const double aValue) throw() {
+		if(! AddName(aName)) return false;
+		return AddNumber(aValue);
 	}
 
-	bool Json::Writer::AddValueString(const ConstStringFragment aName, const ConstStringFragment aValue) throw() {
-		String buffer(mState.GetAllocator());
-		//! \todo Escape quotes in aValue
-		buffer += '"';
-		buffer += aValue;
-		buffer += '"';
-		return AddValueInternal(aName, buffer);
+	bool Json::Writer::AddString(const ConstStringFragment aName, const ConstStringFragment aValue) throw() {
+		if(! AddName(aName)) return false;
+		return AddString(aValue);
 	}
 
 	bool Json::Writer::AddValue(const ConstStringFragment aName, const Encode::Value& aValue) throw() {
-		switch (aValue.GetType()) {
-		case Encode::Value::TYPE_BOOL:
-			return AddValueBool(aName, aValue.GetBool());
-		case Encode::Value::TYPE_CHAR:
-			{
-				const char buf = aValue.GetChar();
-				return AddValueString(aName, String(mState.GetAllocator(), &buf, 1));
-			}
-		case Encode::Value::TYPE_INT:
-		case Encode::Value::TYPE_UINT:
-		case Encode::Value::TYPE_DOUBLE:
-			return AddValueNumber(aName, aValue.GetDouble());
-		case Encode::Value::TYPE_STRING:
-			return AddValueString(aName, aValue.GetString());
-		case Encode::Value::TYPE_ARRAY:
-			{
-				const Encode::Array& _array = aValue.GetArray();
-				const uint32_t length = _array.Size();
-				
-				if(! BeginArray(aName)) return false;
-				for(uint32_t i = 0; i < length; ++i) {
-					if(! AddValue(_array[i])) return false;
-				}
-				if(! EndArray()) return false;
-
-				return true;
-			}
-		case Encode::Value::TYPE_OBJECT:
-			{
-				const Encode::Object& object = aValue.GetObject();
-				const uint32_t length = object.Size();
-				
-				if(! BeginObject(aName)) return false;
-				for(uint32_t i = 0; i < length; ++i) {
-					if(! AddValue(object.GetMemberName(i), object[i])) return false;
-				}
-				if(! EndObject()) return false;
-
-				return true;
-			}
-		default:
-			return false;
-		}
+		if(! AddName(aName)) return false;
+		return AddValue(aValue);
 	}
 
 	bool Json::Writer::AddValue(const Encode::Value& aValue) throw() {
 		switch (aValue.GetType()) {
 		case Encode::Value::TYPE_BOOL:
-			return AddValueBool(aValue.GetBool());
+			return AddBool(aValue.GetBool());
 		case Encode::Value::TYPE_CHAR:
 			{
 				const char buf = aValue.GetChar();
-				return AddValueString(String(mState.GetAllocator(), &buf, 1));
+				return AddString(String(mState.GetAllocator(), &buf, 1));
 			}
 		case Encode::Value::TYPE_INT:
 		case Encode::Value::TYPE_UINT:
 		case Encode::Value::TYPE_DOUBLE:
-			return AddValueNumber(aValue.GetDouble());
+			return AddNumber(aValue.GetDouble());
 		case Encode::Value::TYPE_STRING:
-			return AddValueString(aValue.GetString());
+			return AddString(aValue.GetString());
 		case Encode::Value::TYPE_ARRAY:
 			{
 				const Encode::Array& _array = aValue.GetArray();
