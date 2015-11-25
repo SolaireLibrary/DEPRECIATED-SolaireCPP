@@ -26,9 +26,9 @@ namespace Solaire{ namespace Encode{
 
 	// State
 
-	Json::Writer::State::State() :
-		names(DEFAULT_ALLOCATOR),
-		values(DEFAULT_ALLOCATOR)
+	Json::Writer::State::State(Allocator& aAllocator) :
+		names(aAllocator),
+		values(aAllocator)
 	{}
 
 	// Writer
@@ -36,6 +36,11 @@ namespace Solaire{ namespace Encode{
 	Json::Writer::Writer(WriteStream& aStream) :
 		mOutputStream(aStream),
 		mState(DEFAULT_ALLOCATOR)
+	{}
+
+	Json::Writer::Writer(Allocator& aAllocator, WriteStream& aStream) :
+		mOutputStream(aStream),
+		mState(aAllocator)
 	{}
 
 	Json::Writer::~Writer() {
@@ -46,7 +51,7 @@ namespace Solaire{ namespace Encode{
 		if(mState.IsEmpty()) return false;
 		State& state = mState.Back();
 		if(state.type != STATE_ARRAY) return false;
-		state.values.PushBack(String(DEFAULT_ALLOCATOR, aValue));
+		state.values.PushBack(String(mState.GetAllocator(), aValue));
 		return true;
 	}
 
@@ -54,8 +59,8 @@ namespace Solaire{ namespace Encode{
 		if(mState.IsEmpty()) return false;
 		State& state = mState.Back();
 		if(state.type != STATE_OBJECT) return false;
-		state.names.PushBack(String(DEFAULT_ALLOCATOR, aName));
-		state.values.PushBack(String(DEFAULT_ALLOCATOR, aValue));
+		state.names.PushBack(String(mState.GetAllocator(), aName));
+		state.values.PushBack(String(mState.GetAllocator(), aValue));
 		return true;
 	}
 
@@ -64,7 +69,7 @@ namespace Solaire{ namespace Encode{
 			State& state = mState.Back();
 			if(state.type != STATE_ARRAY) return false;
 		}
-		State& state = mState.PushBack(State());
+		State& state = mState.PushBack(State(mState.GetAllocator()));
 		state.type = STATE_ARRAY;
 		return true;
 	}
@@ -74,7 +79,7 @@ namespace Solaire{ namespace Encode{
 		State& state = mState.Back();
 		if(state.type != STATE_ARRAY) return false;
 
-		String buffer(DEFAULT_ALLOCATOR);
+		String buffer(mState.GetAllocator());
 		const uint32_t size = state.values.Size();
 
 		buffer += '[';
@@ -100,7 +105,7 @@ namespace Solaire{ namespace Encode{
 			State& state = mState.Back();
 			if(state.type != STATE_ARRAY) return false;
 		}
-		State& state = mState.PushBack(State());
+		State& state = mState.PushBack(State(mState.GetAllocator()));
 		state.type = STATE_OBJECT;
 		return true;
 	}
@@ -110,7 +115,7 @@ namespace Solaire{ namespace Encode{
 		State& state = mState.Back();
 		if(state.type != STATE_OBJECT) return false;
 
-		String buffer(DEFAULT_ALLOCATOR);
+		String buffer(mState.GetAllocator());
 		const uint32_t size = state.values.Size();
 
 		buffer += '{';
@@ -144,11 +149,11 @@ namespace Solaire{ namespace Encode{
 	}
 
 	bool Json::Writer::AddValueNumber(const double aValue) throw() {
-		return AddValueInternal(WriteNumber(aValue));
+		return AddValueInternal(WriteNumber(mState.GetAllocator(), aValue));
 	}
 
 	bool Json::Writer::AddValueString(const ConstStringFragment aValue) throw() {
-		String buffer(DEFAULT_ALLOCATOR);
+		String buffer(mState.GetAllocator());
 		buffer += '"';
 		buffer += aValue;
 		buffer += '"';
@@ -159,9 +164,9 @@ namespace Solaire{ namespace Encode{
 		if(mState.IsEmpty()) return false; 
 		State* state = &mState.Back();
 		if(state->type != STATE_OBJECT) return false;
-		state->names.PushBack(String(DEFAULT_ALLOCATOR, aName));
+		state->names.PushBack(String(mState.GetAllocator(), aName));
 
-		state = &mState.PushBack(State());
+		state = &mState.PushBack(State(mState.GetAllocator()));
 		state->type = STATE_ARRAY;
 		return true;
 	}
@@ -170,9 +175,9 @@ namespace Solaire{ namespace Encode{
 		if(mState.IsEmpty()) return false; 
 		State* state = &mState.Back();
 		if(state->type != STATE_OBJECT) return false;
-		state->names.PushBack(String(DEFAULT_ALLOCATOR, aName));
+		state->names.PushBack(String(mState.GetAllocator(), aName));
 
-		state = &mState.PushBack(State());
+		state = &mState.PushBack(State(mState.GetAllocator()));
 		state->type = STATE_OBJECT;
 		return true;
 	}
@@ -186,11 +191,11 @@ namespace Solaire{ namespace Encode{
 	}
 
 	bool Json::Writer::AddValueNumber(const ConstStringFragment aName, const double aValue) throw() {
-		return AddValueInternal(aName, WriteNumber(aValue));
+		return AddValueInternal(aName, WriteNumber(mState.GetAllocator(), aValue));
 	}
 
 	bool Json::Writer::AddValueString(const ConstStringFragment aName, const ConstStringFragment aValue) throw() {
-		String buffer(DEFAULT_ALLOCATOR);
+		String buffer(mState.GetAllocator());
 		buffer += '"';
 		buffer += aValue;
 		buffer += '"';
@@ -204,7 +209,7 @@ namespace Solaire{ namespace Encode{
 		case Value::TYPE_CHAR:
 			{
 				const char buf = aValue.GetChar();
-				return AddValueString(aName, String(DEFAULT_ALLOCATOR, &buf, 1));
+				return AddValueString(aName, String(mState.GetAllocator(), &buf, 1));
 			}
 		case Value::TYPE_INT:
 		case Value::TYPE_UINT:
@@ -250,7 +255,7 @@ namespace Solaire{ namespace Encode{
 		case Value::TYPE_CHAR:
 			{
 				const char buf = aValue.GetChar();
-				return AddValueString(String(DEFAULT_ALLOCATOR, &buf, 1));
+				return AddValueString(String(mState.GetAllocator(), &buf, 1));
 			}
 		case Value::TYPE_INT:
 		case Value::TYPE_UINT:

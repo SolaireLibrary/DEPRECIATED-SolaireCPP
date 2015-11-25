@@ -66,7 +66,7 @@ namespace Solaire{ namespace Encode{
 				DynamicArray<String> names;
 				DynamicArray<String> values;
 
-				State();
+				State(Allocator&);
 			};
 		private:
 			WriteStream& mOutputStream;
@@ -76,6 +76,7 @@ namespace Solaire{ namespace Encode{
 			bool AddValueInternal(const ConstStringFragment, const ConstStringFragment) throw();
 		public:
 			Writer(WriteStream&);
+			Writer(Allocator& aAllocator, WriteStream&);
 			~Writer();
 
 			bool BeginArray() throw();
