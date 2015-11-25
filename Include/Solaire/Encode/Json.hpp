@@ -57,13 +57,23 @@ namespace Solaire{ namespace Encode{
 
 		class Writer {
 		private:
-			enum State : uint8_t {
+			enum ContainterType : uint8_t {
 				STATE_ARRAY,
 				STATE_OBJECT
+			};
+			struct State {
+				ContainterType type;
+				DynamicArray<String> names;
+				DynamicArray<String> values;
+
+				State();
 			};
 		private:
 			WriteStream& mOutputStream;
 			DynamicArray<State> mState;
+		private:
+			bool AddValueInternal(const ConstStringFragment) throw();
+			bool AddValueInternal(const ConstStringFragment, const ConstStringFragment) throw();
 		public:
 			Writer(WriteStream&);
 			~Writer();

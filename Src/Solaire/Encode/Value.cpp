@@ -24,10 +24,6 @@
 
 namespace Solaire{ namespace Encode{
 
-	static String DEFAULT_STRING(DEFAULT_ALLOCATOR, "ERROR");
-	static Array DEFAULT_ARRAY;
-	static Object DEFAULT_OBJECT;
-
 	// Value
 
 	Value::Value(const Value& aOther) throw() :
@@ -576,7 +572,7 @@ namespace Solaire{ namespace Encode{
 		case TYPE_STRING:
 			return *mString;
 		default:
-			return DEFAULT_STRING;
+			return *static_cast<String*>(nullptr);
 		}
 	}
 
@@ -590,7 +586,7 @@ namespace Solaire{ namespace Encode{
 		case TYPE_ARRAY:
 			return *mArray;
 		default:
-			return DEFAULT_ARRAY;
+			return *static_cast<Array*>(nullptr);;
 		}
 	}
 
@@ -600,7 +596,7 @@ namespace Solaire{ namespace Encode{
 		case TYPE_ARRAY:
 			return *mArray;
 		default:
-			return DEFAULT_ARRAY;
+			return *static_cast<Array*>(nullptr);
 		}
 	}
 
@@ -610,7 +606,7 @@ namespace Solaire{ namespace Encode{
 		case TYPE_OBJECT:
 			return *mObject;
 		default:
-			return DEFAULT_OBJECT;
+			return *static_cast<Object*>(nullptr);
 		}
 	}
 
@@ -620,7 +616,7 @@ namespace Solaire{ namespace Encode{
 		case TYPE_OBJECT:
 			return *mObject;
 		default:
-			return DEFAULT_OBJECT;
+			return *static_cast<Object*>(nullptr);
 		}
 	}
 

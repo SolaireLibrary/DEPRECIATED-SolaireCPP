@@ -24,6 +24,13 @@
 
 namespace Solaire{ namespace Encode{
 
+	// State
+
+	Json::Writer::State::State() :
+		names(DEFAULT_ALLOCATOR),
+		values(DEFAULT_ALLOCATOR)
+	{}
+
 	// Writer
 
 	Json::Writer::Writer(WriteStream& aStream) :
@@ -35,148 +42,161 @@ namespace Solaire{ namespace Encode{
 		mOutputStream.Flush();
 	}
 
+	bool Json::Writer::AddValueInternal(const ConstStringFragment aValue) throw() {
+		if(mState.IsEmpty()) return false;
+		State& state = mState.Back();
+		if(state.type != STATE_ARRAY) return false;
+		state.values.PushBack(String(DEFAULT_ALLOCATOR, aValue));
+		return true;
+	}
+
+	bool Json::Writer::AddValueInternal(const ConstStringFragment aName, const ConstStringFragment aValue) throw() {
+		if(mState.IsEmpty()) return false;
+		State& state = mState.Back();
+		if(state.type != STATE_OBJECT) return false;
+		state.names.PushBack(String(DEFAULT_ALLOCATOR, aName));
+		state.values.PushBack(String(DEFAULT_ALLOCATOR, aValue));
+		return true;
+	}
+
 	bool Json::Writer::BeginArray() throw() {
-		if(mState.IsEmpty() || mState.Back() != STATE_ARRAY) return false;
-		mState.PushBack(STATE_ARRAY);
-		mOutputStream << '[';
+		if(! mState.IsEmpty()) {
+			State& state = mState.Back();
+			if(state.type != STATE_ARRAY) return false;
+		}
+		State& state = mState.PushBack(State());
+		state.type = STATE_ARRAY;
 		return true;
 	}
 
 	bool Json::Writer::EndArray() throw() {
-		if(mState.IsEmpty() || mState.Back() != STATE_ARRAY) return false;
-		mState.PopBack();
-		mOutputStream << ']';
-		if(! mState.IsEmpty()) {
-			mOutputStream << ',';
+		if(mState.IsEmpty()) return false; 
+		State& state = mState.Back();
+		if(state.type != STATE_ARRAY) return false;
+
+		String buffer(DEFAULT_ALLOCATOR);
+		const uint32_t size = state.values.Size();
+
+		buffer += '[';
+		for(uint32_t i = 0; i < size; ++i) {
+			buffer += state.values[i];
+			if(i + 1 < size) buffer += ',';
 		}
+		buffer += ']';
+
+		mState.PopBack();
+
+		if(mState.IsEmpty()) {
+			mOutputStream.Write(buffer.CString(), buffer.Size());
+		}else{
+			mState.Back().values.PushBack(buffer);
+		}
+
 		return true;
 	}
 
 	bool Json::Writer::BeginObject() throw() {
-		if(mState.IsEmpty() || mState.Back() != STATE_ARRAY) return false;
-		mState.PushBack(STATE_OBJECT);
-		mOutputStream << '{';
+		if(! mState.IsEmpty()) {
+			State& state = mState.Back();
+			if(state.type != STATE_ARRAY) return false;
+		}
+		State& state = mState.PushBack(State());
+		state.type = STATE_OBJECT;
 		return true;
 	}
 
 	bool Json::Writer::EndObject() throw() {
-		if(mState.IsEmpty() || mState.Back() != STATE_OBJECT) return false;
-		mState.PopBack();
-		mOutputStream << '}';
-		if(! mState.IsEmpty()) {
-			mOutputStream << ',';
+		if(mState.IsEmpty()) return false; 
+		State& state = mState.Back();
+		if(state.type != STATE_OBJECT) return false;
+
+		String buffer(DEFAULT_ALLOCATOR);
+		const uint32_t size = state.values.Size();
+
+		buffer += '{';
+		for(uint32_t i = 0; i < size; ++i) {
+			buffer += '"';
+			buffer += state.names[i];
+			buffer += '"';
+			buffer += ':';
+			buffer += state.values[i];
+			if(i + 1 < size) buffer += ',';
 		}
+		buffer += '}';
+
+		mState.PopBack();
+
+		if(mState.IsEmpty()) {
+			mOutputStream.Write(buffer.CString(), buffer.Size());
+		}else{
+			mState.Back().values.PushBack(buffer);
+		}
+
 		return true;
 	}
 
 	bool Json::Writer::AddValueNull() throw() {
-		if((!mState.IsEmpty()) || mState.Back() != STATE_ARRAY) return false;
-
-		mOutputStream.WriteCString("null,");
-
-		return true;
+		return AddValueInternal("null");
 	}
 
 	bool Json::Writer::AddValueBool(const bool aValue) throw() {
-		if((!mState.IsEmpty()) || mState.Back() != STATE_ARRAY) return false;
-
-		if(aValue) {
-			mOutputStream.WriteCString("true,");
-		}else {
-			mOutputStream.WriteCString("false,");
-		}
-
-		return true;
+		return AddValueInternal(aValue ? "true" : "false");
 	}
 
 	bool Json::Writer::AddValueNumber(const double aValue) throw() {
-		if((!mState.IsEmpty()) || mState.Back() != STATE_ARRAY) return false;
-
-		String buf = WriteNumber(aValue);
-		buf += ',';
-		mOutputStream.WriteCString(buf.CString());
-
-		return true;
+		//return AddValueInternal(WriteNumber(aValue));
+		return AddValueInternal("number_here");
 	}
 
 	bool Json::Writer::AddValueString(const ConstStringFragment aValue) throw() {
-		if((! mState.IsEmpty()) || mState.Back() != STATE_ARRAY) return false;
-
-		String buf = String(DEFAULT_ALLOCATOR, aValue);
-		buf += ',';
-		mOutputStream.WriteCString(buf.CString());
-
-		return true;
+		String buffer(DEFAULT_ALLOCATOR);
+		buffer += '"';
+		buffer += aValue;
+		buffer += '"';
+		return AddValueInternal(buffer);
 	}
 
-	bool Json::Writer::BeginArray(const ConstStringFragment aValue) throw() {
-		if(mState.IsEmpty() || mState.Back() != STATE_OBJECT) return false;
-		mState.PushBack(STATE_ARRAY);
+	bool Json::Writer::BeginArray(const ConstStringFragment aName) throw() {
+		if(mState.IsEmpty()) return false; 
+		State* state = &mState.Back();
+		if(state->type != STATE_OBJECT) return false;
+		state->names.PushBack(String(DEFAULT_ALLOCATOR, aName));
 
-		mOutputStream << '[';
-
+		state = &mState.PushBack(State());
+		state->type = STATE_ARRAY;
 		return true;
 	}
 
 	bool Json::Writer::BeginObject(const ConstStringFragment aName) throw() {
-		if(mState.IsEmpty() || mState.Back() != STATE_OBJECT) return false;
-		mState.PushBack(STATE_OBJECT);
+		if(mState.IsEmpty()) return false; 
+		State* state = &mState.Back();
+		if(state->type != STATE_OBJECT) return false;
+		state->names.PushBack(String(DEFAULT_ALLOCATOR, aName));
 
-		mOutputStream << '{';
-
+		state = &mState.PushBack(State());
+		state->type = STATE_OBJECT;
 		return true;
 	}
 
 	bool Json::Writer::AddValueNull(const ConstStringFragment aName) throw() {
-		if((! mState.IsEmpty()) || mState.Back() != STATE_OBJECT) return false;
-
-		String buf(DEFAULT_ALLOCATOR, "\""); 
-		buf += String(DEFAULT_ALLOCATOR, aName);
-		buf +=  "\" : null,";
-		mOutputStream.WriteCString(buf.CString());
-
-		return true;
+		return AddValueInternal(aName, "null");
 	}
 
 	bool Json::Writer::AddValueBool(const ConstStringFragment aName, const bool aValue) throw() {
-		if((! mState.IsEmpty()) || mState.Back() != STATE_OBJECT) return false;
-
-		mOutputStream << '"';
-		String buf(DEFAULT_ALLOCATOR, "\"");
-		mOutputStream.Write(aName.begin(), aName.Size());
-		
-		if(aValue) {
-			mOutputStream.WriteCString("\" : true,");
-		}else {
-			mOutputStream.WriteCString("\" : false,");
-		}
-
-		return true;
+		return AddValueInternal(aName, aValue ? "true" : "false");
 	}
 
 	bool Json::Writer::AddValueNumber(const ConstStringFragment aName, const double aValue) throw() {
-		if((! mState.IsEmpty()) || mState.Back() != STATE_OBJECT) return false;
-
-		mOutputStream << '"';
-		mOutputStream.Write(aName.begin(), aName.Size());
-		mOutputStream.WriteCString("\" : ");
-		mOutputStream.WriteCString(WriteNumber(aValue).CString());
-		mOutputStream << ',';
-
-		return true;
+		//return AddValueInternal(aName, WriteNumber(aValue));
+		return AddValueInternal(aName, "number_here");
 	}
 
 	bool Json::Writer::AddValueString(const ConstStringFragment aName, const ConstStringFragment aValue) throw() {
-		if((! mState.IsEmpty()) || mState.Back() != STATE_OBJECT) return false;
-
-		mOutputStream << '"';
-		mOutputStream.Write(aName.begin(), aName.Size());
-		mOutputStream.WriteCString("\" : \"");
-		mOutputStream.Write(aValue.begin(), aValue.Size());
-		mOutputStream << '"';
-		mOutputStream << ',';
-
-		return true;
+		String buffer(DEFAULT_ALLOCATOR);
+		buffer += '"';
+		buffer += aValue;
+		buffer += '"';
+		return AddValueInternal(aName, buffer);
 	}
 
 	bool Json::Writer::AddValue(const ConstStringFragment aName, const Value& aValue) throw() {
