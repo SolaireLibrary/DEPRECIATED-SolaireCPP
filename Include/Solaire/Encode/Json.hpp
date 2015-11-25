@@ -36,7 +36,7 @@
 #include "..\IO\Stream.hpp"
 #include "Value.hpp"
 
-namespace Solaire{ namespace Encode{ 
+namespace Solaire{ 
 	
 	struct Json {
 		class SOLAIRE_EXPORT_API Reader {
@@ -100,16 +100,16 @@ namespace Solaire{ namespace Encode{
 			bool AddValueNumber(const ConstStringFragment, const double) throw();
 			bool AddValueString(const ConstStringFragment, const ConstStringFragment) throw();
 
-			bool AddValue(const Value&) throw();
-			bool AddValue(const ConstStringFragment, const Value&) throw();
+			bool AddValue(const Encode::Value&) throw();
+			bool AddValue(const ConstStringFragment, const Encode::Value&) throw();
 		};
 
 		static bool SOLAIRE_EXPORT_CALL Read(ReadStream&, Reader&);
-		static Value SOLAIRE_EXPORT_CALL Read(ReadStream&);
-		static Value SOLAIRE_EXPORT_CALL Read(Allocator&, ReadStream&);
+		static Encode::Value SOLAIRE_EXPORT_CALL Read(ReadStream&);
+		static Encode::Value SOLAIRE_EXPORT_CALL Read(Allocator&, ReadStream&);
 	};
 
 
-}}
+}
 
 #endif

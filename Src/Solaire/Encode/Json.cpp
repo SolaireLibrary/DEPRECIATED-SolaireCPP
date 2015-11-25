@@ -22,7 +22,7 @@
 #include "Solaire\Encode\Array.hpp"
 #include "Solaire\Encode\Object.hpp"
 
-namespace Solaire{ namespace Encode{
+namespace Solaire{
 
 	// State
 
@@ -212,24 +212,24 @@ namespace Solaire{ namespace Encode{
 		return AddValueInternal(aName, buffer);
 	}
 
-	bool Json::Writer::AddValue(const ConstStringFragment aName, const Value& aValue) throw() {
+	bool Json::Writer::AddValue(const ConstStringFragment aName, const Encode::Value& aValue) throw() {
 		switch (aValue.GetType()) {
-		case Value::TYPE_BOOL:
+		case Encode::Value::TYPE_BOOL:
 			return AddValueBool(aName, aValue.GetBool());
-		case Value::TYPE_CHAR:
+		case Encode::Value::TYPE_CHAR:
 			{
 				const char buf = aValue.GetChar();
 				return AddValueString(aName, String(mState.GetAllocator(), &buf, 1));
 			}
-		case Value::TYPE_INT:
-		case Value::TYPE_UINT:
-		case Value::TYPE_DOUBLE:
+		case Encode::Value::TYPE_INT:
+		case Encode::Value::TYPE_UINT:
+		case Encode::Value::TYPE_DOUBLE:
 			return AddValueNumber(aName, aValue.GetDouble());
-		case Value::TYPE_STRING:
+		case Encode::Value::TYPE_STRING:
 			return AddValueString(aName, aValue.GetString());
-		case Value::TYPE_ARRAY:
+		case Encode::Value::TYPE_ARRAY:
 			{
-				const Array& _array = aValue.GetArray();
+				const Encode::Array& _array = aValue.GetArray();
 				const uint32_t length = _array.Size();
 				
 				if(! BeginArray(aName)) return false;
@@ -240,9 +240,9 @@ namespace Solaire{ namespace Encode{
 
 				return true;
 			}
-		case Value::TYPE_OBJECT:
+		case Encode::Value::TYPE_OBJECT:
 			{
-				const Object& object = aValue.GetObject();
+				const Encode::Object& object = aValue.GetObject();
 				const uint32_t length = object.Size();
 				
 				if(! BeginObject(aName)) return false;
@@ -258,24 +258,24 @@ namespace Solaire{ namespace Encode{
 		}
 	}
 
-	bool Json::Writer::AddValue(const Value& aValue) throw() {
+	bool Json::Writer::AddValue(const Encode::Value& aValue) throw() {
 		switch (aValue.GetType()) {
-		case Value::TYPE_BOOL:
+		case Encode::Value::TYPE_BOOL:
 			return AddValueBool(aValue.GetBool());
-		case Value::TYPE_CHAR:
+		case Encode::Value::TYPE_CHAR:
 			{
 				const char buf = aValue.GetChar();
 				return AddValueString(String(mState.GetAllocator(), &buf, 1));
 			}
-		case Value::TYPE_INT:
-		case Value::TYPE_UINT:
-		case Value::TYPE_DOUBLE:
+		case Encode::Value::TYPE_INT:
+		case Encode::Value::TYPE_UINT:
+		case Encode::Value::TYPE_DOUBLE:
 			return AddValueNumber(aValue.GetDouble());
-		case Value::TYPE_STRING:
+		case Encode::Value::TYPE_STRING:
 			return AddValueString(aValue.GetString());
-		case Value::TYPE_ARRAY:
+		case Encode::Value::TYPE_ARRAY:
 			{
-				const Array& _array = aValue.GetArray();
+				const Encode::Array& _array = aValue.GetArray();
 				const uint32_t length = _array.Size();
 
 				if(! BeginArray()) return false;
@@ -286,9 +286,9 @@ namespace Solaire{ namespace Encode{
 
 				return true;
 			}
-		case Value::TYPE_OBJECT:
+		case Encode::Value::TYPE_OBJECT:
 			{
-				const Object& object = aValue.GetObject();
+				const Encode::Object& object = aValue.GetObject();
 				const uint32_t length = object.Size();
 				
 				if(! BeginObject()) return false;
@@ -304,4 +304,4 @@ namespace Solaire{ namespace Encode{
 		}
 	}
 
-}}
+}
