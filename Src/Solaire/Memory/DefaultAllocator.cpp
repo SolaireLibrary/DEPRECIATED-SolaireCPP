@@ -40,6 +40,12 @@ namespace Solaire{
 			return UINT32_MAX - mAllocatedBytes;
 		}
 
+		uint32_t SOLAIRE_EXPORT_CALL SizeOf(const void* const aObject) throw() override {
+			auto it = mAllocations.find(aObject);
+			if(it == mAllocations.end()) return 0;
+			return it->second;
+		}
+
 		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() override {
 			void* const tmp = operator new(aBytes);
 			mAllocations.emplace(tmp, aBytes);
