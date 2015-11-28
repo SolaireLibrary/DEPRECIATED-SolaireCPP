@@ -19,7 +19,6 @@
 #include <string>
 #include <map>
 #include "Solaire\IO\File.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 
 #if SOLAIRE_OS == SOLAIRE_WINDOWS
 

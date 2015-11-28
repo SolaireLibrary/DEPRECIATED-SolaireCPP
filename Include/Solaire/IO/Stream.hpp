@@ -36,13 +36,13 @@
 
 namespace Solaire {
 
-	class SOLAIRE_EXPORT_API StreamBase {
+	class StreamBase {
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL SetOffset(const uint32_t) const throw() = 0;
 		virtual uint32_t SOLAIRE_EXPORT_CALL GetOffset() const throw() = 0;
 	};
 
-	class SOLAIRE_EXPORT_API ReadStream : public StreamBase {
+	class ReadStream : public StreamBase {
 	public:
 		virtual uint32_t SOLAIRE_EXPORT_CALL Read(void* const, const uint32_t) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL End() const throw() = 0;
@@ -108,7 +108,7 @@ namespace Solaire {
 		}
 	};
 
-	class SOLAIRE_EXPORT_API WriteStream : public StreamBase {
+	class WriteStream : public StreamBase {
 	public:
 		virtual uint32_t SOLAIRE_EXPORT_CALL Write(const void* const, const uint32_t) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Flush() throw() = 0;

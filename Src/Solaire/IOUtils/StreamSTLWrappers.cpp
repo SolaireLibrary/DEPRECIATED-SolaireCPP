@@ -16,7 +16,7 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include "Solaire\IO\StreamSTLWrappers.hpp"
+#include "Solaire\IOUtils\StreamSTLWrappers.hpp"
 
 namespace Solaire {
 
