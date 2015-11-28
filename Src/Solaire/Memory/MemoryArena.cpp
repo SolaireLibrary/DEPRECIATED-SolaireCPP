@@ -17,6 +17,8 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include "Solaire\Memory\Allocator.hpp"
+#include <algorithm>
+#include <vector>
 
 namespace Solaire{
 
@@ -76,183 +78,146 @@ namespace Solaire{
 	////
 
 	class AdvancedMemoryArena : public Allocator {
+	public:
+		typedef std::pair<void*, uint32_t> Block;
+	private:
+		static void SortBlocks(std::vector<Block>& aBlocks) throw() {
+			std::sort(aBlocks.begin(), aBlocks.end(), [](const Block aFirst, const Block aSecond)->bool{
+				return aFirst.second < aSecond.second;
+			});
+		}
+
+		static void MergeBlocks(std::vector<Block>& aBlocks) throw() {
+			auto begin = aBlocks.begin();
+			auto end = aBlocks.end();
+
+			for(auto i = begin; i != end; ++i){
+				for(auto j = begin; j != end; ++j){
+					if(i == j) continue;
+
+					uint8_t* const ptrA = static_cast<uint8_t*>(i->first);
+					uint8_t* const ptrB = static_cast<uint8_t*>(j->first);
+					const uint32_t sizeA = i->second;
+					const uint32_t sizeB = j->second;
+
+					if(ptrA + sizeA == ptrB){
+						aBlocks.erase(j);
+						i->second += sizeB;
+						i = begin;
+						j = begin;
+					}else if(ptrB + sizeB == ptrA){
+						aBlocks.erase(j);
+						i->first = ptrB;
+						i->second += sizeB;
+						i = begin;
+						j = begin;
+					}
+				}
+			}
+		}
+
+		void* AllocateFromBlocks(const uint32_t aSize) throw() {
+			const auto end = mFreeBlocks.end();
+			for(auto i = mFreeBlocks.begin(); i != mFreeBlocks.end(); ++i){
+				if(i->second >= aSize){
+					const Block block = *i;
+					mFreeBlocks.erase(i);
+
+					if(block.second > aSize){
+						mFreeBlocks.push_back(Block(
+							static_cast<uint8_t*>(block.first) + aSize,
+							block.second - aSize
+							));
+						SortBlocks(mFreeBlocks);
+					}
+
+					mUsedBlocks.push_back(block);
+					return block.first;
+				}
+			}
+
+			return nullptr;
+		}
+
+		void* AllocateFromAllocator(const uint32_t aSize) throw() {
+			const Block block(mAllocator.Allocate(aSize), aSize);
+			if(! block.first) return nullptr;
+			mMainBlocks.push_back(block);
+			mUsedBlocks.push_back(block);
+			return block.first;
+		}
 	private:
 		Allocator& mAllocator;
+		std::vector<Block> mMainBlocks;
+		std::vector<Block> mFreeBlocks;
+		std::vector<Block> mUsedBlocks;
 	public:
 		AdvancedMemoryArena(Allocator& aAllocator, const uint32_t aInitialSize) :
 			mAllocator(aAllocator)
-		{}
+		{
+			const Block block(mAllocator.Allocate(aInitialSize), aInitialSize);
+			mMainBlocks.push_back(block);
+			mUsedBlocks.push_back(block);
+		}
 
 		// Inherited from Allocator
 
 		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw()  override {
-			return 0;
+			uint32_t bytes = 0;
+			for(const Block i : mUsedBlocks) bytes += i.second;
+			return bytes;
 		}
 
 		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() override {
-			return 0;
+			uint32_t bytes = 0;
+			for(const Block i : mFreeBlocks) bytes += i.second;
+			return bytes;
 		}
 
 		uint32_t SOLAIRE_EXPORT_CALL SizeOf(const void* const aObject) throw() override {
+			for(const Block i : mUsedBlocks) if(i.first == aObject) return i.second;
 			return 0;
 		}
 
 		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() override {
-			return nullptr;
+			void* address = AllocateFromBlocks(aBytes);
+
+			if(! address){
+				MergeBlocks(mFreeBlocks);
+				SortBlocks(mFreeBlocks);
+				address = AllocateFromBlocks(aBytes);
+			}
+
+			if(! address) address = AllocateFromAllocator(aBytes);
+
+			return address;
 		}
 
 		bool SOLAIRE_EXPORT_CALL Deallocate(const void* const aObject) throw() override {
-			return false;
+			auto it = std::find_if(mUsedBlocks.begin(), mUsedBlocks.end(), [aObject](const Block& aBlock) {
+				return aBlock.first == aObject;
+			});
+
+			if(it == mUsedBlocks.end()) return false;
+			const Block block = *it;
+			mUsedBlocks.erase(it);
+			mFreeBlocks.push_back(block);
+
+			return true;
 		}
 
 		bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() {
-			return false;
+			mUsedBlocks.clear();
+			mFreeBlocks = mMainBlocks;
+			return true;
 		}
 
 		void SOLAIRE_EXPORT_CALL Destructor() throw() {
-			
+			for(const Block i : mMainBlocks) mAllocator.Deallocate(i.first);
 		}
 	};
 
-	//typedef std::pair<void*, uint32_t> Block;
-
-	//static void SortBlocks(std::vector<Block>& aBlocks) throw() {
-	//	std::sort(aBlocks.begin(), aBlocks.end(), [](const Block aFirst, const Block aSecond)->bool{
-	//		return aFirst.second < aSecond.second;
-	//	});
-	//}
-
-	//static void MergeBlocks(std::vector<Block>& aBlocks) throw() {
-	//	auto begin = aBlocks.begin();
-	//	auto end = aBlocks.end();
-
-	//	for(auto i = begin; i != end; ++i){
-	//		for(auto j = begin; j != end; ++j){
-	//			if(i == j) continue;
-
-	//			uint8_t* const ptrA = static_cast<uint8_t*>(i->first);
-	//			uint8_t* const ptrB = static_cast<uint8_t*>(j->first);
-	//			const uint32_t sizeA = i->second;
-	//			const uint32_t sizeB = j->second;
-
-	//			if(ptrA + sizeA == ptrB){
-	//				aBlocks.erase(j);
-	//				i->second += sizeB;
-	//				i = begin;
-	//				j = begin;
-	//			}else if(ptrB + sizeB == ptrA){
-	//				aBlocks.erase(j);
-	//				i->first = ptrB;
-	//				i->second += sizeB;
-	//				i = begin;
-	//				j = begin;
-	//			}
-	//		}
-	//	}
-	//}
-
-	//static void* AllocateFromBlocks(std::vector<Block>& aBlocks, const uint32_t aSize) throw() {
-	//	const auto end = aBlocks.end();
-	//	for(auto i = aBlocks.begin(); i != aBlocks.end(); ++i){
-	//		if(i->second >= aSize){
-	//			const Block block = *i;
-	//			aBlocks.erase(i);
-
-	//			if(block.second > aSize){
-	//				aBlocks.push_back(Block(
-	//					static_cast<uint8_t*>(block.first) + aSize,
-	//					block.second - aSize
-	//					));
-	//				SortBlocks(aBlocks);
-	//			}
-
-	//			return block.first;
-	//		}
-	//	}
-
-	//	return nullptr;
-	//}
-
-	//// AdvancedMemoryArena
-
-	//AdvancedMemoryArena::AdvancedMemoryArena(const uint32_t aInitialSize) throw() :
-	//	mAllocator(GetDefaultAllocator()),
-	//	mMainBlocks(),
-	//	mBlocks()
-	//{
-	//	const Block block(mAllocator.Allocate(aInitialSize), aInitialSize);
-	//	mMainBlocks.push_back(block);
-	//	mBlocks.push_back(block);
-	//}
-
-	//AdvancedMemoryArena::AdvancedMemoryArena(Allocator& aAllocator, const uint32_t aInitialSize) throw() :
-	//	mAllocator(aAllocator),
-	//	mMainBlocks(),
-	//	mBlocks()
-	//{
-	//	const Block block(mAllocator.Allocate(aInitialSize), aInitialSize);
-	//	mMainBlocks.push_back(block);
-	//	mBlocks.push_back(block);
-	//}
-
-	//AdvancedMemoryArena::~AdvancedMemoryArena() throw() {
-	//	Clear();
-	//	for(Block i : mBlocks){
-	//		mAllocator.Deallocate(i.first);
-	//	}
-	//}
-
-	//bool AdvancedMemoryArena::Clear() throw() {
-	//	mBlocks.clear();
-	//	MergeBlocks(mMainBlocks);
-	//	SortBlocks(mMainBlocks);
-	//	for(Block i : mMainBlocks){
-	//		mBlocks.push_back(i);
-	//	}
-	//	mAllocations.DeallocateAll();
-	//	return true;
-	//}
-
-	//uint32_t AdvancedMemoryArena::GetAllocatedBytes() const throw() {
-	//	return mAllocations.GetAllocatedBytes();
-	//}
-
-	//uint32_t AdvancedMemoryArena::GetFreeBytes() const throw() {
-	//	uint32_t count = 0;
-	//	for (const Block i : mBlocks) count += i.second;
-
-	//	return count - GetAllocatedBytes();
-	//}
-
-	//void* AdvancedMemoryArena::Allocate(const size_t aBytes) throw() {
-	//	void* address = AllocateFromBlocks(mBlocks, aBytes);
-
-	//	if(! address){
-	//		MergeBlocks(mBlocks);
-	//		SortBlocks(mBlocks);
-	//		address = AllocateFromBlocks(mBlocks, aBytes);
-	//	}
-
-	//	if(! address){
-	//		const Block block(mAllocator.Allocate(aBytes), aBytes);
-	//		if(! block.first) return nullptr;
-	//		mMainBlocks.push_back(block);
-	//		address = block.first;
-	//	}
-
-	//	mAllocations.Allocate(address, aBytes);
-
-	//	return address;
-	//}
-
-	//bool AdvancedMemoryArena::Deallocate(const void* const aObject) throw() {
-	//	void* const object = const_cast<void*>(aObject);
-	//	mBlocks.push_back(Block(object, mAllocations.GetAllocationSize(object)));
-	//	SortBlocks(mBlocks);
-	//	return mAllocations.Deallocate(object);
-	//}
-
-	//////
+	////
 
 	extern "C" {
 		SOLAIRE_EXPORT_API Allocator* SOLAIRE_EXPORT_CALL CreateMemoryArena(Allocator& aAllocator, const uint32_t aInitialSize, const bool aRecycle) throw() {
