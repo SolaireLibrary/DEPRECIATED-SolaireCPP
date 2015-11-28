@@ -31,7 +31,6 @@ Created			: 21st November 2015
 Last Modified	: 21st November 2015
 */
 
-#include "MemoryArena.hpp"
 #include "Allocator.hpp"
 
 namespace Solaire{
@@ -60,6 +59,10 @@ namespace Solaire{
 		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() override {
 			return return mAllocated ? 0 : BYTES;
 		}
+		
+		uint32_t SOLAIRE_EXPORT_CALL SizeOf(const void* const aObject) throw() {
+			return mBlock == aObject && mAllocated ? BYTES : 0;
+		}
 
 		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() override {
 			if(mAllocated || aBytes > BYTES) {
@@ -77,6 +80,14 @@ namespace Solaire{
 			}else {
 				return false;
 			}
+		}
+
+		bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() override {
+			return Deallocate(mBlock);
+		}
+
+		void SOLAIRE_EXPORT_CALL Destructor() throw() override {
+
 		}
 
     };
