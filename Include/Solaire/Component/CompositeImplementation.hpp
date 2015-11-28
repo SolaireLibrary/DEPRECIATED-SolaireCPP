@@ -51,11 +51,11 @@ namespace Solaire{
 		uint32_t SOLAIRE_EXPORT_CALL GetComponentCount() const throw() override;
 		Component* SOLAIRE_EXPORT_CALL GetComponent(const uint32_t) const throw() override;
 		Component* SOLAIRE_EXPORT_CALL GetComponentWithID(const ComponentID) const throw() override;
+		Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() override;
 
 		// Inherited from LinkObject
 
 		void SOLAIRE_EXPORT_CALL Destructor() throw() override;
-		Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() override;
 	};
 
 }

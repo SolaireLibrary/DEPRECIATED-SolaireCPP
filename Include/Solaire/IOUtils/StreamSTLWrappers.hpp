@@ -46,6 +46,7 @@ namespace Solaire {
 		// Inherited from StreamBase
 		bool SOLAIRE_EXPORT_CALL SetOffset(const uint32_t) const throw() override;
 		uint32_t SOLAIRE_EXPORT_CALL GetOffset() const throw() override;
+		void SOLAIRE_EXPORT_CALL Destructor() throw() override;
 
 		// Inherited from ReadStream
 
@@ -60,12 +61,13 @@ namespace Solaire {
 		WriteStreamSTL(std::ostream&);
 		~WriteStreamSTL();
 
-		// Inherited from WriteStream
+		// Inherited from StreamBase
 
 		bool SOLAIRE_EXPORT_CALL SetOffset(const uint32_t) const throw() override;
 		uint32_t SOLAIRE_EXPORT_CALL GetOffset() const throw() override;
+		void SOLAIRE_EXPORT_CALL Destructor() throw() override;
 
-		// Inherited from ReadStream
+		// Inherited from WriteStream
 
 		uint32_t SOLAIRE_EXPORT_CALL Write(const void* const, const uint32_t) throw() override;
 		bool SOLAIRE_EXPORT_CALL Flush() throw() override;

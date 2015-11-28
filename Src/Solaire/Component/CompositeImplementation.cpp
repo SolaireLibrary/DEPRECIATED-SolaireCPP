@@ -82,7 +82,8 @@ namespace Solaire{
 	void SOLAIRE_EXPORT_CALL CompositeImplementation::Destructor() throw() {
 		for(Component* i : mComponents) {
 			i->OnDetachment(*this);
-			i->Free();
+			i->Destructor();
+			i->GetAllocator().Deallocate(i);
 		}
 	}
 

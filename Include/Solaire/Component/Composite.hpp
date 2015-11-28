@@ -33,6 +33,7 @@
 
 #include "..\Core\Init.hpp"
 #include "..\Link\Object.hpp"
+#include "..\Memory\Allocator.hpp"
 
 namespace Solaire{
 
@@ -41,22 +42,16 @@ namespace Solaire{
 
 	class SOLAIRE_EXPORT_API Composite : public Link::Object {
 	public:
+		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
+
 		virtual bool SOLAIRE_EXPORT_CALL Attach(Component&) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Detach(Component&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL DetachAndDestroy(Component& aComponent) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL IsAttached(const Component&) const throw() = 0;
 
 		virtual uint32_t SOLAIRE_EXPORT_CALL GetComponentCount() const throw() = 0;
 		virtual Component* SOLAIRE_EXPORT_CALL GetComponent(const uint32_t) const throw() = 0;
 		virtual Component* SOLAIRE_EXPORT_CALL GetComponentWithID(const ComponentID) const throw() = 0;
-
-		inline bool SOLAIRE_EXPORT_CALL DetachAndDestroy(Component& aComponent) throw() {
-			if(! Detach(aComponent)) {
-				return false;
-			}else {
-				reinterpret_cast<Link::Object&>(aComponent).Free();
-				return true;
-			}
-		}
 	};
 
 }

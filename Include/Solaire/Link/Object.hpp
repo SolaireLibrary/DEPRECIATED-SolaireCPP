@@ -28,29 +28,16 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 9th November 2015
-Last Modified	: 16th November 2015
+Last Modified	: 28th November 2015
 */
 
-#include <cstdint>
 #include "..\Core\Init.hpp"
-#include "..\Memory\Allocator.hpp"
 
 namespace Solaire{ namespace Link{
 
-	class SOLAIRE_EXPORT_API Object{
-	private:
-		//Object(const Object&) = delete;
-		//Object(Object&&) = delete;
-		//Object& operator=(const Object&) = delete;
-		//Object& operator=(Object&&) = delete;
+	class Object{
 	public:
 		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
-		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
-
-		inline void SOLAIRE_EXPORT_CALL Free() throw() {
-			Destructor();
-			GetAllocator().Deallocate(this);
-		}
 	};
 }}
 

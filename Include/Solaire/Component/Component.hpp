@@ -37,6 +37,8 @@ namespace Solaire{
 
 	class SOLAIRE_EXPORT_API Component : public Link::Object {
 	public:
+		virtual Allocator& GetAllocator() const throw() = 0;
+
 		virtual Composite& SOLAIRE_EXPORT_CALL GetComposite() const throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL IsAttached() const throw() = 0;
 

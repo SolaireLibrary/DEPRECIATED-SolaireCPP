@@ -26,7 +26,7 @@ namespace Solaire {
 	{}
 
 	ReadStreamSTL::~ReadStreamSTL() {
-
+		Destructor();
 	}
 
 	bool SOLAIRE_EXPORT_CALL ReadStreamSTL::SetOffset(const uint32_t aOffset) const throw() {
@@ -49,6 +49,10 @@ namespace Solaire {
 		return mStream.eof();
 	}
 
+	void SOLAIRE_EXPORT_CALL ReadStreamSTL::Destructor() throw() {
+
+	}
+
 	// WriteStreamSTL
 
 	WriteStreamSTL::WriteStreamSTL(std::ostream& aStream) :
@@ -56,7 +60,7 @@ namespace Solaire {
 	{}
 
 	WriteStreamSTL::~WriteStreamSTL() {
-
+		Destructor();
 	}
 
 	bool SOLAIRE_EXPORT_CALL WriteStreamSTL::SetOffset(const uint32_t aOffset) const throw() {
@@ -78,6 +82,10 @@ namespace Solaire {
 	bool SOLAIRE_EXPORT_CALL WriteStreamSTL::Flush() throw() {
 		mStream.flush();
 		return true;
+	}
+
+	void SOLAIRE_EXPORT_CALL WriteStreamSTL::Destructor() throw() {
+
 	}
 
 }
