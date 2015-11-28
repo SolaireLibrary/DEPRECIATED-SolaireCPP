@@ -16,23 +16,23 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <string>
 #include <map>
 #include "Solaire\IO\File.hpp"
 #include "Solaire\Memory\DefaultAllocator.hpp"
 
 #if SOLAIRE_OS == SOLAIRE_WINDOWS
 
-namespace Solaire {
+namespace Solaire { namespace File {
 
-	static std::map<String, HANDLE> FILE_TABLE;
+	static std::map<std::string, HANDLE> FILE_TABLE;
 
-	static bool ImplementationOpenFile(const String& aFilename){
-
+	bool ImplementationOpenFile(const std::string& aFilename){
 		if(FILE_TABLE.find(aFilename) != FILE_TABLE.end()) return true;
 
 		//! \bug read-only files are not handled
 		const HANDLE handle = CreateFileA(
-			aFilename.CString(),
+			aFilename.c_str(),
 			GENERIC_READ | GENERIC_WRITE,
 			0,
 			nullptr,
@@ -49,7 +49,7 @@ namespace Solaire {
 		}
 	}
 
-	static bool ImplementationCloseFile(const String& aFilename) {
+	bool ImplementationCloseFile(const std::string& aFilename) {
 		const auto it = FILE_TABLE.find(aFilename);
 		if(it == FILE_TABLE.end()) return false;
 		if(! CloseHandle(it->second)) return false;
@@ -57,166 +57,182 @@ namespace Solaire {
 		return true;
 	}
 
+	bool ImplementationOpenFile(const char* const aFilename){
+		return ImplementationOpenFile(std::string(aFilename));
+	}
+
+	bool ImplementationCloseFile(const char* aFilename) {
+		return ImplementationCloseFile(std::string(aFilename));
+	}
+
 	// File
 
-	File::Attributes SOLAIRE_EXPORT_CALL File::GetAttributes(const ConstStringFragment aFilename) throw() {
-		const String filename(DEFAULT_ALLOCATOR, aFilename);
-		const DWORD attributes = GetFileAttributesA(filename.CString());
-		DWORD binaryType;
-		const BOOL executable = GetBinaryTypeA(filename.CString(), &binaryType);
-		
-		Attributes tmp = NO_ATTRIBUTES;
-		if(attributes & FILE_ATTRIBUTE_HIDDEN) tmp |= HIDDEN;
-		if(attributes & FILE_ATTRIBUTE_DIRECTORY) tmp |= DIRECTORY;
-		else tmp |= FILE;
-		if(attributes & FILE_ATTRIBUTE_READONLY) tmp |= READ;
-		else tmp |= READ | WRITE;
-		if(executable) tmp |= EXECUTABLE;
+	extern "C" {
+		SOLAIRE_EXPORT_API AttributeFlags SOLAIRE_EXPORT_CALL GetAttributes(const char* const aFilename) throw() {
+			const DWORD attributes = GetFileAttributesA(aFilename);
+			DWORD binaryType;
+			const BOOL executable = GetBinaryTypeA(aFilename, &binaryType);
 
-		return tmp;
-	}
+			AttributeFlags tmp = FLAG_NONE;
+			if(attributes & FILE_ATTRIBUTE_HIDDEN) tmp |= FLAG_HIDDEN;
+			if(attributes & FILE_ATTRIBUTE_DIRECTORY) tmp |= FLAG_DIRECTORY;
+			else tmp |= FLAG_FILE;
+			if(attributes & FILE_ATTRIBUTE_READONLY) tmp |= FLAG_READ;
+			else tmp |= FLAG_READ | FLAG_WRITE;
+			if(executable) tmp |= FLAG_EXECUTABLE;
+			if(tmp != FLAG_NONE) tmp |= FLAG_EXISTS;
 
-	bool SOLAIRE_EXPORT_CALL File::CreateFile(const ConstStringFragment aFilename, const Attributes aAttributes) throw() {
-		const String filename(DEFAULT_ALLOCATOR, aFilename);
+			return tmp;
+		}
 
-		DWORD access = 0;
-		if(aAttributes & READ) access |= GENERIC_READ;
-		if(aAttributes & WRITE) access |= GENERIC_WRITE;
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL CreateFile(const char* const aFilename, const AttributeFlags aAttributes) throw() {
+			DWORD access = 0;
+			if (aAttributes & FLAG_READ) access |= GENERIC_READ;
+			if (aAttributes & FLAG_WRITE) access |= GENERIC_WRITE;
 
-		DWORD flags = 0;
-		if(aAttributes & HIDDEN) flags |= FILE_ATTRIBUTE_HIDDEN;
-		if((aAttributes & READ) != 0 && (aAttributes & WRITE) == 0) flags |= FILE_ATTRIBUTE_READONLY;
-		if(flags == 0) flags = FILE_ATTRIBUTE_NORMAL;
+			DWORD flags = 0;
+			if (aAttributes & FLAG_HIDDEN) flags |= FILE_ATTRIBUTE_HIDDEN;
+			if ((aAttributes & FLAG_READ) != 0 && (aAttributes & FLAG_WRITE) == 0) flags |= FILE_ATTRIBUTE_READONLY;
+			if (flags == 0) flags = FILE_ATTRIBUTE_NORMAL;
 
-		const HANDLE handle = CreateFileA(
-			filename.CString(),
-			access,
-			0,
-			nullptr,
-			CREATE_NEW,
-			flags,
-			nullptr
-		);
+			const HANDLE handle = CreateFileA(
+				aFilename,
+				access,
+				0,
+				nullptr,
+				CREATE_NEW,
+				flags,
+				nullptr
+				);
 
-		if(handle != INVALID_HANDLE_VALUE) {
-			CloseHandle(handle);
+			if (handle != INVALID_HANDLE_VALUE) {
+				CloseHandle(handle);
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL CreateDirectory(const char* const aFilename) throw() {
+			return CreateDirectoryA(aFilename, nullptr);
+		}
+
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Delete(const char* const aFilename) throw() {
+			return DeleteFileA(aFilename);
+		}
+
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetParent(const char* const aFilename, char* const aOutput) throw() {
+			const uint32_t length = std::strlen(aFilename);
+
+			const char* j = std::strrchr(aFilename, FILE_SEPERATOR);
+			const char* i = i;
+			while (j != nullptr) {
+				j = std::strrchr(j, FILE_SEPERATOR);
+				if (j != nullptr) i = j;
+			}
+
+			if (i == nullptr) {
+				return 0;
+			}
+			else {
+				const uint32_t outputLength = i - aFilename;
+				if (outputLength >= MAX_PATH_LENGTH) return 0;
+				std::memcpy(aOutput, aFilename, outputLength);
+				aOutput[outputLength] = '\0';
+				return outputLength;
+			}
+		}
+
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetName(const char* const aFilename, char* const aOutput) throw() {
+			const char* i = std::strrchr(aFilename, FILE_SEPERATOR);
+			if (i == nullptr) {
+				return 0;
+			}
+			else {
+				const uint32_t length = i - aFilename;
+				std::memcpy(aOutput, aFilename, length);
+				aOutput[length] = '\0';
+				return length;
+			}
+		}
+
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetExtension(const char* const aFilename, char* const aOutput) throw() {
+			const char* i = std::strrchr(aFilename, '.');
+			if (i == nullptr) {
+				return 0;
+			}
+			else {
+				const uint32_t length = i - aFilename;
+				std::memcpy(aOutput, aFilename, length);
+				aOutput[length] = '\0';
+				return length;
+			}
+		}
+
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL Size(const char* const aFilename) throw() {
+			const std::string filename(aFilename);
+
+			bool opened = false;
+			auto it = FILE_TABLE.find(filename);
+			if (it == FILE_TABLE.end()) {
+				opened = true;
+				if (!ImplementationOpenFile(filename)) return 0;
+				it = FILE_TABLE.find(filename);
+			}
+
+			const uint32_t size = GetFileSize(it->second, nullptr);
+
+			if (opened) {
+				ImplementationCloseFile(filename);
+			}
+
+			return size;
+		}
+
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetFileList(const char* const aDirectory, const char** const aFiles, const uint32_t aMaxFiles) throw() {
+			WIN32_FIND_DATAA findData;
+			HANDLE handle = INVALID_HANDLE_VALUE;
+
+			uint32_t fileCount = 0;
+
+			handle = FindFirstFileA(aDirectory, &findData);
+			if (handle == INVALID_HANDLE_VALUE) return 0;
+
+			do {
+				std::strcpy(findData.cFileName, aFiles[fileCount++]);
+			} while (FindNextFileA(handle, &findData) != 0);
+
+			FindClose(handle);
+
+			return fileCount;
+		}
+
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetCurrentDirectory(char* const aOutput) throw() {
+			return GetCurrentDirectoryA(MAX_PATH_LENGTH, aOutput);
+		}
+
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetTemporaryDirectory(char* const aOutput) throw() {
+			return GetTempPathA(MAX_PATH_LENGTH, aOutput);
+		}
+
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Rename(const char* const aOldName, const char* const aNewName) throw() {
+			//! \todo Optimise Rename
+			if (!Copy(aOldName, aNewName)) return false;
+			if (!Delete(aOldName)) {
+				return Delete(aNewName);
+			}
 			return true;
-		}else {
-			return false;
-		}
-	}
-
-	bool SOLAIRE_EXPORT_CALL File::CreateDirectory(const ConstStringFragment aFilename) throw() {
-		const String filename(DEFAULT_ALLOCATOR, aFilename);
-		return CreateDirectoryA(filename.CString(), nullptr);
-	}
-
-	bool SOLAIRE_EXPORT_CALL File::Delete(const ConstStringFragment aFilename) throw() {
-		const String filename(DEFAULT_ALLOCATOR, aFilename);
-		return DeleteFileA(filename.CString());
-	}
-
-	String SOLAIRE_EXPORT_CALL File::GetParent(const ConstStringFragment aFilename) throw() {
-		auto it = aFilename.FindLast(FILE_SEPERATOR);
-		if(it == aFilename.end()) {
-			return String(DEFAULT_ALLOCATOR);
-		}else{
-			String tmp(DEFAULT_ALLOCATOR, aFilename.begin(), it + 1);
-		}
-		
-	}
-
-	String SOLAIRE_EXPORT_CALL File::GetName(const ConstStringFragment aFilename) throw() {
-		auto it = aFilename.FindLast(FILE_SEPERATOR);
-		if(it == aFilename.end()) {
-			return String(DEFAULT_ALLOCATOR);
-		}else{
-			String tmp(DEFAULT_ALLOCATOR, it, aFilename.end());
-		}
-	}
-
-	String SOLAIRE_EXPORT_CALL File::GetExtension(const ConstStringFragment aFilename) throw() {
-		auto it = aFilename.FindLast('.');
-		if(it == aFilename.end()) {
-			return String(DEFAULT_ALLOCATOR);
-		}else{
-			String tmp(DEFAULT_ALLOCATOR, it, aFilename.end());
-		}
-	}
-
-	uint32_t SOLAIRE_EXPORT_CALL File::Size(const ConstStringFragment aFilename) throw() {
-		const String filename(DEFAULT_ALLOCATOR, aFilename);
-
-		bool opened = false;
-		auto it = FILE_TABLE.find(filename);
-		if(it == FILE_TABLE.end()) {
-			opened = true;
-			if (!ImplementationOpenFile(filename)) return 0;
-			it = FILE_TABLE.find(filename);
 		}
 
-		const uint32_t size = GetFileSize(it->second, nullptr);
-
-		if(opened) {
-			ImplementationCloseFile(filename);
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Copy(const char* const aSrc, const char* const aDst) throw() {
+			return CopyFileA(aSrc, aDst, FALSE);
 		}
 
-		return size;
-	}
-
-	DynamicArray<String> SOLAIRE_EXPORT_CALL File::GetFileList(const ConstStringFragment aFilename) throw() {
-		const String parent(DEFAULT_ALLOCATOR, aFilename);
-		DynamicArray<String> children(DEFAULT_ALLOCATOR);
-		WIN32_FIND_DATAA findData;
-		HANDLE handle = INVALID_HANDLE_VALUE;
-
-		handle = FindFirstFileA(parent.CString(), &findData);
-		if(handle == INVALID_HANDLE_VALUE) return children;
-
-		do{
-			String tmp(DEFAULT_ALLOCATOR, findData.cFileName);
-			children.PushBack(tmp);
-		}while(FindNextFileA(handle, &findData) != 0);
-
-		FindClose(handle);
-
-		return children;
-	}
-
-	String SOLAIRE_EXPORT_CALL File::GetCurrentDirectory() throw() {
-		char buf[256];
-		const DWORD length = GetCurrentDirectoryA(256, buf);
-		return String(DEFAULT_ALLOCATOR, buf, length);
-	}
-
-	String SOLAIRE_EXPORT_CALL File::GetTemporaryDirectory() throw() {
-		char buf[256];
-		const DWORD length = GetTempPathA(256, buf);
-		return String(DEFAULT_ALLOCATOR, buf, length);
-	}
-
-	bool SOLAIRE_EXPORT_CALL File::Rename(const ConstStringFragment aOldName, const ConstStringFragment aNewName) throw() {
-		//! \todo Optimise Rename
-		if(! Copy(aOldName, aNewName)) return false;
-		if(! Delete(aOldName)){
-			Delete(aNewName);
-			return false;
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Move(const char* const aFile, const char* const aTarget) throw() {
+			return MoveFileA(aFile, aTarget);
 		}
-		return true;
 	}
-
-	bool SOLAIRE_EXPORT_CALL File::Copy(const ConstStringFragment aSrc, const ConstStringFragment aDst) throw() {
-		const String src(DEFAULT_ALLOCATOR, aSrc);
-		const String dst(DEFAULT_ALLOCATOR, aDst);
-		return CopyFileA(src.CString(), dst.CString(), FALSE);
-	}
-
-	bool SOLAIRE_EXPORT_CALL File::Move(const ConstStringFragment aFile, const ConstStringFragment aTarget) throw() {
-		const String file(DEFAULT_ALLOCATOR, aFile);
-		const String target(DEFAULT_ALLOCATOR, aTarget);
-		return MoveFileA(file.CString(), target.CString());
-	}
-
-}
+}}
 
 #endif

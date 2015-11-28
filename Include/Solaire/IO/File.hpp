@@ -32,60 +32,64 @@
 */
 
 #include <cstdint>
+#include "..\Core\Init.hpp"
 #include "..\Core\Maths.hpp"
-#include "..\Strings\String.hpp"
 
 #undef CreateFile
 #undef CreateDirectory
 #undef GetCurrentDirectory
 
-namespace Solaire {
-	
-	struct File{
+namespace Solaire { namespace File{
 
-		typedef uint8_t Attributes;
 
-		enum : Attributes {
-			READ			= BIT_0,
-			WRITE			= BIT_1,
-			EXECUTABLE		= BIT_2,
-			HIDDEN			= BIT_3,
-			FILE			= BIT_4,
-			DIRECTORY		= BIT_5,
+	typedef uint8_t AttributeFlags;
 
-			NO_ATTRIBUTES	= 0,
-			READ_WRITE		= READ | WRITE,
-		};
+	enum : AttributeFlags {
+		FLAG_READ			= BIT_0,
+		FLAG_WRITE			= BIT_1,
+		FLAG_EXECUTABLE		= BIT_2,
+		FLAG_HIDDEN			= BIT_3,
+		FLAG_FILE			= BIT_4,
+		FLAG_DIRECTORY		= BIT_5,
+		FLAG_EXISTS			= BIT_6,
 
-		enum : char {
-			#if SOLAIRE_OS == SOLAIRE_WINDOWS
-				FILE_SEPERATOR = '\\'
-			#else
-				FILE_SEPERATOR = '/'
-			#endif
-		};
-
-		static Attributes SOLAIRE_EXPORT_CALL GetAttributes(const ConstStringFragment) throw();
-
-		static bool SOLAIRE_EXPORT_CALL Exists(const ConstStringFragment) throw();
-		static bool SOLAIRE_EXPORT_CALL CreateFile(const ConstStringFragment, const Attributes) throw();
-		static bool SOLAIRE_EXPORT_CALL CreateDirectory(const ConstStringFragment) throw();
-		static bool SOLAIRE_EXPORT_CALL Delete(const ConstStringFragment) throw();
-
-		static String SOLAIRE_EXPORT_CALL GetParent(const ConstStringFragment) throw();
-		static String SOLAIRE_EXPORT_CALL GetName(const ConstStringFragment) throw();
-		static String SOLAIRE_EXPORT_CALL GetExtension(const ConstStringFragment) throw();
-
-		static uint32_t SOLAIRE_EXPORT_CALL Size(const ConstStringFragment) throw();
-
-		static DynamicArray<String> SOLAIRE_EXPORT_CALL GetFileList(const ConstStringFragment) throw();
-		static String SOLAIRE_EXPORT_CALL GetCurrentDirectory() throw();
-		static String SOLAIRE_EXPORT_CALL GetTemporaryDirectory() throw();
-
-		static bool SOLAIRE_EXPORT_CALL Rename(const ConstStringFragment, const ConstStringFragment) throw();
-		static bool SOLAIRE_EXPORT_CALL Copy(const ConstStringFragment, const ConstStringFragment) throw();
-		static bool SOLAIRE_EXPORT_CALL Move(const ConstStringFragment, const ConstStringFragment) throw();
+		FLAG_NONE			= 0,
+		FLAG_READ_WRITE		= FLAG_READ | FLAG_WRITE
 	};
-}
+
+	enum {
+		MAX_PATH_LENGTH = 512
+	};
+
+	enum : char {
+		#if SOLAIRE_OS == SOLAIRE_WINDOWS
+			FILE_SEPERATOR = '\\'
+		#else
+			FILE_SEPERATOR = '/'
+		#endif
+	};
+
+	extern "C" {
+		SOLAIRE_EXPORT_API AttributeFlags SOLAIRE_EXPORT_CALL GetAttributes(const char* const) throw();
+
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL CreateFile(const char* const, const AttributeFlags) throw();
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL CreateDirectory(const char* const) throw();
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Delete(const char* const) throw();
+
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetParent(const char* const aFilename, char* const aOutput) throw();
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetName(const char* const, char* const) throw();
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetExtension(const char* const, char* const) throw();
+
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL Size(const char* const) throw();
+
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetFileList(const char* const, const char** const, const uint32_t) throw();
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetCurrentDirectory(char* const) throw();
+		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetTemporaryDirectory(char* const) throw();
+
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Rename(const char* const, const char* const) throw();
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Copy(const char* const, const char* const) throw();
+		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Move(const char* const, const char* const) throw();
+	}
+}}
 
 #endif
