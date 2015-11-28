@@ -17,14 +17,13 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include "Solaire\Listener\SourceImplementation.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 
 namespace Solaire{
 
     // SourceImplementation
 
 	SourceImplementation::SourceImplementation() :
-		mListeners(DEFAULT_ALLOCATOR)
+		mListeners(GetDefaultAllocator())
 	{}
 
 	SourceImplementation::SourceImplementation(Allocator& aAllocator) :

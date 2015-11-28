@@ -17,15 +17,14 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include "Solaire\Encode\Object.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 
 namespace Solaire{ namespace Encode{
 
 	// Object 
 	
 	Object::Object() throw() :
-		mNames(DEFAULT_ALLOCATOR),
-		mValues(DEFAULT_ALLOCATOR)
+		mNames(GetDefaultAllocator()),
+		mValues(GetDefaultAllocator())
 	{}
 
 	Object::Object(Allocator& aAllocator) throw() :

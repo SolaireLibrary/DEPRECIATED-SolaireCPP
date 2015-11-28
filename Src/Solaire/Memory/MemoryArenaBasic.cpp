@@ -17,14 +17,13 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include "Solaire\Memory\MemoryArenaBasic.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 
 namespace Solaire{
 
 	// BasicMemoryArena 
 	
 	BasicMemoryArena::BasicMemoryArena(const uint32_t aBytes) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mBlock(mAllocator.Allocate(aBytes)),
 		mSize(aBytes)
 	{}
@@ -60,8 +59,8 @@ namespace Solaire{
 		return tmp;
 	}
 
-	bool BasicMemoryArena::Deallocate(void* const aObject) throw() {
-		return mAllocations.Deallocate(aObject);
+	bool BasicMemoryArena::Deallocate(const void* const aObject) throw() {
+		return mAllocations.Deallocate(const_cast<void*>(aObject));
 	}
 
 }

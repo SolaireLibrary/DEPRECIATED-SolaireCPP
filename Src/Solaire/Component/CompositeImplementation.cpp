@@ -18,14 +18,13 @@
 
 #include "Solaire\Component\CompositeImplementation.hpp"
 #include "Solaire\Component\Component.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 
 namespace Solaire{
 
 	// CompositeImplementation
 
 	CompositeImplementation::CompositeImplementation() :
-		mComponents(DEFAULT_ALLOCATOR)
+		mComponents(GetDefaultAllocator())
 	{}
 
 	CompositeImplementation::CompositeImplementation(Allocator& aAllocator) :

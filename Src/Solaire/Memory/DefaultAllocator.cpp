@@ -16,34 +16,64 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include "Solaire\Memory\DefaultAllocator.hpp"
+#include "Solaire\Memory\Allocator.hpp"
+#include <map>
 
 namespace Solaire{
 
-	// DefaultAllocator
+	class DefaultAllocator : public Allocator {
+	private:
+		std::map<const void*, uint32_t> mAllocations;
+		uint32_t mAllocatedBytes;
+	public:
+		DefaultAllocator() : 
+			mAllocatedBytes(0)
+		{}
 
-	DefaultAllocator::DefaultAllocator(){
+		// Inherited from Allocator
 
-	}
+		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw()  override {
+			return mAllocatedBytes;
+		}
 
-	uint32_t DefaultAllocator::GetAllocatedBytes() const throw() {
-		return mAllocations.GetAllocatedBytes();
-	}
+		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() override {
+			return UINT32_MAX - mAllocatedBytes;
+		}
 
-	uint32_t DefaultAllocator::GetFreeBytes() const throw() {
-		return UINT32_MAX - GetAllocatedBytes();
-	}
+		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() override {
+			void* const tmp = operator new(aBytes);
+			mAllocations.emplace(tmp, aBytes);
+			mAllocatedBytes += aBytes;
+			return tmp;
+		}
 
-	void* DefaultAllocator::Allocate(const size_t aBytes) throw() {
-		void* const tmp = operator new(aBytes);
-		mAllocations.Allocate(tmp, aBytes);
-		return tmp;
-	}
+		bool SOLAIRE_EXPORT_CALL Deallocate(const void* const aObject) throw() override {
+			auto it = mAllocations.find(aObject);
+			if(it == mAllocations.end()) return false;
+			operator delete(const_cast<void*>(aObject));
+			mAllocatedBytes -= it->second;
+			mAllocations.erase(it);
+			return true;
+		}
 
-	bool DefaultAllocator::Deallocate(void* const aObject) throw() {
-		operator delete(aObject);
-		mAllocations.Deallocate(aObject);
-		return true;
+		bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() {
+			for(auto i : mAllocations) {
+				operator delete(const_cast<void*>(i.first));
+			}
+			mAllocatedBytes = 0;
+			return true;
+		}
+
+		void SOLAIRE_EXPORT_CALL Destructor() throw() {
+			DeallocateAll();
+		}
+	};
+
+	extern "C" {
+		SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL GetDefaultAllocator() throw() {
+			static DefaultAllocator DEFAULT_ALLOCATOR;
+			return DEFAULT_ALLOCATOR;
+		}
 	}
 
 }

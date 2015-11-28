@@ -69,7 +69,7 @@ namespace Solaire{
 		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() override;
 
 		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() override;
-		bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject) throw() override;
+		bool SOLAIRE_EXPORT_CALL Deallocate(const void* const aObject) throw() override;
 	};
 
 }

@@ -33,7 +33,6 @@
 
 #include <cmath>
 #include "String.hpp"
-#include "..\Memory\DefaultAllocator.hpp"
 
 namespace Solaire {
 	namespace Implementation {
@@ -339,15 +338,15 @@ namespace Solaire {
 	}
 
 	static String WriteNumber(const double aValue) {
-		return WriteNumber(DEFAULT_ALLOCATOR, static_cast<double>(aValue));
+		return WriteNumber(GetDefaultAllocator(), static_cast<double>(aValue));
 	}
 
 	static String WriteNumber(const uint32_t aValue) {
-		return WriteNumber(DEFAULT_ALLOCATOR, static_cast<uint32_t>(aValue));
+		return WriteNumber(GetDefaultAllocator(), static_cast<uint32_t>(aValue));
 	}
 
 	static String WriteNumber(const int32_t aValue) {
-		return WriteNumber(DEFAULT_ALLOCATOR, static_cast<int32_t>(aValue));
+		return WriteNumber(GetDefaultAllocator(), static_cast<int32_t>(aValue));
 	}
 }
 #endif

@@ -19,7 +19,6 @@
 #include "Solaire\Encode\Array.hpp"
 #include "Solaire\Encode\Object.hpp"
 #include "Solaire\Encode\Binary.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 
 namespace Solaire{ namespace Encode{
 
@@ -197,7 +196,7 @@ namespace Solaire{ namespace Encode{
 	}
 
 	Value SOLAIRE_EXPORT_CALL Binary::Read(ReadStream& aStream) {
-		return Read(DEFAULT_ALLOCATOR, aStream);
+		return Read(GetDefaultAllocator(), aStream);
 	}
 
 

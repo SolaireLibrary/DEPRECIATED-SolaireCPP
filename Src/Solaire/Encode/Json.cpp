@@ -18,7 +18,6 @@
 
 #include "Solaire\Encode\Json.hpp"
 #include "Solaire\Strings\NumberParser.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 #include "Solaire\Encode\Array.hpp"
 #include "Solaire\Encode\Object.hpp"
 
@@ -35,7 +34,7 @@ namespace Solaire{
 
 	Json::Writer::Writer(WriteStream& aStream) :
 		mOutputStream(aStream),
-		mState(DEFAULT_ALLOCATOR)
+		mState(GetDefaultAllocator())
 	{}
 
 	Json::Writer::Writer(Allocator& aAllocator, WriteStream& aStream) :

@@ -38,14 +38,22 @@
 
 namespace Solaire{
 
-    class SOLAIRE_EXPORT_API Allocator{
+    class Allocator{
     public:
         virtual uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw() = 0;
         virtual uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() = 0;
 
         virtual void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() = 0;
-        virtual bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject) throw() = 0;
+        virtual bool SOLAIRE_EXPORT_CALL Deallocate(const void* const aObject) throw() = 0;
+
+		virtual bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() = 0;
+
+		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
     };
+
+	extern "C" {
+		SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL GetDefaultAllocator() throw();
+	}
 
 }
 

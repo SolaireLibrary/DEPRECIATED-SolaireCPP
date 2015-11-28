@@ -17,14 +17,13 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include "Solaire\Encode\Array.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 
 namespace Solaire{ namespace Encode{
 
 	// Array
 
 	Array::Array() throw() :
-		mValues(DEFAULT_ALLOCATOR)
+		mValues(GetDefaultAllocator())
 	{}
 
 	Array::Array(Allocator& aAllocator) throw() :

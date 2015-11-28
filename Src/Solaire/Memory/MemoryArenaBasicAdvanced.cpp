@@ -18,7 +18,6 @@
 
 #include <algorithm>
 #include "Solaire\Memory\MemoryArenaAdvanced.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 
 namespace Solaire{
 
@@ -84,7 +83,7 @@ namespace Solaire{
 	// AdvancedMemoryArena
 
 	AdvancedMemoryArena::AdvancedMemoryArena(const uint32_t aInitialSize) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mMainBlocks(),
 		mBlocks()
 	{
@@ -153,10 +152,11 @@ namespace Solaire{
 		return address;
 	}
 
-	bool AdvancedMemoryArena::Deallocate(void* const aObject) throw() {
-		mBlocks.push_back(Block(aObject, mAllocations.GetAllocationSize(aObject)));
+	bool AdvancedMemoryArena::Deallocate(const void* const aObject) throw() {
+		void* const object = const_cast<void*>(aObject);
+		mBlocks.push_back(Block(object, mAllocations.GetAllocationSize(object)));
 		SortBlocks(mBlocks);
-		return mAllocations.Deallocate(aObject);
+		return mAllocations.Deallocate(object);
 	}
 
 }

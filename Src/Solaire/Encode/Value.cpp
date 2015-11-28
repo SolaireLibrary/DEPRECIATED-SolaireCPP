@@ -19,7 +19,6 @@
 #include "Solaire\Encode\Value.hpp"
 #include "Solaire\Encode\Array.hpp"
 #include "Solaire\Encode\Object.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 #include "Solaire\Strings\NumberParser.hpp"
 
 namespace Solaire{ namespace Encode{
@@ -41,84 +40,84 @@ namespace Solaire{ namespace Encode{
 	}
 
 	Value::Value() throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mType(TYPE_NULL)
 	{}
 
 	Value::Value(const char aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_CHAR)
 	{}
 
 	Value::Value(const bool aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_BOOL)
 	{}
 
 	Value::Value(const uint8_t aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(const uint16_t aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(const uint32_t aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(const uint64_t aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_UINT)
 	{}
 
 	Value::Value(const int8_t aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
 	Value::Value(const int16_t aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
 	Value::Value(const int32_t aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
 	Value::Value(const int64_t aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_INT)
 	{}
 
 	Value::Value(const float aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_DOUBLE)
 	{}
 
 	Value::Value(const double aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mDouble(static_cast<double>(aValue)),
 		mType(TYPE_DOUBLE)
 	{}
 
 	Value::Value(const String& aValue) throw() :
-		mAllocator(DEFAULT_ALLOCATOR),
+		mAllocator(GetDefaultAllocator()),
 		mType(TYPE_NULL)
 	{
 		SetString() = aValue;

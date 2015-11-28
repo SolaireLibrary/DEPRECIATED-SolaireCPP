@@ -17,7 +17,6 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 #include "Solaire\Encode\Xml.hpp"
-#include "Solaire\Memory\DefaultAllocator.hpp"
 #include "Solaire\Strings\NumberParser.hpp"
 #include "Solaire\Encode\Array.hpp"
 #include "Solaire\Encode\Object.hpp"
@@ -27,18 +26,18 @@ namespace Solaire{ namespace Encode{
 	// ElementData
 	
 	Xml::Writer::ElementData::ElementData() : 
-		name(DEFAULT_ALLOCATOR),
-		body(DEFAULT_ALLOCATOR),
-		attributeNames(DEFAULT_ALLOCATOR),
-		attributeValues(DEFAULT_ALLOCATOR),
-		children(DEFAULT_ALLOCATOR)
+		name(GetDefaultAllocator()),
+		body(GetDefaultAllocator()),
+		attributeNames(GetDefaultAllocator()),
+		attributeValues(GetDefaultAllocator()),
+		children(GetDefaultAllocator())
 	{}
 
 	// Writer
 	
 	Xml::Writer::Writer(WriteStream& aStream) :
 		mOutputStream(aStream),
-		mHead(DEFAULT_ALLOCATOR)
+		mHead(GetDefaultAllocator())
 	{}
 
 	Xml::Writer::~Writer() {
@@ -136,8 +135,8 @@ namespace Solaire{ namespace Encode{
 	bool Xml::Writer::AddAttribute(const ConstStringFragment aName, const ConstStringFragment aValue) {
 		if(mHead.IsEmpty()) return false;
 		ElementData& element = *mHead.Back();
-		element.attributeNames.PushBack(String(DEFAULT_ALLOCATOR, aName));
-		element.attributeValues.PushBack(String(DEFAULT_ALLOCATOR, aValue));
+		element.attributeNames.PushBack(String(GetDefaultAllocator(), aName));
+		element.attributeValues.PushBack(String(GetDefaultAllocator(), aValue));
 		return true;
 	}
 
@@ -152,7 +151,7 @@ namespace Solaire{ namespace Encode{
 		case Value::TYPE_CHAR:
 			{
 				const char buf = aValue.GetChar();
-				return aWriter.AddAttribute(aName, String(DEFAULT_ALLOCATOR, &buf, 1));
+				return aWriter.AddAttribute(aName, String(GetDefaultAllocator(), &buf, 1));
 			}
 		case Value::TYPE_INT:
 		case Value::TYPE_UINT:
@@ -206,7 +205,7 @@ namespace Solaire{ namespace Encode{
 			{
 				const char buf = aValue.GetChar();
 				if(! BeginElement("char")) return false;
-				if(! SetBody(String(DEFAULT_ALLOCATOR, &buf, 1))) return false;
+				if(! SetBody(String(GetDefaultAllocator(), &buf, 1))) return false;
 				if(! EndElement()) return false;
 				return true;
 			}
