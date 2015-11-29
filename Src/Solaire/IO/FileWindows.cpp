@@ -114,18 +114,18 @@ namespace Solaire { namespace File {
 		}
 
 		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL CreateDirectory(const char* const aFilename) throw() {
-			return CreateDirectoryA(aFilename, nullptr);
+			return CreateDirectoryA(aFilename, nullptr) > 0;
 		}
 
 		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Delete(const char* const aFilename) throw() {
-			return DeleteFileA(aFilename);
+			return DeleteFileA(aFilename) > 0;
 		}
 
 		SOLAIRE_EXPORT_API uint32_t SOLAIRE_EXPORT_CALL GetParent(const char* const aFilename, char* const aOutput) throw() {
 			const uint32_t length = std::strlen(aFilename);
 
 			const char* j = std::strrchr(aFilename, FILE_SEPERATOR);
-			const char* i = i;
+			const char* i = j;
 			while (j != nullptr) {
 				j = std::strrchr(j, FILE_SEPERATOR);
 				if (j != nullptr) i = j;
@@ -225,11 +225,11 @@ namespace Solaire { namespace File {
 		}
 
 		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Copy(const char* const aSrc, const char* const aDst) throw() {
-			return CopyFileA(aSrc, aDst, FALSE);
+			return CopyFileA(aSrc, aDst, FALSE) > 0;
 		}
 
 		SOLAIRE_EXPORT_API bool SOLAIRE_EXPORT_CALL Move(const char* const aFile, const char* const aTarget) throw() {
-			return MoveFileA(aFile, aTarget);
+			return MoveFileA(aFile, aTarget) > 0;
 		}
 	}
 }}

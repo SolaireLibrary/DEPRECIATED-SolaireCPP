@@ -59,6 +59,7 @@ namespace Solaire{
 		State& state = mState.Back();
 		if(state.type != STATE_OBJECT) return false;
 		state.names.PushBack(String(mState.GetAllocator(), aName));
+		return true;
 	}
 
 	bool Json::Writer::AddValueInternal(const ConstStringFragment aValue) throw() {

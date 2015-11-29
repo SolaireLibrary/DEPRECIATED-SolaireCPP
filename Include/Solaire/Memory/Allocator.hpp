@@ -34,7 +34,6 @@
 #include <limits>
 #include <type_traits>
 #include <cstdint>
-#include "..\Core\Init.hpp"
 
 namespace Solaire{
 
@@ -54,6 +53,7 @@ namespace Solaire{
 
 	extern "C" {
 		SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL GetDefaultAllocator() throw();
+
 		SOLAIRE_EXPORT_API Allocator* SOLAIRE_EXPORT_CALL CreateMemoryArena(Allocator&, const uint32_t, const bool) throw();
 	}
 
