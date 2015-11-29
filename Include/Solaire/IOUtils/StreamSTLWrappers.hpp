@@ -32,6 +32,7 @@
 */
 
 #include <iostream>
+#include "..\Core\Init.hpp"
 #include "..\IO\Stream.hpp"
 
 namespace Solaire {

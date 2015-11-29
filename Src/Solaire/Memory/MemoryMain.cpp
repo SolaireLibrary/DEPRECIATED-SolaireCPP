@@ -1,3 +1,7 @@
+#include "Solaire\Core\Init.hpp"
+
+#if SOLAIRE_OS == SOLAIRE_WINDOWS
+
 #include <Windows.h>
 
 BOOL APIENTRY DllMain( HMODULE hModule,
@@ -16,3 +20,4 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	return TRUE;
 }
 
+#endif

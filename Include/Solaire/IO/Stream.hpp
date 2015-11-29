@@ -32,15 +32,14 @@
 */
 
 #include <cstdint>
-#include "..\Core\Init.hpp"
-#include "..\Link\Object.hpp"
 
 namespace Solaire {
 
-	class StreamBase : public Link::Object{
+	class StreamBase{
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL SetOffset(const uint32_t) const throw() = 0;
 		virtual uint32_t SOLAIRE_EXPORT_CALL GetOffset() const throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
 	};
 
 	class ReadStream : public StreamBase {

@@ -32,12 +32,7 @@
 */
 
 #include <cstdint>
-#include "..\Core\Init.hpp"
 #include "..\Core\Maths.hpp"
-
-#undef CreateFile
-#undef CreateDirectory
-#undef GetCurrentDirectory
 
 namespace Solaire { namespace File{
 

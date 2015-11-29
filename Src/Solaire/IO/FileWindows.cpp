@@ -18,6 +18,7 @@
 
 #include <string>
 #include <map>
+#include "Solaire\Core\Init\DetectOS.inl"
 #include "Solaire\IO\File.hpp"
 
 #if SOLAIRE_OS == SOLAIRE_WINDOWS
