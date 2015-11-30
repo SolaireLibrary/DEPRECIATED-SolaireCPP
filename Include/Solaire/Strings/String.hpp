@@ -101,12 +101,12 @@ namespace Solaire{
 	};
 
 	template<class T>
-	class DefaultCase {
+	struct DefaultCase {
 		typedef NullStringCase<T> Type;
 	};
 
 	template<>
-	class DefaultCase<char> {
+	struct DefaultCase<char> {
 		typedef AsciiCase Type;
 	};
 
@@ -118,7 +118,6 @@ namespace Solaire{
 
 		virtual bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>&, const uint32_t) throw() = 0;
 
-		virtual uint32_t SOLAIRE_EXPORT_CALL ReplaceNextChar(const T, const T, const uint32_t) throw() = 0;
 		virtual uint32_t SOLAIRE_EXPORT_CALL ReplaceNext(const ConstString<T>&, const ConstString<T>&, const uint32_t) throw() = 0;
 
 		virtual bool SOLAIRE_EXPORT_CALL Erase(const uint32_t) throw() = 0;
@@ -193,6 +192,15 @@ namespace Solaire{
 			return ReplaceNextChar(aTarget, aReplacement, 0);
 		}
 
+		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceNextChar(const T aTarget, const T aReplacement, const uint32_t aIndex) throw() {
+			const uint32_t size = Size();
+			const uint32_t pos = FindNextChar(aTarget);
+			if(pos < size) {
+				operator[](pos) = aReplacement;
+			}
+			return pos;
+		}
+
 		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceLastChar(const T aTarget, const T aReplacement) throw() {
 			return ReplaceNextChar(aTarget, aReplacement, FindLastChar(aTarget));
 		}
@@ -245,6 +253,11 @@ namespace Solaire{
 			//! \todo Check if non-virtual overload is abi compatible
 			Append(aValue);
 			return *this;
+		}
+
+		inline T* SOLAIRE_EXPORT_CALL GetContiguousPtr() throw() {
+			//! \todo Check if non-virtual overload is abi compatible
+			return const_cast<char*>(static_cast<const ConstString<T>*>(this)->GetContiguousPtr());
 		}
 	};
 
@@ -324,90 +337,6 @@ namespace Solaire{
 			return Size();
 		}
 
-		bool SOLAIRE_EXPORT_CALL operator==(const ConstString<T>& aOther) const throw() override {
-			const uint32_t size = Size();
-			if(size != aOther.Size()) return false;
-
-			if(aOther.IsContiguous()) {
-				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) == 0;
-			}else {
-				for(uint32_t i = 0; i < size; ++i) {
-					if(mString[i] != aOther[i]) return false;
-				}
-				return true;
-			}
-		}
-
-		bool SOLAIRE_EXPORT_CALL operator!=(const ConstString<T>& aOther) const throw() override {
-			const uint32_t size = Size();
-			if(size != aOther.Size()) return false;
-
-			if(aOther.IsContiguous()) {
-				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) != 0;
-			}else {
-				for(uint32_t i = 0; i < size; ++i) {
-					if(mString[i] != aOther[i]) return true;
-				}
-				return false;
-			}
-		}
-
-		bool SOLAIRE_EXPORT_CALL operator<(const ConstString<T>& aOther) const throw() override {
-			const uint32_t size = Size();
-			if(size != aOther.Size()) return false;
-
-			if(aOther.IsContiguous()) {
-				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) < 0;
-			}else {
-				for(uint32_t i = 0; i < size; ++i) {
-					if(mString[i] >= aOther[i]) return false;
-				}
-				return true;
-			}
-		}
-
-		bool SOLAIRE_EXPORT_CALL operator>(const ConstString<T>& aOther) const throw() override {
-			const uint32_t size = Size();
-			if(size != aOther.Size()) return false;
-
-			if(aOther.IsContiguous()) {
-				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) > 0;
-			}else {
-				for(uint32_t i = 0; i < size; ++i) {
-					if(mString[i] <= aOther[i]) return false;
-				}
-				return true;
-			}
-		}
-
-		bool SOLAIRE_EXPORT_CALL operator<=(const ConstString<T>& aOther) const throw() override {
-			const uint32_t size = Size();
-			if(size != aOther.Size()) return false;
-
-			if(aOther.IsContiguous()) {
-				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) <= 0;
-			}else {
-				for(uint32_t i = 0; i < size; ++i) {
-					if(mString[i] > aOther[i]) return false;
-				}
-				return true;
-			}
-		}
-
-		bool SOLAIRE_EXPORT_CALL operator>=(const ConstString<T>& aOther) const throw() override {
-			const uint32_t size = Size();
-			if(size != aOther.Size()) return false;
-
-			if(aOther.IsContiguous()) {
-				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) > 0;
-			}else {
-				for(uint32_t i = 0; i < size; ++i) {
-					if(mString[i] < aOther[i]) return false;
-				}
-				return true;
-			}
-		}
-
 		bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() override {
 			return true;
 		}
@@ -427,15 +356,10 @@ namespace Solaire{
 		bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>& aValue) throw() override {
 			const uint32_t size = aValue.Size();
 			for(uint32_t i = 0; i < size; ++i) {
-				mString.Back() = aValue;
+				mString.Back() = aValue[i];
 				mString.PushBack(TERMINATOR);
 			}
 			return true;
-		}
-
-		bool SOLAIRE_EXPORT_CALL InsertCharBefore(const T aValue, const uint32_t aIndex) throw() override {
-			//! \todo Implement InsertCharBefore
-			return false;
 		}
 
 		bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>& aValue, const uint32_t aIndex) throw() override {
@@ -449,7 +373,7 @@ namespace Solaire{
 		}
 
 		bool SOLAIRE_EXPORT_CALL Erase(const uint32_t aIndex) throw() override {
-			mString.Erase(mString.begin() + aIndex)
+			mString.Erase(mString.begin() + aIndex);
 			return true;
 		}
 
@@ -463,6 +387,9 @@ namespace Solaire{
 		}
 
 	};
+
+	template<class T, const T TERMINATOR>
+	const typename DefaultCase<T>::Type TerminatedString<T, TERMINATOR>::DEFAULT_CASE;
 
 	typedef TerminatedString<char, '\0'> CString;
 

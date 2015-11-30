@@ -49,17 +49,100 @@ namespace Solaire{
 		virtual uint32_t SOLAIRE_EXPORT_CALL FindFirst(const ConstString<T>&) const throw() = 0;
 		virtual uint32_t SOLAIRE_EXPORT_CALL FindNext(const ConstString<T>&, const uint32_t) const throw() = 0;
 		virtual uint32_t SOLAIRE_EXPORT_CALL FindLast(const ConstString<T>&) const throw() = 0;
-	 
-		virtual bool SOLAIRE_EXPORT_CALL operator==(const ConstString<T>&) const throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL operator!=(const ConstString<T>&) const throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL operator<(const ConstString<T>&) const throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL operator>(const ConstString<T>&) const throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL operator<=(const ConstString<T>&) const throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL operator>=(const ConstString<T>&) const throw() = 0;
-	
+
 		virtual bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() = 0;
-	
+
 		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
+	 
+		inline bool SOLAIRE_EXPORT_CALL operator==(const ConstString<T>& aOther) const throw() {
+			const uint32_t size = Size();
+			const uint32_t otherSize = aOther.Size();
+			if(size != otherSize) return false;
+
+			if(IsContiguous() && aOther.IsContiguous()) {
+				return std::memcmp(GetContiguousPtr(), aOther.GetContiguousPtr(), size * sizeof(T)) == 0;
+			}else {
+				for(uint32_t i = 0; i < size; ++i) {
+					if(operator[](i) != aOther[i]) return false;
+				}
+				return true;
+			}
+		}
+
+		inline bool SOLAIRE_EXPORT_CALL operator!=(const ConstString<T>& aOther) const throw() {
+			const uint32_t size = Size();
+			const uint32_t otherSize = aOther.Size();
+			if(size != otherSize) return false;
+
+			if(IsContiguous() && aOther.IsContiguous()) {
+				return std::memcmp(GetContiguousPtr(), aOther.GetContiguousPtr(), size * sizeof(T)) != 0;
+			}else {
+				for(uint32_t i = 0; i < size; ++i) {
+					if(operator[](i) != aOther[i]) return true;
+				}
+				return false;
+			}
+		}
+
+		inline bool SOLAIRE_EXPORT_CALL operator<(const ConstString<T>& aOther) const throw() {
+			const uint32_t size = Size();
+			const uint32_t otherSize = aOther.Size();
+			const uint32_t minSize = size < otherSize ? size : otherSize;
+
+			if(IsContiguous() && aOther.IsContiguous()) {
+				return std::memcmp(GetContiguousPtr(), aOther.GetContiguousPtr(), minSize * sizeof(T)) < 0;
+			}else {
+				for(uint32_t i = 0; i < minSize; ++i) {
+					if(operator[](i) >= aOther[i]) return false;
+				}
+				return true;
+			}
+		}
+
+		inline bool SOLAIRE_EXPORT_CALL operator>(const ConstString<T>& aOther) const throw() {
+			const uint32_t size = Size();
+			const uint32_t otherSize = aOther.Size();
+			const uint32_t minSize = size < otherSize ? size : otherSize;
+
+			if(IsContiguous() && aOther.IsContiguous()) {
+				return std::memcmp(GetContiguousPtr(), aOther.GetContiguousPtr(), minSize * sizeof(T)) > 0;
+			}else {
+				for(uint32_t i = 0; i < minSize; ++i) {
+					if(operator[](i) <= aOther[i]) return false;
+				}
+				return true;
+			}
+		}
+
+		inline bool SOLAIRE_EXPORT_CALL operator<=(const ConstString<T>& aOther) const throw(){
+			const uint32_t size = Size();
+			const uint32_t otherSize = aOther.Size();
+			const uint32_t minSize = size < otherSize ? size : otherSize;
+
+			if(IsContiguous() && aOther.IsContiguous()) {
+				return std::memcmp(GetContiguousPtr(), aOther.GetContiguousPtr(), minSize * sizeof(T)) <= 0;
+			}else {
+				for(uint32_t i = 0; i < minSize; ++i) {
+					if(operator[](i) > aOther[i]) return false;
+				}
+				return true;
+			}
+		}
+
+		inline bool SOLAIRE_EXPORT_CALL operator>=(const ConstString<T>& aOther) const throw() {
+			const uint32_t size = Size();
+			const uint32_t otherSize = aOther.Size();
+			const uint32_t minSize = size < otherSize ? size : otherSize;
+
+			if(IsContiguous() && aOther.IsContiguous()) {
+				return std::memcmp(GetContiguousPtr(), aOther.GetContiguousPtr(), minSize * sizeof(T)) >= 0;
+			}else {
+				for(uint32_t i = 0; i < minSize; ++i) {
+					if(operator[](i) > aOther[i]) return false;
+				}
+				return true;
+			}
+		}
 
 		inline const T* SOLAIRE_EXPORT_CALL GetContiguousPtr() const throw() {
 			return IsContiguous() ? &operator[](0) : nullptr;
