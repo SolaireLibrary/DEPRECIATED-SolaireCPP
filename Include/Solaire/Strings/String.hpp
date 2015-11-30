@@ -118,8 +118,6 @@ namespace Solaire{
 
 		virtual bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>&, const uint32_t) throw() = 0;
 
-		virtual uint32_t SOLAIRE_EXPORT_CALL ReplaceNext(const ConstString<T>&, const ConstString<T>&, const uint32_t) throw() = 0;
-
 		virtual bool SOLAIRE_EXPORT_CALL Erase(const uint32_t) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Clear() throw() = 0;
 
@@ -207,6 +205,19 @@ namespace Solaire{
 
 		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceFirst(const ConstString<T>& aTarget, const ConstString<T>& aReplacement) throw() {
 			return ReplaceNext(aTarget, aReplacement, 0);
+		}
+
+		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceNext(const ConstString<T>& aTarget, const ConstString<T>& aReplacement, const uint32_t aIndex) throw() {
+			const uint32_t size = Size();
+			const uint32_t targetSize = aTarget.Size();
+			const uint32_t replacementSize = aReplacement.Size();
+			uint32_t pos = FindNext(aTarget, aIndex);
+			if(pos == size) return size;
+
+			for(uint32_t i = 0; i < targetSize; ++i) if(! Erase(pos)) return size;
+			for(uint32_t i = 0; i < replacementSize; ++i) if(! InsertAfter(aReplacement[i], pos + i)) return size;
+
+			return pos;
 		}
 
 		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceLast(const ConstString<T>& aTarget, const ConstString<T>& aReplacement) throw() {
@@ -335,11 +346,6 @@ namespace Solaire{
 		bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>& aValue, const uint32_t aIndex) throw() override {
 			//! \todo Implement InsertBefore
 			return false;
-		}
-
-		uint32_t SOLAIRE_EXPORT_CALL ReplaceNext(const ConstString<T>& aTarget, const ConstString<T>& aReplacement, const uint32_t aIndex) throw() override {
-			//! \todo Implement ReplaceNext
-			return Size();
 		}
 
 		bool SOLAIRE_EXPORT_CALL Erase(const uint32_t aIndex) throw() override {
