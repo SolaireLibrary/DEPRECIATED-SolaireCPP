@@ -114,7 +114,6 @@ namespace Solaire{
 	class NewString : public ConstString<T>{
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL AppendChar(const T) throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>&) throw() = 0;
 
 		virtual bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>&, const uint32_t) throw() = 0;
 
@@ -122,6 +121,12 @@ namespace Solaire{
 		virtual bool SOLAIRE_EXPORT_CALL Clear() throw() = 0;
 
 		virtual const StringCase<T>& SOLAIRE_EXPORT_CALL GetCase() const throw() = 0;
+
+		bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>& aString) throw() {
+			const uint32_t size = aString.Size();
+			for (uint32_t i = 0; i < size; ++i) if (!AppendChar(aString[i])) return false;
+			return true;
+		}
 
 		inline NewString<T>& SOLAIRE_EXPORT_CALL ToLowerCase() throw() {
 			const uint32_t size = Size();
@@ -338,15 +343,6 @@ namespace Solaire{
 		bool SOLAIRE_EXPORT_CALL AppendChar(const T aValue) throw() override {
 			mString.Back() = aValue;
 			mString.PushBack(TERMINATOR);
-			return true;
-		}
-
-		bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>& aValue) throw() override {
-			const uint32_t size = aValue.Size();
-			for(uint32_t i = 0; i < size; ++i) {
-				mString.Back() = aValue[i];
-				mString.PushBack(TERMINATOR);
-			}
 			return true;
 		}
 
