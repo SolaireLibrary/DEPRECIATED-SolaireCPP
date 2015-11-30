@@ -34,7 +34,7 @@
 #include <type_traits>
 #include <sstream>
 #include "../DataStructures/DynamicArray.hpp"
-#include "ConstString.hpp"
+#include "ConstString.hpp"      
 #include "ConstStringTerminated.hpp"
 
 namespace Solaire{
@@ -143,7 +143,7 @@ namespace Solaire{
 			}
 			return *this;
 		}
-
+		 
 		inline NewString<T>& SOLAIRE_EXPORT_CALL ToggleCase() throw() {
 			const uint32_t size = Size();
 			for(uint32_t i = 0; i < size; ++i) {
@@ -156,8 +156,9 @@ namespace Solaire{
 		inline bool SOLAIRE_EXPORT_CALL IsLowerCase() const throw() {
 			//! \todo Move to ConstString
 			const uint32_t size = Size();
+			const StringCase<T>& _case = GetCase();
 			for(uint32_t i = 0; i < size; ++i) {
-				if(! GetCase().IsLowerCase(operator[](i))) return false;
+				if(! _case.IsLowerCase(operator[](i))) return false;
 			}
 			return true;
 		}
@@ -165,8 +166,9 @@ namespace Solaire{
 		inline bool SOLAIRE_EXPORT_CALL IsUpperCase() const throw() {
 			//! \todo Move to ConstString
 			const uint32_t size = Size();
+			const StringCase<T>& _case = GetCase();
 			for(uint32_t i = 0; i < size; ++i) {
-				if(! GetCase().IsUpperCase(operator[](i))) return false;
+				if(! _case.IsUpperCase(operator[](i))) return false;
 			}
 			return true;
 		}
@@ -201,6 +203,31 @@ namespace Solaire{
 
 		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceLast(const ConstString<T>& aTarget, const ConstString<T>& aReplacement) throw() {
 			return ReplaceNext(aTarget, aReplacement, FindLast(aTarget));
+		}
+
+		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceAllChars(const T aTarget, const T aReplacement) throw() {
+			const uint32_t size = Size();
+			const uint32_t count = 0;
+			uint32_t pos = FindFirst(aTarget);
+			while(pos != size) {
+				operator[](pos) = aReplacement;
+				pos = FindFirst(aTarget);
+				++count;
+			}
+
+			return count;
+		}
+
+		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceAll(const ConstString<T>& aTarget, const ConstString<T>& aReplacement) throw() {
+			const uint32_t count = 0;
+			uint32_t pos = FindFirst(aTarget);
+			while(pos != Size()) {
+				ReplaceNext(aTarget, aReplacement, pos);
+				pos = FindFirst(aTarget);
+				++count;
+			}
+
+			return count;
 		}
 
 		inline T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) throw() {
