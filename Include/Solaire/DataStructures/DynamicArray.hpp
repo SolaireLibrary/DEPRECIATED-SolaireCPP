@@ -207,6 +207,14 @@ namespace Solaire{
 	        return *this;
 	    }
 
+		Type* GetPtr() {
+			return mData;
+		}
+
+		ConstType* GetPtr() const {
+			return mData;
+		}
+
         Allocator& GetAllocator() const{
             return *mAllocator;
         }

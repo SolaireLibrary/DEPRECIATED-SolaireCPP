@@ -300,7 +300,7 @@ namespace Solaire{
 		// Inherited from ConstString
 
 		const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) const throw() override {
-			return mString[aIndex];
+			return mString.GetPtr()[aIndex];
 		}
 
 		uint32_t SOLAIRE_EXPORT_CALL Size() const throw() override {
