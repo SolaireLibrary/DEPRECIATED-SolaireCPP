@@ -79,16 +79,18 @@ namespace Solaire{
 		}
 
 		inline T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) throw() {
-			//! \todo Check if non-virtual override is abi compatible
+			//! \todo Check if non-virtual overload is abi compatible
 			return const_cast<T&>(static_cast<const ConstString<T>*>(this)->operator[](aIndex));
 		}
 
 		inline String<T>& SOLAIRE_EXPORT_CALL operator+=(const char aValue) throw() {
+			//! \todo Check if non-virtual overload is abi compatible
 			AppendChar(aValue);
 			return *this;
 		}
 
 		inline String<T>& SOLAIRE_EXPORT_CALL operator+=(const ConstString<T>& aValue) throw() {
+			//! \todo Check if non-virtual overload is abi compatible
 			Append(aValue);
 			return *this;
 		}
