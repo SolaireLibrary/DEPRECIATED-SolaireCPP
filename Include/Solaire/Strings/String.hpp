@@ -115,7 +115,7 @@ namespace Solaire{
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL AppendChar(const T) throw() = 0;
 
-		virtual bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>&, const uint32_t) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL InsertCharBefore(const T, const uint32_t) throw() = 0;
 
 		virtual bool SOLAIRE_EXPORT_CALL Erase(const uint32_t) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Clear() throw() = 0;
@@ -175,12 +175,10 @@ namespace Solaire{
 			return true;
 		}
 
-		inline uint32_t SOLAIRE_EXPORT_CALL InsertCharBefore(const T, const uint32_t) throw() {
-			const uint32_t index = FindNextChar(aTarget, aIndex);
-			if(index < Size()) {
-				operator[](index) = aReplacement;
-			}
-			return index;
+		inline bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>& aString, const uint32_t aIndex) throw() {
+			const uint32_t size = aString.Size();
+			for(uint32_t i = 0; i < size; ++i) if(! InsertCharBefore(aString[i], aIndex + i)) return false;
+			return true;
 		}
 
 		inline bool SOLAIRE_EXPORT_CALL InsertCharAfter(const T aValue, const uint32_t aIndex) throw() {
@@ -346,9 +344,9 @@ namespace Solaire{
 			return true;
 		}
 
-		bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>& aValue, const uint32_t aIndex) throw() override {
-			//! \todo Implement InsertBefore
-			return false;
+		bool SOLAIRE_EXPORT_CALL InsertCharBefore(const T aValue, const uint32_t aIndex) throw() override {
+			mString.InsertBefore(mString.begin() + aIndex, aValue);
+			return true;
 		}
 
 		bool SOLAIRE_EXPORT_CALL Erase(const uint32_t aIndex) throw() override {
