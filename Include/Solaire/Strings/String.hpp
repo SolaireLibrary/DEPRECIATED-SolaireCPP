@@ -216,7 +216,11 @@ namespace Solaire{
 			uint32_t pos = FindNext(aTarget, aIndex);
 			if(pos == size) return size;
 
-			for(uint32_t i = 0; i < minSize; ++i) operator[](pos + i) = aValue[i];
+			if(IsContiguous() && aValue.IsContiguous()) {
+				std::memcpy(GetContiguousPtr() + pos, aValue.GetContiguousPtr(), minSize * sizeof(T));
+			}else {
+				for(uint32_t i = 0; i < minSize; ++i) operator[](pos + i) = aValue[i];
+			}
 			for(uint32_t i = minSize; i < targetSize; ++i) if(! Erase(pos + minSize)) return size;
 			for(uint32_t i = minSize; i < replacementSize; ++i) if(! InsertAfter(aReplacement[i], pos + minsize + i)) return size;
 
