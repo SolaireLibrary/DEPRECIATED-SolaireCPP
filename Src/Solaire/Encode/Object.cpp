@@ -36,7 +36,7 @@ namespace Solaire{ namespace Encode{
 		return mNames.Size();
 	}
 
-	const String& Object::GetMemberName(const uint32_t aIndex) const throw() {
+	const ConstString<char>& Object::GetMemberName(const uint32_t aIndex) const throw() {
 		return mNames[aIndex];
 	}
 
@@ -79,7 +79,7 @@ namespace Solaire{ namespace Encode{
 				return mValues[i] = aValue;
 			}
 		}
-		mNames.PushBack(String(mNames.GetAllocator(), aName));
+		mNames.PushBack(CString(mNames.GetAllocator(), aName));
 		return mValues.PushBack(aValue);
 	}
 
@@ -155,7 +155,7 @@ namespace Solaire{ namespace Encode{
 		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 
-	Value& Object::Add(const ConstString<char>& aName, const String& aValue) throw() {
+	Value& Object::Add(const ConstString<char>& aName, const ConstString<char>& aValue) throw() {
 		return Add(aName, Value(mNames.GetAllocator(), aValue));
 	}
 

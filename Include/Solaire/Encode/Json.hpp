@@ -63,8 +63,8 @@ namespace Solaire{
 			};
 			struct State {
 				ContainterType type;
-				DynamicArray<String> names;
-				DynamicArray<String> values;
+				DynamicArray<CString> names;
+				DynamicArray<CString> values;
 
 				State(Allocator&);
 			};

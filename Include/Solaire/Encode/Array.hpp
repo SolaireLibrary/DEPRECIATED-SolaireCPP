@@ -65,7 +65,7 @@ namespace Solaire{ namespace Encode{
 		Value& Add(const int64_t) throw();
 		Value& Add(const float) throw();
 		Value& Add(const double) throw();
-		Value& Add(const String&) throw();
+		Value& Add(const ConstString<char>&) throw();
 	};
 }}
 

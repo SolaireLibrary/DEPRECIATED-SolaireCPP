@@ -59,7 +59,7 @@ namespace Solaire{ namespace Encode{
 			double mDouble;
 			Object* mObject;
 			Array* mArray;
-			String* mString;
+			String<char>* mString;
 		};
 		Type mType;
 	public:
@@ -79,7 +79,7 @@ namespace Solaire{ namespace Encode{
 		Value(const int64_t) throw();
 		Value(const float) throw();
 		Value(const double) throw();
-		Value(const String&) throw();
+		Value(const ConstString<char>&) throw();
 
 		Value(Allocator&) throw();
 		Value(Allocator&, const char) throw();
@@ -94,7 +94,7 @@ namespace Solaire{ namespace Encode{
 		Value(Allocator&, const int64_t) throw();
 		Value(Allocator&, const float) throw();
 		Value(Allocator&, const double) throw();
-		Value(Allocator&, const String&) throw();
+		Value(Allocator&, const ConstString<char>&) throw();
 
 		~Value() throw();
 
@@ -118,8 +118,8 @@ namespace Solaire{ namespace Encode{
 		uint64_t GetUint() const throw();
 		int64_t GetInt() const throw();
 		double GetDouble() const throw();
-		String& GetString() throw();
-		const String& GetString() const throw();
+		String<char>& GetString() throw();
+		const ConstString<char>& GetString() const throw();
 		const Array& GetArray() const throw();
 		const Object& GetObject() const throw();
 		Array& GetArray() throw();
@@ -131,7 +131,7 @@ namespace Solaire{ namespace Encode{
 		void SetUint(const uint64_t) throw();
 		void SetInt(const int64_t) throw();
 		void SetDouble(const double) throw();
-		String& SetString() throw();
+		String<char>& SetString() throw();
 		Array& SetArray() throw();
 		Object& SetObject() throw();
 	};

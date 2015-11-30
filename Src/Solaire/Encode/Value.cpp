@@ -116,7 +116,7 @@ namespace Solaire{ namespace Encode{
 		mType(TYPE_DOUBLE)
 	{}
 
-	Value::Value(const String& aValue) throw() :
+	Value::Value(const ConstString<char>& aValue) throw() :
 		mAllocator(GetDefaultAllocator()),
 		mType(TYPE_NULL)
 	{
@@ -200,7 +200,7 @@ namespace Solaire{ namespace Encode{
 		mType(TYPE_DOUBLE)
 	{}
 
-	Value::Value(Allocator& aAllocator, const String& aValue) throw() :
+	Value::Value(Allocator& aAllocator, const ConstString<char>& aValue) throw() :
 		mAllocator(aAllocator),
 		mType(TYPE_NULL)
 	{
@@ -329,7 +329,7 @@ namespace Solaire{ namespace Encode{
 			return mDouble >= 0.0 && mDouble == std::floor(mDouble);
 		case TYPE_STRING:
 			{
-				const char* const begin = mString->CString();
+				const char* const begin = mString->GetContiguousPtr();
 				const char* const end = begin + mString->Size();
 				uint32_t value;
 				const char* const tmp = ReadNumber<uint32_t>(begin, end, value);
@@ -361,7 +361,7 @@ namespace Solaire{ namespace Encode{
 			return mDouble == std::floor(mDouble);
 		case TYPE_STRING:
 			{
-				const char* const begin = mString->CString();
+				const char* const begin = mString->GetContiguousPtr();
 				const char* const end = begin + mString->Size();
 				int32_t value;
 				const char* const tmp = ReadNumber<int32_t>(begin, end, value);
@@ -392,7 +392,7 @@ namespace Solaire{ namespace Encode{
 			return true;
 		case TYPE_STRING:
 			{
-				const char* const begin = mString->CString();
+				const char* const begin = mString->GetContiguousPtr();
 				const char* const end = begin + mString->Size();
 				double value;
 				const char* const tmp = ReadNumber<double>(begin, end, value);
@@ -475,7 +475,7 @@ namespace Solaire{ namespace Encode{
 			return static_cast<uint32_t>(mDouble);
 		case TYPE_STRING:
 			{
-				const char* const begin = mString->CString();
+				const char* const begin = mString->GetContiguousPtr();
 				const char* const end = begin + mString->Size();
 				uint32_t value;
 				const char* const tmp = ReadNumber<uint32_t>(begin, end, value);
@@ -505,7 +505,7 @@ namespace Solaire{ namespace Encode{
 			return static_cast<int32_t>(mDouble);
 		case TYPE_STRING:
 			{
-				const char* const begin = mString->CString();
+				const char* const begin = mString->GetContiguousPtr();
 				const char* const end = begin + mString->Size();
 				int32_t value;
 				const char* const tmp = ReadNumber<int32_t>(begin, end, value);
@@ -535,7 +535,7 @@ namespace Solaire{ namespace Encode{
 			return static_cast<uint32_t>(mDouble);
 		case TYPE_STRING:
 			{
-				const char* const begin = mString->CString();
+				const char* const begin = mString->GetContiguousPtr();
 				const char* const end = begin + mString->Size();
 				double value;
 				const char* const tmp = ReadNumber<double>(begin, end, value);
@@ -551,7 +551,7 @@ namespace Solaire{ namespace Encode{
 		}
 	}
 
-	String& Value::GetString() throw() {
+	String<char>& Value::GetString() throw() {
 		switch(mType) {
 		case TYPE_CHAR:
 			{
@@ -571,11 +571,11 @@ namespace Solaire{ namespace Encode{
 		case TYPE_STRING:
 			return *mString;
 		default:
-			return *static_cast<String*>(nullptr);
+			return *static_cast<String<char>*>(nullptr);
 		}
 	}
 
-	const String& Value::GetString() const throw() {
+	const ConstString<char>& Value::GetString() const throw() {
 		return const_cast<Value*>(this)->GetString();
 	}
 
@@ -670,11 +670,11 @@ namespace Solaire{ namespace Encode{
 		mDouble = aValue;
 	}
 
-	String& Value::SetString() throw() {
+	String<char>& Value::SetString() throw() {
 		if(mType != TYPE_STRING) {
 			SetNull();
 			mType = TYPE_STRING;
-			mString = new(mAllocator.Allocate(sizeof(std::string))) String(mAllocator);
+			mString = new(mAllocator.Allocate(sizeof(std::string))) CString(mAllocator);
 		}else {
 			mString->Clear();
 		}

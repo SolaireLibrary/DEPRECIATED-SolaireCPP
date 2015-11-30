@@ -111,7 +111,7 @@ namespace Solaire{
 	};
 
 	template<class T>
-	class NewString : public ConstString<T>{
+	class String : public ConstString<T>{
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL AppendChar(const T) throw() = 0;
 
@@ -121,14 +121,19 @@ namespace Solaire{
 		virtual bool SOLAIRE_EXPORT_CALL Clear() throw() = 0;
 
 		virtual const StringCase<T>& SOLAIRE_EXPORT_CALL GetCase() const throw() = 0;
+		 
+		inline String<T>& operator=(const ConstString<T>& aString) throw() {
+			Clear();
+			return operator+=(aString);
+		}
 
-		bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>& aString) throw() {
+		inline bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>& aString) throw() {
 			const uint32_t size = aString.Size();
 			for (uint32_t i = 0; i < size; ++i) if (!AppendChar(aString[i])) return false;
 			return true;
 		}
 
-		inline NewString<T>& SOLAIRE_EXPORT_CALL ToLowerCase() throw() {
+		inline String<T>& SOLAIRE_EXPORT_CALL ToLowerCase() throw() {
 			const uint32_t size = Size();
 			for(uint32_t i = 0; i < size; ++i) {
 				char& ref = operator[](i);
@@ -137,7 +142,7 @@ namespace Solaire{
 			return *this;
 		}
 
-		inline NewString<T>& SOLAIRE_EXPORT_CALL ToUpperCase() throw() {
+		inline String<T>& SOLAIRE_EXPORT_CALL ToUpperCase() throw() {
 			const uint32_t size = Size();
 			for(uint32_t i = 0; i < size; ++i) {
 				char& ref = operator[](i);
@@ -146,7 +151,7 @@ namespace Solaire{
 			return *this;
 		}
 		 
-		inline NewString<T>& SOLAIRE_EXPORT_CALL ToggleCase() throw() {
+		inline String<T>& SOLAIRE_EXPORT_CALL ToggleCase() throw() {
 			const uint32_t size = Size();
 			for(uint32_t i = 0; i < size; ++i) {
 				char& ref = operator[](i);
@@ -264,13 +269,13 @@ namespace Solaire{
 			return const_cast<T&>(static_cast<const ConstString<T>*>(this)->operator[](aIndex));
 		}
 
-		inline NewString<T>& SOLAIRE_EXPORT_CALL operator+=(const char aValue) throw() {
+		inline String<T>& SOLAIRE_EXPORT_CALL operator+=(const char aValue) throw() {
 			//! \todo Check if non-virtual overload is abi compatible
 			AppendChar(aValue);
 			return *this;
 		}
 
-		inline NewString<T>& SOLAIRE_EXPORT_CALL operator+=(const ConstString<T>& aValue) throw() {
+		inline String<T>& SOLAIRE_EXPORT_CALL operator+=(const ConstString<T>& aValue) throw() {
 			//! \todo Check if non-virtual overload is abi compatible
 			Append(aValue);
 			return *this;
@@ -283,7 +288,7 @@ namespace Solaire{
 	};
 
 	template<class T, const T TERMINATOR>
-	class TerminatedString : public NewString<T> {
+	class TerminatedString : public String<T> {
 	private:
 		static const typename DefaultCase<T>::Type DEFAULT_CASE;
 	private:
@@ -315,6 +320,31 @@ namespace Solaire{
 			mString(aAllocator),
 			mCase(&aCase)
 		{
+			mString.PushBack(TERMINATOR);
+		}
+
+		TerminatedString(Allocator& aAllocator, const T* const aValue) :
+			mString(aAllocator),
+			mCase(&DEFAULT_CASE)
+		{
+			const T* tmp = aValue;
+			while(*tmp != TERMINATOR) {
+				mString.PushBack(*tmp);
+				++tmp;
+			}
+			mString.PushBack(TERMINATOR);
+		}
+
+		
+
+		TerminatedString(Allocator& aAllocator, const ConstString<T>& aValue) :
+			mString(aAllocator),
+			mCase(&DEFAULT_CASE)
+		{
+			const uint32_t size = aValue.Size();
+			for(uint32_t i = 0; i < size; ++i) {
+				mString.PushBack(aValue[i]);
+			}
 			mString.PushBack(TERMINATOR);
 		}
 
@@ -369,214 +399,6 @@ namespace Solaire{
 	const typename DefaultCase<T>::Type TerminatedString<T, TERMINATOR>::DEFAULT_CASE;
 
 	typedef TerminatedString<char, '\0'> CString;
-
-    class String{
-    public:
-        typedef DynamicArray<char, const char, uint32_t> Container;
-
-        typedef Container::Type Type;
-        typedef Container::Type ConstType;
-        typedef Container::Move Move;
-        typedef Container::Reference Reference;
-        typedef Container::ConstReference ConstReference;
-        typedef Container::Pointer Pointer;
-        typedef Container::ConstPointer ConstPointer;
-        typedef Container::Iterator Iterator;
-        typedef Container::ConstIterator ConstIterator;
-        typedef Container::ReverseIterator ReverseIterator;
-        typedef Container::ConstReverseIterator ConstReverseIterator;
-    private:
-        Container mContainer;
-    public:
-        // Assignment
-        String& operator=(const ConstString<char>& aOther);
-        String& operator=(const std::basic_string<Type>& aOther);
-        String& operator=(const ConstPointer aOther);
-        String& operator=(const String& aOther);
-        String& operator=(String&& aOther);
-
-        // Constructors
-        String(const String& aOther);
-        String(String&& aOther);
-        String(Allocator& aAllocator);
-        String(Allocator& aAllocator, const ConstString<char>& aOther);
-        String(Allocator& aAllocator, const std::basic_string<Type>& aOther);
-        String(Allocator& aAllocator, const ConstPointer aPointer);
-        String(Allocator& aAllocator, const ConstPointer aPointer, const size_t aSize);
-        String(Allocator& aAllocator, const Type aChar, const size_t aCount);
-
-        template<class ExternalIterator>
-        String(Allocator& aAllocator, const ExternalIterator aBegin, const ExternalIterator aEnd) :
-            mContainer(aAllocator, aBegin, aEnd)
-        {
-            if(mContainer.Back() != '\0') mContainer.PushBack('\0');
-        }
-
-        // Iterators
-        Iterator begin();
-        ConstIterator begin() const;
-        Iterator end();
-        ConstIterator end() const;
-        ReverseIterator rbegin();
-        ConstReverseIterator rbegin() const;
-        ReverseIterator rend();
-        ConstReverseIterator rend() const;
-
-        // Misc
-        Allocator& GetAllocator() const;
-
-        // Erase
-        void Erase(const ConstIterator aPos);
-        void Erase(const ConstIterator aPos, size_t aCount);
-        String& EraseAll(const Type aChar);
-        String& EraseAll(const ConstString<char>& aFragment);
-        void Clear();
-
-        // Insertion
-        Reference InsertBefore(const ConstIterator aPos, const Type aChar);
-        Reference InsertAfter(const ConstIterator aPos, const Type aChar);
-        void InsertBefore(const ConstIterator aPos, const ConstString<char>& aFragment);
-        void InsertAfter(const ConstIterator aPos, const ConstString<char>& aFragment);
-
-        // Deque interface
-        Reference PushBack(Type aChar);
-        Reference PushFront(Type aChar);
-        Type PopBack();
-        Type PopFront();
-
-        Reference Back();
-        Type Back() const;
-        Reference Front();
-        Type Front() const;
-
-        // Size
-        size_t Size() const;
-        size_t Capacity() const;
-
-        // Array Offset
-        Reference operator[](const size_t aIndex);
-        Type operator[](const size_t aIndex) const;
-
-        // Append
-        String& operator+=(const char aValue);
-        String& operator+=(const char* aValue);
-        String& operator+=(const String& aValue);
-        String& operator+=(const ConstString<char>& aValue);
-		String& operator+=(const uint8_t aValue);
-		String& operator+=(const uint16_t aValue);
-		String& operator+=(const uint32_t aValue);
-		String& operator+=(const uint64_t aValue);
-		String& operator+=(const int8_t aValue);
-		String& operator+=(const int16_t aValue);
-		String& operator+=(const int32_t aValue);
-		String& operator+=(const int64_t aValue);
-		String& operator+=(const float aValue);
-		String& operator+=(const double aValue);
-
-        template<class T>
-        String& operator+=(const std::basic_string<T>& aValue){
-            for(const T c : aValue) PushBack(static_cast<char>(c));
-            return *this;
-        }
-
-        /*template<class T>
-        String& operator+=(const T& aValue){
-            std::stringstream ss;
-            ss << aValue;
-            ss >> *this;
-            return *this;
-        }*/
-
-        //C-String conversion
-        ConstPointer CString() const;
-
-        // StringFragment conversion
-        operator ConstCString() const;
-
-        // Comparison
-        bool operator==(const String& aOther) const;
-        bool operator!=(const String& aOther) const;
-        bool operator<(const String& aOther) const;
-        bool operator>(const String& aOther) const;
-        bool operator<=(const String& aOther) const;
-        bool operator>=(const String& aOther) const;
-        bool operator==(const ConstString<char>& aOther) const;
-        bool operator!=(const ConstString<char>& aOther) const;
-        bool operator<(const ConstString<char>& aOther) const;
-        bool operator>(const ConstString<char>& aOther) const;
-        bool operator<=(const ConstString<char>& aOther) const;
-        bool operator>=(const ConstString<char>& aOther) const;
-
-        // Find
-        Iterator FindFirst(const Type aChar);
-        Iterator FindNext(const Iterator aPos, const Type aChar);
-        Iterator FindLast(const Type aChar);
-        ConstIterator FindFirst(const Type aChar) const;
-        ConstIterator FindNext(const Iterator aPos, const Type aChar) const;
-        ConstIterator FindLast(const Type aChar) const;
-
-        Iterator FindFirst(const ConstString<char>& aFragment);
-		Iterator FindNext(const Iterator aPos, const ConstString<char>& aFragment);
-		Iterator FindLast(const ConstString<char>& aFragment);
-		ConstIterator FindFirst(const ConstString<char>& aFragment) const;
-		ConstIterator FindNext(const Iterator aPos, ConstString<char>& aFragment) const;
-		ConstIterator FindLast(const ConstString<char>& aFragment) const;
-
-        template<class F>
-        Iterator FindFirstIf(const F aCondition){return mContainer.FindFirstIf<F>(aCondition);}
-        template<class F>
-        Iterator FindNextIf(const ConstIterator aPos, const F aCondition){return mContainer.FindNextIf<F>(aPos, aCondition);}
-        template<class F>
-        Iterator FindLastIf(const F aCondition){return mContainer.FindLastIf<F>(aCondition);}
-        template<class F>
-        ConstIterator FindFirstIf(const F aCondition) const{return mContainer.FindFirstIf<F>(aCondition);}
-        template<class F>
-        ConstIterator FindNextIf(const ConstIterator aPos, const F aCondition) const{return mContainer.FindNextIf<F>(aPos, aCondition);}
-        template<class F>
-        ConstIterator FindLastIf(const F aCondition) const{return mContainer.FindLastIf<F>(aCondition);}
-
-        // Replace
-		String& ReplaceFirst(const Type aTarget, const Type aReplacement);
-        String& ReplaceNext(const ConstIterator aPos, const Type aTarget, const Type aReplacement);
-        String& ReplaceLast(const Type aTarget, const Type aReplacement);
-        String& ReplaceAll(const Type aTarget, const Type aReplacement);
-
-        String& ReplaceFirst(const ConstString<char>& aTarget, const ConstString<char>& aReplacement);
-        String& ReplaceNext(const ConstIterator aPos, const ConstString<char>& aTarget, const ConstString<char>& aReplacement);
-        String& ReplaceLast(const ConstString<char>& aTarget, const ConstString<char>& aReplacement);
-        String& ReplaceAll(const ConstString<char>& aTarget, const ConstString<char>& aReplacement);
-
-        // Case control
-		static void ToLowerCase(const Iterator aPos);
-		static void ToUpperCase(const Iterator aPos);
-		static void ToggleCase(const Iterator aPos);
-
-		String& ToLowerCase();
-		String& ToUpperCase();
-		String& ToggleCase();
-
-        // I/Ostream compatibility
-        friend std::ostream& operator<<(std::ostream& aStream, const String& aString){
-            aStream.write(aString.CString(), aString.Size());
-            return aStream;
-        }
-
-        friend std::istream& operator>>(std::istream& aStream, String& aString){
-            char c;
-            while(! aStream.eof()){
-                aStream >> c;
-                aString += c;
-            }
-            return aStream;
-        }
-    };
-
-    /*template<class HASH_TYPE>
-    struct HashWrapper<String, HASH_TYPE>{
-        static HASH_TYPE Hash(const HashFunction<HASH_TYPE>& aFunction, const String& aValue){
-            return aFunction.Hash(aValue.begin(), aValue.Size());
-        }
-    };*/
 }
 
 

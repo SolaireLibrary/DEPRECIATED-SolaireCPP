@@ -59,14 +59,14 @@ namespace Solaire{
 		if(mState.IsEmpty()) return false;
 		State& state = mState.Back();
 		if(state.type != STATE_OBJECT) return false;
-		state.names.PushBack(String(mState.GetAllocator(), aName));
+		state.names.PushBack(CString(mState.GetAllocator(), aName));
 		return true;
 	}
 
 	bool Json::Writer::AddValueInternal(const ConstString<char>& aValue) throw() {
 		if(mState.IsEmpty()) return false;
 		State& state = mState.Back();
-		state.values.PushBack(String(mState.GetAllocator(), aValue));
+		state.values.PushBack(CString(mState.GetAllocator(), aValue));
 		return true;
 	}
 
@@ -81,7 +81,7 @@ namespace Solaire{
 		State& state = mState.Back();
 		if(state.type != STATE_ARRAY) return false;
 
-		String buffer(mState.GetAllocator());
+		CString buffer(mState.GetAllocator());
 		const uint32_t size = state.values.Size();
 
 		buffer += '[';
@@ -94,7 +94,7 @@ namespace Solaire{
 		mState.PopBack();
 
 		if(mState.IsEmpty()) {
-			mOutputStream.Write(buffer.CString(), buffer.Size());
+			mOutputStream.Write(buffer.GetContiguousPtr(), buffer.Size());
 		}else{
 			mState.Back().values.PushBack(buffer);
 		}
@@ -113,7 +113,7 @@ namespace Solaire{
 		State& state = mState.Back();
 		if(state.type != STATE_OBJECT) return false;
 
-		String buffer(mState.GetAllocator());
+		CString buffer(mState.GetAllocator());
 		const uint32_t size = state.values.Size();
 		if(state.names.Size() != size) return false;
 
@@ -131,7 +131,7 @@ namespace Solaire{
 		mState.PopBack();
 
 		if(mState.IsEmpty()) {
-			mOutputStream.Write(buffer.CString(), buffer.Size());
+			mOutputStream.Write(buffer.GetContiguousPtr(), buffer.Size());
 		}else{
 			mState.Back().values.PushBack(buffer);
 		}
@@ -152,7 +152,7 @@ namespace Solaire{
 	}
 
 	bool Json::Writer::AddString(const ConstString<char>& aValue) throw() {
-		String buffer(mState.GetAllocator());
+		CString buffer(mState.GetAllocator());
 		//! \todo Escape quotes in aValue
 		buffer += '"';
 		buffer += aValue;
@@ -201,8 +201,11 @@ namespace Solaire{
 			return AddBool(aValue.GetBool());
 		case Encode::Value::TYPE_CHAR:
 			{
-				const char buf = aValue.GetChar();
-				return AddString(String(mState.GetAllocator(), &buf, 1));
+				char buf[2] = {
+					aValue.GetChar(),
+					'\0'
+				};
+				return AddString(CString(mState.GetAllocator(), buf));
 			}
 		case Encode::Value::TYPE_INT:
 		case Encode::Value::TYPE_UINT:

@@ -152,7 +152,7 @@ namespace Solaire{
 
 		static bool StateBody(ReadStream& aStream, Json::Reader& aReader) {
 			bool escaped = false;
-			String buffer(GetDefaultAllocator());
+			CString buffer(GetDefaultAllocator());
 			char c;
 
 			while(! aStream.End()) {
@@ -205,7 +205,7 @@ namespace Solaire{
 	class JsonNumberReader : public JsonBaseReader {
 	private:
 		static bool StateValue(ReadStream& aStream, Json::Reader& aReader) {
-			String buf(GetDefaultAllocator());
+			CString buf(GetDefaultAllocator());
 			double value;
 
 			while(true) {
@@ -232,8 +232,8 @@ namespace Solaire{
 				case 'e':
 					break;
 				default:
-					const char* end = ReadNumber<double>(buf.CString(), buf.CString() + buf.Size(), value);
-					if(end == buf.CString()) return false;
+					const char* end = ReadNumber<double>(buf.GetContiguousPtr(), buf.GetContiguousPtr() + buf.Size(), value);
+					if(end == buf.GetContiguousPtr()) return false;
 					if (!aReader.ValueNumber(value)) return false;
 					aStream.SetOffset(aStream.GetOffset() - 1);
 					return true;
@@ -407,7 +407,7 @@ namespace Solaire{
 		}
 
 		static bool StateMemberName(ReadStream& aStream, Json::Reader& aReader) {
-			String name(GetDefaultAllocator());
+			CString name(GetDefaultAllocator());
 			char c;
 			while(! aStream.End()) {
 				aStream >> c;

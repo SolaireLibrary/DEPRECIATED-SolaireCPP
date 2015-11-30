@@ -38,13 +38,13 @@ namespace Solaire{ namespace Encode{
 
 	class Object {
 	private:
-		DynamicArray<String> mNames;
+		DynamicArray<CString> mNames;
 		DynamicArray<Value> mValues;
 	public:
 		Object() throw();
 		Object(Allocator&) throw();
 
-		const String& GetMemberName(const uint32_t) const throw();
+		const ConstString<char>& GetMemberName(const uint32_t) const throw();
 
 		uint32_t Size() const throw();
 		const Value& operator[](const uint32_t) const throw();
@@ -74,7 +74,7 @@ namespace Solaire{ namespace Encode{
 		Value& Add(const ConstString<char>&, const int64_t) throw();
 		Value& Add(const ConstString<char>&, const float) throw();
 		Value& Add(const ConstString<char>&, const double) throw();
-		Value& Add(const ConstString<char>&, const String&) throw();
+		Value& Add(const ConstString<char>&, const ConstString<char>&) throw();
 	};
 }}
 

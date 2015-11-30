@@ -295,7 +295,7 @@ namespace Solaire {
 		return end;
 	}
 
-	static String WriteNumber(Allocator& aAllocator, const double aValue) {
+	static CString WriteNumber(Allocator& aAllocator, const double aValue) {
 		double highPart = std::floor(aValue);
 		double lowPart = aValue - highPart;
 
@@ -326,26 +326,26 @@ namespace Solaire {
 
 		buf[head] = '\0';
 
-		return String(aAllocator, buf);
+		return CString(aAllocator, buf);
 	}
 
-	static String WriteNumber(Allocator& aAllocator, const uint32_t aValue) {
+	static CString WriteNumber(Allocator& aAllocator, const uint32_t aValue) {
 		return WriteNumber(aAllocator, static_cast<double>(aValue));
 	}
 
-	static String WriteNumber(Allocator& aAllocator, const int32_t aValue) {
+	static CString WriteNumber(Allocator& aAllocator, const int32_t aValue) {
 		return WriteNumber(aAllocator, static_cast<double>(aValue));
 	}
 
-	static String WriteNumber(const double aValue) {
+	static CString WriteNumber(const double aValue) {
 		return WriteNumber(GetDefaultAllocator(), static_cast<double>(aValue));
 	}
 
-	static String WriteNumber(const uint32_t aValue) {
+	static CString WriteNumber(const uint32_t aValue) {
 		return WriteNumber(GetDefaultAllocator(), static_cast<uint32_t>(aValue));
 	}
 
-	static String WriteNumber(const int32_t aValue) {
+	static CString WriteNumber(const int32_t aValue) {
 		return WriteNumber(GetDefaultAllocator(), static_cast<int32_t>(aValue));
 	}
 }

@@ -62,11 +62,17 @@ namespace Solaire{ namespace Encode{
 			break;
 		case Value::TYPE_STRING:
 			{
-				const String& string = aValue.GetString();
+				const ConstString<char>& string = aValue.GetString();
 				const uint16_t length = string.Size();
 
-				aStream.Write(&length, sizeof(uint16_t));
-				aStream.Write(string.CString(), sizeof(char) * length);
+				aStream << length;
+				if(string.IsContiguous()) {
+					aStream.Write(string.GetContiguousPtr(), sizeof(char) * length);
+				}else {
+					for(uint16_t i = 0; i < length; ++i) {
+						aStream << string[i];
+					}
+				}
 			}
 			break;
 		case Value::TYPE_ARRAY:
@@ -88,11 +94,17 @@ namespace Solaire{ namespace Encode{
 
 				aStream.Write(&length, sizeof(uint16_t));
 				for(uint16_t i = 0; i < length; ++i) {
-					const String& name = object.GetMemberName(i);
+					const ConstString<char>& name = object.GetMemberName(i);
 					const uint16_t nameLength = name.Size();
 
-					aStream.Write(&nameLength, sizeof(uint16_t));
-					aStream.Write(name.CString(), sizeof(char) * nameLength);
+					aStream << nameLength;
+					if(name.IsContiguous()) {
+						aStream.Write(name.GetContiguousPtr(), sizeof(char) * nameLength);
+					}else {
+						for(uint16_t i = 0; i < nameLength; ++i) {
+							aStream << name[i];
+						}
+					}
 
 					const Value& value = object[i];
 					if(! Write(value, aStream)) return false;
@@ -154,7 +166,7 @@ namespace Solaire{ namespace Encode{
 				aStream.Read(buf, sizeof(char) * length);
 				buf[length = '\0'];
 
-				value.SetString() = buf;
+				value.SetString() = ConstCString(buf);
 
 				aAllocator.Deallocate(buf);
 			}
@@ -184,7 +196,7 @@ namespace Solaire{ namespace Encode{
 					aStream.Read(buf, sizeof(char) * nameLength);
 					buf[nameLength = '\0'];
 
-					object.Add(String(aAllocator, buf), Read(aStream));
+					object.Add(CString(aAllocator, buf), Read(aStream));
 
 					aAllocator.Deallocate(buf);
 				}

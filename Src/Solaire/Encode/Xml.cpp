@@ -49,18 +49,18 @@ namespace Solaire{ namespace Encode{
 
 		buf = '<';
 		mOutputStream.Write(&buf, sizeof(char));
-		mOutputStream.Write(aData.name.CString(), sizeof(char) * aData.name.Size());
+		mOutputStream.Write(aData.name.ConstString<char>::GetContiguousPtr(), sizeof(char) * aData.name.Size());
 
 		const uint32_t attributeCount = aData.attributeNames.Size();
 		for (uint32_t i = 0; i < attributeCount; ++i) {
 			buf = ' ';
 			mOutputStream.Write(&buf, sizeof(char));
-			mOutputStream.Write(aData.attributeNames[i].CString(), sizeof(char) * aData.attributeNames[i].Size());
+			mOutputStream.Write(aData.attributeNames[i].ConstString<char>::GetContiguousPtr(), sizeof(char) * aData.attributeNames[i].Size());
 			buf = '=';
 			mOutputStream.Write(&buf, sizeof(char));
 			buf = '"';
 			mOutputStream.Write(&buf, sizeof(char));
-			mOutputStream.Write(aData.attributeValues[i].CString(), sizeof(char) * aData.attributeValues[i].Size());
+			mOutputStream.Write(aData.attributeValues[i].ConstString<char>::GetContiguousPtr(), sizeof(char) * aData.attributeValues[i].Size());
 			buf = '"';
 			mOutputStream.Write(&buf, sizeof(char));
 		}
@@ -76,7 +76,7 @@ namespace Solaire{ namespace Encode{
 			mOutputStream.Write(&buf, sizeof(char));
 
 			if (aData.body.Size() != 0) {
-				mOutputStream.Write(aData.body.CString(), sizeof(char) * aData.body.Size());
+				mOutputStream.Write(aData.body.ConstString<char>::GetContiguousPtr(), sizeof(char) * aData.body.Size());
 			}
 			else {
 				const uint32_t childCount = aData.children.Size();
@@ -89,7 +89,7 @@ namespace Solaire{ namespace Encode{
 			mOutputStream.Write(&buf, sizeof(char));
 			buf = '/';
 			mOutputStream.Write(&buf, sizeof(char));
-			mOutputStream.Write(aData.name.CString(), sizeof(char) * aData.name.Size());
+			mOutputStream.Write(aData.name.ConstString<char>::GetContiguousPtr(), sizeof(char) * aData.name.Size());
 			buf = '>';
 			mOutputStream.Write(&buf, sizeof(char));
 		}
@@ -99,14 +99,14 @@ namespace Solaire{ namespace Encode{
 
 	bool Xml::Writer::BeginElement(const ConstString<char>& aName) {
 		if(mHead.IsEmpty()) {
-			mRoot.name = aName;
+			mRoot.name.String<char>::operator=(aName);
 			mHead.PushBack(&mRoot);
 			return true;
 		}else {
 			ElementData& parent = *mHead.Back();
 			if(parent.body.Size() != 0) return false;
 			ElementData& child = parent.children.PushBack(ElementData());
-			child.name = aName;
+			child.name.String<char>::operator=(aName);
 			mHead.PushBack(&child);
 			return true;
 		}
@@ -128,15 +128,15 @@ namespace Solaire{ namespace Encode{
 		if(mHead.IsEmpty()) return false;
 		ElementData& element = *mHead.Back();
 		if(element.children.Size() != 0) return false;
-		element.body = aValue;
+		element.body.String<char>::operator=(aValue);
 		return true;
 	}
 
 	bool Xml::Writer::AddAttribute(const ConstString<char>& aName, const ConstString<char>& aValue) {
 		if(mHead.IsEmpty()) return false;
 		ElementData& element = *mHead.Back();
-		element.attributeNames.PushBack(String(GetDefaultAllocator(), aName));
-		element.attributeValues.PushBack(String(GetDefaultAllocator(), aValue));
+		element.attributeNames.PushBack(CString(GetDefaultAllocator(), aName));
+		element.attributeValues.PushBack(CString(GetDefaultAllocator(), aValue));
 		return true;
 	}
 
@@ -150,8 +150,11 @@ namespace Solaire{ namespace Encode{
 			}
 		case Value::TYPE_CHAR:
 			{
-				const char buf = aValue.GetChar();
-				return aWriter.AddAttribute(aName, String(GetDefaultAllocator(), &buf, 1));
+				const char buf[2] = {
+					aValue.GetChar(),
+					'\0'
+				};
+				return aWriter.AddAttribute(aName, CString(GetDefaultAllocator(), buf));
 			}
 		case Value::TYPE_INT:
 		case Value::TYPE_UINT:
@@ -203,9 +206,12 @@ namespace Solaire{ namespace Encode{
 			return true;
 		case Value::TYPE_CHAR:
 			{
-				const char buf = aValue.GetChar();
+				const char buf[2] = {
+					aValue.GetChar(),
+					'\0'
+				};
 				if(! BeginElement(ConstCString("char"))) return false;
-				if(! SetBody(String(GetDefaultAllocator(), &buf, 1))) return false;
+				if(! SetBody(CString(GetDefaultAllocator(), buf))) return false;
 				if(! EndElement()) return false;
 				return true;
 			}

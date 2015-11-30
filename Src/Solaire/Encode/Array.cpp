@@ -106,7 +106,7 @@ namespace Solaire{ namespace Encode{
 		return Add(Value(mValues.GetAllocator(), aValue));
 	}
 
-	Value& Array::Add(const String& aValue) throw() {
+	Value& Array::Add(const ConstString<char>& aValue) throw() {
 		return Add(Value(mValues.GetAllocator(), aValue));
 	}
 

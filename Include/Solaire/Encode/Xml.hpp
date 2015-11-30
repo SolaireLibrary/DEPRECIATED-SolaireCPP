@@ -53,10 +53,10 @@ namespace Solaire { namespace Encode {
 		class Writer {
 		private:
 			struct ElementData {
-				String name;
-				String body;
-				DynamicArray<String> attributeNames;
-				DynamicArray<String> attributeValues;
+				CString name;
+				CString body;
+				DynamicArray<CString> attributeNames;
+				DynamicArray<CString> attributeValues;
 				DynamicArray<ElementData> children;
 
 				ElementData();
