@@ -211,11 +211,14 @@ namespace Solaire{
 			const uint32_t size = Size();
 			const uint32_t targetSize = aTarget.Size();
 			const uint32_t replacementSize = aReplacement.Size();
+			const uint32_t minSize = targetSize < replacementSize ? targetSize : replacementSize;
+
 			uint32_t pos = FindNext(aTarget, aIndex);
 			if(pos == size) return size;
 
-			for(uint32_t i = 0; i < targetSize; ++i) if(! Erase(pos)) return size;
-			for(uint32_t i = 0; i < replacementSize; ++i) if(! InsertAfter(aReplacement[i], pos + i)) return size;
+			for(uint32_t i = 0; i < minSize; ++i) operator[](pos + i) = aValue[i];
+			for(uint32_t i = minSize; i < targetSize; ++i) if(! Erase(pos + minSize)) return size;
+			for(uint32_t i = minSize; i < replacementSize; ++i) if(! InsertAfter(aReplacement[i], pos + minsize + i)) return size;
 
 			return pos;
 		}
