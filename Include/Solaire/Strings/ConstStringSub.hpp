@@ -64,46 +64,6 @@ namespace Solaire{
 			return mEnd - mBegin;
 		}
 	
-		uint32_t SOLAIRE_EXPORT_CALL FindFirstChar(const T aValue) const throw() override {
-			return FindNextChar(aValue, 0);
-		}
-	
-		uint32_t SOLAIRE_EXPORT_CALL FindNextChar(const T aValue, const uint32_t aIndex) const throw() override {
-			const uint32_t pos = mString.FindFirstChar(aValue, aIndex + mBegin);
-			if(pos >= mEnd) return mEnd;
-			return pos;
-		}
-	
-		uint32_t SOLAIRE_EXPORT_CALL FindLastChar(const T aValue) const throw() override {
-			uint32_t pos = FindFirst(aValue);
-			uint32_t posPrev = pos;
-			while(pos != mSize) { 
-				posPrev = pos;
-				pos = FindNextChar(aValue, pos + 1);
-			}
-			return posPrev;
-		}
-	
-		uint32_t SOLAIRE_EXPORT_CALL FindFirst(const ConstString<T>& aValue) const throw() override {
-			return FindNext(aValue, 0);
-		}
-	
-		uint32_t SOLAIRE_EXPORT_CALL FindNext(const ConstString<T>& aValue, const uint32_t aIndex) const throw() override {
-			const uint32_t pos = mString.FindFirs(aValue, aIndex + mBegin);
-			if(pos >= mEnd) return mEnd;
-			return pos;
-		}
-	
-		uint32_t SOLAIRE_EXPORT_CALL FindLast(const ConstString<T>& aValue) const throw() override {
-			uint32_t pos = FindFirst(aValue);
-			uint32_t posPrev = pos;
-			while(pos != mSize) { 
-				posPrev = pos;
-				pos = FindNext(aValue, pos + 1);
-			}
-			return posPrev;
-		}
-	
 		bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() override {
 			return mString.IsContiguous();
 		}

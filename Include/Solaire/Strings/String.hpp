@@ -307,36 +307,6 @@ namespace Solaire{
 			return mString.Size() - 1;
 		}
 
-		uint32_t SOLAIRE_EXPORT_CALL FindFirstChar(const T aValue) const throw() override {
-			//! \todo Implement FindFirstChar
-			return Size();
-		}
-
-		uint32_t SOLAIRE_EXPORT_CALL FindNextChar(const T aValue, const uint32_t aIndex) const throw() override {
-			//! \todo Implement FindNextChar
-			return Size();
-		}
-
-		uint32_t SOLAIRE_EXPORT_CALL FindLastChar(const T aValue) const throw() override {
-			//! \todo Implement FindLastChar
-			return Size();
-		}
-
-		uint32_t SOLAIRE_EXPORT_CALL FindFirst(const ConstString<T>& aValue) const throw() override {
-			//! \todo Implement FindFirst
-			return Size();
-		}
-
-		uint32_t SOLAIRE_EXPORT_CALL FindNext(const ConstString<T>& aValue, const uint32_t aIndex) const throw() override {
-			//! \todo Implement FindNext
-			return Size();
-		}
-
-		uint32_t SOLAIRE_EXPORT_CALL FindLast(const ConstString<T>& aValue) const throw() override {
-			//! \todo Implement FindLast
-			return Size();
-		}
-
 		bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() override {
 			return true;
 		}
