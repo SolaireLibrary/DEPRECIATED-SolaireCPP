@@ -28,7 +28,7 @@ namespace Solaire{
         return mContainer.GetAllocator();
     }
 
-    String& String::operator=(const ConstStringFragment aOther){
+    String& String::operator=(const ConstString<char>& aOther){
         Clear();
         operator+=(aOther);
         return *this;
@@ -36,13 +36,13 @@ namespace Solaire{
 
     String& String::operator=(const std::basic_string<Type>& aOther){
         Clear();
-        operator+=(ConstStringFragment(aOther.c_str(), aOther.c_str() + aOther.size()));
+        operator+=(ConstCString(aOther.c_str(), aOther.size()));
         return *this;
     }
 
     String& String::operator=(const ConstPointer aOther){
         Clear();
-        operator+=(ConstStringFragment(aOther));
+        operator+=(ConstCString(aOther));
         return *this;
     }
 
@@ -88,9 +88,13 @@ namespace Solaire{
         mContainer.PushBack('\0');
     }
 
-    String::String(Allocator& aAllocator, const ConstStringFragment aOther) :
-        mContainer(aAllocator, aOther.begin(), aOther.end())
+    String::String(Allocator& aAllocator, const ConstString<char>& aOther) :
+        mContainer(aAllocator)
     {
+		const uint32_t size = aOther.Size();
+		for(uint32_t i = 0; i < size; ++i) {
+			mContainer.PushBack(aOther[i]);
+		}
         mContainer.PushBack('\0');
     }
 
@@ -125,16 +129,16 @@ namespace Solaire{
         return mContainer.InsertAfter(aPos, aChar);
     }
 
-    StringFragment String::InsertBefore(const ConstIterator aPos, const ConstStringFragment aFragment){
+    void String::InsertBefore(const ConstIterator aPos, const ConstString<char>& aFragment){
         const size_t pos = aPos - begin();
-        const ConstReverseIterator end = aFragment.rend();
-        for(ConstReverseIterator i = aFragment.rbegin(); i != end; ++i){
-            InsertBefore(begin() + pos, *i);
-        }
-        return StringFragment(begin() + pos, aFragment.Size());
+		//! \todo Implement InsertBefore
+        //const ConstReverseIterator end = aFragment.rend();
+        //for(ConstReverseIterator i = aFragment.rbegin(); i != end; ++i){
+        //    InsertBefore(begin() + pos, *i);
+        //}
     }
 
-    StringFragment String::InsertAfter(const ConstIterator aPos, const ConstStringFragment aFragment){
+    void String::InsertAfter(const ConstIterator aPos, const ConstString<char>& aFragment){
         return InsertBefore(aPos + 1, aFragment);
     }
 
@@ -209,9 +213,14 @@ namespace Solaire{
         return *this;
     }
 
-    String& String::operator+=(const ConstStringFragment aValue){
-        for(const Type c : aValue) PushBack(c);
-        return *this;
+    String& String::operator+=(const ConstString<char>& aValue){
+		mContainer.PopBack();
+		const uint32_t size = aValue.Size();
+		for (uint32_t i = 0; i < size; ++i) {
+			mContainer.PushBack(aValue[i]);
+		}
+		mContainer.PushBack('\0');
+		return *this;
     }
 
 	String& String::operator+=(const uint8_t aValue) {
@@ -258,12 +267,8 @@ namespace Solaire{
         return &const_cast<Container&>(mContainer)[0];
     }
 
-    String::operator StringFragment(){
-        return StringFragment(begin(), end());
-    }
-
-    String::operator ConstStringFragment() const{
-        return ConstStringFragment(begin(), end());
+    String::operator ConstCString() const{
+        return ConstCString(begin(), Size());
     }
 
     bool String::operator==(const String& aOther) const{
@@ -292,28 +297,28 @@ namespace Solaire{
         return std::memcmp(CString(), aOther.CString(), sizeof(Type) * Min(Size(), aOther.Size())) >= 0;
     }
 
-    bool String::operator==(const ConstStringFragment aOther) const{
-        return static_cast<ConstStringFragment>(*this) == aOther;
+    bool String::operator==(const ConstString<char>& aOther) const{
+        return static_cast<ConstCString>(*this) == aOther;
     }
 
-    bool String::operator!=(const ConstStringFragment aOther) const{
-        return static_cast<ConstStringFragment>(*this) != aOther;
+    bool String::operator!=(const ConstString<char>& aOther) const{
+        return static_cast<ConstCString>(*this) != aOther;
     }
 
-    bool String::operator<(const ConstStringFragment aOther) const{
-        return static_cast<ConstStringFragment>(*this) < aOther;
+    bool String::operator<(const ConstString<char>& aOther) const{
+        return static_cast<ConstCString>(*this) < aOther;
     }
 
-    bool String::operator>(const ConstStringFragment aOther) const{
-        return static_cast<ConstStringFragment>(*this) > aOther;
+    bool String::operator>(const ConstString<char>& aOther) const{
+        return static_cast<ConstCString>(*this) > aOther;
     }
 
-    bool String::operator<=(const ConstStringFragment aOther) const{
-        return static_cast<ConstStringFragment>(*this) <= aOther;
+    bool String::operator<=(const ConstString<char>& aOther) const{
+        return static_cast<ConstCString>(*this) <= aOther;
     }
 
-    bool String::operator>=(const ConstStringFragment aOther) const{
-        return static_cast<ConstStringFragment>(*this) >= aOther;
+    bool String::operator>=(const ConstString<char>& aOther) const{
+        return static_cast<ConstCString>(*this) >= aOther;
     }
 
     String::Iterator String::begin(){
@@ -349,63 +354,63 @@ namespace Solaire{
     }
 
     String::Iterator String::FindFirst(const Type aChar){
-        return StringFragment(begin(), end()).FindFirst(aChar);
+		return end();// StringFragment(begin(), end()).FindFirst(aChar);
     }
 
     String::Iterator String::FindNext(const Iterator aPos, const Type aChar){
-        return StringFragment(begin(), end()).FindNext(aPos, aChar);
+        return end();// StringFragment(begin(), end()).FindNext(aPos, aChar);
     }
 
     String::Iterator String::FindLast(const Type aChar){
-        return StringFragment(begin(), end()).FindLast(aChar);
+        return end();// StringFragment(begin(), end()).FindLast(aChar);
     }
 
     String::ConstIterator String::FindFirst(const Type aChar) const{
-        return ConstStringFragment(begin(), end()).FindFirst(aChar);
+        return end();// ConstStringFragment(begin(), end()).FindFirst(aChar);
     }
 
     String::ConstIterator String::FindNext(const Iterator aPos, const Type aChar) const{
-        return ConstStringFragment(begin(), end()).FindNext(aPos, aChar);
+        return end();// ConstStringFragment(begin(), end()).FindNext(aPos, aChar);
     }
 
     String::ConstIterator String::FindLast(const Type aChar) const{
-        return ConstStringFragment(begin(), end()).FindLast(aChar);
+        return end();// ConstStringFragment(begin(), end()).FindLast(aChar);
     }
 
-    StringFragment String::FindFirst(const ConstStringFragment aFragment){
-        return StringFragment(begin(), end()).FindFirst(aFragment);
+	String::Iterator String::FindFirst(const ConstString<char>& aFragment){
+        return end();// StringFragment(begin(), end()).FindFirst(aFragment);
     }
 
-    StringFragment String::FindNext(const Iterator aPos, const ConstStringFragment aFragment){
-        return StringFragment(begin(), end()).FindNext(aPos, aFragment);
+	String::Iterator String::FindNext(const Iterator aPos, const ConstString<char>& aFragment){
+        return end();// StringFragment(begin(), end()).FindNext(aPos, aFragment);
     }
 
-    StringFragment String::FindLast(const ConstStringFragment aFragment){
-        return StringFragment(begin(), end()).FindLast(aFragment);
+	String::Iterator String::FindLast(const ConstString<char>& aFragment){
+        return end();// StringFragment(begin(), end()).FindLast(aFragment);
     }
 
-    ConstStringFragment String::FindFirst(const ConstStringFragment aFragment) const{
-        return ConstStringFragment(begin(), end()).FindFirst(aFragment);
+	String::ConstIterator String::FindFirst(const ConstString<char>& aFragment) const{
+        return end();// ConstStringFragment(begin(), end()).FindFirst(aFragment);
     }
 
-    ConstStringFragment String::FindNext(const Iterator aPos, ConstStringFragment aFragment) const{
-        return ConstStringFragment(begin(), end()).FindNext(aPos, aFragment);
+	String::ConstIterator String::FindNext(const Iterator aPos, ConstString<char>& aFragment) const{
+        return end();// ConstStringFragment(begin(), end()).FindNext(aPos, aFragment);
     }
 
-    ConstStringFragment String::FindLast(const ConstStringFragment aFragment) const{
-        return ConstStringFragment(begin(), end()).FindLast(aFragment);
+    String::ConstIterator String::FindLast(const ConstString<char>& aFragment) const{
+        return end();// ConstStringFragment(begin(), end()).FindLast(aFragment);
     }
 
     void String::ToLowerCase(const Iterator aPos){
-        StringFragment::ToLowerCase(aPos);
+        //StringFragment::ToLowerCase(aPos);
     }
 
     void String::ToUpperCase(const Iterator aPos){
-        StringFragment::ToUpperCase(aPos);
+        //StringFragment::ToUpperCase(aPos);
     }
 
     void String::ToggleCase(const Iterator aPos){
-        StringFragment::ToggleCase(aPos);
+        //StringFragment::ToggleCase(aPos);
     }
 
     String& String::ToLowerCase(){
@@ -451,19 +456,19 @@ namespace Solaire{
         return *this;
     }
 
-    String& String::ReplaceFirst(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
+    String& String::ReplaceFirst(const ConstString<char>& aTarget, const ConstString<char>& aReplacement){
         return ReplaceNext(begin(), aTarget, aReplacement);
     }
 
-    String& String::ReplaceNext(const ConstIterator aPos, const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
+    String& String::ReplaceNext(const ConstIterator aPos, const ConstString<char>& aTarget, const ConstString<char>& aReplacement){
         const size_t targetSize = aTarget.Size();
         const size_t replacementSize = aReplacement.Size();
 
-        const Iterator pos = FindNext(const_cast<Iterator>(aPos), aTarget).begin();
+        const Iterator pos = FindNext(const_cast<Iterator>(aPos), aTarget);
         const ConstIterator end = this->end();
         if(pos != end){
             if(targetSize == replacementSize){
-                std::memcpy(pos, aReplacement.begin(), sizeof(Type) * replacementSize);
+                //std::memcpy(pos, aReplacement.begin(), sizeof(Type) * replacementSize);
             }else{
                 Erase(pos, targetSize);
                 InsertBefore(pos, aReplacement);
@@ -472,15 +477,15 @@ namespace Solaire{
         return *this;
     }
 
-    String& String::ReplaceLast(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
-        return ReplaceNext(FindLast(aTarget).begin(), aTarget, aReplacement);
+    String& String::ReplaceLast(const ConstString<char>& aTarget, const ConstString<char>& aReplacement){
+        return ReplaceNext(FindLast(aTarget), aTarget, aReplacement);
     }
 
-    String& String::ReplaceAll(const ConstStringFragment aTarget, const ConstStringFragment aReplacement){
-        Iterator it = FindFirst(aTarget).begin();
+    String& String::ReplaceAll(const ConstString<char>& aTarget, const ConstString<char>& aReplacement){
+        Iterator it = FindFirst(aTarget);
         while(it != end()){
             ReplaceNext(it, aTarget, aReplacement);
-            it = FindNext(it + 1, aTarget).begin();
+            it = FindNext(it + 1, aTarget);
         }
         return *this;
     }
@@ -494,11 +499,11 @@ namespace Solaire{
         return *this;
     }
 
-    String& String::EraseAll(const ConstStringFragment aFragment){
-        Iterator it = FindFirst(aFragment).begin();
+    String& String::EraseAll(const ConstString<char>& aFragment){
+        Iterator it = FindFirst(aFragment);
         while(it != end()){
             Erase(it, aFragment.Size());
-            it = FindNext(it, aFragment).begin();
+            it = FindNext(it, aFragment);
         }
         return *this;
     }

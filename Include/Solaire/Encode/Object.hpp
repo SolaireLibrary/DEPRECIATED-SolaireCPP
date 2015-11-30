@@ -50,31 +50,31 @@ namespace Solaire{ namespace Encode{
 		const Value& operator[](const uint32_t) const throw();
 		Value& operator[](const uint32_t) throw();
 
-		bool ContainsValue(const ConstStringFragment) const throw();
+		bool ContainsValue(const ConstString<char>&) const throw();
 
-		const Value& operator[](const ConstStringFragment) const throw();
-		Value& operator[](const ConstStringFragment) throw();
+		const Value& operator[](const ConstString<char>&) const throw();
+		Value& operator[](const ConstString<char>&) throw();
 
-		Value& Add(const ConstStringFragment, const Value&) throw();
+		Value& Add(const ConstString<char>&, const Value&) throw();
 		void Erase(const uint32_t) throw();
-		void Erase(const ConstStringFragment) throw();
+		void Erase(const ConstString<char>&) throw();
 
 		void Clear() throw();
 
-		Value& Add(const ConstStringFragment) throw();
-		Value& Add(const ConstStringFragment, const char) throw();
-		Value& Add(const ConstStringFragment, const bool) throw();
-		Value& Add(const ConstStringFragment, const uint8_t) throw();
-		Value& Add(const ConstStringFragment, const uint16_t) throw();
-		Value& Add(const ConstStringFragment, const uint32_t) throw();
-		Value& Add(const ConstStringFragment, const uint64_t) throw();
-		Value& Add(const ConstStringFragment, const int8_t) throw();
-		Value& Add(const ConstStringFragment, const int16_t) throw();
-		Value& Add(const ConstStringFragment, const int32_t) throw();
-		Value& Add(const ConstStringFragment, const int64_t) throw();
-		Value& Add(const ConstStringFragment, const float) throw();
-		Value& Add(const ConstStringFragment, const double) throw();
-		Value& Add(const ConstStringFragment, const String&) throw();
+		Value& Add(const ConstString<char>&) throw();
+		Value& Add(const ConstString<char>&, const char) throw();
+		Value& Add(const ConstString<char>&, const bool) throw();
+		Value& Add(const ConstString<char>&, const uint8_t) throw();
+		Value& Add(const ConstString<char>&, const uint16_t) throw();
+		Value& Add(const ConstString<char>&, const uint32_t) throw();
+		Value& Add(const ConstString<char>&, const uint64_t) throw();
+		Value& Add(const ConstString<char>&, const int8_t) throw();
+		Value& Add(const ConstString<char>&, const int16_t) throw();
+		Value& Add(const ConstString<char>&, const int32_t) throw();
+		Value& Add(const ConstString<char>&, const int64_t) throw();
+		Value& Add(const ConstString<char>&, const float) throw();
+		Value& Add(const ConstString<char>&, const double) throw();
+		Value& Add(const ConstString<char>&, const String&) throw();
 	};
 }}
 

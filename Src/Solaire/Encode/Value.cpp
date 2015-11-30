@@ -276,7 +276,7 @@ namespace Solaire{ namespace Encode{
 		case TYPE_NULL:
 			return true;
 		case TYPE_STRING:
-			return mString->Size() == 0 || *mString == "null";
+			return mString->Size() == 0 || *mString == ConstCString("null");
 		default:
 			return false;
 		}
@@ -291,7 +291,7 @@ namespace Solaire{ namespace Encode{
 		case TYPE_DOUBLE:
 			return mDouble >= 0.0 && mDouble == std::floor(mDouble);
 		case TYPE_STRING:
-			return *mString == "true" || *mString == "false";
+			return *mString == ConstCString("true") || *mString == ConstCString("false");
 		default:
 			return false;
 		}
@@ -438,7 +438,7 @@ namespace Solaire{ namespace Encode{
 		case TYPE_DOUBLE:
 			return mDouble > 0.0;
 		case TYPE_STRING:
-			return *mString == "true";
+			return *mString == ConstCString("true");
 		default:
 			return false;
 		}

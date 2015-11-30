@@ -97,7 +97,7 @@ namespace Solaire{ namespace Encode{
 		return true;
 	}
 
-	bool Xml::Writer::BeginElement(const ConstStringFragment aName) {
+	bool Xml::Writer::BeginElement(const ConstString<char>& aName) {
 		if(mHead.IsEmpty()) {
 			mRoot.name = aName;
 			mHead.PushBack(&mRoot);
@@ -124,7 +124,7 @@ namespace Solaire{ namespace Encode{
 		return true;
 	}
 
-	bool Xml::Writer::SetBody(const ConstStringFragment aValue) {
+	bool Xml::Writer::SetBody(const ConstString<char>& aValue) {
 		if(mHead.IsEmpty()) return false;
 		ElementData& element = *mHead.Back();
 		if(element.children.Size() != 0) return false;
@@ -132,7 +132,7 @@ namespace Solaire{ namespace Encode{
 		return true;
 	}
 
-	bool Xml::Writer::AddAttribute(const ConstStringFragment aName, const ConstStringFragment aValue) {
+	bool Xml::Writer::AddAttribute(const ConstString<char>& aName, const ConstString<char>& aValue) {
 		if(mHead.IsEmpty()) return false;
 		ElementData& element = *mHead.Back();
 		element.attributeNames.PushBack(String(GetDefaultAllocator(), aName));
@@ -140,13 +140,13 @@ namespace Solaire{ namespace Encode{
 		return true;
 	}
 
-	static bool WriteObject(const ConstStringFragment aName, const Value& aValue, Xml::Writer& aWriter) {
+	static bool WriteObject(const ConstString<char>& aName, const Value& aValue, Xml::Writer& aWriter) {
 		switch (aValue.GetType()) {
 		case Value::TYPE_BOOL:
 			if(aValue.GetBool()) {
-				return aWriter.AddAttribute(aName, "true");
+				return aWriter.AddAttribute(aName, ConstCString("true"));
 			}else {
-				return aWriter.AddAttribute(aName, "false");
+				return aWriter.AddAttribute(aName, ConstCString("false"));
 			}
 		case Value::TYPE_CHAR:
 			{
@@ -193,18 +193,18 @@ namespace Solaire{ namespace Encode{
 	bool Xml::Writer::Write(const Value& aValue) {
 		switch (aValue.GetType()) {
 		case Value::TYPE_BOOL:
-			if(! BeginElement("bool")) return false;
+			if(! BeginElement(ConstCString("bool"))) return false;
 			if(aValue.GetBool()) {
-				if(! SetBody("true")) return false;
+				if(! SetBody(ConstCString("true"))) return false;
 			}else {
-				if(! SetBody("false")) return false;
+				if(! SetBody(ConstCString("false"))) return false;
 			}
 			if(! EndElement()) return false;
 			return true;
 		case Value::TYPE_CHAR:
 			{
 				const char buf = aValue.GetChar();
-				if(! BeginElement("char")) return false;
+				if(! BeginElement(ConstCString("char"))) return false;
 				if(! SetBody(String(GetDefaultAllocator(), &buf, 1))) return false;
 				if(! EndElement()) return false;
 				return true;
@@ -212,12 +212,12 @@ namespace Solaire{ namespace Encode{
 		case Value::TYPE_INT:
 		case Value::TYPE_UINT:
 		case Value::TYPE_DOUBLE:
-			if(! BeginElement("number")) return false;
+			if(! BeginElement(ConstCString("number"))) return false;
 			if(! SetBody(WriteNumber(aValue.GetDouble()))) return false;
 			if(! EndElement()) return false;
 			return true;
 		case Value::TYPE_STRING:
-			if(! BeginElement("string")) return false;
+			if(! BeginElement(ConstCString("string"))) return false;
 			if(! SetBody(aValue.GetString())) return false;
 			if(! EndElement()) return false;
 		case Value::TYPE_ARRAY:
@@ -225,7 +225,7 @@ namespace Solaire{ namespace Encode{
 				const Array& _array = aValue.GetArray();
 				const uint32_t length = _array.Size();
 
-				if(! BeginElement("array")) return false;
+				if(! BeginElement(ConstCString("array"))) return false;
 				for(uint32_t i = 0; i < length; ++i) {
 					if(! Write(_array[i])) return false;
 				}
@@ -238,7 +238,7 @@ namespace Solaire{ namespace Encode{
 				const Object& object = aValue.GetObject();
 				const uint32_t length = object.Size();
 				
-				if(! BeginElement("object")) return false;
+				if(! BeginElement(ConstCString("object"))) return false;
 				for(uint32_t i = 0; i < length; ++i) {
 					if(! WriteObject(object.GetMemberName(i), object[i], *this)) return false;
 				}

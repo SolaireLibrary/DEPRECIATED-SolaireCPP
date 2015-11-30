@@ -32,7 +32,7 @@
 */
 
 #include "..\Core\Init.hpp"
-#include "..\Strings\StringFragment.hpp"
+#include "..\Strings\ConstString.hpp"
 #include "..\IO\Stream.hpp"
 #include "Value.hpp"
 
@@ -47,12 +47,12 @@ namespace Solaire{
 			virtual bool SOLAIRE_EXPORT_CALL BeginObject() throw() = 0;
 			virtual bool SOLAIRE_EXPORT_CALL EndObject() throw() = 0;
 
-			virtual bool SOLAIRE_EXPORT_CALL MemberName(const ConstStringFragment) throw() = 0;
+			virtual bool SOLAIRE_EXPORT_CALL MemberName(const ConstString<char>&) throw() = 0;
 
 			virtual bool SOLAIRE_EXPORT_CALL ValueNull() throw() = 0;
 			virtual bool SOLAIRE_EXPORT_CALL ValueBool(const bool) throw() = 0;
 			virtual bool SOLAIRE_EXPORT_CALL ValueNumber(const double) throw() = 0;
-			virtual bool SOLAIRE_EXPORT_CALL ValueString(const ConstStringFragment) throw() = 0;
+			virtual bool SOLAIRE_EXPORT_CALL ValueString(const ConstString<char>&) throw() = 0;
 		};
 
 		class Writer {
@@ -72,7 +72,7 @@ namespace Solaire{
 			WriteStream& mOutputStream;
 			DynamicArray<State> mState;
 		private:
-			bool AddValueInternal(const ConstStringFragment) throw();
+			bool AddValueInternal(const ConstString<char>&) throw();
 		public:
 			Writer(WriteStream&);
 			Writer(Allocator& aAllocator, WriteStream&);
@@ -81,7 +81,7 @@ namespace Solaire{
 			bool IsArray() const throw();
 			bool IsObject() const throw();
 
-			bool AddName(const ConstStringFragment);
+			bool AddName(const ConstString<char>&);
 			bool EndArray() throw();
 			bool EndObject() throw();
 
@@ -91,19 +91,19 @@ namespace Solaire{
 			bool AddNull() throw();
 			bool AddBool(const bool) throw();
 			bool AddNumber(const double) throw();
-			bool AddString(const ConstStringFragment) throw();
+			bool AddString(const ConstString<char>&) throw();
 
-			bool BeginArray(const ConstStringFragment) throw();
-			bool BeginObject(const ConstStringFragment) throw();
+			bool BeginArray(const ConstString<char>&) throw();
+			bool BeginObject(const ConstString<char>&) throw();
 
-			bool AddNull(const ConstStringFragment) throw();
-			bool AddNumber(const ConstStringFragment) throw();
-			bool AddBool(const ConstStringFragment, const bool) throw();
-			bool AddNumber(const ConstStringFragment, const double) throw();
-			bool AddString(const ConstStringFragment, const ConstStringFragment) throw();
+			bool AddNull(const ConstString<char>&) throw();
+			bool AddNumber(const ConstString<char>&) throw();
+			bool AddBool(const ConstString<char>&, const bool) throw();
+			bool AddNumber(const ConstString<char>&, const double) throw();
+			bool AddString(const ConstString<char>&, const ConstString<char>&) throw();
 
 			bool AddValue(const Encode::Value&) throw();
-			bool AddValue(const ConstStringFragment, const Encode::Value&) throw();
+			bool AddValue(const ConstString<char>&, const Encode::Value&) throw();
 		};
 
 		static bool SOLAIRE_EXPORT_CALL Read(ReadStream&, Reader&);

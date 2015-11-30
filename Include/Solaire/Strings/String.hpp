@@ -34,7 +34,8 @@
 #include <type_traits>
 #include <sstream>
 #include "../DataStructures/DynamicArray.hpp"
-#include "StringFragment.hpp"
+#include "ConstString.hpp"
+#include "ConstStringTerminated.hpp"
 
 namespace Solaire{
 
@@ -57,7 +58,7 @@ namespace Solaire{
         Container mContainer;
     public:
         // Assignment
-        String& operator=(const ConstStringFragment aOther);
+        String& operator=(const ConstString<char>& aOther);
         String& operator=(const std::basic_string<Type>& aOther);
         String& operator=(const ConstPointer aOther);
         String& operator=(const String& aOther);
@@ -67,7 +68,7 @@ namespace Solaire{
         String(const String& aOther);
         String(String&& aOther);
         String(Allocator& aAllocator);
-        String(Allocator& aAllocator, const ConstStringFragment aOther);
+        String(Allocator& aAllocator, const ConstString<char>& aOther);
         String(Allocator& aAllocator, const std::basic_string<Type>& aOther);
         String(Allocator& aAllocator, const ConstPointer aPointer);
         String(Allocator& aAllocator, const ConstPointer aPointer, const size_t aSize);
@@ -97,14 +98,14 @@ namespace Solaire{
         void Erase(const ConstIterator aPos);
         void Erase(const ConstIterator aPos, size_t aCount);
         String& EraseAll(const Type aChar);
-        String& EraseAll(const ConstStringFragment aFragment);
+        String& EraseAll(const ConstString<char>& aFragment);
         void Clear();
 
         // Insertion
         Reference InsertBefore(const ConstIterator aPos, const Type aChar);
         Reference InsertAfter(const ConstIterator aPos, const Type aChar);
-        StringFragment InsertBefore(const ConstIterator aPos, const ConstStringFragment aFragment);
-        StringFragment InsertAfter(const ConstIterator aPos, const ConstStringFragment aFragment);
+        void InsertBefore(const ConstIterator aPos, const ConstString<char>& aFragment);
+        void InsertAfter(const ConstIterator aPos, const ConstString<char>& aFragment);
 
         // Deque interface
         Reference PushBack(Type aChar);
@@ -129,7 +130,7 @@ namespace Solaire{
         String& operator+=(const char aValue);
         String& operator+=(const char* aValue);
         String& operator+=(const String& aValue);
-        String& operator+=(const ConstStringFragment aValue);
+        String& operator+=(const ConstString<char>& aValue);
 		String& operator+=(const uint8_t aValue);
 		String& operator+=(const uint16_t aValue);
 		String& operator+=(const uint32_t aValue);
@@ -159,8 +160,7 @@ namespace Solaire{
         ConstPointer CString() const;
 
         // StringFragment conversion
-        operator StringFragment();
-        operator ConstStringFragment() const;
+        operator ConstCString() const;
 
         // Comparison
         bool operator==(const String& aOther) const;
@@ -169,12 +169,12 @@ namespace Solaire{
         bool operator>(const String& aOther) const;
         bool operator<=(const String& aOther) const;
         bool operator>=(const String& aOther) const;
-        bool operator==(const ConstStringFragment aOther) const;
-        bool operator!=(const ConstStringFragment aOther) const;
-        bool operator<(const ConstStringFragment aOther) const;
-        bool operator>(const ConstStringFragment aOther) const;
-        bool operator<=(const ConstStringFragment aOther) const;
-        bool operator>=(const ConstStringFragment aOther) const;
+        bool operator==(const ConstString<char>& aOther) const;
+        bool operator!=(const ConstString<char>& aOther) const;
+        bool operator<(const ConstString<char>& aOther) const;
+        bool operator>(const ConstString<char>& aOther) const;
+        bool operator<=(const ConstString<char>& aOther) const;
+        bool operator>=(const ConstString<char>& aOther) const;
 
         // Find
         Iterator FindFirst(const Type aChar);
@@ -183,13 +183,13 @@ namespace Solaire{
         ConstIterator FindFirst(const Type aChar) const;
         ConstIterator FindNext(const Iterator aPos, const Type aChar) const;
         ConstIterator FindLast(const Type aChar) const;
-        StringFragment FindFirst(const ConstStringFragment aFragment);
 
-        StringFragment FindNext(const Iterator aPos, const ConstStringFragment aFragment);
-        StringFragment FindLast(const ConstStringFragment aFragment);
-        ConstStringFragment FindFirst(const ConstStringFragment aFragment) const;
-        ConstStringFragment FindNext(const Iterator aPos, ConstStringFragment aFragment) const;
-        ConstStringFragment FindLast(const ConstStringFragment aFragment) const;
+        Iterator FindFirst(const ConstString<char>& aFragment);
+		Iterator FindNext(const Iterator aPos, const ConstString<char>& aFragment);
+		Iterator FindLast(const ConstString<char>& aFragment);
+		ConstIterator FindFirst(const ConstString<char>& aFragment) const;
+		ConstIterator FindNext(const Iterator aPos, ConstString<char>& aFragment) const;
+		ConstIterator FindLast(const ConstString<char>& aFragment) const;
 
         template<class F>
         Iterator FindFirstIf(const F aCondition){return mContainer.FindFirstIf<F>(aCondition);}
@@ -210,10 +210,10 @@ namespace Solaire{
         String& ReplaceLast(const Type aTarget, const Type aReplacement);
         String& ReplaceAll(const Type aTarget, const Type aReplacement);
 
-        String& ReplaceFirst(const ConstStringFragment aTarget, const ConstStringFragment aReplacement);
-        String& ReplaceNext(const ConstIterator aPos, const ConstStringFragment aTarget, const ConstStringFragment aReplacement);
-        String& ReplaceLast(const ConstStringFragment aTarget, const ConstStringFragment aReplacement);
-        String& ReplaceAll(const ConstStringFragment aTarget, const ConstStringFragment aReplacement);
+        String& ReplaceFirst(const ConstString<char>& aTarget, const ConstString<char>& aReplacement);
+        String& ReplaceNext(const ConstIterator aPos, const ConstString<char>& aTarget, const ConstString<char>& aReplacement);
+        String& ReplaceLast(const ConstString<char>& aTarget, const ConstString<char>& aReplacement);
+        String& ReplaceAll(const ConstString<char>& aTarget, const ConstString<char>& aReplacement);
 
         // Case control
 		static void ToLowerCase(const Iterator aPos);
@@ -240,12 +240,12 @@ namespace Solaire{
         }
     };
 
-    template<class HASH_TYPE>
+    /*template<class HASH_TYPE>
     struct HashWrapper<String, HASH_TYPE>{
         static HASH_TYPE Hash(const HashFunction<HASH_TYPE>& aFunction, const String& aValue){
             return aFunction.Hash(aValue.begin(), aValue.Size());
         }
-    };
+    };*/
 }
 
 

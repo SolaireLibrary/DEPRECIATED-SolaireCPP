@@ -32,7 +32,7 @@ Last Modified	: 23rd November 2015
 */
 
 #include "..\Core\Init.hpp"
-#include "..\Strings\StringFragment.hpp"
+#include "..\Strings\ConstString.hpp"
 #include "..\IO\Stream.hpp"
 #include "Value.hpp"
 
@@ -40,13 +40,13 @@ namespace Solaire { namespace Encode {
 
 	struct Xml {
 		class SOLAIRE_EXPORT_API Reader {
-			virtual bool SOLAIRE_EXPORT_CALL BeginElement(const ConstStringFragment) const = 0;
+			virtual bool SOLAIRE_EXPORT_CALL BeginElement(const ConstString<char>&) const = 0;
 			virtual bool SOLAIRE_EXPORT_CALL EndElement() const = 0;
 
-			virtual bool SOLAIRE_EXPORT_CALL ElementBody(const ConstStringFragment) const = 0;
+			virtual bool SOLAIRE_EXPORT_CALL ElementBody(const ConstString<char>&) const = 0;
 
-			virtual bool SOLAIRE_EXPORT_CALL AttributeName(const ConstStringFragment) const = 0;
-			virtual bool SOLAIRE_EXPORT_CALL AttributeValue(const ConstStringFragment) const = 0;
+			virtual bool SOLAIRE_EXPORT_CALL AttributeName(const ConstString<char>&) const = 0;
+			virtual bool SOLAIRE_EXPORT_CALL AttributeValue(const ConstString<char>&) const = 0;
 
 		};
 
@@ -71,11 +71,11 @@ namespace Solaire { namespace Encode {
 			Writer(WriteStream&);
 			~Writer();
 
-			bool BeginElement(const ConstStringFragment);
+			bool BeginElement(const ConstString<char>&);
 			bool EndElement();
 
-			bool SetBody(const ConstStringFragment);
-			bool AddAttribute(const ConstStringFragment, const ConstStringFragment);
+			bool SetBody(const ConstString<char>&);
+			bool AddAttribute(const ConstString<char>&, const ConstString<char>&);
 
 			bool Write(const Value&);
 

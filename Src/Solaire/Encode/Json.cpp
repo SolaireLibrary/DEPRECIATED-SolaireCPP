@@ -20,6 +20,7 @@
 #include "Solaire\Strings\NumberParser.hpp"
 #include "Solaire\Encode\Array.hpp"
 #include "Solaire\Encode\Object.hpp"
+#include "Solaire\Strings\ConstStringTerminated.hpp"
 
 namespace Solaire{
 
@@ -54,7 +55,7 @@ namespace Solaire{
 		return mState.IsEmpty() ? false : mState.Back().type == STATE_OBJECT;
 	}
 
-	bool Json::Writer::AddName(const ConstStringFragment aName) {
+	bool Json::Writer::AddName(const ConstString<char>& aName) {
 		if(mState.IsEmpty()) return false;
 		State& state = mState.Back();
 		if(state.type != STATE_OBJECT) return false;
@@ -62,7 +63,7 @@ namespace Solaire{
 		return true;
 	}
 
-	bool Json::Writer::AddValueInternal(const ConstStringFragment aValue) throw() {
+	bool Json::Writer::AddValueInternal(const ConstString<char>& aValue) throw() {
 		if(mState.IsEmpty()) return false;
 		State& state = mState.Back();
 		state.values.PushBack(String(mState.GetAllocator(), aValue));
@@ -139,18 +140,18 @@ namespace Solaire{
 	}
 
 	bool Json::Writer::AddNull() throw() {
-		return AddValueInternal("null");
+		return AddValueInternal(ConstCString("null"));
 	}
 
 	bool Json::Writer::AddBool(const bool aValue) throw() {
-		return AddValueInternal(aValue ? "true" : "false");
+		return AddValueInternal(ConstCString(aValue ? "true" : "false"));
 	}
 
 	bool Json::Writer::AddNumber(const double aValue) throw() {
 		return AddValueInternal(WriteNumber(mState.GetAllocator(), aValue));
 	}
 
-	bool Json::Writer::AddString(const ConstStringFragment aValue) throw() {
+	bool Json::Writer::AddString(const ConstString<char>& aValue) throw() {
 		String buffer(mState.GetAllocator());
 		//! \todo Escape quotes in aValue
 		buffer += '"';
@@ -159,37 +160,37 @@ namespace Solaire{
 		return AddValueInternal(buffer);
 	}
 
-	bool Json::Writer::BeginArray(const ConstStringFragment aName) throw() {
+	bool Json::Writer::BeginArray(const ConstString<char>& aName) throw() {
 		if(! AddName(aName)) return false;
 		return BeginArray();
 	}
 
-	bool Json::Writer::BeginObject(const ConstStringFragment aName) throw() {
+	bool Json::Writer::BeginObject(const ConstString<char>& aName) throw() {
 		if(! AddName(aName)) return false;
 		return BeginObject();
 	}
 
-	bool Json::Writer::AddNull(const ConstStringFragment aName) throw() {
+	bool Json::Writer::AddNull(const ConstString<char>& aName) throw() {
 		if(! AddName(aName)) return false;
 		return AddNull();
 	}
 
-	bool Json::Writer::AddBool(const ConstStringFragment aName, const bool aValue) throw() {
+	bool Json::Writer::AddBool(const ConstString<char>& aName, const bool aValue) throw() {
 		if(! AddName(aName)) return false;
 		return AddBool(aValue);
 	}
 
-	bool Json::Writer::AddNumber(const ConstStringFragment aName, const double aValue) throw() {
+	bool Json::Writer::AddNumber(const ConstString<char>& aName, const double aValue) throw() {
 		if(! AddName(aName)) return false;
 		return AddNumber(aValue);
 	}
 
-	bool Json::Writer::AddString(const ConstStringFragment aName, const ConstStringFragment aValue) throw() {
+	bool Json::Writer::AddString(const ConstString<char>& aName, const ConstString<char>& aValue) throw() {
 		if(! AddName(aName)) return false;
 		return AddString(aValue);
 	}
 
-	bool Json::Writer::AddValue(const ConstStringFragment aName, const Encode::Value& aValue) throw() {
+	bool Json::Writer::AddValue(const ConstString<char>& aName, const Encode::Value& aValue) throw() {
 		if(! AddName(aName)) return false;
 		return AddValue(aValue);
 	}
