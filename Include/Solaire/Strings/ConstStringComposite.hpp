@@ -51,7 +51,7 @@ namespace Solaire{
 
 		// Inherited from ConstString
 	
-		T operator[](const uint32_t aIndex) const throw() override {
+		const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) const throw() override {
 			uint32_t index = aIndex;
 		
 			for(const ConstString<T>* string : StringList) {
@@ -60,27 +60,27 @@ namespace Solaire{
 				index -= size;
 			}
 		
-			return static_cast<T>(0);
+			return mStrings->Begin()->operator[0];
 		}
 	
-		uint32_t Size() const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL Size() const throw() override {
 			uint32_t size = 0;
 			for(const ConstString<T>* const string : StringList) size += string->Size();
 			return size;
 		}
 	
-		uint32_t FindFirstChar(const T aValue) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindFirstChar(const T aValue) const throw() override {
 			return FindNextChar(aValue, 0);
 		}
 	
-		uint32_t FindNextChar(const T aValue, const uint32_t aIndex) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindNextChar(const T aValue, const uint32_t aIndex) const throw() override {
 			for(uint32_t i = aIndex; i < mSize; ++i) {
 				if(operator[](i) == aValue) return i;
 			}
 			return mSize;
 		}
 	
-		uint32_t FindLastChar(const T aValue) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindLastChar(const T aValue) const throw() override {
 			uint32_t pos = FindFirst(aValue);
 			uint32_t posPrev = pos;
 			while(pos != mSize) { 
@@ -90,16 +90,16 @@ namespace Solaire{
 			return posPrev;
 		}
 	
-		uint32_t FindFirst(const ConstString<T>& aValue) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindFirst(const ConstString<T>& aValue) const throw() override {
 			return FindNext(aValue, 0);
 		}
 	
-		uint32_t FindNext(const ConstString<T>& aValue, const uint32_t aIndex) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindNext(const ConstString<T>& aValue, const uint32_t aIndex) const throw() override {
 			//! \todo Implement FindNext
 			return mSize;
 		}
 	
-		uint32_t FindLast(const ConstString<T>& aValue) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindLast(const ConstString<T>& aValue) const throw() override {
 			uint32_t pos = FindFirst(aValue);
 			uint32_t posPrev = pos;
 			while(pos != mSize) { 
@@ -109,7 +109,7 @@ namespace Solaire{
 			return posPrev;
 		}
 	
-		bool operator==(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator==(const ConstString<T>& aOther) const throw() override {
 			uint32_t offset = 0;
 			const uint32_t otherSize = aOther.Size();
 			for(const ConstString<T>* const string : StringList) {
@@ -121,7 +121,7 @@ namespace Solaire{
 			return true;
 		}
 	
-		bool operator!=(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator!=(const ConstString<T>& aOther) const throw() override {
 			uint32_t offset = 0;
 			const uint32_t otherSize = aOther.Size();
 			for(const ConstString<T>* const string : StringList) {
@@ -133,7 +133,7 @@ namespace Solaire{
 			return false;
 		}
 	
-		bool operator<(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator<(const ConstString<T>& aOther) const throw() override {
 			uint32_t offset = 0;
 			const uint32_t otherSize = aOther.Size();
 			for(const ConstString<T>* const string : StringList) {
@@ -144,7 +144,7 @@ namespace Solaire{
 			return true;
 		}
 	
-		bool operator>(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator>(const ConstString<T>& aOther) const throw() override {
 			uint32_t offset = 0;
 			const uint32_t otherSize = aOther.Size();
 			for(const ConstString<T>* const string : StringList) {
@@ -155,7 +155,7 @@ namespace Solaire{
 			return true;
 		}
 	
-		bool operator<=(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator<=(const ConstString<T>& aOther) const throw() override {
 			uint32_t offset = 0;
 			const uint32_t otherSize = aOther.Size();
 			for(const ConstString<T>* const string : StringList) {
@@ -166,7 +166,7 @@ namespace Solaire{
 			return true;
 		}
 	
-		bool operator>=(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator>=(const ConstString<T>& aOther) const throw() override {
 			uint32_t offset = 0;
 			const uint32_t otherSize = aOther.Size();
 			for(const ConstString<T>* const string : StringList) {
@@ -177,15 +177,11 @@ namespace Solaire{
 			return true;
 		}
 	
-		bool IsContiguous() const throw() override {
+		bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() override {
 			return false;
 		}
 	
-		const T* GetContiguousPtr() const throw() override {
-			return nullptr;
-		}
-	
-		void Destructor() throw() override {
+		void SOLAIRE_EXPORT_CALL Destructor() throw() override {
 	
 		}
 	};

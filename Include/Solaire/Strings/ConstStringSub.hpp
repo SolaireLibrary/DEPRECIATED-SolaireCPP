@@ -56,25 +56,25 @@ namespace Solaire{
 
 		// Inherited from ConstString
 	
-		T operator[](const uint32_t aIndex) const throw() override {
-			return mString(aIndex + mBegin);
+		const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) const throw() override {
+			return mString[aIndex + mBegin];
 		}
 	
-		uint32_t Size() const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL Size() const throw() override {
 			return mEnd - mBegin;
 		}
 	
-		uint32_t FindFirstChar(const T aValue) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindFirstChar(const T aValue) const throw() override {
 			return FindNextChar(aValue, 0);
 		}
 	
-		uint32_t FindNextChar(const T aValue, const uint32_t aIndex) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindNextChar(const T aValue, const uint32_t aIndex) const throw() override {
 			const uint32_t pos = mString.FindFirstChar(aValue, aIndex + mBegin);
 			if(pos >= mEnd) return mEnd;
 			return pos;
 		}
 	
-		uint32_t FindLastChar(const T aValue) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindLastChar(const T aValue) const throw() override {
 			uint32_t pos = FindFirst(aValue);
 			uint32_t posPrev = pos;
 			while(pos != mSize) { 
@@ -84,17 +84,17 @@ namespace Solaire{
 			return posPrev;
 		}
 	
-		uint32_t FindFirst(const ConstString<T>& aValue) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindFirst(const ConstString<T>& aValue) const throw() override {
 			return FindNext(aValue, 0);
 		}
 	
-		uint32_t FindNext(const ConstString<T>& aValue, const uint32_t aIndex) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindNext(const ConstString<T>& aValue, const uint32_t aIndex) const throw() override {
 			const uint32_t pos = mString.FindFirs(aValue, aIndex + mBegin);
 			if(pos >= mEnd) return mEnd;
 			return pos;
 		}
 	
-		uint32_t FindLast(const ConstString<T>& aValue) const throw() override {
+		uint32_t SOLAIRE_EXPORT_CALL FindLast(const ConstString<T>& aValue) const throw() override {
 			uint32_t pos = FindFirst(aValue);
 			uint32_t posPrev = pos;
 			while(pos != mSize) { 
@@ -104,7 +104,7 @@ namespace Solaire{
 			return posPrev;
 		}
 	
-		bool operator==(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator==(const ConstString<T>& aOther) const throw() override {
 			const uint32_t size = mString.GetSize();
 			const uint32_t otherSize = aOther.GetSize();
 		
@@ -119,7 +119,7 @@ namespace Solaire{
 			}
 		}
 	
-		bool operator!=(const ConstString<T>& aOther) const throw() override {		
+		bool SOLAIRE_EXPORT_CALL operator!=(const ConstString<T>& aOther) const throw() override {
 			const uint32_t size = mString.GetSize();
 			const uint32_t otherSize = aOther.GetSize();
 		
@@ -134,7 +134,7 @@ namespace Solaire{
 			}
 		}
 	
-		bool operator<(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator<(const ConstString<T>& aOther) const throw() override {
 			const uint32_t size = mString.GetSize();
 			const uint32_t otherSize = aOther.GetSize();
 			const uint32_t minSize = Min(size, otherSize);
@@ -149,7 +149,7 @@ namespace Solaire{
 			}
 		}
 	
-		bool operator>(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator>(const ConstString<T>& aOther) const throw() override {
 			const uint32_t size = mString.GetSize();
 			const uint32_t otherSize = aOther.GetSize();
 			const uint32_t minSize = Min(size, otherSize);
@@ -164,7 +164,7 @@ namespace Solaire{
 			}
 		}
 	
-		bool operator<=(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator<=(const ConstString<T>& aOther) const throw() override {
 			const uint32_t size = mString.GetSize();
 			const uint32_t otherSize = aOther.GetSize();
 			const uint32_t minSize = Min(size, otherSize);
@@ -179,7 +179,7 @@ namespace Solaire{
 			}
 		}
 	
-		bool operator>=(const ConstString<T>& aOther) const throw() override {
+		bool SOLAIRE_EXPORT_CALL operator>=(const ConstString<T>& aOther) const throw() override {
 			const uint32_t size = mString.GetSize();
 			const uint32_t otherSize = aOther.GetSize();
 			const uint32_t minSize = Min(size, otherSize);
@@ -194,15 +194,11 @@ namespace Solaire{
 			}
 		}
 	
-		bool IsContiguous() const throw() override {
+		bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() override {
 			return mString.IsContiguous();
 		}
 	
-		const T* GetContiguousPtr() const throw() override {
-			return mString.IsContiguous() ? mString.GetContiguousPtr() + mBegin : nullptr;
-		}
-	
-		void Destructor() throw() override {
+		void SOLAIRE_EXPORT_CALL Destructor() throw() override {
 	
 		}
 	};

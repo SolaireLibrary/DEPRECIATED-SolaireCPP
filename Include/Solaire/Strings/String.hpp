@@ -39,6 +39,61 @@
 
 namespace Solaire{
 
+	template<class T>
+	class NewString : public ConstString<T>{
+	public:
+		virtual bool SOLAIRE_EXPORT_CALL AppendChar(const T) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>&) throw() = 0;
+
+		virtual bool SOLAIRE_EXPORT_CALL InsertCharBefore(const T, const uint32_t) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>&, const uint32_t) throw() = 0;
+
+		virtual uint32_t SOLAIRE_EXPORT_CALL ReplaceNextChar(const T, const T, const uint32_t) throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL ReplaceNext(const ConstString<T>&, const ConstString<T>&, const uint32_t) throw() = 0;
+
+		virtual bool SOLAIRE_EXPORT_CALL Erase(const uint32_t) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Clear() throw() = 0;
+
+		inline bool SOLAIRE_EXPORT_CALL InsertCharAfter(const T aValue, const uint32_t aIndex) throw() {
+			return InsertCharBefore(aValue, aIndex + 1);
+		}
+
+		inline bool SOLAIRE_EXPORT_CALL InsertAfter(const ConstString<T>& aValue, const uint32_t aIndex) throw() {
+			return InsertBefore(aValue, aIndex + 1);
+		}
+
+		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceFirstChar(const T aTarget, const T aReplacement) throw() {
+			return ReplaceNextChar(aTarget, aReplacement, 0);
+		}
+
+		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceLastChar(const T aTarget, const T aReplacement) throw() {
+			return ReplaceNextChar(aTarget, aReplacement, FindLastChar(aTarget));
+		}
+
+		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceFirst(const ConstString<T>& aTarget, const ConstString<T>& aReplacement) throw() {
+			return ReplaceNext(aTarget, aReplacement, 0);
+		}
+
+		inline uint32_t SOLAIRE_EXPORT_CALL ReplaceLast(const ConstString<T>& aTarget, const ConstString<T>& aReplacement) throw() {
+			return ReplaceNext(aTarget, aReplacement, FindLast(aTarget));
+		}
+
+		inline T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) throw() {
+			//! \todo Check if non-virtual override is abi compatible
+			return const_cast<T&>(static_cast<const ConstString<T>*>(this)->operator[](aIndex));
+		}
+
+		inline String<T>& SOLAIRE_EXPORT_CALL operator+=(const char aValue) throw() {
+			AppendChar(aValue);
+			return *this;
+		}
+
+		inline String<T>& SOLAIRE_EXPORT_CALL operator+=(const ConstString<T>& aValue) throw() {
+			Append(aValue);
+			return *this;
+		}
+	};
+
     class String{
     public:
         typedef DynamicArray<char, const char, uint32_t> Container;

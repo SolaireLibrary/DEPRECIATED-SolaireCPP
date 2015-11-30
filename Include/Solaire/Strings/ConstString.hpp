@@ -32,34 +32,38 @@
 */
 
 #include <cstdint>
+#include "..\Core\Init.hpp"
 
 namespace Solaire{
 
 	template<class T>
 	class ConstString{
 	public:
-		virtual T operator[](const uint32_t) const throw() = 0;
-		virtual uint32_t Size() const throw() = 0;
+		virtual const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t) const throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL Size() const throw() = 0;
 	
-		virtual uint32_t FindFirstChar(const T) const throw() = 0;
-		virtual uint32_t FindNextChar(const T, const uint32_t) const throw() = 0;
-		virtual uint32_t FindLastChar(const T) const throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL FindFirstChar(const T) const throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL FindNextChar(const T, const uint32_t) const throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL FindLastChar(const T) const throw() = 0;
 	
-		virtual uint32_t FindFirst(const ConstString<T>&) const throw() = 0;
-		virtual uint32_t FindNext(const ConstString<T>&, const uint32_t) const throw() = 0;
-		virtual uint32_t FindLast(const ConstString<T>&) const throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL FindFirst(const ConstString<T>&) const throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL FindNext(const ConstString<T>&, const uint32_t) const throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL FindLast(const ConstString<T>&) const throw() = 0;
 	 
-		virtual bool operator==(const ConstString<T>&) const throw() = 0;
-		virtual bool operator!=(const ConstString<T>&) const throw() = 0;
-		virtual bool operator<(const ConstString<T>&) const throw() = 0;
-		virtual bool operator>(const ConstString<T>&) const throw() = 0;
-		virtual bool operator<=(const ConstString<T>&) const throw() = 0;
-		virtual bool operator>=(const ConstString<T>&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL operator==(const ConstString<T>&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL operator!=(const ConstString<T>&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL operator<(const ConstString<T>&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL operator>(const ConstString<T>&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL operator<=(const ConstString<T>&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL operator>=(const ConstString<T>&) const throw() = 0;
 	
-		virtual bool IsContiguous() const throw() = 0;
-		virtual const T* GetContiguousPtr() const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() = 0;
 	
-		virtual void Destructor() throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
+
+		inline const T* SOLAIRE_EXPORT_CALL GetContiguousPtr() const throw() {
+			return IsContiguous() ? &operator[](0) : nullptr;
+		}
 	};
     
 }
