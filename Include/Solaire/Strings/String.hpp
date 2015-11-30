@@ -40,12 +40,82 @@
 namespace Solaire{
 
 	template<class T>
+	class StringCase {
+	public:
+		virtual T SOLAIRE_EXPORT_CALL ToLowerCase(const T) const throw() = 0;
+		virtual T SOLAIRE_EXPORT_CALL ToUpperCase(const T) const throw() = 0;
+		virtual T SOLAIRE_EXPORT_CALL ToggleCase(const T) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL IsLowerCase(const T) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL IsUpperCase(const T) const throw() = 0;
+	};
+
+	template<class T>
+	class NullStringCase : public StringCase<T>{
+	public:
+		T SOLAIRE_EXPORT_CALL ToLowerCase(const T aValue) const throw() override {
+			return aValue;
+		}
+
+		T SOLAIRE_EXPORT_CALL ToUpperCase(const T aValue) const throw() {
+			return aValue;
+		}
+
+		T SOLAIRE_EXPORT_CALL ToggleCase(const T aValue) const throw() {
+			return aValue;
+		}
+
+		bool SOLAIRE_EXPORT_CALL IsLowerCase(const T aValue) const throw() {
+			return false;
+		}
+
+		bool SOLAIRE_EXPORT_CALL IsUpperCase(const T aValue) const throw() {
+			return false;
+		}
+	};
+
+	class AsciiCase : public StringCase<char> {
+	private:
+		enum {
+			CASE_DIF = 'A' - 'a'
+		};
+	public:
+		char SOLAIRE_EXPORT_CALL ToLowerCase(const char aValue) const throw() override {
+			return IsUpperCase(aValue) ? aValue - CASE_DIF : aValue;
+		}
+
+		char SOLAIRE_EXPORT_CALL ToUpperCase(const char aValue) const throw() {
+			return IsLowerCase(aValue) ? aValue + CASE_DIF : aValue;
+		}
+
+		char SOLAIRE_EXPORT_CALL ToggleCase(const char aValue) const throw() {
+			return IsLowerCase(aValue) ? ToUpperCase(aValue) : ToLowerCase(aValue);
+		}
+
+		bool SOLAIRE_EXPORT_CALL IsLowerCase(const char aValue) const throw() {
+			return aValue >= 'a' && aValue <= 'z';
+		}
+
+		bool SOLAIRE_EXPORT_CALL IsUpperCase(const char aValue) const throw() {
+			return aValue >= 'A' && aValue <= 'Z';
+		}
+	};
+
+	template<class T>
+	class DefaultCase {
+		typedef NullStringCase<T> Type;
+	};
+
+	template<>
+	class DefaultCase<char> {
+		typedef AsciiCase Type;
+	};
+
+	template<class T>
 	class NewString : public ConstString<T>{
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL AppendChar(const T) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>&) throw() = 0;
 
-		virtual bool SOLAIRE_EXPORT_CALL InsertCharBefore(const T, const uint32_t) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>&, const uint32_t) throw() = 0;
 
 		virtual uint32_t SOLAIRE_EXPORT_CALL ReplaceNextChar(const T, const T, const uint32_t) throw() = 0;
@@ -53,6 +123,61 @@ namespace Solaire{
 
 		virtual bool SOLAIRE_EXPORT_CALL Erase(const uint32_t) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Clear() throw() = 0;
+
+		virtual const StringCase<T>& SOLAIRE_EXPORT_CALL GetCase() const throw() = 0;
+
+		inline NewString<T>& SOLAIRE_EXPORT_CALL ToLowerCase() throw() {
+			const uint32_t size = Size();
+			for(uint32_t i = 0; i < size; ++i) {
+				char& ref = operator[](i);
+				ref = GetCase().ToLowerCase(ref);
+			}
+			return *this;
+		}
+
+		inline NewString<T>& SOLAIRE_EXPORT_CALL ToUpperCase() throw() {
+			const uint32_t size = Size();
+			for(uint32_t i = 0; i < size; ++i) {
+				char& ref = operator[](i);
+				ref = GetCase().ToUpperCase(ref);
+			}
+			return *this;
+		}
+
+		inline NewString<T>& SOLAIRE_EXPORT_CALL ToggleCase() throw() {
+			const uint32_t size = Size();
+			for(uint32_t i = 0; i < size; ++i) {
+				char& ref = operator[](i);
+				ref = GetCase().ToggleCase(ref);
+			}
+			return *this;
+		}
+
+		inline bool SOLAIRE_EXPORT_CALL IsLowerCase() const throw() {
+			//! \todo Move to ConstString
+			const uint32_t size = Size();
+			for(uint32_t i = 0; i < size; ++i) {
+				if(! GetCase().IsLowerCase(operator[](i))) return false;
+			}
+			return true;
+		}
+
+		inline bool SOLAIRE_EXPORT_CALL IsUpperCase() const throw() {
+			//! \todo Move to ConstString
+			const uint32_t size = Size();
+			for(uint32_t i = 0; i < size; ++i) {
+				if(! GetCase().IsUpperCase(operator[](i))) return false;
+			}
+			return true;
+		}
+
+		inline uint32_t SOLAIRE_EXPORT_CALL InsertCharBefore(const T, const uint32_t) throw() {
+			const uint32_t index = FindNextChar(aTarget, aIndex);
+			if(index < Size()) {
+				operator[](index) = aReplacement;
+			}
+			return index;
+		}
 
 		inline bool SOLAIRE_EXPORT_CALL InsertCharAfter(const T aValue, const uint32_t aIndex) throw() {
 			return InsertCharBefore(aValue, aIndex + 1);
@@ -83,18 +208,236 @@ namespace Solaire{
 			return const_cast<T&>(static_cast<const ConstString<T>*>(this)->operator[](aIndex));
 		}
 
-		inline String<T>& SOLAIRE_EXPORT_CALL operator+=(const char aValue) throw() {
+		inline NewString<T>& SOLAIRE_EXPORT_CALL operator+=(const char aValue) throw() {
 			//! \todo Check if non-virtual overload is abi compatible
 			AppendChar(aValue);
 			return *this;
 		}
 
-		inline String<T>& SOLAIRE_EXPORT_CALL operator+=(const ConstString<T>& aValue) throw() {
+		inline NewString<T>& SOLAIRE_EXPORT_CALL operator+=(const ConstString<T>& aValue) throw() {
 			//! \todo Check if non-virtual overload is abi compatible
 			Append(aValue);
 			return *this;
 		}
 	};
+
+	template<class T, const T TERMINATOR>
+	class TerminatedString : public NewString<T> {
+	private:
+		static const typename DefaultCase<T>::Type DEFAULT_CASE;
+	private:
+		DynamicArray<T> mString;
+		const StringCase<T>* mCase;
+	public:
+		TerminatedString() :
+			mString(GetDefaultAllocator()),
+			mCase(& DEFAULT_CASE)
+		{
+			mString.PushBack(TERMINATOR);
+		}
+
+		TerminatedString(Allocator& aAllocator) :
+			mString(aAllocator),
+			mCase(&DEFAULT_CASE)
+		{
+			mString.PushBack(TERMINATOR);
+		}
+
+		TerminatedString(const StringCase<T>& aCase) :
+			mString(GetDefaultAllocator()),
+			mCase(&aCase)
+		{
+			mString.PushBack(TERMINATOR);
+		}
+
+		TerminatedString(Allocator& aAllocator, const StringCase<T>& aCase) :
+			mString(aAllocator),
+			mCase(&aCase)
+		{
+			mString.PushBack(TERMINATOR);
+		}
+
+		// Inherited from ConstString
+
+		const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) const throw() override {
+			return mString[aIndex];
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL Size() const throw() override {
+			return mString.Size() - 1;
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL FindFirstChar(const T aValue) const throw() override {
+			//! \todo Implement FindFirstChar
+			return Size();
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL FindNextChar(const T aValue, const uint32_t aIndex) const throw() override {
+			//! \todo Implement FindNextChar
+			return Size();
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL FindLastChar(const T aValue) const throw() override {
+			//! \todo Implement FindLastChar
+			return Size();
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL FindFirst(const ConstString<T>& aValue) const throw() override {
+			//! \todo Implement FindFirst
+			return Size();
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL FindNext(const ConstString<T>& aValue, const uint32_t aIndex) const throw() override {
+			//! \todo Implement FindNext
+			return Size();
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL FindLast(const ConstString<T>& aValue) const throw() override {
+			//! \todo Implement FindLast
+			return Size();
+		}
+
+		bool SOLAIRE_EXPORT_CALL operator==(const ConstString<T>& aOther) const throw() override {
+			const uint32_t size = Size();
+			if(size != aOther.Size()) return false;
+
+			if(aOther.IsContiguous()) {
+				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) == 0;
+			}else {
+				for(uint32_t i = 0; i < size; ++i) {
+					if(mString[i] != aOther[i]) return false;
+				}
+				return true;
+			}
+		}
+
+		bool SOLAIRE_EXPORT_CALL operator!=(const ConstString<T>& aOther) const throw() override {
+			const uint32_t size = Size();
+			if(size != aOther.Size()) return false;
+
+			if(aOther.IsContiguous()) {
+				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) != 0;
+			}else {
+				for(uint32_t i = 0; i < size; ++i) {
+					if(mString[i] != aOther[i]) return true;
+				}
+				return false;
+			}
+		}
+
+		bool SOLAIRE_EXPORT_CALL operator<(const ConstString<T>& aOther) const throw() override {
+			const uint32_t size = Size();
+			if(size != aOther.Size()) return false;
+
+			if(aOther.IsContiguous()) {
+				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) < 0;
+			}else {
+				for(uint32_t i = 0; i < size; ++i) {
+					if(mString[i] >= aOther[i]) return false;
+				}
+				return true;
+			}
+		}
+
+		bool SOLAIRE_EXPORT_CALL operator>(const ConstString<T>& aOther) const throw() override {
+			const uint32_t size = Size();
+			if(size != aOther.Size()) return false;
+
+			if(aOther.IsContiguous()) {
+				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) > 0;
+			}else {
+				for(uint32_t i = 0; i < size; ++i) {
+					if(mString[i] <= aOther[i]) return false;
+				}
+				return true;
+			}
+		}
+
+		bool SOLAIRE_EXPORT_CALL operator<=(const ConstString<T>& aOther) const throw() override {
+			const uint32_t size = Size();
+			if(size != aOther.Size()) return false;
+
+			if(aOther.IsContiguous()) {
+				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) <= 0;
+			}else {
+				for(uint32_t i = 0; i < size; ++i) {
+					if(mString[i] > aOther[i]) return false;
+				}
+				return true;
+			}
+		}
+
+		bool SOLAIRE_EXPORT_CALL operator>=(const ConstString<T>& aOther) const throw() override {
+			const uint32_t size = Size();
+			if(size != aOther.Size()) return false;
+
+			if(aOther.IsContiguous()) {
+				return std::memcmp(&mString[0], aOther.GetContiguousPtr(), size * sizeof(T)) > 0;
+			}else {
+				for(uint32_t i = 0; i < size; ++i) {
+					if(mString[i] < aOther[i]) return false;
+				}
+				return true;
+			}
+		}
+
+		bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() override {
+			return true;
+		}
+
+		void SOLAIRE_EXPORT_CALL Destructor() throw() override {
+			mString.~DynamicArray();
+		}
+
+		// Inherited from String
+
+		bool SOLAIRE_EXPORT_CALL AppendChar(const T aValue) throw() override {
+			mString.Back() = aValue;
+			mString.PushBack(TERMINATOR);
+			return true;
+		}
+
+		bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>& aValue) throw() override {
+			const uint32_t size = aValue.Size();
+			for(uint32_t i = 0; i < size; ++i) {
+				mString.Back() = aValue;
+				mString.PushBack(TERMINATOR);
+			}
+			return true;
+		}
+
+		bool SOLAIRE_EXPORT_CALL InsertCharBefore(const T aValue, const uint32_t aIndex) throw() override {
+			//! \todo Implement InsertCharBefore
+			return false;
+		}
+
+		bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>& aValue, const uint32_t aIndex) throw() override {
+			//! \todo Implement InsertBefore
+			return false;
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL ReplaceNext(const ConstString<T>& aTarget, const ConstString<T>& aReplacement, const uint32_t aIndex) throw() override {
+			//! \todo Implement ReplaceNext
+			return Size();
+		}
+
+		bool SOLAIRE_EXPORT_CALL Erase(const uint32_t aIndex) throw() override {
+			mString.Erase(mString.begin() + aIndex)
+			return true;
+		}
+
+		bool SOLAIRE_EXPORT_CALL Clear() throw() override {
+			mString.Clear();
+			return true;
+		}
+
+		const StringCase<T>& SOLAIRE_EXPORT_CALL GetCase() const throw() override {
+			return *mCase;
+		}
+
+	};
+
+	typedef TerminatedString<char, '\0'> CString;
 
     class String{
     public:
