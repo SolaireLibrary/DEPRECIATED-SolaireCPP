@@ -84,6 +84,7 @@ namespace Solaire{
 			i->Destructor();
 			i->GetAllocator().Deallocate(i);
 		}
+		mComponents.~DynamicArray();
 	}
 
 	Allocator& SOLAIRE_EXPORT_CALL CompositeImplementation::GetAllocator() const throw() {

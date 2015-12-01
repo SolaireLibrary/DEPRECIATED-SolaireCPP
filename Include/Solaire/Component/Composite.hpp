@@ -32,7 +32,6 @@
 */
 
 #include "..\Core\Init.hpp"
-#include "..\Link\Object.hpp"
 #include "..\Memory\Allocator.hpp"
 
 namespace Solaire{
@@ -40,7 +39,7 @@ namespace Solaire{
 	class Component;
 	typedef uint64_t ComponentID;
 
-	class SOLAIRE_EXPORT_API Composite : public Link::Object {
+	class Composite {
 	public:
 		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
 
@@ -52,6 +51,8 @@ namespace Solaire{
 		virtual uint32_t SOLAIRE_EXPORT_CALL GetComponentCount() const throw() = 0;
 		virtual Component* SOLAIRE_EXPORT_CALL GetComponent(const uint32_t) const throw() = 0;
 		virtual Component* SOLAIRE_EXPORT_CALL GetComponentWithID(const ComponentID) const throw() = 0;
+
+		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
 	};
 
 }
