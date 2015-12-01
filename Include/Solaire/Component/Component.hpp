@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file Listener.hpp
+	\file Component.hpp
 	\brief
 	\author
 	Created			: Adam Smith
@@ -28,7 +28,7 @@
 	\version 1.0
 	\date
 	Created			: 19th November 2015
-	Last Modified	: 19th November 2015
+	Last Modified	: 1st December 2015
 */
 
 #include "Composite.hpp"
@@ -42,7 +42,7 @@ namespace Solaire{
 		friend CompositeImplementation;
 	protected:
 		virtual void SOLAIRE_EXPORT_CALL OnAttachment(Composite&) throw() = 0;
-		virtual void SOLAIRE_EXPORT_CALL OnDetachment(Composite&) throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL OnDetachment() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL CanAttachTo(const Composite&) const throw() = 0;
 	public:
 		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;

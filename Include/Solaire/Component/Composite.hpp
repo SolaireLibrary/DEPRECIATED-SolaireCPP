@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file Source.hpp
+	\file Composite.hpp
 	\brief
 	\author
 	Created			: Adam Smith
@@ -28,7 +28,7 @@
 	\version 1.0
 	\date
 	Created			: 19th November 2015
-	Last Modified	: 19th November 2015
+	Last Modified	: 1st December 2015
 */
 
 #include "..\Core\Init.hpp"

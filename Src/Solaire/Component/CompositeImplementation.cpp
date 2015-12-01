@@ -54,7 +54,7 @@ namespace Solaire{
 		if(! aComponent.CanDetach()) return false;
 
 		mComponents.Erase(mComponents.FindFirst(&aComponent));
-		aComponent.OnDetachment(*this);
+		aComponent.OnDetachment();
 
 		return true;
 	}
@@ -80,7 +80,7 @@ namespace Solaire{
 
 	void SOLAIRE_EXPORT_CALL CompositeImplementation::Destructor() throw() {
 		for(Component* i : mComponents) {
-			i->OnDetachment(*this);
+			i->OnDetachment();
 			i->Destructor();
 			i->GetAllocator().Deallocate(i);
 		}
