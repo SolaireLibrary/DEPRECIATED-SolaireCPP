@@ -39,7 +39,7 @@ namespace Solaire{
 	class TagComponent : public Component {
 	public:
 		enum : ComponentID {
-			CLASS_ID = ('T' << 24) | ('A' << 16) | ('G' << 8) | ('C')
+			CLASS_ID = SolaireMakeComponentID("TAG_COMP")
 		};
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL AddTag(const ConstString<char>&) throw() = 0;

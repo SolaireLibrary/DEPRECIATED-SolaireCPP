@@ -39,6 +39,16 @@ namespace Solaire{
 	class Component;
 	typedef uint64_t ComponentID;
 
+	#define SolaireMakeComponentID(str)(\
+		(static_cast<ComponentID>((str)[0]) << 54L) |\
+		(static_cast<ComponentID>((str)[1]) << 48L) |\
+		(static_cast<ComponentID>((str)[2]) << 40L) |\
+		(static_cast<ComponentID>((str)[3]) << 32L) |\
+		(static_cast<ComponentID>((str)[4]) << 24L) |\
+		(static_cast<ComponentID>((str)[5]) << 16L) |\
+		(static_cast<ComponentID>((str)[6]) << 8L) |\
+		(str)[7])
+
 	class Composite {
 	public:
 		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
