@@ -50,16 +50,17 @@ namespace Solaire{
 		virtual bool SOLAIRE_EXPORT_CALL Clear() throw() = 0;
 
 		virtual SOLAIRE_EXPORT_CALL ~String() throw() {}
-		 
-		inline String<T>& operator=(const ConstString<T>& aString) throw() {
-			Clear();
-			return operator+=(aString);
-		}
 
 		inline bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>& aString) throw() {
 			const uint32_t size = aString.Size();
 			for (uint32_t i = 0; i < size; ++i) if (!AppendChar(aString[i])) return false;
 			return true;
+		}
+
+		inline String<T>& operator=(const ConstString<T>& aString) throw() {
+			Clear();
+			Append(aString);
+			return *this;
 		}
 
 		inline bool SOLAIRE_EXPORT_CALL InsertBefore(const ConstString<T>& aString, const uint32_t aIndex) throw() {
@@ -151,18 +152,6 @@ namespace Solaire{
 			return const_cast<T&>(static_cast<const ConstString<T>*>(this)->operator[](aIndex));
 		}
 
-		inline String<T>& SOLAIRE_EXPORT_CALL operator+=(const char aValue) throw() {
-			//! \todo Check if non-virtual overload is abi compatible
-			AppendChar(aValue);
-			return *this;
-		}
-
-		inline String<T>& SOLAIRE_EXPORT_CALL operator+=(const ConstString<T>& aValue) throw() {
-			//! \todo Check if non-virtual overload is abi compatible
-			Append(aValue);
-			return *this;
-		}
-
 		inline T* SOLAIRE_EXPORT_CALL GetContiguousPtr() throw() {
 			//! \todo Check if non-virtual overload is abi compatible
 			return const_cast<char*>(static_cast<const ConstString<T>*>(this)->GetContiguousPtr());
@@ -208,18 +197,8 @@ namespace Solaire{
 			mString.PushBack(TERMINATOR);
 		}
 
-		TerminatedString(Allocator& aAllocator, const ConstString<T>& aValue) :
-			mString(aAllocator)
-		{
-			const uint32_t size = aValue.Size();
-			for(uint32_t i = 0; i < size; ++i) {
-				mString.PushBack(aValue[i]);
-			}
-			mString.PushBack(TERMINATOR);
-		}
-
 		TerminatedString(const ConstString<T>& aValue) :
-			mString(GetDefaultAllocator())
+			mString(aValue.GetAllocator())
 		{
 			const uint32_t size = aValue.Size();
 			for(uint32_t i = 0; i < size; ++i) {
@@ -276,6 +255,115 @@ namespace Solaire{
 	};
 
 	typedef TerminatedString<char, '\0'> CString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const uint8_t aValue) throw() {
+	//! \todo implement String += uint8_t
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const uint16_t aValue) throw() {
+	//! \todo implement String += uint16_t
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const uint32_t aValue) throw() {
+	//! \todo implement String += uint32_t
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const uint64_t aValue) throw() {
+	//! \todo implement String += uint64_t
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const int8_t aValue) throw() {
+	//! \todo implement String += int8_t
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const int16_t aValue) throw() {
+	//! \todo implement String += int16_t
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const int32_t aValue) throw() {
+	//! \todo implement String += int32_t
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const int64_t aValue) throw() {
+	//! \todo implement String += int64_t
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const float aValue) throw() {
+	//! \todo implement String += float
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const double aValue) throw() {
+	//! \todo implement String += double
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const T aValue) throw() {
+	aString.AppendChar(aValue);
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const Solaire::ConstString<T>& aValue) throw() {
+	aString.Append(aValue);
+	return aString;
+}
+
+template<class T>
+Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const T* const aValue) throw() {
+	aString.Append(TerminatedString<T, '\0'>(aString.GetAllocator(), aValue));
+	return aString;
+}
+
+template<class T, const T TERMINATOR = '\0'>
+Solaire::TerminatedString<T, TERMINATOR> SOLAIRE_EXPORT_CALL operator+(const Solaire::ConstString<T>& aFirst, const T aSecond) {
+	return Solaire::TerminatedString<T, TERMINATOR>(aFirst) += aSecond;
+}
+
+template<class T, const T TERMINATOR = '\0'>
+Solaire::TerminatedString<T, TERMINATOR> SOLAIRE_EXPORT_CALL operator+(const Solaire::ConstString<T>& aFirst, const Solaire::ConstString<T>& aSecond) {
+	return Solaire::TerminatedString<T, TERMINATOR>(aFirst) += aSecond;
+}
+
+template<class T, const T TERMINATOR = '\0'>
+Solaire::TerminatedString<T, TERMINATOR> SOLAIRE_EXPORT_CALL operator+(const Solaire::ConstString<T>& aFirst, const T* const aSecond) {
+	return Solaire::TerminatedString<T, TERMINATOR>(aFirst) += aSecond;
+}
+
+template<class T, const T TERMINATOR = '\0'>
+Solaire::TerminatedString<T, TERMINATOR> SOLAIRE_EXPORT_CALL operator+(const char aFirst, const Solaire::ConstString<T>& aSecond) {
+	Solaire::TerminatedString<T, TERMINATOR> tmp(aSecond.GetAllocator());
+	tmp += aFirst;
+	tmp += aSecond;
+	return tmp;
+}
+
+template<class T, const T TERMINATOR = '\0'>
+Solaire::TerminatedString<T, TERMINATOR> SOLAIRE_EXPORT_CALL operator+(const T* const aFirst, const Solaire::ConstString<T>& aSecond) {
+	Solaire::TerminatedString<T, TERMINATOR> tmp(aSecond.GetAllocator());
+	tmp += aFirst;
+	tmp += aSecond;
+	return tmp;
 }
 
 

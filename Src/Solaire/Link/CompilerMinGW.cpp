@@ -20,6 +20,7 @@
 #include "Solaire\Memory\Allocator.hpp"
 #include "Solaire\Core\System.hpp"
 #include "Solaire\IO\File.hpp"
+#include "Solaire\Strings\String.hpp"
 #include <vector>
 #include <string>
 

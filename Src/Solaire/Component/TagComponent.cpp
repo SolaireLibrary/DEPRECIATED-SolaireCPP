@@ -78,7 +78,7 @@ namespace Solaire{
 			for(const CString& tag : mTags) {
 				if (tag == aTag) return true;
 			}
-			mTags.PushBack(CString(GetAllocator(), aTag));
+			mTags.PushBack(CString(aTag));
 			return true;
 		}
 

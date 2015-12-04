@@ -135,8 +135,8 @@ namespace Solaire{ namespace Encode{
 	bool Xml::Writer::AddAttribute(const ConstString<char>& aName, const ConstString<char>& aValue) {
 		if(mHead.IsEmpty()) return false;
 		ElementData& element = *mHead.Back();
-		element.attributeNames.PushBack(CString(GetDefaultAllocator(), aName));
-		element.attributeValues.PushBack(CString(GetDefaultAllocator(), aValue));
+		element.attributeNames.PushBack(CString(aName));
+		element.attributeValues.PushBack(CString(aValue));
 		return true;
 	}
 

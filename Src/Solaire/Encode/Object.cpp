@@ -79,7 +79,7 @@ namespace Solaire{ namespace Encode{
 				return mValues[i] = aValue;
 			}
 		}
-		mNames.PushBack(CString(mNames.GetAllocator(), aName));
+		mNames.PushBack(CString(aName));
 		return mValues.PushBack(aValue);
 	}
 
