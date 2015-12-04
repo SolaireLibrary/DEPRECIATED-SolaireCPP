@@ -28,7 +28,7 @@
 	\version 1.0
 	\date
 	Created			: 19th November 2015
-	Last Modified	: 1st December 2015
+	Last Modified	: 3rd December 2015
 */
 
 #include "Composite.hpp"
@@ -46,15 +46,11 @@ namespace Solaire{
 		virtual bool SOLAIRE_EXPORT_CALL CanAttachTo(const Composite&) const throw() = 0;
 	public:
 		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
-
 		virtual Composite& SOLAIRE_EXPORT_CALL GetComposite() const throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL IsAttached() const throw() = 0;
-
 		virtual ComponentID SOLAIRE_EXPORT_CALL GetClassID() const throw() = 0;
-
 		virtual bool SOLAIRE_EXPORT_CALL CanDetach() const throw() = 0;
-
-		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
+		virtual SOLAIRE_EXPORT_CALL ~Component() throw() {}
 
 		inline bool SOLAIRE_EXPORT_CALL AttachTo(Composite& aComposite) throw() {
 			return aComposite.Attach(*this);

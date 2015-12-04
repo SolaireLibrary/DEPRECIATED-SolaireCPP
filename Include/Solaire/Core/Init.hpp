@@ -331,14 +331,18 @@ namespace Solaire{
 	#if SOLAIRE_OS == SOLAIRE_WINDOWS
 		//#define SOLAIRE_EXPORT_IMPORT __declspec(dllimport)
 		//#define SOLAIRE_EXPORT_EXPORT __declspec(dllexport)
-		#define SOLAIRE_EXPORT_CALL __stdcall
+		#ifndef SOLAIRE_EXPORT_CALL
+			#define SOLAIRE_EXPORT_CALL __stdcall
+		#endif
 
 		#define SOLAIRE_EXPORT_IMPORT
 		#define SOLAIRE_EXPORT_EXPORT
 	#else
 		#define SOLAIRE_EXPORT_IMPORT
 		#define SOLAIRE_EXPORT_EXPORT
-		#define SOLAIRE_EXPORT_CALL
+		#ifndef SOLAIRE_EXPORT_CALL
+			#define SOLAIRE_EXPORT_CALL
+		#endif
 	#endif
 
 	#ifndef SOLAIRE_EXPORT_API

@@ -28,7 +28,7 @@
 	\version 1.0
 	\date
 	Created			: 1st December 2015
-	Last Modified	: 1st December 2015
+	Last Modified	: 3rd December 2015
 */
 
 #include "Component.hpp"
@@ -42,12 +42,15 @@ namespace Solaire{
 			CLASS_ID = ('T' << 24) | ('A' << 16) | ('G' << 8) | ('C')
 		};
 	public:
-		//! \todo Check if adding virtual functions breaks vtable in abi
-
 		virtual bool SOLAIRE_EXPORT_CALL AddTag(const ConstString<char>&) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL HasTag(const ConstString<char>&) const throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL RemoveTag(const ConstString<char>&) throw() = 0;
+		virtual ~TagComponent() {}
 	};
+
+	extern "C" {
+		SOLAIRE_EXPORT_API TagComponent* SOLAIRE_EXPORT_CALL CreateTagComponent(Allocator&);
+	}
 
 }
 

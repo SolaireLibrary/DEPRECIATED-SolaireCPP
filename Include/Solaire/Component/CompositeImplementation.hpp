@@ -36,24 +36,7 @@
 
 namespace Solaire{
 
-	class CompositeImplementation : public Composite {
-	private:
-		DynamicArray<Component*> mComponents;
-	public:
-		CompositeImplementation();
-		CompositeImplementation(Allocator&);
-
-		// Inherited from Composite
-
-		virtual bool SOLAIRE_EXPORT_CALL Attach(Component&) throw() override;
-		virtual bool SOLAIRE_EXPORT_CALL Detach(Component&) throw() override;
-		bool SOLAIRE_EXPORT_CALL IsAttached(const Component&) const throw() override;
-		uint32_t SOLAIRE_EXPORT_CALL GetComponentCount() const throw() override;
-		Component* SOLAIRE_EXPORT_CALL GetComponent(const uint32_t) const throw() override;
-		Component* SOLAIRE_EXPORT_CALL GetComponentWithID(const ComponentID) const throw() override;
-		Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() override;
-		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() override;
-	};
+	/**/
 
 }
 
