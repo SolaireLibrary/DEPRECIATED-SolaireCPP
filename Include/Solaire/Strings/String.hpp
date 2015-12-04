@@ -163,11 +163,11 @@ namespace Solaire{
 	private:
 		DynamicArray<T> mString;
 	public:
-		/*TerminatedString() :
+		TerminatedString() :
 			mString(GetDefaultAllocator())
 		{
 			mString.PushBack(TERMINATOR);
-		}*/
+		}
 
 		TerminatedString(Allocator& aAllocator) :
 			mString(aAllocator)
@@ -186,7 +186,7 @@ namespace Solaire{
 			mString.PushBack(TERMINATOR);
 		}
 
-		/*TerminatedString(const T* const aValue) :
+		TerminatedString(const T* const aValue) :
 			mString(GetDefaultAllocator())
 		{
 			const T* tmp = aValue;
@@ -195,7 +195,7 @@ namespace Solaire{
 				++tmp;
 			}
 			mString.PushBack(TERMINATOR);
-		}*/
+		}
 
 		TerminatedString(const ConstString<T>& aValue) :
 			mString(aValue.GetAllocator())

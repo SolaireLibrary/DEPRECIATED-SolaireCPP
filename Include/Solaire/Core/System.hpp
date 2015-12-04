@@ -33,12 +33,13 @@
 
 #include <cstdint>
 #include "Init.hpp"
+#include "Iterator.hpp"
 
 namespace Solaire {
 
 	extern "C" {
 
-		bool SOLAIRE_EXPORT_CALL RunExecutable(const char* const, const char* const* const, const char* const* const, int* const);
+		bool SOLAIRE_EXPORT_CALL RunExecutable(const char* const, Iterator<const char*>&, int* const);
 
 	}
 }
