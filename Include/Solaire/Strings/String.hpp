@@ -28,7 +28,7 @@
 	\version 1.0
 	\date
 	Created			: 27th September 2015
-	Last Modified	: 27th September 2015
+	Last Modified	: 3rd December 2015
 */
 
 #include <type_traits>
@@ -40,77 +40,6 @@
 namespace Solaire{
 
 	template<class T>
-	class StringCase {
-	public:
-		virtual T SOLAIRE_EXPORT_CALL ToLowerCase(const T) const throw() = 0;
-		virtual T SOLAIRE_EXPORT_CALL ToUpperCase(const T) const throw() = 0;
-		virtual T SOLAIRE_EXPORT_CALL ToggleCase(const T) const throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL IsLowerCase(const T) const throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL IsUpperCase(const T) const throw() = 0;
-	};
-
-	template<class T>
-	class NullStringCase : public StringCase<T>{
-	public:
-		T SOLAIRE_EXPORT_CALL ToLowerCase(const T aValue) const throw() override {
-			return aValue;
-		}
-
-		T SOLAIRE_EXPORT_CALL ToUpperCase(const T aValue) const throw() {
-			return aValue;
-		}
-
-		T SOLAIRE_EXPORT_CALL ToggleCase(const T aValue) const throw() {
-			return aValue;
-		}
-
-		bool SOLAIRE_EXPORT_CALL IsLowerCase(const T aValue) const throw() {
-			return false;
-		}
-
-		bool SOLAIRE_EXPORT_CALL IsUpperCase(const T aValue) const throw() {
-			return false;
-		}
-	};
-
-	class AsciiCase : public StringCase<char> {
-	private:
-		enum {
-			CASE_DIF = 'A' - 'a'
-		};
-	public:
-		char SOLAIRE_EXPORT_CALL ToLowerCase(const char aValue) const throw() override {
-			return IsUpperCase(aValue) ? aValue - CASE_DIF : aValue;
-		}
-
-		char SOLAIRE_EXPORT_CALL ToUpperCase(const char aValue) const throw() {
-			return IsLowerCase(aValue) ? aValue + CASE_DIF : aValue;
-		}
-
-		char SOLAIRE_EXPORT_CALL ToggleCase(const char aValue) const throw() {
-			return IsLowerCase(aValue) ? ToUpperCase(aValue) : ToLowerCase(aValue);
-		}
-
-		bool SOLAIRE_EXPORT_CALL IsLowerCase(const char aValue) const throw() {
-			return aValue >= 'a' && aValue <= 'z';
-		}
-
-		bool SOLAIRE_EXPORT_CALL IsUpperCase(const char aValue) const throw() {
-			return aValue >= 'A' && aValue <= 'Z';
-		}
-	};
-
-	template<class T>
-	struct DefaultCase {
-		typedef NullStringCase<T> Type;
-	};
-
-	template<>
-	struct DefaultCase<char> {
-		typedef AsciiCase Type;
-	};
-
-	template<class T>
 	class String : public ConstString<T>{
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL AppendChar(const T) throw() = 0;
@@ -119,8 +48,6 @@ namespace Solaire{
 
 		virtual bool SOLAIRE_EXPORT_CALL Erase(const uint32_t) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Clear() throw() = 0;
-
-		virtual const StringCase<T>& SOLAIRE_EXPORT_CALL GetCase() const throw() = 0;
 
 		virtual SOLAIRE_EXPORT_CALL ~String() throw() {}
 		 
@@ -132,53 +59,6 @@ namespace Solaire{
 		inline bool SOLAIRE_EXPORT_CALL Append(const ConstString<T>& aString) throw() {
 			const uint32_t size = aString.Size();
 			for (uint32_t i = 0; i < size; ++i) if (!AppendChar(aString[i])) return false;
-			return true;
-		}
-
-		inline String<T>& SOLAIRE_EXPORT_CALL ToLowerCase() throw() {
-			const uint32_t size = Size();
-			for(uint32_t i = 0; i < size; ++i) {
-				char& ref = operator[](i);
-				ref = GetCase().ToLowerCase(ref);
-			}
-			return *this;
-		}
-
-		inline String<T>& SOLAIRE_EXPORT_CALL ToUpperCase() throw() {
-			const uint32_t size = Size();
-			for(uint32_t i = 0; i < size; ++i) {
-				char& ref = operator[](i);
-				ref = GetCase().ToUpperCase(ref);
-			}
-			return *this;
-		}
-		 
-		inline String<T>& SOLAIRE_EXPORT_CALL ToggleCase() throw() {
-			const uint32_t size = Size();
-			for(uint32_t i = 0; i < size; ++i) {
-				char& ref = operator[](i);
-				ref = GetCase().ToggleCase(ref);
-			}
-			return *this;
-		}
-
-		inline bool SOLAIRE_EXPORT_CALL IsLowerCase() const throw() {
-			//! \todo Move to ConstString
-			const uint32_t size = Size();
-			const StringCase<T>& _case = GetCase();
-			for(uint32_t i = 0; i < size; ++i) {
-				if(! _case.IsLowerCase(operator[](i))) return false;
-			}
-			return true;
-		}
-
-		inline bool SOLAIRE_EXPORT_CALL IsUpperCase() const throw() {
-			//! \todo Move to ConstString
-			const uint32_t size = Size();
-			const StringCase<T>& _case = GetCase();
-			for(uint32_t i = 0; i < size; ++i) {
-				if(! _case.IsUpperCase(operator[](i))) return false;
-			}
 			return true;
 		}
 
@@ -292,42 +172,22 @@ namespace Solaire{
 	template<class T, const T TERMINATOR>
 	class TerminatedString : public String<T> {
 	private:
-		static const typename DefaultCase<T>::Type DEFAULT_CASE;
-	private:
 		DynamicArray<T> mString;
-		const StringCase<T>* mCase;
 	public:
 		TerminatedString() :
-			mString(GetDefaultAllocator()),
-			mCase(& DEFAULT_CASE)
+			mString(GetDefaultAllocator())
 		{
 			mString.PushBack(TERMINATOR);
 		}
 
 		TerminatedString(Allocator& aAllocator) :
-			mString(aAllocator),
-			mCase(&DEFAULT_CASE)
-		{
-			mString.PushBack(TERMINATOR);
-		}
-
-		TerminatedString(const StringCase<T>& aCase) :
-			mString(GetDefaultAllocator()),
-			mCase(&aCase)
-		{
-			mString.PushBack(TERMINATOR);
-		}
-
-		TerminatedString(Allocator& aAllocator, const StringCase<T>& aCase) :
-			mString(aAllocator),
-			mCase(&aCase)
+			mString(aAllocator)
 		{
 			mString.PushBack(TERMINATOR);
 		}
 
 		TerminatedString(Allocator& aAllocator, const T* const aValue) :
-			mString(aAllocator),
-			mCase(&DEFAULT_CASE)
+			mString(aAllocator)
 		{
 			const T* tmp = aValue;
 			while(*tmp != TERMINATOR) {
@@ -337,11 +197,29 @@ namespace Solaire{
 			mString.PushBack(TERMINATOR);
 		}
 
-		
+		TerminatedString(const T* const aValue) :
+			mString(GetDefaultAllocator())
+		{
+			const T* tmp = aValue;
+			while(*tmp != TERMINATOR) {
+				mString.PushBack(*tmp);
+				++tmp;
+			}
+			mString.PushBack(TERMINATOR);
+		}
 
 		TerminatedString(Allocator& aAllocator, const ConstString<T>& aValue) :
-			mString(aAllocator),
-			mCase(&DEFAULT_CASE)
+			mString(aAllocator)
+		{
+			const uint32_t size = aValue.Size();
+			for(uint32_t i = 0; i < size; ++i) {
+				mString.PushBack(aValue[i]);
+			}
+			mString.PushBack(TERMINATOR);
+		}
+
+		TerminatedString(const ConstString<T>& aValue) :
+			mString(GetDefaultAllocator())
 		{
 			const uint32_t size = aValue.Size();
 			for(uint32_t i = 0; i < size; ++i) {
@@ -391,14 +269,7 @@ namespace Solaire{
 			return true;
 		}
 
-		const StringCase<T>& SOLAIRE_EXPORT_CALL GetCase() const throw() override {
-			return *mCase;
-		}
-
 	};
-
-	template<class T, const T TERMINATOR>
-	const typename DefaultCase<T>::Type TerminatedString<T, TERMINATOR>::DEFAULT_CASE;
 
 	typedef TerminatedString<char, '\0'> CString;
 }

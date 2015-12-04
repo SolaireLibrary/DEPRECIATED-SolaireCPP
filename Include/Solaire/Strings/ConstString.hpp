@@ -28,7 +28,7 @@
 	\version 1.0
 	\date
 	Created			: 30th November 2015
-	Last Modified	: 30th November 2015
+	Last Modified	: 3rd December 2015
 */
 
 #include <cstdint>
