@@ -36,14 +36,15 @@
 
 namespace Solaire{
 
+	class Allocator;
+	  
 	template<class T>
 	class ConstString{
 	public:
 		virtual const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t) const throw() = 0;
 		virtual uint32_t SOLAIRE_EXPORT_CALL Size() const throw() = 0;
-
 		virtual bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() = 0;
-
+		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~ConstString() throw() {}
 
 		inline uint32_t SOLAIRE_EXPORT_CALL FindFirstChar(const T aValue) const throw() {

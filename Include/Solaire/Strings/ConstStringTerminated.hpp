@@ -61,6 +61,10 @@ namespace Solaire{
 		}
 
 		// Inherited from ConstString
+
+		Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() override {
+			return GetDefaultAllocator();
+		}
 	
 		const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) const throw() override {
 			return mString[aIndex];

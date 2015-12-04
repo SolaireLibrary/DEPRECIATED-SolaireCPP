@@ -59,6 +59,10 @@ namespace Solaire{
 		}
 
 		// Inherited from ConstString
+
+		Allocator& SOLAIE_EXPORT_CALL GetAllocator() const throw() override {
+			return mString.GetAllocator();
+		}
 	
 		const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) const throw() override {
 			return mString[aIndex + mBegin];
