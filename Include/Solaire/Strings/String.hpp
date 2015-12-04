@@ -163,11 +163,11 @@ namespace Solaire{
 	private:
 		DynamicArray<T> mString;
 	public:
-		TerminatedString() :
+		/*TerminatedString() :
 			mString(GetDefaultAllocator())
 		{
 			mString.PushBack(TERMINATOR);
-		}
+		}*/
 
 		TerminatedString(Allocator& aAllocator) :
 			mString(aAllocator)
@@ -186,7 +186,7 @@ namespace Solaire{
 			mString.PushBack(TERMINATOR);
 		}
 
-		TerminatedString(const T* const aValue) :
+		/*TerminatedString(const T* const aValue) :
 			mString(GetDefaultAllocator())
 		{
 			const T* tmp = aValue;
@@ -195,7 +195,7 @@ namespace Solaire{
 				++tmp;
 			}
 			mString.PushBack(TERMINATOR);
-		}
+		}*/
 
 		TerminatedString(const ConstString<T>& aValue) :
 			mString(aValue.GetAllocator())
@@ -329,9 +329,9 @@ Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, 
 	return aString;
 }
 
-template<class T>
+template<class T, const T TERMINATOR = '\0'>
 Solaire::String<T>& SOLAIRE_EXPORT_CALL operator+=(Solaire::String<T>& aString, const T* const aValue) throw() {
-	aString.Append(TerminatedString<T, '\0'>(aString.GetAllocator(), aValue));
+	aString.Append(Solaire::TerminatedString<T, TERMINATOR>(aString.GetAllocator(), aValue));
 	return aString;
 }
 
