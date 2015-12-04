@@ -36,6 +36,10 @@ namespace Solaire{
 			mAllocated(false)
 		{}
 
+		SOLAIRE_EXPORT_CALL ~BasicMemoryArena() throw() {
+			mAllocator.Deallocate(mBlock);
+		}
+
 		// Inherited from Allocator
 
 		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw()  override {
@@ -68,10 +72,6 @@ namespace Solaire{
 
 		bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() {
 			return Deallocate(mBlock);
-		}
-
-		void SOLAIRE_EXPORT_CALL Destructor() throw() {
-			mAllocator.Deallocate(mBlock);
 		}
 	};
 
@@ -160,6 +160,10 @@ namespace Solaire{
 			mUsedBlocks.push_back(block);
 		}
 
+		SOLAIRE_EXPORT_CALL ~AdvancedMemoryArena() throw() {
+			for (const Block i : mMainBlocks) mAllocator.Deallocate(i.first);
+		}
+
 		// Inherited from Allocator
 
 		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw()  override {
@@ -210,10 +214,6 @@ namespace Solaire{
 			mUsedBlocks.clear();
 			mFreeBlocks = mMainBlocks;
 			return true;
-		}
-
-		void SOLAIRE_EXPORT_CALL Destructor() throw() {
-			for(const Block i : mMainBlocks) mAllocator.Deallocate(i.first);
 		}
 	};
 

@@ -50,6 +50,10 @@ namespace Solaire{
 			mAllocated(false)
 		{}
 
+		SOLAIRE_EXPORT_CALL ~AllocatorStack() throw() {
+			DeallocateAll();
+		}
+
         // Inherited from Allocator
 
 		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw() override {
@@ -84,10 +88,6 @@ namespace Solaire{
 
 		bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() override {
 			return Deallocate(mBlock);
-		}
-
-		void SOLAIRE_EXPORT_CALL Destructor() throw() override {
-
 		}
 
     };

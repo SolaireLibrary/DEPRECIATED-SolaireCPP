@@ -28,12 +28,11 @@
 	\version 1.0
 	\date
 	Created			: 25th September 2015
-	Last Modified	: 16th November 2015
+	Last Modified	: 3rd December 2015
 */
 
-#include <limits>
-#include <type_traits>
 #include <cstdint>
+#include "..\Core\Init.hpp"
 
 namespace Solaire{
 
@@ -48,7 +47,7 @@ namespace Solaire{
 
 		virtual bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() = 0;
 
-		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
+		virtual SOLAIRE_EXPORT_CALL ~Allocator(){}
     };
 
 	extern "C" {
