@@ -64,6 +64,10 @@ namespace Solaire { namespace File{
 		#endif
 	};
 
+#undef Createfile
+#undef CreateDirectory
+#undef GetCurrentDirectory
+
 	extern "C" {
 		SOLAIRE_EXPORT_API AttributeFlags SOLAIRE_EXPORT_CALL GetAttributes(const char* const) throw();
 

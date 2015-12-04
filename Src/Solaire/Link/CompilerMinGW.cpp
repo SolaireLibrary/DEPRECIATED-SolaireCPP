@@ -19,6 +19,7 @@
 #include "Solaire\Link\CompilerMinGW.hpp"
 #include "Solaire\Memory\Allocator.hpp"
 #include "Solaire\Core\System.hpp"
+#include "Solaire\IO\File.hpp"
 #include <vector>
 #include <string>
 
@@ -148,8 +149,7 @@ namespace Solaire{
 				flags.push_back("-luser32");
 				passB = ExecuteMinGW(flags);
 
-				DeleteFileA(oFile.c_str());
-				if(mGenerateImportLib) DeleteFileA(aFile.c_str());
+				File::Delete(oFile.c_str());
 			}
 
 			return passA && passB;
