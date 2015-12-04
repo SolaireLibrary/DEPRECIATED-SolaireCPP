@@ -20,7 +20,7 @@
 
 #if SOLAIRE_OS == SOLAIRE_WINDOWS
 
-#include "Solaire\Core\SharedLibrary.hpp"
+#include "Solaire\Link\SharedLibrary.hpp"
 #include "Solaire\Memory\Allocator.hpp"
 #include <new>
 
@@ -70,7 +70,7 @@ namespace Solaire {
 	};
 
 	extern "C" {
-		SharedLibrary* SOLAIRE_EXPORT_CALL CreateSharedLibrary(Allocator& aAllocator) {
+		SOLAIRE_EXPORT_API SharedLibrary* SOLAIRE_EXPORT_CALL CreateSharedLibrary(Allocator& aAllocator) {
 			return new(aAllocator.Allocate(sizeof(SharedLibraryDll))) SharedLibraryDll(aAllocator);
 		}
 	}

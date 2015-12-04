@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_SHARED_LIBRARY_HPP
-#define SOLAIRE_SHARED_LIBRARY_HPP
+#ifndef SOLAIRE_COMPILER_MINGW_HPP
+#define SOLAIRE_COMPILER_MINGW_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file SharedLibrary.hpp
+	\file CompilerMinGW.hpp
 	\brief
 	\author
 	Created			: Adam Smith
@@ -31,27 +31,12 @@
 	Last Modified	: 3rd December 2015
 */
 
-#include "Init.hpp"
+#include "Compiler.hpp"
 
 namespace Solaire {
-
 	class Allocator;
 
-	class SharedLibrary {
-	public:
-		typedef void(SOLAIRE_EXPORT_CALL *FunctionPtr)();
-	public:
-		virtual bool SOLAIRE_EXPORT_CALL Open(const char* const) throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL Close() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL IsOpen() const throw() = 0;
-		virtual FunctionPtr SOLAIRE_EXPORT_CALL LoadFunction(const char* const) const throw() = 0;
-		virtual Allocator& GetAllocator() const throw() = 0;
-		virtual ~SharedLibrary(){}
-	};
-
-	extern "C" {
-		SharedLibrary* SOLAIRE_EXPORT_CALL CreateSharedLibrary(Allocator&);
-	}
+	SOLAIRE_EXPORT_API CppCompiler* CreateCompilerMinGW(Allocator&);
 }
 
 

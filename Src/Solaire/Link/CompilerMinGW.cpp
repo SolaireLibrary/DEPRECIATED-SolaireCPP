@@ -16,7 +16,7 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include "Solaire\Core\CompilerMinGW.hpp"
+#include "Solaire\Link\CompilerMinGW.hpp"
 #include "Solaire\Memory\Allocator.hpp"
 #include "Solaire\Core\System.hpp"
 #include <vector>
@@ -76,7 +76,7 @@ namespace Solaire{
 			aFlags.push_back(flag);
 		}
 	public:
-		CompilerMinGW() :
+		CompilerMinGW(Allocator& aAllocator) :
 			mGenerateImportLib(false)
 		{}
 
@@ -168,7 +168,7 @@ namespace Solaire{
 		}
 	};
 
-	CppCompiler* CreateCompilerMinGW(Allocator& aAllocator) {
-		return new(aAllocator.Allocate(sizeof(CompilerMinGW))) CompilerMinGW();
+	SOLAIRE_EXPORT_API CppCompiler* CreateCompilerMinGW(Allocator& aAllocator) {
+		return new(aAllocator.Allocate(sizeof(CompilerMinGW))) CompilerMinGW(aAllocator);
 	}
 }
