@@ -121,6 +121,8 @@ namespace Solaire{
 		virtual bool SOLAIRE_EXPORT_CALL Clear() throw() = 0;
 
 		virtual const StringCase<T>& SOLAIRE_EXPORT_CALL GetCase() const throw() = 0;
+
+		virtual SOLAIRE_EXPORT_CALL ~String() throw() {}
 		 
 		inline String<T>& operator=(const ConstString<T>& aString) throw() {
 			Clear();
@@ -348,6 +350,10 @@ namespace Solaire{
 			mString.PushBack(TERMINATOR);
 		}
 
+		SOLAIRE_EXPORT_CALL ~TerminatedString() throw() {
+
+		}
+
 		// Inherited from ConstString
 
 		const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) const throw() override {
@@ -360,10 +366,6 @@ namespace Solaire{
 
 		bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() override {
 			return true;
-		}
-
-		void SOLAIRE_EXPORT_CALL Destructor() throw() override {
-			mString.~DynamicArray();
 		}
 
 		// Inherited from String

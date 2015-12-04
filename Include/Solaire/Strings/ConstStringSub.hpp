@@ -54,6 +54,10 @@ namespace Solaire{
 			mEnd(aEnd)
 		{}
 
+		SOLAIRE_EXPORT_CALL ConstSubString() throw() {
+
+		}
+
 		// Inherited from ConstString
 	
 		const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) const throw() override {
@@ -66,10 +70,6 @@ namespace Solaire{
 	
 		bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() override {
 			return mString.IsContiguous();
-		}
-	
-		void SOLAIRE_EXPORT_CALL Destructor() throw() override {
-	
 		}
 	};
 

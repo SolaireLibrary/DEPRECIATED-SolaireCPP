@@ -44,7 +44,7 @@ namespace Solaire{
 
 		virtual bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() = 0;
 
-		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
+		virtual SOLAIRE_EXPORT_CALL ~ConstString() throw() {}
 
 		inline uint32_t SOLAIRE_EXPORT_CALL FindFirstChar(const T aValue) const throw() {
 			return FindNextChar(aValue, 0);

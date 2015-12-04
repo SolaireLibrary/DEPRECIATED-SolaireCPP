@@ -49,6 +49,10 @@ namespace Solaire{
 			StringList(aAllocator)
 		{}
 
+		SOLAIRE_EXPORT_CALL ~ConstCompositeString() throw() {
+
+		}
+
 		// Inherited from ConstString
 	
 		const T& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) const throw() override {
@@ -71,10 +75,6 @@ namespace Solaire{
 	
 		bool SOLAIRE_EXPORT_CALL IsContiguous() const throw() override {
 			return false;
-		}
-	
-		void SOLAIRE_EXPORT_CALL Destructor() throw() override {
-	
 		}
 	};
 
