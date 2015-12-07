@@ -45,7 +45,12 @@ namespace Solaire{
 			for (uint32_t i = 0; i < flagCount; ++i) flags[i] = aFlags[i].c_str();
 
 			int returnCode;
-			if (! RunExecutable(mCompilerPath.c_str(), IteratorPtr<const char*>(flags, flags + flagCount), &returnCode)){
+			if (! RunExecutable(
+				mCompilerPath.c_str(),
+				IteratorPtr<const char*>(flags),
+				IteratorPtr<const char*>(flags, flagCount), 
+				&returnCode
+			)){
 				delete[] flags;
 				mLog = "Failed to call compiler .exe";
 				return false;

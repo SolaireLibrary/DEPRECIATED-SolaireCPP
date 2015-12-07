@@ -38,9 +38,7 @@
 namespace Solaire {
 
 	extern "C" {
-
-		bool SOLAIRE_EXPORT_CALL RunExecutable(const char* const, Iterator<const char*>&, int* const);
-
+		bool SOLAIRE_EXPORT_CALL RunExecutable(const char* const, Iterator<const char*>&, const Iterator<const char*>&, int* const);
 	}
 }
 

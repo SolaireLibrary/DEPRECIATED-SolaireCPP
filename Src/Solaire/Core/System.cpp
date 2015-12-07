@@ -22,7 +22,12 @@
 namespace Solaire {
 
 	extern "C" {
-		bool SOLAIRE_EXPORT_CALL RunExecutable(const char* const aPath, Iterator<const char*>& aParam, int* const aReturnCode) {
+		bool SOLAIRE_EXPORT_CALL RunExecutable(
+			const char* const aPath, 
+			Iterator<const char*>& aBegin, 
+			const Iterator<const char*>& aEnd, 
+			int* const aReturnCode
+		) {
 		#if SOLAIRE_OS == SOLAIRE_WINDOWS
 			char buf[MAX_PATH * 2];
 			uint32_t offset = 0;
@@ -32,13 +37,13 @@ namespace Solaire {
 			std::memcpy(buf + offset, aPath, size);
 			offset += size;
 
-			while(! aParam.AtEnd()) {
+			while(aBegin != aEnd) {
 				buf[offset++] = ' ';
-				const char* const param = *aParam;
+				const char* const param = *aBegin;
 				size = std::strlen(param);
 				std::memcpy(buf + offset, param, size);
 				offset += size;
-				++aParam;
+				++aBegin;
 			}
 
 			buf[offset++] = '\0';
@@ -62,6 +67,7 @@ namespace Solaire {
 			}else {
 				return false;
 			}
+			return true;
 		#else
 			return false;
 		#endif

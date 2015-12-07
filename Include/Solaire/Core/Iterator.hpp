@@ -34,24 +34,14 @@
 #include <cstdint>
 #include "Init.hpp"
 
-namespace Solaire{
+namespace Solaire {
 
 	class BaseIterator {
 	public:
 		typedef int32_t Offset;
 	protected:
-		virtual Offset SOLAIRE_EXPORT_CALL GetBegin() const throw() = 0;
 		virtual Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() = 0;
-		virtual Offset SOLAIRE_EXPORT_CALL GetEnd() const throw() = 0;
 	public:
-		inline bool AtBegin() const throw() {
-			return GetOffset() == GetBegin();
-		}
-
-		inline bool AtEnd() const throw() {
-			return GetOffset() == GetEnd();
-		}
-
 		inline bool operator==(const BaseIterator& aOther) const throw() {
 			return GetOffset() == aOther.GetOffset();
 		}
@@ -82,7 +72,7 @@ namespace Solaire{
 	};
 
 	template<class T>
-	class Iterator : public BaseIterator{
+	class Iterator : public BaseIterator {
 	public:
 		typedef T Type;
 	public:
@@ -102,33 +92,22 @@ namespace Solaire{
 	class IteratorSTL : public Iterator<T>{
 	private:
 		const ITERATOR mBegin;
-		const ITERATOR mEnd;
 		ITERATOR mCurrent;
 	protected:
 		//Inherited from Iterator
 
-		Offset SOLAIRE_EXPORT_CALL GetBegin() const throw() override {
-			return 0;
-		}
-
-		Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() override{
+		Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() override {
 			return mCurrent - mBegin;
 		}
-
-		Offset SOLAIRE_EXPORT_CALL GetEnd() const throw() override{
-			return mEnd - mBegin;
-		}
 	public:
-		IteratorSTL(const ITERATOR aBegin, const ITERATOR aEnd) :
-			mBegin(aBegin),
-			mEnd(aEnd),
-			mCurrent(aBegin)
+		IteratorSTL(const ITERATOR aCurrent) :
+			mBegin(aCurrent),
+			mCurrent(aCurrent)
 		{}
 
-		IteratorSTL(const ITERATOR aBegin, const ITERATOR aCurrent, const ITERATOR aEnd) :
+		IteratorSTL(const ITERATOR aBegin, const Offset aOffset) :
 			mBegin(aBegin),
-			mEnd(aEnd),
-			mCurrent(aCurrent)
+			mCurrent(aBegin + aOffset)
 		{}
 
 		SOLAIRE_EXPORT_CALL ~IteratorSTL() {
@@ -161,7 +140,7 @@ namespace Solaire{
 			return *this;
 		}
 	}; 
-
+	
 	template<class T>
 	using IteratorPtr = IteratorSTL<T*, T>;
 
@@ -171,17 +150,8 @@ namespace Solaire{
 		ITERATOR mIterator;
 	protected:
 		//Inherited from Iterator
-
-		Offset SOLAIRE_EXPORT_CALL GetBegin() const throw() override {
-			return mIterator.GetBegin();
-		}
-
 		Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() override{
-			return mIterator.GetBegin();
-		}
-
-		Offset SOLAIRE_EXPORT_CALL GetEnd() const throw() override{
-			return mIterator.GetEnd();
+			return mIterator.GetOffset();
 		}
 	public:
 		DereferenceIterator(const ITERATOR aIterator) :
@@ -217,7 +187,7 @@ namespace Solaire{
 			mIterator -= aOffset;
 			return *this;
 		}
-	}; 
+	};
 }
 
 
