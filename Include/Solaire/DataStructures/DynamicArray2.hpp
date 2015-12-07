@@ -154,7 +154,7 @@ namespace Solaire {
 			return true;
 		}
 
-		Solaire::Iterator<T>& SOLAIRE_EXPORT_CALL GetBeginIterator() const override {
+		Solaire::Iterator<T>& SOLAIRE_EXPORT_CALL GetBeginIterator() override {
 			return *new(mIterator) IteratorPtr<T>(mData);
 		}
 		

@@ -196,7 +196,7 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL IsContiguous() const = 0;
 		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Reserve(const uint32_t) = 0;
-		virtual Solaire::Iterator<T>& SOLAIRE_EXPORT_CALL GetBeginIterator() const = 0;
+		virtual Solaire::Iterator<T>& SOLAIRE_EXPORT_CALL GetBeginIterator() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~FixedContainer(){}
 
 		inline const Type& operator[](const uint32_t aIndex) const {
@@ -220,11 +220,11 @@ namespace Solaire {
 		}
 
 		inline ConstIterator begin() const {
-			return ContainerConstIterator<T>(GetBeginIterator(), 0);
+			return ContainerConstIterator<T>(const_cast<FixedContainer<T>*>(this)->GetBeginIterator(), 0);
 		}
 
 		inline ConstIterator end() const {
-			return ContainerConstIterator<T>(GetBeginIterator(), Size());
+			return ContainerConstIterator<T>(const_cast<FixedContainer<T>*>(this)->GetBeginIterator(), Size());
 		}
 
 		inline ReverseIterator rbegin() {
@@ -236,11 +236,11 @@ namespace Solaire {
 		}
 
 		inline ConstReverseIterator rbegin() const {
-			return ReverseIterator(GetBeginIterator(), Size() - 1);
+			return ReverseIterator(const_cast<FixedContainer<T>*>(this)->GetBeginIterator(), Size() - 1);
 		}
 
 		inline ConstReverseIterator rend() const {
-			return ReverseIterator(GetBeginIterator(), -1);
+			return ReverseIterator(const_cast<FixedContainer<T>*>(this)->GetBeginIterator(), -1);
 		}
 	};
 
