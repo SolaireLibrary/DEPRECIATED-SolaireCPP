@@ -122,7 +122,9 @@ namespace Solaire {
 	public:
 		virtual Type& SOLAIRE_EXPORT_CALL PushBack(const Type&) = 0;
 		virtual Type SOLAIRE_EXPORT_CALL PopBack() = 0;
-		virtual SOLAIRE_EXPORT_CALL ~Stack(){}
+		virtual Stack<T>& SOLAIRE_EXPORT_CALL operator=(const FixedContainer<T>&) = 0;
+		virtual void SOLAIRE_EXPORT_CALL Clear() = 0;
+		virtual  SOLAIRE_EXPORT_CALL ~Stack(){}
 
 		inline T& Back() {
 			return operator[](Size() - 1);
