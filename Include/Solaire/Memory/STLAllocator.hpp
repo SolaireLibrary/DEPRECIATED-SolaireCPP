@@ -83,7 +83,7 @@ namespace Solaire {
         }
 
         pointer allocate(size_type aCount, const void* = 0){
-            return STL_ALLOCATOR_PTR->Allocate(sizeof(T) * aCount);
+            return static_cast<pointer>(STL_ALLOCATOR_PTR->Allocate(sizeof(T) * aCount));
         }
 
         void construct(pointer aAddress, const T& aValue){
@@ -95,6 +95,7 @@ namespace Solaire {
         }
 
         void deallocate(pointer aAddress, size_type aCount){
+			//! \todo Deallocation invalid if aCount is different that provided in allocate()
 			STL_ALLOCATOR_PTR->Deallocate(aAddress);
         }
     };

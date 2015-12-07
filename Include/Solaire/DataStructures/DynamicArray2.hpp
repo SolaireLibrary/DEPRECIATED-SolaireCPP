@@ -41,8 +41,7 @@ namespace Solaire {
     template<class T>
 	class DynamicArray2 : public DoubleEndedStack<T> {
 	private:
-		IteratorPtr<T> mEnd;
-		IteratorPtr<T> mBegin;
+		uint8_t mIterator[sizeof(IteratorPtr<T>)];
 		Allocator* mAllocator;
 		Type* mData;
 		uint32_t mSize;
@@ -104,7 +103,7 @@ namespace Solaire {
 		SOLAIRE_EXPORT_CALL ~DynamicArray2() {
 			if(mData != nullptr) {
 				Clear();
-				mAllocator.Deallocate(mData);
+				mAllocator->Deallocate(mData);
 			}
 		}
 
@@ -130,21 +129,21 @@ namespace Solaire {
 			return true;
 		}
 
-		Iterator<T>& SOLAIRE_EXPORT_CALL begin() override {
-			return mBegin = IteratorPtr<T>(mData);
+		ContainerIterator<Type> SOLAIRE_EXPORT_CALL begin() override {
+			return ContainerIterator<Type>(*new(mIterator) IteratorPtr<T>(mData), 0);
 		}
 
-		Iterator<T>& SOLAIRE_EXPORT_CALL end() override {
-			return mEnd = IteratorPtr<T>(mData + 1);
+		ContainerIterator<Type> SOLAIRE_EXPORT_CALL end() override {
+			return ContainerIterator<Type>(*new(mIterator) IteratorPtr<T>(mData), mHead);
 		}
 
 		Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const override {
-			return mAllocator;
+			return *mAllocator;
 		}
 
 		bool SOLAIRE_EXPORT_CALL Reserve(const uint32_t aSize) override {
 			if(aSize <= mSize) return true;
-			Type* const data = mAllocator.Allocate(sizeof(T) * aSize);
+			Type* const data = static_cast<Type*>(mAllocator->Allocate(sizeof(T) * aSize));
 			if(data == nullptr) return false;
 
 			if(mData != nullptr) {
@@ -155,7 +154,7 @@ namespace Solaire {
 					old->~Type();
 				}
 
-				mAllocator.Deallocate(mData);
+				mAllocator->Deallocate(mData);
 			}
 
 			mData = data;

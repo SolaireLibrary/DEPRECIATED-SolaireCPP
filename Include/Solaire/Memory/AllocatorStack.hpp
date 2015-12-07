@@ -61,7 +61,7 @@ namespace Solaire{
 		}
 
 		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() override {
-			return return mAllocated ? 0 : BYTES;
+			return mAllocated ? 0 : BYTES;
 		}
 		
 		uint32_t SOLAIRE_EXPORT_CALL SizeOf(const void* const aObject) throw() {
@@ -77,7 +77,7 @@ namespace Solaire{
 			}
 		}
 
-		bool SOLAIRE_EXPORT_CALL Deallocate(void* const aObject) throw() override {
+		bool SOLAIRE_EXPORT_CALL Deallocate(const void* const aObject) throw() override {
 			if(mAllocated && aObject == mBlock) {
 				mAllocated = false;
 				return true;
@@ -89,7 +89,55 @@ namespace Solaire{
 		bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() override {
 			return Deallocate(mBlock);
 		}
+    };
 
+	template<const uint32_t BYTES, const bool RECYCLE>
+    class MemoryArenaStack : public Allocator {
+    private:
+		AllocatorStack<BYTES> mStack;
+		Allocator& mArena;
+	private:
+		MemoryArenaStack(const MemoryArenaStack&) = delete;
+		MemoryArenaStack(MemoryArenaStack&&) = delete;
+		MemoryArenaStack& operator=(const MemoryArenaStack&) = delete;
+		MemoryArenaStack& operator=(MemoryArenaStack&&) = delete;
+    public:
+		MemoryArenaStack() throw() :
+			mStack(),
+			//mArena(*CreateMemoryArena(GetDefaultAllocator(), mArena, BYTES, RECYCLE))
+			mArena(*CreateMemoryArena(GetDefaultAllocator(), GetDefaultAllocator(), BYTES, RECYCLE))
+		{}
+
+		SOLAIRE_EXPORT_CALL ~MemoryArenaStack() throw() {
+			mArena.~Allocator();
+			GetDefaultAllocator().Deallocate(&mArena);
+		}
+
+        // Inherited from Allocator
+
+		uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw() override {
+			return mArena.GetAllocatedBytes();
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() override {
+			return mArena.GetFreeBytes();
+		}
+		
+		uint32_t SOLAIRE_EXPORT_CALL SizeOf(const void* const aObject) throw() {
+			return mArena.SizeOf(aObject);
+		}
+
+		void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() override {
+			return mArena.Allocate(aBytes);
+		}
+
+		bool SOLAIRE_EXPORT_CALL Deallocate(const void* const aObject) throw() override {
+			return mArena.Deallocate(aObject);
+		}
+
+		bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() override {
+			return mArena.DeallocateAll();
+		}
     };
 
 }

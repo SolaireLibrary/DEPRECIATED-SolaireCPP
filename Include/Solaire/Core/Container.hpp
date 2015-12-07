@@ -38,17 +38,67 @@ namespace Solaire {
 	class Allocator;
 
 	template<class T>
+	class ContainerIterator : public Iterator<T>{
+	private:
+		Iterator<T>* mIterator;
+		uint32_t mOffset;
+	protected:
+		//Inherited from Iterator
+		Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() override{
+			return mOffset;
+		}
+	public:
+		ContainerIterator(Iterator<T>& aIterator, uint32_t aOffset = 0) :
+			mIterator(&aIterator),
+			mOffset(aOffset)
+		{}
+
+		SOLAIRE_EXPORT_CALL ~ContainerIterator() {
+
+		}
+
+		// Inherited from Iterator
+
+		Type* SOLAIRE_EXPORT_CALL operator->() throw() override{
+			mIterator->operator+=(mOffset);
+			Type* const tmp = mIterator->operator->();
+			mIterator->operator-=(mOffset);
+			return tmp;
+		}
+
+		Iterator<Type>& SOLAIRE_EXPORT_CALL operator++() throw() override {
+			++mOffset;
+			return *this;
+		}
+
+		Iterator<Type>& SOLAIRE_EXPORT_CALL operator--() throw() override {
+			--mOffset;
+			return *this;
+		}
+
+		Iterator<Type>& SOLAIRE_EXPORT_CALL operator+=(const Offset aOffset) throw() override {
+			mOffset += aOffset;
+			return *this;
+		}
+
+		Iterator<Type>& SOLAIRE_EXPORT_CALL operator-=(const Offset aOffset) throw() override {
+			mOffset -= aOffset;
+			return *this;
+		}
+	};
+
+	template<class T>
 	class ContainerConstIterator : public Iterator<const T>{
 	private:
-		Iterator<T>& mIterator;
+		ContainerIterator<T> mIterator;
 	protected:
 		//Inherited from Iterator
 		Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() override{
 			return mIterator.GetOffset();
 		}
 	public:
-		ContainerConstIterator(Iterator<T>& aIterator) :
-			mIterator(aIterator)
+		ContainerConstIterator(Iterator<T>& aIterator, const Offset aOffset = 0) :
+			mIterator(aIterator, aOffset)
 		{}
 
 		SOLAIRE_EXPORT_CALL ~ContainerConstIterator() {
@@ -57,21 +107,21 @@ namespace Solaire {
 
 		// Inherited from Iterator
 
-		Type* operator->() throw() {
+		Type* SOLAIRE_EXPORT_CALL operator->() throw() override {
 			return mIterator.operator->();
 		}
 
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator++() throw() {
+		Iterator<Type>& SOLAIRE_EXPORT_CALL operator++() throw() override {
 			++mIterator;
 			return *this;
 		}
 
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator--() throw() {
+		Iterator<Type>& SOLAIRE_EXPORT_CALL operator--() throw() override {
 			--mIterator;
 			return *this;
 		}
 
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator+=(const Offset aOffset) throw() {
+		Iterator<Type>& SOLAIRE_EXPORT_CALL operator+=(const Offset aOffset) throw() override {
 			mIterator += aOffset;
 			return *this;
 		}
@@ -90,8 +140,8 @@ namespace Solaire {
 		virtual uint32_t SOLAIRE_EXPORT_CALL Size() const = 0;
 		virtual Type& SOLAIRE_EXPORT_CALL operator[](const uint32_t) = 0;
 		virtual bool SOLAIRE_EXPORT_CALL IsContiguous() const = 0;
-		virtual Iterator<T>& SOLAIRE_EXPORT_CALL begin() = 0;
-		virtual Iterator<T>& SOLAIRE_EXPORT_CALL end() = 0;
+		virtual ContainerIterator<T> SOLAIRE_EXPORT_CALL begin() = 0;
+		virtual ContainerIterator<T> SOLAIRE_EXPORT_CALL end() = 0;
 		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Reserve(const uint32_t) = 0;
 		virtual SOLAIRE_EXPORT_CALL ~FixedContainer(){}

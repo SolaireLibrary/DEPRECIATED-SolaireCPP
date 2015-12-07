@@ -42,8 +42,8 @@ namespace Solaire{
         virtual uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() = 0;
 		virtual uint32_t SOLAIRE_EXPORT_CALL SizeOf(const void* const) throw() = 0;
 
-        virtual void* SOLAIRE_EXPORT_CALL Allocate(const size_t aBytes) throw() = 0;
-        virtual bool SOLAIRE_EXPORT_CALL Deallocate(const void* const aObject) throw() = 0;
+        virtual void* SOLAIRE_EXPORT_CALL Allocate(const size_t) throw() = 0;
+        virtual bool SOLAIRE_EXPORT_CALL Deallocate(const void* const) throw() = 0;
 
 		virtual bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() = 0;
 
@@ -53,7 +53,7 @@ namespace Solaire{
 	extern "C" {
 		SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL GetDefaultAllocator() throw();
 
-		SOLAIRE_EXPORT_API Allocator* SOLAIRE_EXPORT_CALL CreateMemoryArena(Allocator&, const uint32_t, const bool) throw();
+		SOLAIRE_EXPORT_API Allocator* SOLAIRE_EXPORT_CALL CreateMemoryArena(Allocator&, Allocator&, const uint32_t, const bool) throw();
 	}
 
 }
