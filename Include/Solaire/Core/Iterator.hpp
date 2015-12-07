@@ -38,7 +38,7 @@ namespace Solaire {
 
 	class BaseIterator {
 	public:
-		typedef int32_t Offset;
+		typedef size_t Offset;
 	protected:
 		virtual Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() = 0;
 	public:
@@ -143,51 +143,6 @@ namespace Solaire {
 	
 	template<class T>
 	using IteratorPtr = IteratorSTL<T*, T>;
-
-	template<class ITERATOR, class T, class T2>
-	class DereferenceIterator : public Iterator<T2>{
-	private:
-		ITERATOR mIterator;
-	protected:
-		//Inherited from Iterator
-		Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() override{
-			return mIterator.GetOffset();
-		}
-	public:
-		DereferenceIterator(const ITERATOR aIterator) :
-			mIterator(aIterator)
-		{}
-
-		SOLAIRE_EXPORT_CALL ~DereferenceIterator() {
-
-		}
-
-		// Inherited from Iterator
-
-		Type* operator->() throw() {
-			return &*mIterator;
-		}
-
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator++() throw() {
-			++mIterator;
-			return *this;
-		}
-
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator--() throw() {
-			--mIterator;
-			return *this;
-		}
-
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator+=(const Offset aOffset) throw() {
-			mIterator += aOffset;
-			return *this;
-		}
-
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator-=(const Offset aOffset) throw() override {
-			mIterator -= aOffset;
-			return *this;
-		}
-	};
 }
 
 
