@@ -33,9 +33,11 @@
 
 #include "Allocator.hpp"
 
-namespace Solaire{
+namespace Solaire {
 
-    template <class T, Allocator*& ALLOCATOR>
+	static Allocator* STL_ALLOCATOR_PTR = nullptr;
+
+    template <class T>
     class STLAllocator {
     public:
         typedef T           value_type;
@@ -48,7 +50,7 @@ namespace Solaire{
 
         template <class U>
         struct rebind {
-            typedef STLAllocator<U, ALLOCATOR> other;
+            typedef STLAllocator<U> other;
         };
 
         pointer address (reference aValue) const {
@@ -68,7 +70,7 @@ namespace Solaire{
         }
 
         template <class U>
-        STLAllocator(const STLAllocator<U, ALLOCATOR>&) throw(){
+        STLAllocator(const STLAllocator<U>&) throw(){
 
         }
 
@@ -77,11 +79,11 @@ namespace Solaire{
         }
 
         size_type max_size() const throw(){
-            return ALLOCATOR->GetFreeBytes() / sizeof(T);
+            return STL_ALLOCATOR_PTR->GetFreeBytes() / sizeof(T);
         }
 
         pointer allocate(size_type aCount, const void* = 0){
-            return ALLOCATOR->Allocate(sizeof(T) * aCount);
+            return STL_ALLOCATOR_PTR->Allocate(sizeof(T) * aCount);
         }
 
         void construct(pointer aAddress, const T& aValue){
@@ -93,17 +95,17 @@ namespace Solaire{
         }
 
         void deallocate(pointer aAddress, size_type aCount){
-            ALLOCATOR->Deallocate(aAddress);
+			STL_ALLOCATOR_PTR->Deallocate(aAddress);
         }
     };
 
-    template <class T1, class T2, const Allocator& ALLOCATOR>
-    bool operator==(const STLAllocator<T1, ALLOCATOR>&, const STLAllocator<T2, ALLOCATOR>&) throw(){
+    template <class T1, class T2>
+    bool operator==(const STLAllocator<T1>&, const STLAllocator<T2>&) throw(){
         return true;
     }
 
-    template <class T1, class T2, const Allocator& ALLOCATOR>
-    bool operator!=(const STLAllocator<T1, ALLOCATOR>&, const STLAllocator<T2, ALLOCATOR>&) throw(){
+    template <class T1, class T2>
+    bool operator!=(const STLAllocator<T1>&, const STLAllocator<T2>&) throw(){
         return false;
     }
 
