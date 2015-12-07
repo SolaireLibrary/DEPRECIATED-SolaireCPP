@@ -35,6 +35,8 @@
 
 namespace Solaire {
 
+	class Allocator;
+
 	template<class T>
 	class ContainerConstIterator : public Iterator<const T>{
 	private:
@@ -90,6 +92,8 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL IsContiguous() const = 0;
 		virtual Iterator<T>& SOLAIRE_EXPORT_CALL begin() = 0;
 		virtual Iterator<T>& SOLAIRE_EXPORT_CALL end() = 0;
+		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Reserve(const uint32_t) = 0;
 		virtual SOLAIRE_EXPORT_CALL ~FixedContainer(){}
 
 		inline const Type& operator[](const uint32_t aIndex) const {
