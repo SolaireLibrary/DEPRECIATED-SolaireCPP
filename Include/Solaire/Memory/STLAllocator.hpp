@@ -35,7 +35,7 @@
 
 namespace Solaire{
 
-    template <class T, Allocator& ALLOCATOR>
+    template <class T, Allocator*& ALLOCATOR>
     class STLAllocator {
     public:
         typedef T           value_type;
@@ -77,11 +77,11 @@ namespace Solaire{
         }
 
         size_type max_size() const throw(){
-            return std::numeric_limits<std::size_t>::max() / sizeof(T);;
+            return ALLOCATOR->GetFreeBytes() / sizeof(T);
         }
 
         pointer allocate(size_type aCount, const void* = 0){
-            return ALLOCATOR.Allocate(sizeof(T) * aCount);
+            return ALLOCATOR->Allocate(sizeof(T) * aCount);
         }
 
         void construct(pointer aAddress, const T& aValue){
@@ -93,7 +93,7 @@ namespace Solaire{
         }
 
         void deallocate(pointer aAddress, size_type aCount){
-            ALLOCATOR.Deallocate(aAddress, sizeof(T) * aCount);
+            ALLOCATOR->Deallocate(aAddress);
         }
     };
 

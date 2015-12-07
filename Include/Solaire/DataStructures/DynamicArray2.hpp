@@ -36,6 +36,8 @@
 
 namespace Solaire {
 
+	//! \todo Inherit from List
+
     template<class T>
 	class DynamicArray2 : public DoubleEndedStack<T> {
 	private:
