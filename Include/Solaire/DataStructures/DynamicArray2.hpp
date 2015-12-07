@@ -41,7 +41,7 @@ namespace Solaire {
     template<class T>
 	class DynamicArray2 : public DoubleEndedStack<T> {
 	private:
-		uint8_t mIterator[sizeof(IteratorPtr<T>)];
+		mutable uint8_t mIterator[sizeof(IteratorPtr<T>)];
 		Allocator* mAllocator;
 		Type* mData;
 		uint32_t mSize;
@@ -118,7 +118,7 @@ namespace Solaire {
 		// Inherited from FixedContainer
 
 		uint32_t SOLAIRE_EXPORT_CALL Size() const override {
-			return mSize;
+			return mHead;
 		}
 
 		Type& SOLAIRE_EXPORT_CALL operator[](const uint32_t aIndex) override {
@@ -127,14 +127,6 @@ namespace Solaire {
 
 		bool SOLAIRE_EXPORT_CALL IsContiguous() const override {
 			return true;
-		}
-
-		ContainerIterator<Type> SOLAIRE_EXPORT_CALL begin() override {
-			return ContainerIterator<Type>(*new(mIterator) IteratorPtr<T>(mData), 0);
-		}
-
-		ContainerIterator<Type> SOLAIRE_EXPORT_CALL end() override {
-			return ContainerIterator<Type>(*new(mIterator) IteratorPtr<T>(mData), mHead);
 		}
 
 		Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const override {
@@ -160,6 +152,10 @@ namespace Solaire {
 			mData = data;
 			mSize = aSize;
 			return true;
+		}
+
+		Solaire::Iterator<T>& SOLAIRE_EXPORT_CALL GetBeginIterator() const override {
+			return *new(mIterator) IteratorPtr<T>(mData);
 		}
 		
 		// Inherted from Stack
