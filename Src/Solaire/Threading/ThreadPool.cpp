@@ -186,7 +186,7 @@ namespace Solaire {
 	                 
 	extern "C" {
 		SOLAIRE_EXPORT_API TaskExecutorI* SOLAIRE_EXPORT_CALL _CreateThreadPool(Allocator& aAllocator, const uint32_t aThreads) throw() {
-			return new(aAllocator.Allocate(sizeof(ThreadPool))) ThreadPool(aAllocator, aThreads);
+			return aAllocator.AllocateObject<ThreadPool>(aAllocator, aThreads);
 		}
 	}
 

@@ -97,9 +97,22 @@ namespace Solaire{
 			\see DeallocateAll
 		*/
 		virtual SOLAIRE_EXPORT_CALL ~Allocator(){}
+
+		/*!
+			\brief Allocated a block of memory that will fit type \a T
+			\detail Allocation size is determined uisng sizeof
+			Object is created using placement new, so manual destructor calls are required.
+			\tparam T The type to allocate.
+			\tparam PARAMS The parameter types to pass to the object's constructor.
+			\param aParams The parameters to pass to the object's constructor.
+			\return The address of the object, or nullptr if the allocation failed.
+			\see Allocate
+		*/
+		template<class T, typename ...PARAMS>
+		T* AllocateObject(PARAMS&&... aParams) {
+			return new(Allocate(sizeof(T))) T(aParams...);
+		}
     };
-
-
 
 #ifdef SOLAIRE_EXPORT_IMPORT_LIBRARY
 	extern "C" SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL _GetDefaultAllocator() throw();
