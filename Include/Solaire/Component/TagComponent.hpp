@@ -48,9 +48,12 @@ namespace Solaire{
 		virtual ~TagComponent() {}
 	};
 
-	extern "C" {
-		SOLAIRE_EXPORT_API TagComponent* SOLAIRE_EXPORT_CALL CreateTagComponent(Allocator&);
-	}
+	#ifdef SOLAIRE_EXPORT_IMPORT_LIBRARY
+		extern "C" SOLAIRE_EXPORT_API TagComponent* SOLAIRE_EXPORT_CALL _CreateTagComponent(Allocator&) throw();
+		inline TagComponent* CreateTagComponent(Allocator& aAllocator) {return _CreateTagComponent(aAllocator);}
+	#else 
+		static TagComponent* (SOLAIRE_EXPORT_CALL *CreateTagComponent)(Allocator&);
+	#endif
 
 }
 

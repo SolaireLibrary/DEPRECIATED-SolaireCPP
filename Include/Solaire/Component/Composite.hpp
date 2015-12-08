@@ -61,9 +61,12 @@ namespace Solaire{
 		virtual SOLAIRE_EXPORT_CALL ~Composite() throw() {}
 	};
 
-	extern "C" {
-		SOLAIRE_EXPORT_API Composite* SOLAIRE_EXPORT_CALL CreateComposite(Allocator&);
-	}
+	#ifdef SOLAIRE_EXPORT_IMPORT_LIBRARY
+		extern "C" SOLAIRE_EXPORT_API Composite* SOLAIRE_EXPORT_CALL _CreateComposite(Allocator&) throw();
+		inline Composite* CreateComposite(Allocator& aAllocator) {return _CreateComposite(aAllocator);}
+	#else 
+		static Composite* (SOLAIRE_EXPORT_CALL *CreateComposite)(Allocator&);
+	#endif
 
 }
 

@@ -97,7 +97,7 @@ namespace Solaire{
 	};
 
 	extern "C" {
-		SOLAIRE_EXPORT_API Composite* SOLAIRE_EXPORT_CALL CreateComposite(Allocator& aAllocator) {
+		SOLAIRE_EXPORT_API Composite* SOLAIRE_EXPORT_CALL _CreateComposite(Allocator& aAllocator) {
 			return new(aAllocator.Allocate(sizeof(CompositeImplementation))) CompositeImplementation(aAllocator);
 		}
 	}
