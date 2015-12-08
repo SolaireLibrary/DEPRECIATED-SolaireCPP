@@ -76,7 +76,7 @@ namespace Solaire{
 	};
 
 	extern "C" {
-		SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL GetDefaultAllocator() throw() {
+		SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL _GetDefaultAllocator() throw() {
 			static DefaultAllocator DEFAULT_ALLOCATOR;
 			return DEFAULT_ALLOCATOR;
 		}

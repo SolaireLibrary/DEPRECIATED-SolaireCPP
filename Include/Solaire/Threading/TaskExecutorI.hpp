@@ -47,7 +47,7 @@ namespace Solaire {
 		extern "C" SOLAIRE_EXPORT_API TaskExecutorI* SOLAIRE_EXPORT_CALL _CreateThreadPool(Allocator&, const uint32_t) throw();
 		inline TaskExecutorI* CreateThreadPool(Allocator& aAllocator, const uint32_t aThreads) {return _CreateThreadPool(aAllocator, aThreads);}
 	#else 
-		TaskExecutorI* (SOLAIRE_EXPORT_CALL *CreateThreadPool)(Allocator&, const uint32_t);
+		static TaskExecutorI* (SOLAIRE_EXPORT_CALL *CreateThreadPool)(Allocator&, const uint32_t);
 	#endif
 }
 

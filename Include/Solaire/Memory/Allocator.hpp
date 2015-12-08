@@ -50,11 +50,18 @@ namespace Solaire{
 		virtual SOLAIRE_EXPORT_CALL ~Allocator(){}
     };
 
-	extern "C" {
-		SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL GetDefaultAllocator() throw();
 
-		SOLAIRE_EXPORT_API Allocator* SOLAIRE_EXPORT_CALL CreateMemoryArena(Allocator&, Allocator&, const uint32_t, const bool) throw();
-	}
+
+#ifdef SOLAIRE_EXPORT_INCLUDE_LIBRARY
+	extern "C" SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL _GetDefaultAllocator() throw();
+	extern "C" SOLAIRE_EXPORT_API Allocator* SOLAIRE_EXPORT_CALL _CreateMemoryArena(Allocator&, Allocator&, const uint32_t, const bool) throw();
+
+	inline Allocator& GetDefaultAllocator() { return _GetDefaultAllocator(); }
+	inline Allocator* CreateMemoryArena(Allocator& aAllocator, Allocator& aArenaAllocator, const uint32_t aBytes, const bool aRecycle){ return _CreateMemoryArena(aAllocator, aArenaAllocator, aBytes, aRecycle); }
+#else 
+	static Allocator& (SOLAIRE_EXPORT_CALL *GetDefaultAllocator)();
+	static Allocator* (SOLAIRE_EXPORT_CALL *CreateMemoryArena)(Allocator&, Allocator&, const uint32_t, const bool);
+#endif
 
 }
 
