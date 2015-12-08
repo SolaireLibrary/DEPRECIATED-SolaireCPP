@@ -63,6 +63,7 @@ namespace Solaire {
 	private:
 		Allocator& mAllocator;
 		std::mutex mLock;
+		std::deque<std::thread> mWorkers;
 		std::deque<TaskImplementationPtr> mInitialiseList;
 		std::deque<TaskImplementationPtr> mPreList;
 		std::map<std::thread::id, TaskImplementationPtr> mExecuteList;
@@ -143,10 +144,26 @@ namespace Solaire {
 	ThreadPool::ThreadPool(Allocator& aAllocator, const uint32_t aThreads) throw() :
 		mAllocator(aAllocator),
 		mExitFlag(false)
-	{}
+	{
+		for(uint32_t i = 0; i < aThreads; ++i) {
+			mWorkers.push_back(std::thread(&ThreadPool::WorkerFunction, this));
+			mExecuteList.emplace(mWorkers.back().get_id(), TaskImplementationPtr());
+		}
+	}
 
 	SOLAIRE_EXPORT_CALL ThreadPool::~ThreadPool() throw() {
-		//! \todo Cancel all tasks  
+		mExitFlag = true;
+		{
+			std::lock_guard<std::mutex> lock(mLock);
+			for(TaskImplementationPtr i : mPreList) i->Cancel();
+			for(TaskImplementationPtr i : mPostList) i->Cancel();
+			for(TaskImplementationPtr i : mPauseList) i->Cancel();
+			mInitialiseList.clear();
+			mPreList.clear();
+			mPostList.clear();
+			mPauseList.clear();
+		}
+		for(std::thread& i : mWorkers) i.join();
 	}
 
 	bool SOLAIRE_EXPORT_CALL ThreadPool::Schedule(TaskI& aTask) throw() {
