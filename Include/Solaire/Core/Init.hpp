@@ -31,25 +31,7 @@
 	Last Modified	: 22nd September 2015
 */
 
-// Misc
-#define SOLAIRE_ERROR -1
-
-// SOLAIRE_OS
-
-#define SOLAIRE_WINDOWS 0
-#define SOLAIRE_LINUX 1
-
-// SOLAIRE_COMPILER
-
-#define SOLAIRE_MSVC 0
-#define SOLAIRE_GCC 1
-#define SOLAIRE_MINGW 2
-#define SOLAIRE_CLANG 3
-
-// Detect environment
-
-#include "Init/DetectCompiler.inl"
-#include "Init/DetectOS.inl"
+#include "ModuleHeader.hpp"
 
 // Misc
 #ifndef SOLAIRE_THREADLOCAL
