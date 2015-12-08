@@ -36,17 +36,66 @@
 
 namespace Solaire{
 
+	/*!
+		\class Allocator
+		\brief An interface that abstracts memory allocation behavior.
+		\detail Memory allocated from an Allocator can only be deallocated from the same Allocator object.
+		\author Adam Smith
+		\date Created : 25th September 2015
+		\date Modified : 3rd December 2015
+		\version 1.0
+	*/
     class Allocator{
     public:
-        virtual uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw() = 0;
-        virtual uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() = 0;
-		virtual uint32_t SOLAIRE_EXPORT_CALL SizeOf(const void* const) throw() = 0;
+		/*!
+			\brief Return the total number of bytes that are currently allocated by this Allocator.
+			\return The number of bytes allocated.
+		*/
+        virtual SOLAIRE_DEFAULT_API uint32_t SOLAIRE_EXPORT_CALL GetAllocatedBytes() const throw() = 0;
 
-        virtual void* SOLAIRE_EXPORT_CALL Allocate(const size_t) throw() = 0;
-        virtual bool SOLAIRE_EXPORT_CALL Deallocate(const void* const) throw() = 0;
+		/*!
+			\brief Return the total number of bytes that this Allocator has avalible for allocation.
+			\detail If the Allocator does not have an allocation limit, the returned value will be UINT32_MAX.
+			\return The number of unallocated bytes.
+		*/
+        virtual SOLAIRE_DEFAULT_API uint32_t SOLAIRE_EXPORT_CALL GetFreeBytes() const throw() = 0;
 
-		virtual bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() = 0;
+		/*!
+			\brief Return the size of an allocated memory block.
+			\detail \a aObject must point to the start of the allocted block, else the function will return 0.
+			\param aObject The address of the allocation block to check.
+			\return The size of \a aObject 's block in bytes.
+		*/
+		virtual SOLAIRE_DEFAULT_API uint32_t SOLAIRE_EXPORT_CALL SizeOf(const void* const) throw() = 0;
 
+		/*!
+			\brief Allocate a block of memory.
+			\param aBytes The number of bytes to allocate.
+			\return The starting address of the allocated block, or nullptr if the allocation failed.
+			\see Deallocate
+		*/
+        virtual SOLAIRE_DEFAULT_API void* SOLAIRE_EXPORT_CALL Allocate(const size_t) throw() = 0;
+
+		/*!
+			\brief Deallocate a block of memory.
+			\param aObject The starting address of the block to deallocate.
+			\return True if the block was deallocated successfully.
+			\see Allocate
+		*/
+        virtual SOLAIRE_DEFAULT_API bool SOLAIRE_EXPORT_CALL Deallocate(const void* const) throw() = 0;
+
+		/*!
+			\brief Deallocated all blocks currently allocated by this Allocator.
+			\return True if all blocks were deallocated.
+			\see Deallocate
+		*/
+		virtual SOLAIRE_DEFAULT_API bool SOLAIRE_EXPORT_CALL DeallocateAll() throw() = 0;
+
+		/*!
+			\brief Destroy the Allocator.
+			\detail DeallocateAll will be called before the Allocator is destroyed.
+			\see DeallocateAll
+		*/
 		virtual SOLAIRE_EXPORT_CALL ~Allocator(){}
     };
 
