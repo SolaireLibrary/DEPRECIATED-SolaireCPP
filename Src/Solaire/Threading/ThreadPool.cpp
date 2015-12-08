@@ -19,6 +19,7 @@
 #include "TaskImplementation.hpp"
 #include "Solaire\Threading\TaskExecutorI.hpp"
 #include "Solaire\Memory\Allocator.hpp"
+#include "Solaire\Memory\SmartAllocation.hpp"
 
 #include <mutex>
 #include <thread>
@@ -37,12 +38,12 @@ namespace Solaire {
 		std::mutex mLock;
 		std::condition_variable mPreCondition;
 		std::deque<std::thread> mWorkers;
-		std::deque<TaskImplementationPtr> mInitialiseList;
-		std::deque<TaskImplementationPtr> mPreList;
-		std::map<std::thread::id, TaskImplementationPtr> mExecuteList;
-		std::deque<TaskImplementationPtr> mPauseList;
-		std::deque<TaskImplementationPtr> mPostList;
-		std::deque<TaskImplementationPtr> mBufferList;
+		std::deque<SharedAllocation<TaskImplementation>> mInitialiseList;
+		std::deque<SharedAllocation<TaskImplementation>> mPreList;
+		std::map<std::thread::id, SharedAllocation<TaskImplementation>> mExecuteList;
+		std::deque<SharedAllocation<TaskImplementation>> mPauseList;
+		std::deque<SharedAllocation<TaskImplementation>> mPostList;
+		std::deque<SharedAllocation<TaskImplementation>> mBufferList;
 		bool mExitFlag;
 	public:
 		ThreadPool(Allocator& aAllocator, const uint32_t aThreads) throw() :
@@ -51,7 +52,7 @@ namespace Solaire {
 		{
 			for (uint32_t i = 0; i < aThreads; ++i) {
 				mWorkers.push_back(std::thread(&ThreadPool::WorkerFunction, this));
-				mExecuteList.emplace(mWorkers.back().get_id(), TaskImplementationPtr());
+				mExecuteList.emplace(mWorkers.back().get_id(), SharedAllocation<TaskImplementation>());
 			}
 		}
 
@@ -59,9 +60,9 @@ namespace Solaire {
 			mExitFlag = true;
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				for(TaskImplementationPtr i : mPreList) i->Cancel();
-				for(TaskImplementationPtr i : mPostList) i->Cancel();
-				for(TaskImplementationPtr i : mPauseList) i->Cancel();
+				for(SharedAllocation<TaskImplementation> i : mPreList) i->Cancel();
+				for(SharedAllocation<TaskImplementation> i : mPostList) i->Cancel();
+				for(SharedAllocation<TaskImplementation> i : mPauseList) i->Cancel();
 				mInitialiseList.clear();
 				mPreList.clear();
 				mPostList.clear();
@@ -74,13 +75,7 @@ namespace Solaire {
 		// Inherited from TaskExecutorI
 		
 		bool SOLAIRE_EXPORT_CALL Schedule(TaskI& aTask) throw() override {
-			const TaskImplementationPtr task(
-				new(mAllocator.Allocate(sizeof(TaskImplementation))) TaskImplementation(aTask),
-				[&](TaskImplementation* aTask) {
-					aTask->~TaskImplementation();
-					mAllocator.Deallocate(aTask);
-				}
-			);
+			const SharedAllocation<TaskImplementation> task = SharedAllocate<TaskImplementation>(mAllocator, aTask);
 
 			const TaskI::State state = task->GetState();
 			if(state == TaskI::STATE_CANCELED || state == TaskI::STATE_COMPLETE) {
@@ -100,13 +95,13 @@ namespace Solaire {
 				std::swap(mBufferList, mInitialiseList);
 			}
 
-			for(TaskImplementationPtr i : mBufferList) i->PreExecute();
+			for(SharedAllocation<TaskImplementation> i : mBufferList) i->PreExecute();
 
 			uint32_t preCount = 0;
 			{
 				std::lock_guard<std::mutex> lock(mLock);
 				preCount = mPreList.size();
-				for(TaskImplementationPtr i : mBufferList) if(i->GetState() == TaskI::STATE_PRE_EXECUTE) mPreList.push_back(i);
+				for(SharedAllocation<TaskImplementation> i : mBufferList) if(i->GetState() == TaskI::STATE_PRE_EXECUTE) mPreList.push_back(i);
 				preCount = mPreList.size() - preCount;
 				mBufferList.clear();
 				mBufferList.swap(mPostList);
@@ -118,7 +113,7 @@ namespace Solaire {
 				for(uint32_t i = 0; i < preCount; ++i) mPreCondition.notify_one();
 			}
 
-			for(TaskImplementationPtr i : mBufferList) i->PostExecute();
+			for(SharedAllocation<TaskImplementation> i : mBufferList) i->PostExecute();
 			mBufferList.clear();
 
 			return true;
@@ -126,7 +121,7 @@ namespace Solaire {
 	private:
 		void WorkerFunction() throw() {
 			while(! mExitFlag) {
-				TaskImplementationPtr& task = mExecuteList[std::this_thread::get_id()];
+				SharedAllocation<TaskImplementation>& task = mExecuteList[std::this_thread::get_id()];
 				{
 					std::lock_guard<std::mutex> lock(mLock);
 					if(! mPauseList.empty()) {
@@ -148,12 +143,12 @@ namespace Solaire {
 						result = task->Execute();
 						break;
 					default:
-						task.swap(TaskImplementationPtr());
+						task.swap(SharedAllocation<TaskImplementation>());
 						continue;
 					}
 
 					if(! result) {
-						task.swap(TaskImplementationPtr());
+						task.swap(SharedAllocation<TaskImplementation>());
 						continue;
 					}
 
@@ -173,7 +168,7 @@ namespace Solaire {
 							break;
 						}
 				
-						task.swap(TaskImplementationPtr());
+						task.swap(SharedAllocation<TaskImplementation>());
 						continue;
 					}
 				}else {

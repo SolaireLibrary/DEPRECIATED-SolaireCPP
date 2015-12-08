@@ -87,8 +87,6 @@ namespace Solaire {
 		}
 	};
 
-	typedef std::shared_ptr<TaskImplementation> TaskImplementationPtr;
-
 }
 
 #endif
