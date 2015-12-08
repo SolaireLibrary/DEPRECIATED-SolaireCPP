@@ -45,7 +45,14 @@
 #ifndef WIN32_LEAN_AND_MEAN
     #define WIN32_LEAN_AND_MEAN
 #endif
+
 #include <windows.h>
+
+#define SOLAIRE_OS_IMPORT_API __declspec(dllimport)
+#define SOLAIRE_OS_EXPORT_API __declspec(dllexport)
+#define SOLAIRE_OS_DEFAULT_API
+
+#define SOLAIRE_OS_DEFAULT_CALL __stdcall
 
 #endif
 

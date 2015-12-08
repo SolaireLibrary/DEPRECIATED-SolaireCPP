@@ -57,4 +57,22 @@
 #include "Init/DetectCompiler.inl"
 #include "Init/DetectOS.inl"
 
+// Calling conventions
+
+#ifndef SOLAIRE_DEFAULT_CALL
+	#define SOLAIRE_DEFAULT_CALL SOLAIRE_OS_DEFAULT_CALL
+#endif
+
+#ifndef SOLAIRE_DEFAULT_API
+	#define SOLAIRE_DEFAULT_API SOLAIRE_OS_DEFAULT_API
+#endif
+
+#ifndef SOLAIRE_EXPORT_API
+	#define SOLAIRE_EXPORT_API SOLAIRE_OS_IMPORT_API
+#endif
+
+#ifndef SOLAIRE_EXPORT_CALL
+	#define SOLAIRE_EXPORT_CALL SOLAIRE_DEFAULT_CALL
+#endif
+
 #endif

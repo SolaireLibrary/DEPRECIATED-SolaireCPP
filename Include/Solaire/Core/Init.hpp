@@ -310,27 +310,6 @@ namespace Solaire{
 		return aFirst < aSecond ? aFirst : aSecond;
 	}
 
-	#if SOLAIRE_OS == SOLAIRE_WINDOWS
-		#define SOLAIRE_EXPORT_IMPORT __declspec(dllimport)
-		#define SOLAIRE_EXPORT_EXPORT __declspec(dllexport)
-		#ifndef SOLAIRE_EXPORT_CALL
-			#define SOLAIRE_EXPORT_CALL __stdcall
-		#endif
-
-		//#define SOLAIRE_EXPORT_IMPORT
-		//#define SOLAIRE_EXPORT_EXPORT
-	#else
-		#define SOLAIRE_EXPORT_IMPORT
-		#define SOLAIRE_EXPORT_EXPORT
-		#ifndef SOLAIRE_EXPORT_CALL
-			#define SOLAIRE_EXPORT_CALL
-		#endif
-	#endif
-
-	#ifndef SOLAIRE_EXPORT_API
-		#define SOLAIRE_EXPORT_API SOLAIRE_EXPORT_IMPORT
-	#endif
-
 	template<const uint32_t BITS, typename ENABLE = void>
 	struct BinaryContainerStruct {
 		typedef void Type;
