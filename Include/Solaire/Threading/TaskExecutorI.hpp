@@ -43,7 +43,7 @@ namespace Solaire {
 		virtual SOLAIRE_EXPORT_CALL ~TaskExecutorI() throw(){}
 	};
 
-	#ifdef SOLAIRE_EXPORT_INCLUDE_LIBRARY
+	#ifdef SOLAIRE_EXPORT_IMPORT_LIBRARY
 		extern "C" SOLAIRE_EXPORT_API TaskExecutorI* SOLAIRE_EXPORT_CALL _CreateThreadPool(Allocator&, const uint32_t) throw();
 		inline TaskExecutorI* CreateThreadPool(Allocator& aAllocator, const uint32_t aThreads) {return _CreateThreadPool(aAllocator, aThreads);}
 	#else 

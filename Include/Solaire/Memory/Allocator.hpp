@@ -52,7 +52,7 @@ namespace Solaire{
 
 
 
-#ifdef SOLAIRE_EXPORT_INCLUDE_LIBRARY
+#ifdef SOLAIRE_EXPORT_IMPORT_LIBRARY
 	extern "C" SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL _GetDefaultAllocator() throw();
 	extern "C" SOLAIRE_EXPORT_API Allocator* SOLAIRE_EXPORT_CALL _CreateMemoryArena(Allocator&, Allocator&, const uint32_t, const bool) throw();
 
