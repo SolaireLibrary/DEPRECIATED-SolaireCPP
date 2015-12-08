@@ -33,13 +33,12 @@ namespace Solaire {
 	class ThreadPool;
 
 	class TaskImplementation : public TaskCallbacks {
+	private:
+		std::mutex mLock;
+		std::condition_variable mWaitCondition;
+		TaskI& mTask;
 	public:
-		std::mutex Lock;
-		std::condition_variable WaitCondition;
-		ThreadPool& Executor;
-		TaskI& Task;
-
-		TaskImplementation(ThreadPool&, TaskI&) throw();
+		TaskImplementation(TaskI&) throw();
 		SOLAIRE_EXPORT_CALL ~TaskImplementation() throw();
 
 		bool Initialise() throw();
@@ -47,6 +46,7 @@ namespace Solaire {
 		bool Execute() throw();
 		bool Resume() throw();
 		bool PostExecute() throw();
+		TaskI::State GetState() const throw();
 
 		// Inherited from TaskCallbacks
 		
@@ -92,9 +92,8 @@ namespace Solaire {
 
 	// TaskImplementation
 
-	TaskImplementation::TaskImplementation(ThreadPool& aPool, TaskI& aTask) throw() :
-		Executor(aPool),
-		Task(aTask)
+	TaskImplementation::TaskImplementation(TaskI& aTask) throw() :
+		mTask(aTask)
 	{}
 
 	SOLAIRE_EXPORT_CALL TaskImplementation::~TaskImplementation() throw() {
@@ -102,42 +101,46 @@ namespace Solaire {
 	}
 
 	bool TaskImplementation::Initialise() throw() {
-		return Task.InitialiseI(*this);
+		return mTask.InitialiseI(*this);
 	}
 
 	bool TaskImplementation::PreExecute() throw() {
-		return Task.OnPreExecuteI();
+		return mTask.OnPreExecuteI();
 	}
 
 	bool TaskImplementation::Execute() throw() {
-		return Task.OnExecuteI();
+		return mTask.OnExecuteI();
 	}
 
 	bool TaskImplementation::Resume() throw() {
-		return Task.OnResumeI();
+		return mTask.OnResumeI();
 	}
 
 	bool TaskImplementation::PostExecute() throw() {
-		const bool result = Task.OnPostExecuteI();
-		WaitCondition.notify_all();
+		const bool result = mTask.OnPostExecuteI();
+		mWaitCondition.notify_all();
 		return result;
 	}
 
+	TaskI::State TaskImplementation::GetState() const throw() {
+		return mTask.GetState();
+	}
+
 	bool SOLAIRE_EXPORT_CALL TaskImplementation::Cancel() throw() {
-		const bool result = Task.OnCancelI();
-		WaitCondition.notify_all();
+		const bool result = mTask.OnCancelI();
+		mWaitCondition.notify_all();
 		return result;
 	}
 
 	bool SOLAIRE_EXPORT_CALL TaskImplementation::Wait() throw() {
-		std::unique_lock<std::mutex> lock(Lock);
-		WaitCondition.wait(lock);
+		std::unique_lock<std::mutex> lock(mLock);
+		mWaitCondition.wait(lock);
 		return true;
 	}         
 
 	bool SOLAIRE_EXPORT_CALL TaskImplementation::WaitFor(const uint32_t aMilliseconds) throw() {
-		std::unique_lock<std::mutex> lock(Lock);
-		return WaitCondition.wait_for(lock, std::chrono::milliseconds(aMilliseconds)) == std::cv_status::no_timeout;
+		std::unique_lock<std::mutex> lock(mLock);
+		return mWaitCondition.wait_for(lock, std::chrono::milliseconds(aMilliseconds)) == std::cv_status::no_timeout;
 	}
 
 	// ThreadPool
@@ -170,19 +173,19 @@ namespace Solaire {
 
 	bool SOLAIRE_EXPORT_CALL ThreadPool::Schedule(TaskI& aTask) throw() {
 		const TaskImplementationPtr task(
-			new(mAllocator.Allocate(sizeof(TaskImplementation))) TaskImplementation(*this, aTask),
+			new(mAllocator.Allocate(sizeof(TaskImplementation))) TaskImplementation(aTask),
 			[&](TaskImplementation* aTask) {
 				aTask->~TaskImplementation();
 				mAllocator.Deallocate(aTask);
 			}
 		);
 
-		const TaskI::State state = task->Task.GetState();
+		const TaskI::State state = task->GetState();
 		if(state == TaskI::STATE_CANCELED || state == TaskI::STATE_COMPLETE) {
 			if (!task->Initialise()) return false;
 		}
 
-		if(task->Task.GetState() != TaskI::STATE_INITIALISED) return false;
+		if(task->GetState() != TaskI::STATE_INITIALISED) return false;
 
 		std::lock_guard<std::mutex> lock(mLock);
 		mInitialiseList.push_back(task);
@@ -201,7 +204,7 @@ namespace Solaire {
 		{
 			std::lock_guard<std::mutex> lock(mLock);
 			preCount = mPreList.size();
-			for(TaskImplementationPtr i : mBufferList) if(i->Task.GetState() == TaskI::STATE_PRE_EXECUTE) mPreList.push_back(i);
+			for(TaskImplementationPtr i : mBufferList) if(i->GetState() == TaskI::STATE_PRE_EXECUTE) mPreList.push_back(i);
 			preCount = mPreList.size() - preCount;
 			mBufferList.clear();
 			mBufferList.swap(mPostList);
@@ -235,7 +238,7 @@ namespace Solaire {
 
 			if(task) {
 				bool result = false;
-				switch (task->Task.GetState()) {
+				switch (task->GetState()) {
 				case TaskI::STATE_PAUSED:
 					result = task->Resume();
 					break;
@@ -253,7 +256,7 @@ namespace Solaire {
 				}
 
 				if(task) {
-					switch (task->Task.GetState()) {
+					switch (task->GetState()) {
 					case TaskI::STATE_POST_EXECUTE :
 						{
 							std::lock_guard<std::mutex> lock(mLock);
