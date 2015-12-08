@@ -32,7 +32,6 @@ Last Modified	: 8th December 2015
 */
 
 #include <cstdint>
-#include "Init.hpp"
 
 namespace Solaire {
 
@@ -46,6 +45,7 @@ namespace Solaire {
 			STATE_INITIALISED,
 			STATE_PRE_EXECUTE,
 			STATE_EXECUTE,
+			STATE_PAUSED,
 			STATE_POST_EXECUTE,
 			STATE_CANCELED,
 			STATE_COMPLETE
@@ -63,7 +63,7 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL Wait() const throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL WaitFor(const uint32_t) const throw() = 0;
 		virtual State SOLAIRE_EXPORT_CALL GetState() const throw() = 0;
-		virtual SOLAIRE_EXPORT_CALL ~TaskI() throw();
+		virtual SOLAIRE_EXPORT_CALL ~TaskI() throw(){}
 	};
 }
 

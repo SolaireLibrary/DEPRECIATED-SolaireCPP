@@ -31,19 +31,16 @@ Created			: 8th December 2015
 Last Modified	: 8th December 2015
 */
 
-#include "Task I.hpp"
+#include "TaskI.hpp"
 
 namespace Solaire {
-
-	class  TaskImplementation;
-	class TaskCallbacks;
 
 	class TaskCallbacks {
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Cancel() throw() = 0;;
 		virtual bool SOLAIRE_EXPORT_CALL Wait() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL WaitFor(const uint32_t) throw() = 0;
-		virtual SOLAIRE_EXPORT_CALL ~TaskCallbacks() throw();
+		virtual SOLAIRE_EXPORT_CALL ~TaskCallbacks() throw(){}
 	};
 }
 

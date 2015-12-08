@@ -31,7 +31,7 @@ Created			: 6th December 2015
 Last Modified	: 8th December 2015
 */
 
-#include "Task I.hpp"
+#include "TaskI.hpp"
 #include "TaskCallbacks.hpp"
 
 namespace Solaire {
@@ -54,7 +54,7 @@ namespace Solaire {
 		bool SOLAIRE_EXPORT_CALL InitialiseI(TaskCallbacks& aCallbacks) throw() {
 			if(mCallbacks != nullptr) return false;
 			if(mState != STATE_CANCELED && mState != STATE_COMPLETE) return true;
-			mCallbacks = aCallbacks;
+			mCallbacks = &aCallbacks;
 			mState = STATE_INITIALISED;
 			return Initialise();
 		}
