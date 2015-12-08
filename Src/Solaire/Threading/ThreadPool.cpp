@@ -63,6 +63,7 @@ namespace Solaire {
 	private:
 		Allocator& mAllocator;
 		std::mutex mLock;
+		std::condition_variable mPreCondition;
 		std::deque<std::thread> mWorkers;
 		std::deque<TaskImplementationPtr> mInitialiseList;
 		std::deque<TaskImplementationPtr> mPreList;
@@ -163,6 +164,7 @@ namespace Solaire {
 			mPostList.clear();
 			mPauseList.clear();
 		}
+		mPreCondition.notify_all();
 		for(std::thread& i : mWorkers) i.join();
 	}
 
@@ -195,11 +197,20 @@ namespace Solaire {
 
 		for(TaskImplementationPtr i : mBufferList) i->PreExecute();
 
+		uint32_t preCount = 0;
 		{
 			std::lock_guard<std::mutex> lock(mLock);
+			preCount = mPreList.size();
 			for(TaskImplementationPtr i : mBufferList) if(i->Task.GetState() == TaskI::STATE_PRE_EXECUTE) mPreList.push_back(i);
+			preCount = mPreList.size() - preCount;
 			mBufferList.clear();
 			mBufferList.swap(mPostList);
+		}
+
+		if(preCount >= mWorkers.size()) {
+			mPreCondition.notify_all();
+		}else {
+			for(uint32_t i = 0; i < preCount; ++i) mPreCondition.notify_one();
 		}
 
 		for(TaskImplementationPtr i : mBufferList) i->PostExecute();
@@ -261,7 +272,8 @@ namespace Solaire {
 					continue;
 				}
 			}else {
-				//! \todo Wait for task to be pre-executed
+				std::unique_lock<std::mutex> lock(mLock);
+				mPreCondition.wait(lock);
 			}
 		}
 	}
