@@ -52,6 +52,7 @@ namespace Solaire{
 		extern "C" SOLAIRE_EXPORT_API TagComponent* SOLAIRE_EXPORT_CALL _CreateTagComponent(Allocator&) throw();
 		inline TagComponent* CreateTagComponent(Allocator& aAllocator) {return _CreateTagComponent(aAllocator);}
 	#else 
+		static constexpr const char* const CreateTagComponent_FnName = "__CreateTagComponent@4";
 		static TagComponent* (SOLAIRE_EXPORT_CALL *CreateTagComponent)(Allocator&);
 	#endif
 

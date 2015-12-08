@@ -59,6 +59,9 @@ namespace Solaire{
 	inline Allocator& GetDefaultAllocator() { return _GetDefaultAllocator(); }
 	inline Allocator* CreateMemoryArena(Allocator& aAllocator, Allocator& aArenaAllocator, const uint32_t aBytes, const bool aRecycle){ return _CreateMemoryArena(aAllocator, aArenaAllocator, aBytes, aRecycle); }
 #else 
+	static constexpr const char* const GetDefaultAllocator_FnName = "__GetDefaultAllocator@0";
+	static constexpr const char* const CreateMemoryArena_FnName = "__CreateMemoryArena@16";
+
 	static Allocator& (SOLAIRE_EXPORT_CALL *GetDefaultAllocator)();
 	static Allocator* (SOLAIRE_EXPORT_CALL *CreateMemoryArena)(Allocator&, Allocator&, const uint32_t, const bool);
 #endif

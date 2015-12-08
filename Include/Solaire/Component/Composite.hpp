@@ -65,6 +65,7 @@ namespace Solaire{
 		extern "C" SOLAIRE_EXPORT_API Composite* SOLAIRE_EXPORT_CALL _CreateComposite(Allocator&) throw();
 		inline Composite* CreateComposite(Allocator& aAllocator) {return _CreateComposite(aAllocator);}
 	#else 
+		static constexpr const char* const CreateComposite_FnName = "__CreateComposite@4";
 		static Composite* (SOLAIRE_EXPORT_CALL *CreateComposite)(Allocator&);
 	#endif
 
