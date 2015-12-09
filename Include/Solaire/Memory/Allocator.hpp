@@ -33,6 +33,7 @@
 
 #include <cstdint>
 #include "..\Core\Init.hpp"
+#include "SmartAllocation.hpp"
 
 namespace Solaire{
 
@@ -101,7 +102,6 @@ namespace Solaire{
 		/*!
 			\brief Allocated a block of memory that will fit type \a T
 			\detail Allocation size is determined uisng sizeof
-			Object is created using placement new, so manual destructor calls are required.
 			\tparam T The type to allocate.
 			\tparam PARAMS The parameter types to pass to the object's constructor.
 			\param aParams The parameters to pass to the object's constructor.
@@ -109,8 +109,42 @@ namespace Solaire{
 			\see Allocate
 		*/
 		template<class T, typename ...PARAMS>
-		T* AllocateObject(PARAMS&&... aParams) {
+		inline T* RawAllocate(PARAMS&&... aParams) {
 			return new(Allocate(sizeof(T))) T(aParams...);
+		}
+
+		/*!
+			\brief Allocated a block of memory that will fit type \a T
+			\detail Allocation size is determined uisng sizeof
+			\tparam T The type to allocate.
+			\tparam PARAMS The parameter types to pass to the object's constructor.
+			\param aParams The parameters to pass to the object's constructor.
+			\return The address of the object, or nullptr if the allocation failed.
+			\see Allocate
+		*/
+		template<class T, typename ...PARAMS>
+		inline UniqueAllocation<T> UniqueAllocate(PARAMS&&... aParams) {
+			return UniqueAllocation<T>(
+				*this,
+				new(Allocate(sizeof(T))) T(aParams...)
+			);
+		}
+
+		/*!
+			\brief Allocated a block of memory that will fit type \a T
+			\detail Allocation size is determined uisng sizeof
+			\tparam T The type to allocate.
+			\tparam PARAMS The parameter types to pass to the object's constructor.
+			\param aParams The parameters to pass to the object's constructor.
+			\return The address of the object, or nullptr if the allocation failed.
+			\see Allocate
+		*/
+		template<class T, typename ...PARAMS>
+		inline SharedAllocation<T> SharedAllocate(PARAMS&&... aParams) {
+			return SharedAllocation<T>(
+				*this,
+				new(Allocate(sizeof(T))) T(aParams...)
+			);
 		}
     };
 

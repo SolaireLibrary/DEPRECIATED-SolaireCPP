@@ -106,7 +106,7 @@ namespace Solaire{
 
 	extern "C" {
 		SOLAIRE_EXPORT_API TagComponent* SOLAIRE_EXPORT_CALL _CreateTagComponent(Allocator& aAllocator) {
-			return aAllocator.AllocateObject<TagComponentImplementation>(aAllocator);
+			return aAllocator.RawAllocate<TagComponentImplementation>(aAllocator);
 		}
 	}
 

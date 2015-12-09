@@ -32,49 +32,194 @@
 */
 
 #include <memory>
-#include <functional>
-#include "Allocator.hpp"
 
-namespace Solaire{
+namespace Solaire {
 
-	template<class T>
-	using SharedAllocation = std::shared_ptr<T>;
+	class Allocator;
 
 	template<class T>
-	using UniqueAllocation = std::unique_ptr<T, std::function<void(void*)>>;
+	class UniqueAllocation {
+	private:
+		Allocator* mAllocator;
+		T* mObject;
+	private:
+		bool DeleteObject() throw() {
+			if(mObject == nullptr) return false;
+			mObject->~T();
+			if(! mAllocator->Deallocate(mObject)) return false;
+			mObject = nullptr;
+			return true;
+		}
 
+		UniqueAllocation(const UniqueAllocation<T>&) = delete;
+		UniqueAllocation& operator=(const UniqueAllocation<T>&) = delete;
+	public:
+		UniqueAllocation() throw() :
+			mAllocator(nullptr),
+			mObject(nullptr)
+		{}
+
+		UniqueAllocation(Allocator& aAllocator, T* const aObject) throw() :
+			mAllocator(&aAllocator),
+			mObject(aObject)
+		{}
+
+		template<class T2>
+		UniqueAllocation(UniqueAllocation<T2>&& aOther) throw() :
+			mAllocator(aOther.mAllocator),
+			mObject(aOther.ReleaseOwnership())
+		{}
+
+		~UniqueAllocation() throw() {
+			DeleteObject();
+		}
+
+		template<class T2>
+		UniqueAllocation& operator=(UniqueAllocation<T2>&& aOther) throw() {
+			Swap(aOther);
+			return *this;
+		}
+
+		void Swap(UniqueAllocation<T>& aOther) throw() {
+			std::swap(mAllocator, aOther.mAllocator);
+			std::swap(mObject, aOther.mObject);
+		}
+
+		T* ReleaseOwnership() throw() {
+			T* const tmp = mObject;
+			mObject = nullptr;
+			return tmp;
+		}
+
+		Allocator& GetAllocator() const throw(){
+			return *mAllocator;
+		}
+
+		operator bool() const throw() {
+			return mObject != nullptr;
+		}
+
+		T& operator*() const throw() {
+			return *mObject;
+		}
+
+		T* operator->() const throw() {
+			return mObject;
+		}
+	}; 
+	
 	template<class T>
-	SOLAIRE_DEFAULT_API SharedAllocation<T> SOLAIRE_DEFAULT_CALL CreateSharedAllocation(Allocator& aAllocator, T* const aObject) {
-		return SharedAllocation<T>(
-			aObject,
-			[&](T* aPtr) {
-				aPtr->~T();
-				aAllocator.Deallocate(aPtr);
+	class SharedAllocation {
+	private:
+		uint32_t* mCount;
+		Allocator* mAllocator;
+		T* mObject;
+	private:
+		bool DeleteObject() throw() {
+			if(mCount == nullptr) return false;
+			-- *mCount;
+			if(*mCount == 0) {
+				mAllocator->Deallocate(mCount);
+				mCount = nullptr;
+			}else {
+				return false;
 			}
-		);
-	}
 
-	template<class T>
-	SOLAIRE_DEFAULT_API UniqueAllocation<T> SOLAIRE_DEFAULT_CALL CreateUniqueAllocation(Allocator& aAllocator, T* const aObject) {
-		return UniqueAllocation<T>(
-			aObject,
-			[&](void* aPtr) {
-				static_cast<T*>(aPtr)->~T();
-				aAllocator.Deallocate(aPtr);
-			}
-		);
-	}
+			if(mObject == nullptr) return false;
+			mObject->~T();
+			if(! mAllocator->Deallocate(mObject)) return false;
+			mObject = nullptr;
 
-	template<class T, typename... PARAMS>
-	SOLAIRE_DEFAULT_API SharedAllocation<T> SOLAIRE_DEFAULT_CALL SharedAllocate(Allocator& aAllocator, PARAMS&& ...aParams) {
-		return CreateSharedAllocation<T>(aAllocator, aAllocator.AllocateObject<T>(aParams...));
-	}
+			return true;
+		}
 
-	template<class T, typename... PARAMS>
-	SOLAIRE_DEFAULT_API UniqueAllocation<T> SOLAIRE_DEFAULT_CALL UniqueAllocate(Allocator& aAllocator, PARAMS&& ...aParams) {
-		return CreateUniqueAllocation<T>(aAllocator, aAllocator.AllocateObject<T>(aParams...));
-	}
+	public:
+		SharedAllocation() throw() :
+			mCount(nullptr),
+			mAllocator(nullptr),
+			mObject(nullptr)
+		{}
 
+		SharedAllocation(Allocator& aAllocator, T* const aObject) throw() :
+			mCount(new(aAllocator.Allocate(sizeof(uint32_t))) uint32_t(1)),
+			mAllocator(&aAllocator),
+			mObject(aObject)
+		{}
+
+		template<class T2>
+		SharedAllocation(const SharedAllocation<T2>& aOther) throw() :
+			mCount(aOther.mCount),
+			mAllocator(aOther.mAllocator),
+			mObject(aOther.ReleaseOwnership())
+		{
+			++ *mCount;
+		}
+
+		template<class T2>
+		SharedAllocation(SharedAllocation<T2>&& aOther) throw() :
+			mCount(aOther.mCount),
+			mAllocator(aOther.mAllocator),
+			mObject(aOther.ReleaseOwnership())
+		{
+			++ *mCount;
+		}
+
+		~SharedAllocation() throw() {
+			DeleteObject();
+		}
+
+		template<class T2>
+		SharedAllocation& operator=(const SharedAllocation<T2>& aOther) throw() {
+			DeleteObject();
+			mCount = aOther.mCount;
+			mAllocator = aOther.mAllocator;
+			mObject = aOther.mObject;
+
+			++ *mCount;
+			return *this;
+		}
+
+		template<class T2>
+		SharedAllocation& operator=(SharedAllocation<T2>&& aOther) throw() {
+			Swap(aOther);
+			return *this;
+		}
+
+		void Swap(SharedAllocation<T>& aOther) throw() {
+			std::swap(mAllocator, aOther.mAllocator);
+			std::swap(mObject, aOther.mObject);
+		}
+
+		T* ReleaseOwnership() throw() {
+			if(*mCount != 1) return nullptr;
+
+			T* const tmp = mObject;
+			mAllocator->Deallocate(mCount);
+			mCount = nullptr;
+			mObject = nullptr;
+			return tmp;
+		}
+
+		Allocator& GetAllocator() const throw() {
+			return *mAllocator;
+		}
+
+		uint32_t GetUserCount() const throw() {
+			return mCount == nullptr ? 0 : *mCount;
+		}
+
+		operator bool() const throw() {
+			return mObject != nullptr;
+		}
+
+		T& operator*() const throw() {
+			return *mObject;
+		}
+
+		T* operator->() const throw() {
+			return mObject;
+		}
+	};
 }
 
 #endif

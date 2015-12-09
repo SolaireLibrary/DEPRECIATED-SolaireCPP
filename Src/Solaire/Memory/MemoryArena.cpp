@@ -222,8 +222,8 @@ namespace Solaire{
 	extern "C" {
 		SOLAIRE_EXPORT_API Allocator* SOLAIRE_EXPORT_CALL _CreateMemoryArena(Allocator& aAllocator, Allocator& aArenaAllocator, const uint32_t aInitialSize, const bool aRecycle) throw() {
 			return aRecycle ?
-				(Allocator*) aAllocator.AllocateObject<AdvancedMemoryArena>(aArenaAllocator, aInitialSize) :
-				(Allocator*) aAllocator.AllocateObject<BasicMemoryArena>(aArenaAllocator, aInitialSize);
+				(Allocator*) aAllocator.RawAllocate<AdvancedMemoryArena>(aArenaAllocator, aInitialSize) :
+				(Allocator*) aAllocator.RawAllocate<BasicMemoryArena>(aArenaAllocator, aInitialSize);
 		}
 	}
 

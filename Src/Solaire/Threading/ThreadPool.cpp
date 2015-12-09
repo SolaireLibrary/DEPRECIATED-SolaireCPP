@@ -75,7 +75,7 @@ namespace Solaire {
 		// Inherited from TaskExecutorI
 		
 		bool SOLAIRE_EXPORT_CALL Schedule(TaskI& aTask) throw() override {
-			const SharedAllocation<TaskImplementation> task = SharedAllocate<TaskImplementation>(mAllocator, aTask);
+			const SharedAllocation<TaskImplementation> task = mAllocator.SharedAllocate<TaskImplementation>(aTask);
 
 			const TaskI::State state = task->GetState();
 			if(state == TaskI::STATE_CANCELED || state == TaskI::STATE_COMPLETE) {
@@ -125,10 +125,10 @@ namespace Solaire {
 				{
 					std::lock_guard<std::mutex> lock(mLock);
 					if(! mPauseList.empty()) {
-						task.swap(mPauseList.front());
+						task.Swap(mPauseList.front());
 						mPauseList.pop_front();
 					}else if(! mPreList.empty()) {
-						task.swap(mPreList.front());
+						task.Swap(mPreList.front());
 						mPreList.pop_front();
 					}                
 				}  
@@ -143,12 +143,12 @@ namespace Solaire {
 						result = task->Execute();
 						break;
 					default:
-						task.swap(SharedAllocation<TaskImplementation>());
+						task.Swap(SharedAllocation<TaskImplementation>());
 						continue;
 					}
 
 					if(! result) {
-						task.swap(SharedAllocation<TaskImplementation>());
+						task.Swap(SharedAllocation<TaskImplementation>());
 						continue;
 					}
 
@@ -168,7 +168,7 @@ namespace Solaire {
 							break;
 						}
 				
-						task.swap(SharedAllocation<TaskImplementation>());
+						task.Swap(SharedAllocation<TaskImplementation>());
 						continue;
 					}
 				}else {
@@ -181,7 +181,7 @@ namespace Solaire {
 	                 
 	extern "C" {
 		SOLAIRE_EXPORT_API TaskExecutorI* SOLAIRE_EXPORT_CALL _CreateThreadPool(Allocator& aAllocator, const uint32_t aThreads) throw() {
-			return aAllocator.AllocateObject<ThreadPool>(aAllocator, aThreads);
+			return aAllocator.RawAllocate<ThreadPool>(aAllocator, aThreads);
 		}
 	}
 
