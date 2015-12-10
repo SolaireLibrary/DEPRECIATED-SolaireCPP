@@ -34,13 +34,14 @@ Last Modified	: 9th December 2015
 #include "..\ModuleHeader.hpp"
 #include "..\..\Core\ModuleHeader.hpp"
 
+#define SOLAIRE_GL_VER_EQ(aMajor, aMinor) (SOLAIRE_GL_VER_MAJOR == aMajor && SOLAIRE_GL_VER_MINOR == aMinor)
 #define SOLAIRE_GL_VER_LT(aMajor, aMinor) (SOLAIRE_GL_VER_MAJOR < aMajor || (SOLAIRE_GL_VER_MAJOR == aMajor && SOLAIRE_GL_VER_MINOR < aMinor))
 #define SOLAIRE_GL_VER_LTE(aMajor, aMinor) (SOLAIRE_GL_VER_MAJOR < aMajor || (SOLAIRE_GL_VER_MAJOR == aMajor && SOLAIRE_GL_VER_MINOR <= aMinor))
 #define SOLAIRE_GL_VER_GT(aMajor, aMinor) (SOLAIRE_GL_VER_MAJOR > aMajor || (SOLAIRE_GL_VER_MAJOR == aMajor && SOLAIRE_GL_VER_MINOR > aMinor))
 #define SOLAIRE_GL_VER_GTE(aMajor, aMinor) (SOLAIRE_GL_VER_MAJOR > aMajor || (SOLAIRE_GL_VER_MAJOR == aMajor && SOLAIRE_GL_VER_MINOR >= aMinor))
 
 #define SOLAIRE_GL_VER_MAJOR 3
-#define SOLAIRE_GL_VER_MINOR 3
+#define SOLAIRE_GL_VER_MINOR 0
 
 #if SOLAIRE_GL_VER_MAJOR == 4
 	#if SOLAIRE_GL_VER_MINOR == 5

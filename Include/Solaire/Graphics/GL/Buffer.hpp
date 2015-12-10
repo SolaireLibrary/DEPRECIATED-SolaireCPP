@@ -242,21 +242,29 @@ namespace Solaire {
 				#if SOLAIRE_GL_VER_GTE(4,5)
 					glCopyNamedBufferSubData(other.mID, mID, 0, 0, mSize);
 				#endif
-				#if SOLAIRE_GL_VER_GTE(3,1) && SOLAIRE_GL_VER_LT(4,5)
+				#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,5)
 					GLuint previousRead = NULL_ID;  
 					GLuint previousWrite = NULL_ID;
 					glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previousRead));
 					glGetIntegerv(SECONDARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previousWrite));
 			
 					glBindBuffer(PRIMARY_BUFFER, aOther.mID);
-					glBindBuffer(SECONDAY_BUFFER, mID);
-			
-					glCopyBufferSubData(PRIMARY_BUFFER, SECONDAY_BUFFER, 0, 0, mSize);
+					glBindBuffer(SECONDARY_BUFFER, mID);
+
+					#if SOLAIRE_GL_VER_EQ(3,0)
+						const void* const readMap = glMapBufferRange(PRIMARY_BUFFER, 0, mSize, GL_MAP_READ_BIT);
+						void* const writeMap = glMapBufferRange(SECONDARY_BUFFER, 0, mSize, GL_MAP_WRITE_BIT);
+						std::memcpy(writeMap, redMap, mSize);
+						glUnmapBuffer(PRIMARY_BUFFER);
+						glUnmapBuffer(SECONDARY_BUFFER);
+					#else
+						glCopyBufferSubData(PRIMARY_BUFFER, SECONDARY_BUFFER, 0, 0, mSize);
+					#endif
 			
 					glBindBuffer(PRIMARY_BUFFER, previousRead);
-					glBindBuffer(SECONDAY_BUFFER, previousWrite);
+					glBindBuffer(SECONDARY_BUFFER, previousWrite);
 				#endif
-				#if SOLAIRE_GL_VER_LT(3,1)
+				#if SOLAIRE_GL_VER_LT(3,0)
 					#error SolaireCPP : BufferImplementation::operator=(copy) only defined for OpenGL 3.0+
 				#endif
 			}
