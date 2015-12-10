@@ -288,7 +288,7 @@ namespace Solaire {
 				GLuint previous = NULL_ID;
 				glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
 				glBindBuffer(PRIMARY_BUFFER, mID);
-				void* const mapping = glMapBufferRange(PRIMARY_BUFFER, aOffset, aSize, GL_MAP_EAD_BIT | aSyncMode);
+				void* const mapping = glMapBufferRange(PRIMARY_BUFFER, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
 				std::memcpy(mapping, aData, aSize);
 				glUnmapBuffer(PRIMARY_BUFFER);
 				glBindBuffer(PRIMARY_BUFFER, previous);
@@ -321,7 +321,7 @@ namespace Solaire {
 				return glUnmapNamedBuffer(mID);
 			}
 		#endif
-		#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,4)
+		#if SOLAIRE_GL_VER_GTE(3,0)
 			template<const bool FLAG = READ>
 			typename std::enable_if<FLAG, const void*>::type MapRangeRead(const Target aTarget) const throw() {
 				return glMapBufferRange(aTarget, GL_READ_ONLY);
