@@ -39,11 +39,6 @@ namespace Solaire {
 		enum ID : GLuint {
 			NULL_ID = 0
 		};
-	private:
-		Object(Object&&) = delete;
-		Object(const Object&) = delete;
-		Object& operator=(Object&&) = delete;
-		Object& operator(const Object&) = delete;
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Create() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Destroy() throw() = 0;
