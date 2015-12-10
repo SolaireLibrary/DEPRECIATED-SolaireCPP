@@ -38,7 +38,7 @@ namespace Solaire {
 		{}
 
 		SOLAIRE_EXPORT_CALL ~TaskImplementation() throw() {
-
+			mTask.RemoveCallbacks();
 		}
 
 		inline bool Initialise() throw() {

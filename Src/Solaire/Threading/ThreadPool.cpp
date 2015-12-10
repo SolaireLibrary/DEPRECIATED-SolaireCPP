@@ -93,7 +93,7 @@ namespace Solaire {
 				std::swap(mBufferList, mInitialiseList);
 			}
 
-			for(SharedAllocation<TaskImplementation> i : mBufferList) i->PreExecute();
+			for(SharedAllocation<TaskImplementation> i : mBufferList) if(! i->PreExecute()) i->Cancel();
 
 			uint32_t preCount = 0;
 			{
@@ -111,7 +111,7 @@ namespace Solaire {
 				for(uint32_t i = 0; i < preCount; ++i) mPreCondition.notify_one();
 			}
 
-			for(SharedAllocation<TaskImplementation> i : mBufferList) i->PostExecute();
+			for(SharedAllocation<TaskImplementation> i : mBufferList) if(! i->PostExecute()) i->Cancel();
 			mBufferList.clear();
 
 			return true;
@@ -137,7 +137,7 @@ namespace Solaire {
 					case TaskI::STATE_PAUSED:
 						result = task->Resume();
 						break;
-					case TaskI::STATE_EXECUTE:
+					case TaskI::STATE_PRE_EXECUTE:
 						result = task->Execute();
 						break;
 					default:
@@ -146,6 +146,7 @@ namespace Solaire {
 					}
 
 					if(! result) {
+						task->Cancel();
 						task.Swap(SharedAllocation<TaskImplementation>());
 						continue;
 					}
@@ -166,7 +167,6 @@ namespace Solaire {
 							break;
 						}
 				
-						task.Swap(SharedAllocation<TaskImplementation>());
 						continue;
 					}
 				}else {

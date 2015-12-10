@@ -52,6 +52,7 @@ namespace Solaire {
 		};
 	protected :
 		virtual bool SOLAIRE_EXPORT_CALL InitialiseI(TaskCallbacks&) throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL RemoveCallbacks() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnPreExecuteI() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnExecuteI() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnPostExecuteI() throw() = 0;

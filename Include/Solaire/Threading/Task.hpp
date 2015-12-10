@@ -51,8 +51,11 @@ namespace Solaire {
 
 		// Inherited from TaskI
 		
+		void SOLAIRE_EXPORT_CALL RemoveCallbacks() throw() override{
+			mCallbacks = nullptr;
+		}
+		
 		bool SOLAIRE_EXPORT_CALL InitialiseI(TaskCallbacks& aCallbacks) throw() override {
-			if(mCallbacks != nullptr) return false;
 			switch (mState) {
 			case STATE_INITIALISED:
 				mCallbacks = &aCallbacks;
@@ -76,13 +79,14 @@ namespace Solaire {
 		bool SOLAIRE_EXPORT_CALL OnExecuteI() throw() override {
 			if(mState != STATE_PRE_EXECUTE) return false;
 			mState = STATE_EXECUTE;
-			return OnExecute();
+			const bool result = OnExecute();
+			mState = STATE_POST_EXECUTE;
+			return result;
 		}
 
 		bool SOLAIRE_EXPORT_CALL OnPostExecuteI() throw() override {
-			if(mState != STATE_EXECUTE) return false;
+			if(mState != STATE_POST_EXECUTE) return false;
 			const bool result = OnPostExecute();
-			mCallbacks = nullptr;
 			mState = STATE_COMPLETE;
 			return result;
 		}
@@ -90,7 +94,6 @@ namespace Solaire {
 		bool SOLAIRE_EXPORT_CALL Pause() throw() override {
 			if(mState != STATE_EXECUTE) return false;
 			const bool result = OnPause();
-			mCallbacks = nullptr;
 			mState = STATE_PAUSED;
 			return result;
 		}
@@ -104,7 +107,6 @@ namespace Solaire {
 		bool SOLAIRE_EXPORT_CALL OnCancelI() throw() override {
 			if(mState != STATE_CANCELED || mState != STATE_COMPLETE || mState == STATE_INITIALISED) return false;
 			const bool result = OnCancel();
-			mCallbacks = nullptr;
 			mState = STATE_CANCELED;
 			return result;
 		}
