@@ -36,6 +36,27 @@ Last Modified	: 9th December 2015
 namespace Solaire {
 
 	class Buffer : public Object {
+	protected:
+		enum : GLenum {
+			#if SOLAIRE_GL_VER_GTE(4,2)
+				PRIMARY_BUFFER = GL_COPY_WRITE_BUFFER,
+				PRIMARY_BUFFER_BINDING = GL_COPY_WRITE_BUFFER_BINDING,
+				SECONDARY_BUFFER = GL_COPY_READ_BUFFER,
+				SECONDARY_BUFFER_BINDING = GL_COPY_READ_BUFFER_BINDING
+			#endif
+			#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,2)
+				PRIMARY_BUFFER = GL_ARRAY_BUFFER,
+				PRIMARY_BUFFER_BINDING = GL_ARRAY_BUFFER_BINDING,
+				SECONDARY_BUFFER = GL_ELEMENT_ARRAY_BUFFER,
+				SECONDARY_BUFFER_BINDING = GL_ELEMENT_ARRAY_BUFFER_BINDING
+			#endif
+			#if SOLAIRE_GL_VER_LT(3,0)
+				PRIMARY_BUFFER = GL_INVALID_ENUM,
+				PRIMARY_BUFFER_BINDING = GL_INVALID_ENUM,
+				SECONDARY_BUFFER = GL_INVALID_ENUM,
+				SECONDARY_BUFFER_BINDING = GL_INVALID_ENUM
+			#endif
+		};
 	public:
 		enum Target : GLenum {
 			#if SOLAIRE_GL_VER_GTE(3,1)
@@ -85,10 +106,10 @@ namespace Solaire {
 		Buffer& operator=(Buffer&&) = delete;
 		Buffer& operator=(const Buffer&) = delete;
 	protected:
-		#if SOLAIRE_GL_VER_GTE(4,0)
+		#if SOLAIRE_GL_VER_GTE(4,4)
 			virtual GLbitfield SOLAIRE_EXPORT_CALL GetCreationFlags() const throw() = 0;
 		#endif
-		#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,0)
+		#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,4)
 			virtual GLenum SOLAIRE_EXPORT_CALL GetUsage() const throw() = 0;
 		#endif
 	public:
@@ -128,19 +149,22 @@ namespace Solaire {
 			#endif
 			#if SOLAIRE_GL_VER_GTE(4,4) && SOLAIRE_GL_VER_LT(4,5)
 				GLuint previous = NULL_ID;
-				glGetIntegerv(GL_COPY_WRITE_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
-				glBindBuffer(GL_COPY_WRITE_BUFFER, mID);
-				glBufferStorage(GL_COPY_WRITE_BUFFER, mSize, nullptr, GetCreationFlags());
-				glBindBuffer(GL_COPY_WRITE_BUFFER, previous);
+				glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
+				glBindBuffer(PRIMARY_BUFFER, mID);
+				glBufferStorage(PRIMARY_BUFFER, mSize, nullptr, GetCreationFlags());
+				glBindBuffer(PRIMARY_BUFFER, previous);
 				return true;
 			#endif
-			#if SOLAIRE_GL_VER_LT(4,4)
+			#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,4)
 				GLuint previous = NULL_ID;
-				glGetIntegerv(GL_ARRAY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
-				glBindBuffer(GL_ARRAY_BUFFER, mID);
-				glBufferData(GL_ARRAY_BUFFER, mSize, nullptr, GetUsage());
-				glBindBuffer(GL_ARRAY_BUFFER, previous);
+				glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
+				glBindBuffer(PRIMARY_BUFFER, mID);
+				glBufferData(PRIMARY_BUFFER, mSize, nullptr, GetUsage());
+				glBindBuffer(PRIMARY_BUFFER, previous);
 				return true;
+			#endif
+			#if SOLAIRE_GL_VER_LT(3,0)
+				#error SolaireCPP : Buffer::Create only defined for OpenGL 3.1+
 			#endif
 		}
 	
@@ -156,8 +180,9 @@ namespace Solaire {
 
 	template<const bool READ, const bool WRITE>
 	class BufferImplementation : public Buffer {
+	protected:
 		// Inherited from BufferBase
-		#if SOLAIRE_GL_VER_GTE(4,0)
+		#if SOLAIRE_GL_VER_GTE(4,4)
 			GLbitfield SOLAIRE_EXPORT_CALL GetCreationFlags() const throw() override {
 				enum : GLbitfield{
 					CREATION_FLAGS = (READ ? GL_MAP_READ_BIT : 0) | (WRITE ? GL_MAP_WRITE_BIT : 0);
@@ -166,7 +191,7 @@ namespace Solaire {
 				return CREATION_FLAGS;
 			}
 		#endif
-		#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,0)
+		#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,4)
 			GLenum SOLAIRE_EXPORT_CALL GetUsage() const throw() override {
 				//! \todo Check usage enums are optimal
 				if(READ && WRITE) return GL_DYNAMIC_COPY;
@@ -218,41 +243,63 @@ namespace Solaire {
 				#if SOLAIRE_GL_VER_GTE(4,5)
 					glCopyNamedBufferSubData(other.mID, mID, 0, 0, mSize);
 				#endif
-				#if SOLAIRE_GL_VER_GTE(4,0) && SOLAIRE_GL_VER_LT(4,5)
+				#if SOLAIRE_GL_VER_GTE(3,1) && SOLAIRE_GL_VER_LT(4,5)
 					GLuint previousRead = NULL_ID;  
 					GLuint previousWrite = NULL_ID;
-					glGetIntegerv(GL_COPY_READ_BUFFER_BINDING, reinterpret_cast<GLint*>(&previousRead));
-					glGetIntegerv(GL_COPY_WRITE_BUFFER_BINDING, reinterpret_cast<GLint*>(&previousWrite));
+					glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previousRead));
+					glGetIntegerv(SECONDARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previousWrite));
 			
-					glBindBuffer(GL_COPY_READ_BUFFER, aOther.mID);
-					glBindBuffer(GL_COPY_WRITE_BUFFER, mID);
+					glBindBuffer(PRIMARY_BUFFER, aOther.mID);
+					glBindBuffer(SECONDAY_BUFFER, mID);
 			
-					glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, mSize);
+					glCopyBufferSubData(PRIMARY_BUFFER, SECONDAY_BUFFER, 0, 0, mSize);
 			
-					glBindBuffer(GL_COPY_READ_BUFFER, previousRead);
-					glBindBuffer(GL_COPY_WRITE_BUFFER, previousWrite);
+					glBindBuffer(PRIMARY_BUFFER, previousRead);
+					glBindBuffer(SECONDAY_BUFFER, previousWrite);
 				#endif
-				#if SOLAIRE_GL_VER_LT(4,0)
-					#error SolaireCPP : BufferImplementation::operator=(copy) only defined for OpenGL 4.0+
+				#if SOLAIRE_GL_VER_LT(3,1)
+					#error SolaireCPP : BufferImplementation::operator=(copy) only defined for OpenGL 3.0+
 				#endif
 			}
 		}
-	
-		#if SOLAIRE_GL_VER_GTE(4,4)
-			template<const bool FLAG = READ>
-			typename std::enable_if<FLAG, void>::type Read(const GLuint aOffset, void* const aData, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
+
+		template<const bool FLAG = READ>
+		typename std::enable_if<FLAG, void>::type Read(const GLuint aOffset, void* const aData, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
+			#if SOLAIRE_GL_VER_GTE(4,4)
 				const void* const mapping = glMapNamedBufferRange(mID, aOffset, aSize, GL_MAP_EAD_BIT | aSyncMode);
 				std::memcpy(aData, mapping, aSize);
 				glUnmapNamedBuffer(mID);
-			}  
-	 
-			template<const bool FLAG = WRITE> 
-			typename std::enable_if<FLAG, void>::type Write(const GLuint aOffset, void* const aData, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {
+			#endif
+			#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,4)
+				GLuint previous = NULL_ID;
+				glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
+				glBindBuffer(PRIMARY_BUFFER, mID);
+				const void* const mapping = glMapBufferRange(PRIMARY_BUFFER, aOffset, aSize, GL_MAP_EAD_BIT | aSyncMode);
+				std::memcpy(aData, mapping, aSize);
+				glUnmapBuffer(PRIMARY_BUFFER);
+				glBindBuffer(PRIMARY_BUFFER, previous);
+			#endif
+		}
+
+		template<const bool FLAG = WRITE>
+		typename std::enable_if<FLAG, void>::type Write(const GLuint aOffset, void* const aData, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {
+			#if SOLAIRE_GL_VER_GTE(4,4)
 				void* const mapping = glMapNamedBufferRange(mID, aOffset, aSize, GL_MAP_WRITE_BIT | aInvMode | aSyncMode);
 				std::memcpy(mapping, aData, aSize);
 				glUnmapNamedBuffer(mID);
-			}
+			#endif
+			#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,4)
+				GLuint previous = NULL_ID;
+				glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
+				glBindBuffer(PRIMARY_BUFFER, mID);
+				void* const mapping = glMapBufferRange(PRIMARY_BUFFER, aOffset, aSize, GL_MAP_EAD_BIT | aSyncMode);
+				std::memcpy(mapping, aData, aSize);
+				glUnmapBuffer(PRIMARY_BUFFER);
+				glBindBuffer(PRIMARY_BUFFER, previous);
+			#endif
+		}
 	
+		#if SOLAIRE_GL_VER_GTE(4,4)
 			template<const bool FLAG = READ>
 			typename std::enable_if<FLAG, const void*>::type MapRangeRead() const throw() {
 				return glMapNamedBufferRange(mID, GL_READ_ONLY);
