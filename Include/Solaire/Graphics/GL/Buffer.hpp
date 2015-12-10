@@ -174,14 +174,17 @@ namespace Solaire {
 
 	//! \todo Persistant mapping
 
-	template<const bool READ, const bool WRITE>
+	template<const bool READ, const bool WRITE, const bool PERSISSTENT = false>
 	class BufferImplementation : public Buffer {
+	public:
+		static_assert(READ || WRITE, "SolaireCpp : Buffer must have READ and/or WRITE set");
+		static_assert((! PERSISSTENT) || (PERSISSTENT && SOLAIRE_GL_VER_GTE(4, 4)), "SolaireCpp : Persistent Buffers only supported on OpenGL 4.4+");
 	protected:
 		// Inherited from BufferBase
 		#if SOLAIRE_GL_VER_GTE(4,4)
 			GLbitfield SOLAIRE_EXPORT_CALL GetCreationFlags() const throw() override {
 				enum : GLbitfield{
-					CREATION_FLAGS = (READ ? GL_MAP_READ_BIT : 0) | (WRITE ? GL_MAP_WRITE_BIT : 0);
+					CREATION_FLAGS = (READ ? GL_MAP_READ_BIT : 0) | (WRITE ? GL_MAP_WRITE_BIT : 0) | (PERSISTENT ? GL_MAP_PERSISTENT_BIT : 0);
 				};
 		
 				return CREATION_FLAGS;
@@ -201,16 +204,16 @@ namespace Solaire {
 			Buffer(aSize)
 		{}
 	
-		template<const bool R, const bool W>
-		BufferImplementation(typename std::enable_if<(READ >= R) && (WRITE >= W), BufferImplementation<R, W>&&>::type aOther) :
+		template<const bool R, const bool W, const bool P>
+		BufferImplementation(typename std::enable_if<(READ >= R) && (WRITE >= W), BufferImplementation<R, W, P>&&>::type aOther) :
 			Buffer(aOther.mSize)
 		{
 			mID = aOther.mID;
 			aOther.mID = NULL_ID;
 		}
 	
-		template<const bool R, const bool W>
-		BufferImplementation(typename std::enable_if<R && WRITE, BufferImplementation<R, W>&>::type aOther) :
+		template<const bool R, const bool W, const bool P>
+		BufferImplementation(typename std::enable_if<R && WRITE, BufferImplementation<R, W, P>&>::type aOther) :
 			Buffer(0)
 		{
 			operator=(aOther);
@@ -220,15 +223,15 @@ namespace Solaire {
 			Destroy();
 		}
 	
-		template<const bool R, const bool W>
-		typename std::enable_if<(READ >= R) && (WRITE >= W), BufferImplementation<READ, WRITE>&>::type operator=(BufferImplementation<R, W>&& aOther) {
+		template<const bool R, const bool W, const bool P>
+		typename std::enable_if<(READ >= R) && (WRITE >= W), BufferImplementation<READ, WRITE, PERSISSTENT>&>::type operator=(BufferImplementation<R, W, P>&& aOther) {
 			std::swap(mID, aOther.mID);
 			std::swap(mSize, aOther.mSize);
 			return *this;
 		}
 	
-		template<const bool R, const bool W>
-		typename std::enable_if<R && WRITE, BufferImplementation<READ, WRITE>&>::type operator=(const BufferImplementation<R, W>& aOther) {
+		template<const bool R, const bool W, const bool P>
+		typename std::enable_if<R && WRITE, BufferImplementation<READ, WRITE, PERSISSTENT>&>::type operator=(const BufferImplementation<R, W, P>& aOther) {
 			if(mSize < aOther.mSize) {
 				Destroy();
 				mSize = aOther.mSize;
@@ -262,7 +265,7 @@ namespace Solaire {
 		template<const bool FLAG = READ>
 		typename std::enable_if<FLAG, void>::type Read(const GLuint aOffset, void* const aData, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
 			#if SOLAIRE_GL_VER_GTE(4,4)
-				const void* const mapping = glMapNamedBufferRange(mID, aOffset, aSize, GL_MAP_EAD_BIT | aSyncMode);
+				const void* const mapping = glMapNamedBufferRange(mID, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
 				std::memcpy(aData, mapping, aSize);
 				glUnmapNamedBuffer(mID);
 			#endif
@@ -270,7 +273,7 @@ namespace Solaire {
 				GLuint previous = NULL_ID;
 				glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
 				glBindBuffer(PRIMARY_BUFFER, mID);
-				const void* const mapping = glMapBufferRange(PRIMARY_BUFFER, aOffset, aSize, GL_MAP_EAD_BIT | aSyncMode);
+				const void* const mapping = glMapBufferRange(PRIMARY_BUFFER, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
 				std::memcpy(aData, mapping, aSize);
 				glUnmapBuffer(PRIMARY_BUFFER);
 				glBindBuffer(PRIMARY_BUFFER, previous);
@@ -288,7 +291,7 @@ namespace Solaire {
 				GLuint previous = NULL_ID;
 				glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
 				glBindBuffer(PRIMARY_BUFFER, mID);
-				void* const mapping = glMapBufferRange(PRIMARY_BUFFER, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
+				void* const mapping = glMapBufferRange(PRIMARY_BUFFER, aOffset, aSize, GL_MAP_WRITE_BIT | aSyncMode);
 				std::memcpy(mapping, aData, aSize);
 				glUnmapBuffer(PRIMARY_BUFFER);
 				glBindBuffer(PRIMARY_BUFFER, previous);
@@ -298,26 +301,37 @@ namespace Solaire {
 		#if SOLAIRE_GL_VER_GTE(4,4)
 			template<const bool FLAG = READ>
 			typename std::enable_if<FLAG, const void*>::type MapRangeRead() const throw() {
-				return glMapNamedBufferRange(mID, GL_READ_ONLY);
+				if(PERSISTANT) {
+					return MapRangeRead(0, mSize);
+				}else {
+					return glMapNamedBufferRange(mID, GL_READ_ONLY);
+				}
 			}  
 		
 			template<const bool FLAG = WRITE>
 			typename std::enable_if<FLAG, void*>::type MapRangeWrite() throw() {
-				return glMapNamedBufferRange(mID, READ ? GL_READ_WRITE : GL_WRITE_ONLY);
+				if(PERSISTANT) {
+					return MapRangeWrite(0, mSize);
+				}else {
+					enum : GLenum { MODE = READ ? GL_READ_WRITE : GL_WRITE_ONLY };
+					return glMapNamedBufferRange(mID, MODE);
+				}
 			}  
 		
 			template<const bool FLAG = READ>
 			typename std::enable_if<FLAG, const void*>::type MapRangeRead(const GLuint aOffset, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
-				return glMapNamedBufferRange(mID, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
+				const GLbitfield flags = GL_MAP_READ_BIT | aSyncMode | (PERSISTENT ? GL_MAP_PERSISTENT_BIT : 0);
+				return glMapNamedBufferRange(mID, aOffset, aSize, flags);
 			}  
 		
 			template<const bool FLAG = WRITE> 
 			typename std::enable_if<FLAG, void*>::type MapRangeWrite(const GLuint aOffset, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {  
-				return glMapNamedBufferRange(mID, aOffset, aSize, GL_MAP_WRITE_BIT | aInvMode | aSyncMode | (aInvMode == NO_INVALIDATION && READ ? GL_MAP_READ_BIT : 0) );
+				const GLbitfield flags = GL_MAP_WRITE_BIT | aInvMode | aSyncMode | (aInvMode == NO_INVALIDATION && READ ? GL_MAP_READ_BIT : 0) | (PERSISTENT ? GL_MAP_PERSISTENT_BIT : 0);
+				return glMapNamedBufferRange(mID, aOffset, aSize, flags);
 			}
 		
-			template<const bool R = READ, const bool W = WRITE> 
-			typename std::enable_if<R || W, void>::type Unmap() throw() {  
+			template<const bool R = READ, const bool W = WRITE, const bool P = PERSISSTENT>
+			typename std::enable_if<(R || W) && (! P), void>::type Unmap() throw() {  
 				return glUnmapNamedBuffer(mID);
 			}
 		#endif
@@ -349,15 +363,19 @@ namespace Solaire {
 		#endif
 	};
 
-	template<const bool WRITE>
-	using ReadBuffer = BufferImplementation<true, WRITE>;
+	template<const bool WRITE, const bool PERSISSTENT = false>
+	using ReadBuffer = BufferImplementation<true, WRITE, PERSISSTENT>;
 
-	template<const bool READ>
-	using WriteBuffer = BufferImplementation<READ, true>;
+	template<const bool READ, const bool PERSISSTENT = false>
+	using WriteBuffer = BufferImplementation<READ, true, PERSISSTENT>;
 
-	typedef ReadBuffer<false>	ReadOnlyBuffer;
-	typedef WriteBuffer<false>	WriteOnlyBuffer;
-	typedef ReadBuffer<true>	ReadWriteBuffer;
+	typedef ReadBuffer<false, false>	ReadOnlyBuffer;
+	typedef WriteBuffer<false, false>	WriteOnlyBuffer;
+	typedef ReadBuffer<true, false>		ReadWriteBuffer;
+
+	typedef ReadBuffer<false, true>		PersisstentReadOnlyBuffer;
+	typedef WriteBuffer<false, true>	PersisstentWriteOnlyBuffer;
+	typedef ReadBuffer<true, true>		PersisstentReadWriteBuffer;
 }
 
 #endif
