@@ -143,6 +143,30 @@ namespace Solaire {
 			return mState;
 		}
 	};
+
+	template<class T>
+	class ReturnTask : public Task {
+	private:
+		SharedAllocation<T> mReturn;
+	protected:
+		inline void SetReturn(SharedAllocation<T> aValue) throw() {
+			mReturn.Swap(aValue);
+		}
+	public:
+		virtual SOLAIRE_EXPORT_CALL ~ReturnTask() throw() {
+
+		}
+
+		SharedAllocation<T> Get() const throw() {
+			if(! Wait()) return SharedAllocation<T>();
+			return mReturn;
+		}
+
+		SharedAllocation<T> GetFor(const uint32_t aMilliseconds) const throw() {
+			if(! WaitFor(aMilliseconds)) return SharedAllocation<T>();
+			return mReturn;
+		}
+	};
 }
 
 
