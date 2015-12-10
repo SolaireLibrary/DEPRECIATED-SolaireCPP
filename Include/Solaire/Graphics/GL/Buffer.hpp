@@ -252,8 +252,8 @@ namespace Solaire {
 					glBindBuffer(SECONDARY_BUFFER, mID);
 
 					#if SOLAIRE_GL_VER_EQ(3,0)
-						const void* const readMap = glMapBufferRange(PRIMARY_BUFFER, 0, mSize, GL_MAP_READ_BIT);
-						void* const writeMap = glMapBufferRange(SECONDARY_BUFFER, 0, mSize, GL_MAP_WRITE_BIT);
+						const void* const readMap = glMapBuffer(PRIMARY_BUFFER, GL_READ_ONLY);
+						void* const writeMap = glMapBuffer(SECONDARY_BUFFER, GL_WRITE_ONLY);
 						std::memcpy(writeMap, redMap, mSize);
 						glUnmapBuffer(PRIMARY_BUFFER);
 						glUnmapBuffer(SECONDARY_BUFFER);
