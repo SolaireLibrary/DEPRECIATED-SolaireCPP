@@ -75,17 +75,15 @@ namespace Solaire {
 		// Inherited from TaskExecutorI
 		
 		bool SOLAIRE_EXPORT_CALL Schedule(TaskI& aTask) throw() override {
-			const SharedAllocation<TaskImplementation> task = mAllocator.SharedAllocate<TaskImplementation>(aTask);
-
-			const TaskI::State state = task->GetState();
-			if(state == TaskI::STATE_CANCELED || state == TaskI::STATE_COMPLETE) {
+			{
+				const SharedAllocation<TaskImplementation> task = mAllocator.SharedAllocate<TaskImplementation>(aTask);
 				if (!task->Initialise()) return false;
+
+				if (task->GetState() != TaskI::STATE_INITIALISED) return false;
+
+				std::lock_guard<std::mutex> lock(mLock);
+				mInitialiseList.push_back(task);
 			}
-
-			if(task->GetState() != TaskI::STATE_INITIALISED) return false;
-
-			std::lock_guard<std::mutex> lock(mLock);
-			mInitialiseList.push_back(task);
 			return true;
 		}
 

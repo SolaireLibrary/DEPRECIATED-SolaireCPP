@@ -51,27 +51,35 @@ namespace Solaire {
 
 		// Inherited from TaskI
 		
-		bool SOLAIRE_EXPORT_CALL InitialiseI(TaskCallbacks& aCallbacks) throw() {
+		bool SOLAIRE_EXPORT_CALL InitialiseI(TaskCallbacks& aCallbacks) throw() override {
 			if(mCallbacks != nullptr) return false;
-			if(mState != STATE_CANCELED && mState != STATE_COMPLETE) return true;
-			mCallbacks = &aCallbacks;
-			mState = STATE_INITIALISED;
-			return Initialise();
+			switch (mState) {
+			case STATE_INITIALISED:
+				mCallbacks = &aCallbacks;
+				return true;
+			case STATE_CANCELED:
+			case STATE_COMPLETE:
+				mCallbacks = &aCallbacks;
+				mState = STATE_INITIALISED;
+				return Initialise();
+			default:
+				return false;
+			}
 		}
 		
-		bool SOLAIRE_EXPORT_CALL OnPreExecuteI() throw() {
+		bool SOLAIRE_EXPORT_CALL OnPreExecuteI() throw() override {
 			if(mState != STATE_INITIALISED) return false;
 			mState = STATE_PRE_EXECUTE;
 			return OnPreExecute();
 		}
 
-		bool SOLAIRE_EXPORT_CALL OnExecuteI() throw() {
+		bool SOLAIRE_EXPORT_CALL OnExecuteI() throw() override {
 			if(mState != STATE_PRE_EXECUTE) return false;
 			mState = STATE_EXECUTE;
 			return OnExecute();
 		}
 
-		bool SOLAIRE_EXPORT_CALL OnPostExecutei() throw() {
+		bool SOLAIRE_EXPORT_CALL OnPostExecuteI() throw() override {
 			if(mState != STATE_EXECUTE) return false;
 			const bool result = OnPostExecute();
 			mCallbacks = nullptr;
@@ -79,7 +87,7 @@ namespace Solaire {
 			return result;
 		}
 
-		bool SOLAIRE_EXPORT_CALL Pause() throw() {
+		bool SOLAIRE_EXPORT_CALL Pause() throw() override {
 			if(mState != STATE_EXECUTE) return false;
 			const bool result = OnPause();
 			mCallbacks = nullptr;
@@ -87,14 +95,14 @@ namespace Solaire {
 			return result;
 		}
 
-		bool SOLAIRE_EXPORT_CALL OnResumeI() throw() {
+		bool SOLAIRE_EXPORT_CALL OnResumeI() throw() override {
 			if(mState != STATE_PAUSED) return false;
 			mState = STATE_EXECUTE;
 			return OnResume();
 		}
 
-		bool SOLAIRE_EXPORT_CALL OnCancelI() throw() {
-			if(mState != STATE_CANCELED || mState = STATE_COMPLETE || mState == STATE_INITIALISED) return false;
+		bool SOLAIRE_EXPORT_CALL OnCancelI() throw() override {
+			if(mState != STATE_CANCELED || mState != STATE_COMPLETE || mState == STATE_INITIALISED) return false;
 			const bool result = OnCancel();
 			mCallbacks = nullptr;
 			mState = STATE_CANCELED;

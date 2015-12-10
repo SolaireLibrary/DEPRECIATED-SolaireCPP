@@ -146,11 +146,28 @@ namespace Solaire {
 			mObject(aObject)
 		{}
 
+		SharedAllocation(const SharedAllocation<T>& aOther) throw() :
+			mCount(aOther.mCount),
+			mAllocator(aOther.mAllocator),
+			mObject(aOther.mObject)
+		{
+			++ *mCount;
+		}
+
+		SharedAllocation(SharedAllocation<T>&& aOther) throw() :
+			mCount(aOther.mCount),
+			mAllocator(aOther.mAllocator),
+			mObject(aOther.mObject)
+		{
+			aOther.mObject = nullptr;
+			aOther.mCount = nullptr;
+		}
+
 		template<class T2>
 		SharedAllocation(const SharedAllocation<T2>& aOther) throw() :
 			mCount(aOther.mCount),
 			mAllocator(aOther.mAllocator),
-			mObject(aOther.ReleaseOwnership())
+			mObject(aOther.mObject)
 		{
 			++ *mCount;
 		}
@@ -159,13 +176,28 @@ namespace Solaire {
 		SharedAllocation(SharedAllocation<T2>&& aOther) throw() :
 			mCount(aOther.mCount),
 			mAllocator(aOther.mAllocator),
-			mObject(aOther.ReleaseOwnership())
+			mObject(aOther.mObject)
 		{
-			++ *mCount;
+			aOther.mObject = nullptr;
+			aOther.mCount = nullptr;
 		}
 
 		~SharedAllocation() throw() {
 			DeleteObject();
+		}
+
+		SharedAllocation& operator=(const SharedAllocation<T>& aOther) throw() {
+			DeleteObject();
+			mCount = aOther.mCount;
+			mAllocator = aOther.mAllocator;
+			mObject = aOther.mObject;
+			++ *mCount;
+			return *this;
+		}
+
+		SharedAllocation& operator=(SharedAllocation<T>&& aOther) throw() {
+			Swap(aOther);
+			return *this;
 		}
 
 		template<class T2>
@@ -174,23 +206,18 @@ namespace Solaire {
 			mCount = aOther.mCount;
 			mAllocator = aOther.mAllocator;
 			mObject = aOther.mObject;
-
 			++ *mCount;
-			return *this;
-		}
-
-		template<class T2>
-		SharedAllocation& operator=(SharedAllocation<T2>&& aOther) throw() {
-			Swap(aOther);
 			return *this;
 		}
 
 		void Swap(SharedAllocation<T>& aOther) throw() {
 			std::swap(mAllocator, aOther.mAllocator);
 			std::swap(mObject, aOther.mObject);
+			std::swap(mCount, aOther.mCount);
 		}
 
 		T* ReleaseOwnership() throw() {
+			if(mCount == nullptr) return nullptr;
 			if(*mCount != 1) return nullptr;
 
 			T* const tmp = mObject;
