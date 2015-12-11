@@ -58,11 +58,6 @@ namespace Solaire {
 
 		constexpr GLenum GetBinding(const GLenum aTarget) {
 			return
-				#if SOLAIRE_GL_VER_GTE(3,1)
-					aTarget == GL_COPY_READ_BUFFER ? GL_COPY_READ_BUFFER_BINDING :
-					aTarget == GL_COPY_WRITE_BUFFER ? GL_COPY_WRITE_BUFFER_BINDING :
-					aTarget == GL_TEXTURE_BUFFER ? GL_TEXTURE_BUFFER_BINDING :
-				#endif
 				#if SOLAIRE_GL_VER_GTE(4,0)
 					aTarget == GL_UNIFORM_BUFFER ? GL_UNIFORM_BUFFER_BINDING :
 				#endif
@@ -70,6 +65,8 @@ namespace Solaire {
 					aTarget == GL_DRAW_INDIRECT_BUFFER ? GL_DRAW_INDIRECT_BUFFER_BINDING :
 				#endif
 				#if SOLAIRE_GL_VER_GTE(4,2)
+					aTarget == GL_COPY_READ_BUFFER ? GL_COPY_READ_BUFFER_BINDING :
+					aTarget == GL_COPY_WRITE_BUFFER ? GL_COPY_WRITE_BUFFER_BINDING :
 					aTarget == GL_ATOMIC_COUNTER_BUFFER ? GL_ATOMIC_COUNTER_BUFFER_BINDING :
 				#endif
 				#if SOLAIRE_GL_VER_GTE(4,3)
@@ -77,6 +74,7 @@ namespace Solaire {
 					aTarget == GL_SHADER_STORAGE_BUFFER ? GL_SHADER_STORAGE_BUFFER_BINDING :
 				#endif
 				#if SOLAIRE_GL_VER_GTE(4,4)
+					aTarget == GL_TEXTURE_BUFFER ? GL_TEXTURE_BUFFER_BINDING :
 					aTarget ==  GL_QUERY_BUFFER ? GL_QUERY_BUFFER_BINDING :
 				#endif
 				aTarget == GL_ARRAY_BUFFER,
