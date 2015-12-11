@@ -34,6 +34,13 @@ Last Modified	: 9th December 2015
 #include "..\ModuleHeader.hpp"
 #include "..\..\Core\ModuleHeader.hpp"
 
+#define SOLAIRE_GLLOADGEN 1
+#define SOLAIRE_GLEW 2
+
+#ifndef SOLAIRE_GL_LIB
+	#define SOLAIRE_GL_LIB SOLAIRE_GLLOADGEN
+#endif
+
 #define SOLAIRE_GL_VER_EQ(aMajor, aMinor) (SOLAIRE_GL_VER_MAJOR == aMajor && SOLAIRE_GL_VER_MINOR == aMinor)
 #define SOLAIRE_GL_VER_LT(aMajor, aMinor) (SOLAIRE_GL_VER_MAJOR < aMajor || (SOLAIRE_GL_VER_MAJOR == aMajor && SOLAIRE_GL_VER_MINOR < aMinor))
 #define SOLAIRE_GL_VER_LTE(aMajor, aMinor) (SOLAIRE_GL_VER_MAJOR < aMajor || (SOLAIRE_GL_VER_MAJOR == aMajor && SOLAIRE_GL_VER_MINOR <= aMinor))
@@ -43,7 +50,8 @@ Last Modified	: 9th December 2015
 #define SOLAIRE_GL_VER_MAJOR 3
 #define SOLAIRE_GL_VER_MINOR 0
 
-#if SOLAIRE_GL_VER_MAJOR == 4
+#if SOLAIRE_GL_LIB == SOLAIRE_GLLOADGEN
+#if SOLAIRE_GL_VER_MAJOR == 4 
 	#if SOLAIRE_GL_VER_MINOR == 5
 		#include "GLLoadGen\gl_core_4.5.h"
 	#endif
@@ -78,7 +86,7 @@ Last Modified	: 9th December 2015
 		#include "GLLoadGen\gl_core_3.0.h"
 	#endif
 #endif
-
+#endif
 
 
 #endif
