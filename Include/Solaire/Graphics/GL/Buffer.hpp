@@ -95,11 +95,6 @@ namespace Solaire {
 		GLuint mSize;
 		Target mMapBinding;
 		bool mIsMapped;
-	private:
-		Buffer(Buffer&&) = delete;
-		Buffer(const Buffer&) = delete;
-		Buffer& operator=(Buffer&&) = delete;
-		Buffer& operator=(const Buffer&) = delete;
 	protected:
 		#if SOLAIRE_GL_VER_GTE(4,4)
 			virtual GLbitfield SOLAIRE_EXPORT_CALL GetCreationFlags() const throw() = 0;
@@ -107,6 +102,46 @@ namespace Solaire {
 		#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,4)
 			virtual GLenum SOLAIRE_EXPORT_CALL GetUsage() const throw() = 0;
 		#endif
+
+		Buffer(const Buffer& aOther) :
+			mID(NULL_ID),
+			mSize(aOther.aSize),
+			mMapBinding(Target::INVALID_TARGET),
+			mIsMapped(false)
+		{}
+
+		Buffer(Buffer&& aOther) :
+			mID(aOther.mID),
+			mSize(aOther.aSize),
+			mMapBinding(aOther.mMapBinding),
+			mIsMapped(aOther.mIsMapped)
+		{
+			aOther.mID = NULL_ID;
+			aOther.mSize = 0;
+			aOther.mMapBinding = Target::INVALID_TARGET;
+			aOther.mIsMapped = false;
+		}
+
+		Buffer& operator=(Buffer&& aOther) {
+			std::swap(mID, aOther.mID);
+			std::swap(mSize, aOther.mSize);
+			std::swap(mMapBinding, aOther.mMapBinding);
+			std::swap(mIsMapped, aOther.mIsMapped);
+			return *this;
+		}
+
+		Buffer& operator=(const Buffer& aOther) {
+			if(mSize < aOther.mSize) {
+				if(mID != NULL_ID) {
+					Delete();
+					mSize = aOther.mSize;
+					Create();
+				}else {
+					mSize = aOther.mSize;
+				}
+			}
+			return *this;
+		}
 	public:
 		Buffer(const GLuint aSize) :
 			mID(NULL_ID),
@@ -212,19 +247,12 @@ namespace Solaire {
 	
 		template<const bool R, const bool W, const bool P>
 		BufferImplementation(typename std::enable_if<(READ >= R) && (WRITE >= W), BufferImplementation<R, W, P>&&>::type aOther) :
-			Buffer(aOther.mSize)
-		{
-			mID = aOther.mID;
-			aOther.mID = NULL_ID;
-			mMapBinding = aOther.mMapBinding;
-			aOther.mMapBinding = Target::INVALID_TARGET;
-			mIsMapped = aOther.mIsMapped;
-			aOther.mIsMapped = false;
-		}
+			Buffer(std::move(aOther))
+		{}
 	
 		template<const bool R, const bool W, const bool P>
 		BufferImplementation(typename std::enable_if<R && WRITE, const BufferImplementation<R, W, P>&>::type aOther) :
-			Buffer(0)
+			Buffer()
 		{
 			operator=(aOther);
 		}
@@ -235,20 +263,14 @@ namespace Solaire {
 	
 		template<const bool R, const bool W, const bool P>
 		typename std::enable_if<(READ >= R) && (WRITE >= W), BufferImplementation<READ, WRITE, PERSISSTENT>&>::type operator=(BufferImplementation<R, W, P>&& aOther) {
-			std::swap(mID, aOther.mID);
-			std::swap(mSize, aOther.mSize);
-			std::swap(mMapBinding, aOther.mMapBinding);
-			std::swap(mIsMapped, aOther.mIsMapped);
+			Buffer::operator=(std::move(aOther));
 			return *this;
 		}
 	
 		template<const bool R, const bool W, const bool P>
 		typename std::enable_if<R && WRITE, BufferImplementation<READ, WRITE, PERSISSTENT>&>::type operator=(const BufferImplementation<R, W, P>& aOther) {
-			if(mSize < aOther.mSize) {
-				Destroy();
-				mSize = aOther.mSize;
-			}
-			if(aOther.mID != NULL_ID) {
+			Bufer::operator=(aOther);
+			if(mID != NULL_ID && aOther.mID != NULL_ID) {
 				Create();
 			
 				#if SOLAIRE_GL_VER_GTE(4,5)
@@ -279,6 +301,7 @@ namespace Solaire {
 				#if SOLAIRE_GL_VER_LT(3,0)
 					#error SolaireCPP : BufferImplementation::operator=(copy) only defined for OpenGL 3.0+
 				#endif
+				return *this;
 			}
 		}
 
