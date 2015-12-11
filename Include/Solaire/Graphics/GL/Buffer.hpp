@@ -94,6 +94,7 @@ namespace Solaire {
 		ID mID;
 		GLuint mSize;
 		Target mMapBinding;
+		bool mIsMapped;
 	private:
 		Buffer(Buffer&&) = delete;
 		Buffer(const Buffer&) = delete;
@@ -110,7 +111,8 @@ namespace Solaire {
 		Buffer(const GLuint aSize) :
 			mID(NULL_ID),
 			mSize(aSize),
-			mMapBinding(Target::INVALID_TARGET)
+			mMapBinding(Target::INVALID_TARGET),
+			mIsMapped(false)
 		{
 			GLBufferImplementation::InitialiseBufferData();
 		}
@@ -168,6 +170,7 @@ namespace Solaire {
 		bool SOLAIRE_EXPORT_CALL Destroy() throw() override {
 			if(mID == NULL_ID) return false;
 			//! \todo unbind all
+			mIsMapped = false;
 			mMapBinding = Target::INVALID_TARGET;
 			glDeleteBuffers(1, reinterpret_cast<GLuint*>(&mID));
 			mID = NULL_ID;
@@ -215,6 +218,8 @@ namespace Solaire {
 			aOther.mID = NULL_ID;
 			mMapBinding = aOther.mMapBinding;
 			aOther.mMapBinding = Target::INVALID_TARGET;
+			mIsMapped = aOther.mIsMapped;
+			aOther.mIsMapped = false;
 		}
 	
 		template<const bool R, const bool W, const bool P>
@@ -233,6 +238,7 @@ namespace Solaire {
 			std::swap(mID, aOther.mID);
 			std::swap(mSize, aOther.mSize);
 			std::swap(mMapBinding, aOther.mMapBinding);
+			std::swap(mIsMapped, aOther.mIsMapped);
 			return *this;
 		}
 	
@@ -295,7 +301,8 @@ namespace Solaire {
 		}
 
 		template<const bool FLAG = WRITE>
-		typename std::enable_if<FLAG, void>::type Write(const GLuint aOffset, void* const aData, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {
+		typename std::enable_if<FLAG, bool>::type Write(const GLuint aOffset, void* const aData, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {
+			if(mIsMapped) return false;
 			#if SOLAIRE_GL_VER_GTE(4,4)
 				void* const mapping = glMapNamedBufferRange(mID, aOffset, aSize, GL_MAP_WRITE_BIT | aInvMode | aSyncMode);
 				std::memcpy(mapping, aData, aSize);
@@ -310,11 +317,14 @@ namespace Solaire {
 				glUnmapBuffer(PRIMARY_BUFFER);
 				glBindBuffer(PRIMARY_BUFFER, previous);
 			#endif
+			return true;
 		}
 	
 		template<const bool FLAG = READ>
 		typename std::enable_if<FLAG, const void*>::type MapRangeRead() const throw() {
+			if(mIsMapped) return nullptr;
 			#if SOLAIRE_GL_VER_GTE(4,4)
+				mIsMapped = true;
 				if(PERSISTANT) {
 					return MapRangeRead(0, mSize);
 				}else {
@@ -330,7 +340,9 @@ namespace Solaire {
 		
 		template<const bool FLAG = WRITE>
 		typename std::enable_if<FLAG, void*>::type MapRangeWrite() throw() {
+			if(mIsMapped) return nullptr;
 			#if SOLAIRE_GL_VER_GTE(4,4)
+				mIsMapped = true;
 				if(PERSISTANT) {
 					return MapRangeWrite(0, mSize);
 				}else {
@@ -347,7 +359,9 @@ namespace Solaire {
 		
 		template<const bool FLAG = READ>
 		typename std::enable_if<FLAG, const void*>::type MapRangeRead(const GLuint aOffset, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
+			if(mIsMapped) return nullptr;
 			#if SOLAIRE_GL_VER_GTE(4,4)
+				mIsMapped = true;
 				const GLbitfield flags = GL_MAP_READ_BIT | aSyncMode | (PERSISTENT ? GL_MAP_PERSISTENT_BIT : 0);
 				return glMapNamedBufferRange(mID, aOffset, aSize, flags);
 			#else
@@ -360,7 +374,9 @@ namespace Solaire {
 		
 		template<const bool FLAG = WRITE> 
 		typename std::enable_if<FLAG, void*>::type MapRangeWrite(const GLuint aOffset, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {  
+			if(mIsMapped) return nullptr;
 			#if SOLAIRE_GL_VER_GTE(4,4)
+				mIsMapped = true;
 				const GLbitfield flags = GL_MAP_WRITE_BIT | aInvMode | aSyncMode | (aInvMode == NO_INVALIDATION && READ ? GL_MAP_READ_BIT : 0) | (PERSISTENT ? GL_MAP_PERSISTENT_BIT : 0);
 				return glMapNamedBufferRange(mID, aOffset, aSize, flags);
 			#else
@@ -373,8 +389,10 @@ namespace Solaire {
 		
 		template<const bool R = READ, const bool W = WRITE, const bool P = PERSISSTENT>
 		typename std::enable_if<(R || W) && (! P), bool>::type Unmap() throw() { 
+			if(mIsMapped) return nullptr;
 			#if SOLAIRE_GL_VER_GTE(4,4)
 				glUnmapNamedBuffer(mID);
+				mIsMapped = false;
 				return true;
 			#else
 				if(mMapBinding == Target::INVALID_TARGET) return false;
@@ -386,27 +404,42 @@ namespace Solaire {
 
 		template<const bool FLAG = READ>
 		typename std::enable_if<FLAG, const void*>::type MapRangeRead(const Target aTarget) const throw() {
+			if(mIsMapped) return nullptr;
+			mIsMapped = true;
 			return glMapBufferRange(aTarget, GL_READ_ONLY);
 		}
 
 		template<const bool FLAG = WRITE>
 		typename std::enable_if<FLAG, void*>::type MapRangeWrite(const Target aTarget) throw() {
+			if(mIsMapped) return nullptr;
 			return glMapBufferRange(aTarget, READ ? GL_READ_WRITE : GL_WRITE_ONLY);
 		}
 
 		template<const bool FLAG = READ>
 		typename std::enable_if<FLAG, const void*>::type MapRangeRead(const Target aTarget, const GLuint aOffset, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
+			if(mIsMapped) return nullptr;
+			mIsMapped = true;
 			return glMapBufferRange(aTarget, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
 		}
 
 		template<const bool FLAG = WRITE>
 		typename std::enable_if<FLAG, void*>::type MapRangeWrite(const Target Target, const GLuint aOffset, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {
+			if(mIsMapped) return nullptr;
+			mIsMapped = true;
 			return glMapBufferRange(aTarget, aOffset, aSize, GL_MAP_WRITE_BIT | aInvMode | aSyncMode | (aInvMode == NO_INVALIDATION && READ ? GL_MAP_READ_BIT : 0));
 		}
 
 		template<const bool R = READ, const bool W = WRITE>
-		typename std::enable_if<R || W, void>::type Unmap(const Target Target) throw() {
-			return glUnmapBuffer(aTarget);
+		typename std::enable_if<R || W, bool>::type Unmap(const Target Target) throw() {
+			if(! mIsMapped) return false;
+			glUnmapBuffer(aTarget);
+			mIsMapped = false;
+			return true;
+		}
+
+		template<const bool R = READ, const bool W = WRITE>
+		typename std::enable_if<R || W, bool>::type IsMapped() const throw() {
+			return mIsMapped;
 		}
 	};
 
