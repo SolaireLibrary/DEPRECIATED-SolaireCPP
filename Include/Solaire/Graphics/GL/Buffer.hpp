@@ -31,9 +31,29 @@ Created			: 9th December 2015
 Last Modified	: 9th December 2015
 */
 
+#define SOLAIRE_GL_COPY_READ_BUFFER_VER 3,1
+#define SOLAIRE_GL_COPY_WRITE_BUFFER_VER 3,1
+#define SOLAIRE_GL_TEXTURE_BUFFER_VER 3,1
+#define SOLAIRE_GL_UNIFORM_BUFFER_VER 4,0
+#define SOLAIRE_GL_DRAW_INDIRECT_BUFFER_VER 4,1
+#define SOLAIRE_GL_ATOMIC_COUNTER_BUFFER_VER 4,2
+#define SOLAIRE_GL_GL_DISPATCH_INDIRECT_BUFFER_VER 4,3
+#define SOLAIRE_GL_SHADER_STORAGE_BUFFER_VER 4,3
+#define SOLAIRE_GL_QUERY_BUFFER_VER 4,4
+#define SOLAIRE_GL_ARRAY_BUFFER_VER 3,0
+#define SOLAIRE_GL_ELEMENT_ARRAY_BUFFER_VER 3,0
+#define SOLAIRE_GL_PIXEL_PACK_BUFFER_VER 3,0
+#define SOLAIRE_GL_PIXEL_UNPACK_BUFFER_VER 3,0
+#define SOLAIRE_GL_TRANSFORM_FEEDBACK_BUFFER_VER 3,0
+	
+#include <map>
+#include <vector>
 #include "Object.hpp"
+#include "BufferImplementation.hpp"
 
 namespace Solaire {
+
+	//! \todo Check if buffer is mapped
 
 	class Buffer : public Object {
 	protected:
@@ -58,34 +78,7 @@ namespace Solaire {
 			#endif
 		};
 	public:
-		enum Target : GLenum {
-			#if SOLAIRE_GL_VER_GTE(3,1)
-				COPY_READ = GL_COPY_READ_BUFFER,
-				COPY_WRITE = GL_COPY_WRITE_BUFFER,
-				TEXTURE = GL_TEXTURE_BUFFER,
-			#endif
-			#if SOLAIRE_GL_VER_GTE(4,0)
-				UNIFORM = GL_UNIFORM_BUFFER,
-			#endif
-			#if SOLAIRE_GL_VER_GTE(4,1)
-				DRAW_INDIRECT = GL_DRAW_INDIRECT_BUFFER,
-			#endif
-			#if SOLAIRE_GL_VER_GTE(4,2)
-				ATOMIC_COUNTER = GL_ATOMIC_COUNTER_BUFFER,
-			#endif
-			#if SOLAIRE_GL_VER_GTE(4,3)
-				DISPATCH_INDIRECT = GL_DISPATCH_INDIRECT_BUFFER,
-				SHADER_STORAGE = GL_SHADER_STORAGE_BUFFER,
-			#endif
-			#if SOLAIRE_GL_VER_GTE(4,4)
-				QUERY = GL_QUERY_BUFFER,
-			#endif
-			ARRAY = GL_ARRAY_BUFFER,
-			ELEMENT_ARRAY = GL_ELEMENT_ARRAY_BUFFER,
-			PIXEL_PACK = GL_PIXEL_PACK_BUFFER,
-			PIXEL_UNPACK = GL_PIXEL_UNPACK_BUFFER,
-			TRANSFORM_FEEDBACK = GL_TRANSFORM_FEEDBACK_BUFFER
-		};
+		typedef GLBufferImplementation::BufferTarget Target;
 
 		enum SynchronisationMode : GLbitfield  {
 			SYNCHRONISED 			= 0,
@@ -100,6 +93,7 @@ namespace Solaire {
 	protected:
 		ID mID;
 		GLuint mSize;
+		Target mMapBinding;
 	private:
 		Buffer(Buffer&&) = delete;
 		Buffer(const Buffer&) = delete;
@@ -115,8 +109,11 @@ namespace Solaire {
 	public:
 		Buffer(const GLuint aSize) :
 			mID(NULL_ID),
-			mSize(aSize)
-		{}
+			mSize(aSize),
+			mMapBinding(Target::INVALID_TARGET)
+		{
+			GLBufferImplementation::InitialiseBufferData();
+		}
 	
 		virtual SOLAIRE_EXPORT_CALL ~Buffer() throw() {
 	
@@ -128,8 +125,12 @@ namespace Solaire {
 	
 		bool Bind(const Target aTarget) {
 			if(mID == NULL_ID) return false;
-			glBindBuffer(aTarget, mID);
-			return true;
+			return GLBufferImplementation::Bind(aTarget, *this);
+		}
+
+		bool Unbind(const Target aTarget) {
+			if (mID == NULL_ID) return false;
+			return GLBufferImplementation::Unbind(aTarget, *this);
 		}
 	
 		// Inherited from Object
@@ -166,6 +167,8 @@ namespace Solaire {
 	
 		bool SOLAIRE_EXPORT_CALL Destroy() throw() override {
 			if(mID == NULL_ID) return false;
+			//! \todo unbind all
+			mMapBinding = Target::INVALID_TARGET;
 			glDeleteBuffers(1, reinterpret_cast<GLuint*>(&mID));
 			mID = NULL_ID;
 			return true;
@@ -210,10 +213,12 @@ namespace Solaire {
 		{
 			mID = aOther.mID;
 			aOther.mID = NULL_ID;
+			mMapBinding = aOther.mMapBinding;
+			aOther.mMapBinding = Target::INVALID_TARGET;
 		}
 	
 		template<const bool R, const bool W, const bool P>
-		BufferImplementation(typename std::enable_if<R && WRITE, BufferImplementation<R, W, P>&>::type aOther) :
+		BufferImplementation(typename std::enable_if<R && WRITE, const BufferImplementation<R, W, P>&>::type aOther) :
 			Buffer(0)
 		{
 			operator=(aOther);
@@ -227,6 +232,7 @@ namespace Solaire {
 		typename std::enable_if<(READ >= R) && (WRITE >= W), BufferImplementation<READ, WRITE, PERSISSTENT>&>::type operator=(BufferImplementation<R, W, P>&& aOther) {
 			std::swap(mID, aOther.mID);
 			std::swap(mSize, aOther.mSize);
+			std::swap(mMapBinding, aOther.mMapBinding);
 			return *this;
 		}
 	
@@ -306,69 +312,102 @@ namespace Solaire {
 			#endif
 		}
 	
-		#if SOLAIRE_GL_VER_GTE(4,4)
-			template<const bool FLAG = READ>
-			typename std::enable_if<FLAG, const void*>::type MapRangeRead() const throw() {
+		template<const bool FLAG = READ>
+		typename std::enable_if<FLAG, const void*>::type MapRangeRead() const throw() {
+			#if SOLAIRE_GL_VER_GTE(4,4)
 				if(PERSISTANT) {
 					return MapRangeRead(0, mSize);
 				}else {
 					return glMapNamedBufferRange(mID, GL_READ_ONLY);
 				}
-			}  
+			#else
+				mMapBinding = GLBufferImplementation::GetUnusedBuffer();
+				if(mMapBinding == Target::INVALID_TARGET) return nullptr;
+				Bind(mMapBinding);
+				return MapRangeRead(mMapBinding);
+			#endif
+		}  
 		
-			template<const bool FLAG = WRITE>
-			typename std::enable_if<FLAG, void*>::type MapRangeWrite() throw() {
+		template<const bool FLAG = WRITE>
+		typename std::enable_if<FLAG, void*>::type MapRangeWrite() throw() {
+			#if SOLAIRE_GL_VER_GTE(4,4)
 				if(PERSISTANT) {
 					return MapRangeWrite(0, mSize);
 				}else {
 					enum : GLenum { MODE = READ ? GL_READ_WRITE : GL_WRITE_ONLY };
 					return glMapNamedBufferRange(mID, MODE);
 				}
-			}  
+			#else
+				mMapBinding = GLBufferImplementation::GetUnusedBuffer();
+				if(mMapBinding == Target::INVALID_TARGET) return nullptr;
+				Bind(mMapBinding);
+				return MapRangeWrite(mMapBinding);
+			#endif
+		}  
 		
-			template<const bool FLAG = READ>
-			typename std::enable_if<FLAG, const void*>::type MapRangeRead(const GLuint aOffset, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
+		template<const bool FLAG = READ>
+		typename std::enable_if<FLAG, const void*>::type MapRangeRead(const GLuint aOffset, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
+			#if SOLAIRE_GL_VER_GTE(4,4)
 				const GLbitfield flags = GL_MAP_READ_BIT | aSyncMode | (PERSISTENT ? GL_MAP_PERSISTENT_BIT : 0);
 				return glMapNamedBufferRange(mID, aOffset, aSize, flags);
-			}  
+			#else
+				mMapBinding = GLBufferImplementation::GetUnusedBuffer();
+				if(mMapBinding == Target::INVALID_TARGET) return nullptr;
+				Bind(mMapBinding);
+				return MapRangeRead(mMapBinding, aOffset, aSize, aSyncMode);
+			#endif
+		}  
 		
-			template<const bool FLAG = WRITE> 
-			typename std::enable_if<FLAG, void*>::type MapRangeWrite(const GLuint aOffset, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {  
+		template<const bool FLAG = WRITE> 
+		typename std::enable_if<FLAG, void*>::type MapRangeWrite(const GLuint aOffset, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {  
+			#if SOLAIRE_GL_VER_GTE(4,4)
 				const GLbitfield flags = GL_MAP_WRITE_BIT | aInvMode | aSyncMode | (aInvMode == NO_INVALIDATION && READ ? GL_MAP_READ_BIT : 0) | (PERSISTENT ? GL_MAP_PERSISTENT_BIT : 0);
 				return glMapNamedBufferRange(mID, aOffset, aSize, flags);
-			}
+			#else
+				mMapBinding = GLBufferImplementation::GetUnusedBuffer();
+				if(mMapBinding == Target::INVALID_TARGET) return nullptr;
+				Bind(mMapBinding);
+				return MapRangeWrite(mMapBinding, aOffset, aSize, aInvMode, aSyncMode);
+			#endif
+		}
 		
-			template<const bool R = READ, const bool W = WRITE, const bool P = PERSISSTENT>
-			typename std::enable_if<(R || W) && (! P), void>::type Unmap() throw() {  
-				return glUnmapNamedBuffer(mID);
-			}
-		#endif
-		#if SOLAIRE_GL_VER_GTE(3,0)
-			template<const bool FLAG = READ>
-			typename std::enable_if<FLAG, const void*>::type MapRangeRead(const Target aTarget) const throw() {
-				return glMapBufferRange(aTarget, GL_READ_ONLY);
-			}
+		template<const bool R = READ, const bool W = WRITE, const bool P = PERSISSTENT>
+		typename std::enable_if<(R || W) && (! P), bool>::type Unmap() throw() { 
+			#if SOLAIRE_GL_VER_GTE(4,4)
+				glUnmapNamedBuffer(mID);
+				return true;
+			#else
+				if(mMapBinding == Target::INVALID_TARGET) return false;
+				const bool result = Unbind(mMapBinding);
+				mMapBinding = Target::INVALID_TARGET;
+				return result;
+			#endif
+		}
 
-			template<const bool FLAG = WRITE>
-			typename std::enable_if<FLAG, void*>::type MapRangeWrite(const Target aTarget) throw() {
-				return glMapBufferRange(aTarget, READ ? GL_READ_WRITE : GL_WRITE_ONLY);
-			}
+		template<const bool FLAG = READ>
+		typename std::enable_if<FLAG, const void*>::type MapRangeRead(const Target aTarget) const throw() {
+			return glMapBufferRange(aTarget, GL_READ_ONLY);
+		}
 
-			template<const bool FLAG = READ>
-			typename std::enable_if<FLAG, const void*>::type MapRangeRead(const Target aTarget, const GLuint aOffset, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
-				return glMapBufferRange(aTarget, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
-			}
+		template<const bool FLAG = WRITE>
+		typename std::enable_if<FLAG, void*>::type MapRangeWrite(const Target aTarget) throw() {
+			return glMapBufferRange(aTarget, READ ? GL_READ_WRITE : GL_WRITE_ONLY);
+		}
 
-			template<const bool FLAG = WRITE>
-			typename std::enable_if<FLAG, void*>::type MapRangeWrite(const Target Target, const GLuint aOffset, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {
-				return glMapBufferRange(aTarget, aOffset, aSize, GL_MAP_WRITE_BIT | aInvMode | aSyncMode | (aInvMode == NO_INVALIDATION && READ ? GL_MAP_READ_BIT : 0));
-			}
+		template<const bool FLAG = READ>
+		typename std::enable_if<FLAG, const void*>::type MapRangeRead(const Target aTarget, const GLuint aOffset, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
+			return glMapBufferRange(aTarget, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
+		}
 
-			template<const bool R = READ, const bool W = WRITE>
-			typename std::enable_if<R || W, void>::type Unmap(const Target Target) throw() {
-				return glUnmapBuffer(aTarget);
-			}
-		#endif
+		template<const bool FLAG = WRITE>
+		typename std::enable_if<FLAG, void*>::type MapRangeWrite(const Target Target, const GLuint aOffset, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {
+			return glMapBufferRange(aTarget, aOffset, aSize, GL_MAP_WRITE_BIT | aInvMode | aSyncMode | (aInvMode == NO_INVALIDATION && READ ? GL_MAP_READ_BIT : 0));
+		}
+
+		template<const bool R = READ, const bool W = WRITE>
+		typename std::enable_if<R || W, void>::type Unmap(const Target Target) throw() {
+			return glUnmapBuffer(aTarget);
+		}
 	};
 
 	template<const bool WRITE, const bool PERSISSTENT = false>
