@@ -93,7 +93,9 @@ namespace Solaire {
 	protected:
 		ID mID;
 		GLuint mSize;
-		Target mMapBinding;
+		#if SOLAIRE_GL_VER_LT(4,4)
+			Target mMapBinding;
+		#endif
 		bool mIsMapped;
 	protected:
 		#if SOLAIRE_GL_VER_GTE(4,4)
@@ -105,27 +107,35 @@ namespace Solaire {
 
 		Buffer(const Buffer& aOther) :
 			mID(NULL_ID),
-			mSize(aOther.aSize),
-			mMapBinding(Target::INVALID_TARGET),
+			mSize(aOther.mSize),
+			#if SOLAIRE_GL_VER_LT(4,4)
+				mMapBinding(Target::INVALID_TARGET),
+			#endif
 			mIsMapped(false)
 		{}
 
 		Buffer(Buffer&& aOther) :
 			mID(aOther.mID),
-			mSize(aOther.aSize),
-			mMapBinding(aOther.mMapBinding),
+			mSize(aOther.mSize),
+			#if SOLAIRE_GL_VER_LT(4,4)
+				mMapBinding(aOther.mMapBinding),
+			#endif
 			mIsMapped(aOther.mIsMapped)
 		{
 			aOther.mID = NULL_ID;
 			aOther.mSize = 0;
-			aOther.mMapBinding = Target::INVALID_TARGET;
+			#if SOLAIRE_GL_VER_LT(4,4)
+				aOther.mMapBinding = Target::INVALID_TARGET;
+			#endif
 			aOther.mIsMapped = false;
 		}
 
 		Buffer& operator=(Buffer&& aOther) {
 			std::swap(mID, aOther.mID);
 			std::swap(mSize, aOther.mSize);
-			std::swap(mMapBinding, aOther.mMapBinding);
+			#if SOLAIRE_GL_VER_LT(4,4)
+				std::swap(mMapBinding, aOther.mMapBinding);
+			#endif
 			std::swap(mIsMapped, aOther.mIsMapped);
 			return *this;
 		}
@@ -133,7 +143,7 @@ namespace Solaire {
 		Buffer& operator=(const Buffer& aOther) {
 			if(mSize < aOther.mSize) {
 				if(mID != NULL_ID) {
-					Delete();
+					Destroy();
 					mSize = aOther.mSize;
 					Create();
 				}else {
@@ -146,7 +156,9 @@ namespace Solaire {
 		Buffer(const GLuint aSize) :
 			mID(NULL_ID),
 			mSize(aSize),
-			mMapBinding(Target::INVALID_TARGET),
+			#if SOLAIRE_GL_VER_LT(4,4)
+				mMapBinding(Target::INVALID_TARGET),
+			#endif
 			mIsMapped(false)
 		{
 			GLBufferImplementation::InitialiseBufferData();
@@ -206,12 +218,14 @@ namespace Solaire {
 			if(mID == NULL_ID) return false;
 			//! \todo unbind all
 			mIsMapped = false;
-			mMapBinding = Target::INVALID_TARGET;
+			#if SOLAIRE_GL_VER_LT(4,4)
+				mMapBinding = Target::INVALID_TARGET;
+			#endif
 			glDeleteBuffers(1, reinterpret_cast<GLuint*>(&mID));
 			mID = NULL_ID;
 			return true;
 		}
-	};
+	}; 
 
 	//! \todo Persistant mapping
 
