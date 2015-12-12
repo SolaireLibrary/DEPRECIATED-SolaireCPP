@@ -73,7 +73,7 @@ namespace Solaire {
 	};
 
 	template<typename ID_TYPE, const bool READ, const bool PERSISSTENT = false>
-	class BufferResource : public Resource<ID_TYPE, BufferImplementation<READ, true, PERSISSTENT>> {
+	class BufferResource<ID_TYPE, READ, true, PERSISSTENT> : public Resource<ID_TYPE, BufferImplementation<READ, true, PERSISSTENT>> {
 	private:
 		Allocator& mAllocator;
 		GLuint mSize;
