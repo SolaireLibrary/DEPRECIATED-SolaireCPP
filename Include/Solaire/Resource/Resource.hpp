@@ -27,25 +27,79 @@
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 13th November 2015
-	Last Modified	: 13th November 2015
+	Created			: 11th December 2015
+	Last Modified	: 11th December 2015
 */
 
-#include <cstdint>
-#include <memory>
-#include "..\Link\Object.hpp"
-#include "..\Link\ObjectUtility.hpp"
+#include "ResourceI.hpp"
 
-namespace Solaire{
+namespace Solaire {
 
-	class SOLAIRE_EXPORT_API Resource : public Link::Object{
+	template<typename ID_TYPE, class TYPE>
+	class Resource<TYPE> : public ResourceI<ID_TYPE> {
 	public:
-		typedef uint64_t ID;
+		typedef TYPE Type;
+		typedef SharedAllocation<Type> Ptr;
+		typedef SharedAllocation<const Type> ConstPtr;
+	private:
+		Ptr mResource;
+		ID mID;
+	protected:
+		virtual SOLAIRE_EXPORT_CALL SharedAllocation<Type> CreateResource() const throw() = 0;
+	public:
+		Resource(const ID aID) :
+			mResource(),
+			mID(aID)
+		{}
+
+		virtual SOLAIRE_EXPORT_CALL ~Resource() throw() {
+
+		}
+
+		Ptr Get() throw() {
+			return mResource;
+		}
+
+		ConstPtr Get() throw() const {
+			return mResource;
+		}
+
+		// Inherited from ResourceI
+
+		bool SOLAIRE_EXPORT_CALL Create() throw() override {
+			if (mResource) return false;
+			Ptr tmp = CreateResource();
+			if (!tmp) return false;
+			mResource.Swap(tmp);
+			return true;
+		}
+
+		bool SOLAIRE_EXPORT_CALL Recreate() throw() override {
+			Ptr tmp = CreateResource();
+			if (!tmp) return false;
+			mResource.Swap(tmp);
+			return true;
+		}
+
+		bool SOLAIRE_EXPORT_CALL Destroy() throw() {
+			mResource.Swap(Ptr());
+		}
+
+		bool SOLAIRE_EXPORT_CALL IsCreated() throw() {
+			return mResource ? true : false;
+		}
+
+		bool SOLAIRE_EXPORT_CALL CompareID(const ID aID) const throw() override {
+			return mID == aID;
+		}
 	};
 
-	typedef Link::SharedPtr<Resource> ResourcePtr;
-	typedef Link::SharedPtr<const Resource> ConstResourcePtr;
-    
+	template<typename ID_TYPE, class TYPE>
+	using ResourcePtr = SharedAllocation<Resource<ID_TYPE, TYPE>>;
+
+	template<typename ID_TYPE, class TYPE>
+	using ConstResourcePtr = SharedAllocation<const Resource<ID_TYPE, TYPE>>;
+
 }
 
 
