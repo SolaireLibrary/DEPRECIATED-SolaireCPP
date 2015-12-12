@@ -48,14 +48,14 @@ Last Modified	: 9th December 2015
 	
 #include <map>
 #include <vector>
-#include "Object.hpp"
+#include "GLHeader.hpp"
 #include "BufferImplementation.hpp"
 
 namespace Solaire {
 
 	//! \todo Check if buffer is mapped
 
-	class Buffer : public Object {
+	class Buffer {
 	protected:
 		enum : GLenum {
 			#if SOLAIRE_GL_VER_GTE(4,2)
@@ -91,7 +91,7 @@ namespace Solaire {
 			INVALIDATE_RANGE 		= GL_MAP_INVALIDATE_RANGE_BIT
 		};
 	protected:
-		ID mID;
+		GLID mID;
 		GLuint mSize;
 		#if SOLAIRE_GL_VER_LT(4,4)
 			Target mMapBinding;
@@ -106,7 +106,7 @@ namespace Solaire {
 		#endif
 
 		Buffer(const Buffer& aOther) :
-			mID(NULL_ID),
+			mID(GLID::NULL_ID),
 			mSize(aOther.mSize),
 			#if SOLAIRE_GL_VER_LT(4,4)
 				mMapBinding(Target::INVALID_TARGET),
@@ -122,7 +122,7 @@ namespace Solaire {
 			#endif
 			mIsMapped(aOther.mIsMapped)
 		{
-			aOther.mID = NULL_ID;
+			aOther.mID = GLID::NULL_ID;
 			aOther.mSize = 0;
 			#if SOLAIRE_GL_VER_LT(4,4)
 				aOther.mMapBinding = Target::INVALID_TARGET;
@@ -142,7 +142,7 @@ namespace Solaire {
 
 		Buffer& operator=(const Buffer& aOther) {
 			if(mSize < aOther.mSize) {
-				if(mID != NULL_ID) {
+				if(mID != GLID::NULL_ID) {
 					Destroy();
 					mSize = aOther.mSize;
 					Create();
@@ -153,9 +153,9 @@ namespace Solaire {
 			return *this;
 		}
 	public:
-		Buffer(const GLuint aSize) :
-			mID(NULL_ID),
-			mSize(aSize),
+		Buffer() :
+			mID(GLID::NULL_ID),
+			mSize(0),
 			#if SOLAIRE_GL_VER_LT(4,4)
 				mMapBinding(Target::INVALID_TARGET),
 			#endif
@@ -165,7 +165,7 @@ namespace Solaire {
 		}
 	
 		virtual SOLAIRE_EXPORT_CALL ~Buffer() throw() {
-	
+			Destroy();
 		}
 	
 		GLuint Size() const throw() {
@@ -173,34 +173,38 @@ namespace Solaire {
 		}
 	
 		bool Bind(const Target aTarget) {
-			if(mID == NULL_ID) return false;
+			if(mID == GLID::NULL_ID) return false;
 			return GLBufferImplementation::Bind(aTarget, *this);
 		}
 
 		bool Unbind(const Target aTarget) {
-			if (mID == NULL_ID) return false;
+			if (mID == GLID::NULL_ID) return false;
 			return GLBufferImplementation::Unbind(aTarget, *this);
 		}
 	
-		// Inherited from Object
-	
-		ID SOLAIRE_EXPORT_CALL GetID() const throw() override {
+		GLID GetID() const throw() {
 			return mID;
 		}
 	
-		bool SOLAIRE_EXPORT_CALL Create() throw() override {
-			if(mID != NULL_ID) return false;
+		bool Create() throw() {
+			if(mID != GLID::NULL_ID) return false;
 			glGenBuffers(1, reinterpret_cast<GLuint*>(&mID));
-			if(mID == NULL_ID) return false;
+			if(mID == GLID::NULL_ID) return false;
+			return true;
+		}
+		
+		bool Allocate(const GLuint aSize) throw() {
+			if(mID != GLID::NULL_ID) return false;
+			mSize = aSize;
 
 			#if SOLAIRE_GL_VER_GTE(4,5)
-				glNamedBufferStorage(mID, mSize, nullptr, GetCreationFlags());
+				glNamedBufferStorage((GLint) mID, mSize, nullptr, GetCreationFlags());
 				return true;
 			#endif
 			#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,5)
-				GLuint previous = NULL_ID;
-				glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
-				glBindBuffer(PRIMARY_BUFFER, mID);
+				GLint previous = static_cast<GLint>(GLID::NULL_ID);
+				glGetIntegerv(PRIMARY_BUFFER_BINDING, &previous);
+				glBindBuffer(PRIMARY_BUFFER, (GLint) mID);
 				#if SOLAIRE_GL_VER_GTE(4,4)
 					glBufferStorage(PRIMARY_BUFFER, mSize, nullptr, GetCreationFlags());
 				#else
@@ -210,19 +214,19 @@ namespace Solaire {
 				return true;
 			#endif
 			#if SOLAIRE_GL_VER_LT(3,0)
-				#error SolaireCPP : Buffer::Create only defined for OpenGL 3.0+
+				#error SolaireCPP : Buffer::Allocate only defined for OpenGL 3.0+
 			#endif
 		}
 	
-		bool SOLAIRE_EXPORT_CALL Destroy() throw() override {
-			if(mID == NULL_ID) return false;
+		bool Destroy() throw() {
+			if(mID == GLID::NULL_ID) return false;
 			//! \todo unbind all
 			mIsMapped = false;
 			#if SOLAIRE_GL_VER_LT(4,4)
 				mMapBinding = Target::INVALID_TARGET;
 			#endif
 			glDeleteBuffers(1, reinterpret_cast<GLuint*>(&mID));
-			mID = NULL_ID;
+			mID = GLID::NULL_ID;
 			return true;
 		}
 	}; 
@@ -255,8 +259,8 @@ namespace Solaire {
 			}
 		#endif
 	public:
-		BufferImplementation(const GLuint aSize) : 
-			Buffer(aSize)
+		BufferImplementation() : 
+			Buffer()
 		{}
 	
 		template<const bool R, const bool W, const bool P>
@@ -272,7 +276,7 @@ namespace Solaire {
 		}
 	
 		SOLAIRE_EXPORT_CALL ~BufferImplementation() throw() {
-			Destroy();
+			
 		}
 	
 		template<const bool R, const bool W, const bool P>
@@ -288,7 +292,7 @@ namespace Solaire {
 				Create();
 			
 				#if SOLAIRE_GL_VER_GTE(4,5)
-					glCopyNamedBufferSubData(other.mID, mID, 0, 0, mSize);
+					glCopyNamedBufferSubData((GLint) other.mID, (GLint) mID, 0, 0, mSize);
 				#endif
 				#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,5)
 					GLuint previousRead = NULL_ID;  
@@ -296,8 +300,8 @@ namespace Solaire {
 					glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previousRead));
 					glGetIntegerv(SECONDARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previousWrite));
 			
-					glBindBuffer(PRIMARY_BUFFER, aOther.mID);
-					glBindBuffer(SECONDARY_BUFFER, mID);
+					glBindBuffer(PRIMARY_BUFFER, (GLint) aOther.mID);
+					glBindBuffer(SECONDARY_BUFFER, (GLint) mID);
 
 					#if SOLAIRE_GL_VER_EQ(3,0)
 						const void* const readMap = glMapBuffer(PRIMARY_BUFFER, GL_READ_ONLY);
@@ -322,14 +326,14 @@ namespace Solaire {
 		template<const bool FLAG = READ>
 		typename std::enable_if<FLAG, void>::type Read(const GLuint aOffset, void* const aData, const GLuint aSize, const SynchronisationMode aSyncMode = SYNCHRONISED) const throw() {
 			#if SOLAIRE_GL_VER_GTE(4,4)
-				const void* const mapping = glMapNamedBufferRange(mID, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
+				const void* const mapping = glMapNamedBufferRange((GLint) mID, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
 				std::memcpy(aData, mapping, aSize);
-				glUnmapNamedBuffer(mID);
+				glUnmapNamedBuffer((GLint) mID);
 			#endif
 			#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,4)
-				GLuint previous = NULL_ID;
-				glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
-				glBindBuffer(PRIMARY_BUFFER, mID);
+				GLint previous = (GLint) GLID::NULL_ID;
+				glGetIntegerv(PRIMARY_BUFFER_BINDING, &previous);
+				glBindBuffer(PRIMARY_BUFFER, (GLint) mID);
 				const void* const mapping = glMapBufferRange(PRIMARY_BUFFER, aOffset, aSize, GL_MAP_READ_BIT | aSyncMode);
 				std::memcpy(aData, mapping, aSize);
 				glUnmapBuffer(PRIMARY_BUFFER);
@@ -341,14 +345,14 @@ namespace Solaire {
 		typename std::enable_if<FLAG, bool>::type Write(const GLuint aOffset, void* const aData, const GLuint aSize, const InvalidationMode aInvMode = NO_INVALIDATION, const SynchronisationMode aSyncMode = SYNCHRONISED) throw() {
 			if(mIsMapped) return false;
 			#if SOLAIRE_GL_VER_GTE(4,4)
-				void* const mapping = glMapNamedBufferRange(mID, aOffset, aSize, GL_MAP_WRITE_BIT | aInvMode | aSyncMode);
+				void* const mapping = glMapNamedBufferRange((GLint) mID, aOffset, aSize, GL_MAP_WRITE_BIT | aInvMode | aSyncMode);
 				std::memcpy(mapping, aData, aSize);
-				glUnmapNamedBuffer(mID);
+				glUnmapNamedBuffer((GLint) mID);
 			#endif
 			#if SOLAIRE_GL_VER_GTE(3,0) && SOLAIRE_GL_VER_LT(4,4)
-				GLuint previous = NULL_ID;
-				glGetIntegerv(PRIMARY_BUFFER_BINDING, reinterpret_cast<GLint*>(&previous));
-				glBindBuffer(PRIMARY_BUFFER, mID);
+				GLint previous = (GLint) GLID::NULL_ID;
+				glGetIntegerv(PRIMARY_BUFFER_BINDING, &previous);
+				glBindBuffer(PRIMARY_BUFFER, (GLint) mID);
 				void* const mapping = glMapBufferRange(PRIMARY_BUFFER, aOffset, aSize, GL_MAP_WRITE_BIT | aSyncMode);
 				std::memcpy(mapping, aData, aSize);
 				glUnmapBuffer(PRIMARY_BUFFER);
@@ -365,7 +369,7 @@ namespace Solaire {
 				if(PERSISTANT) {
 					return MapRangeRead(0, mSize);
 				}else {
-					return glMapNamedBufferRange(mID, GL_READ_ONLY);
+					return glMapNamedBufferRange((GLint) mID, GL_READ_ONLY);
 				}
 			#else
 				mMapBinding = GLBufferImplementation::GetUnusedBuffer();
@@ -384,7 +388,7 @@ namespace Solaire {
 					return MapRangeWrite(0, mSize);
 				}else {
 					enum : GLenum { MODE = READ ? GL_READ_WRITE : GL_WRITE_ONLY };
-					return glMapNamedBufferRange(mID, MODE);
+					return glMapNamedBufferRange((GLint) mID, MODE);
 				}
 			#else
 				mMapBinding = GLBufferImplementation::GetUnusedBuffer();
@@ -400,7 +404,7 @@ namespace Solaire {
 			#if SOLAIRE_GL_VER_GTE(4,4)
 				mIsMapped = true;
 				const GLbitfield flags = GL_MAP_READ_BIT | aSyncMode | (PERSISTENT ? GL_MAP_PERSISTENT_BIT : 0);
-				return glMapNamedBufferRange(mID, aOffset, aSize, flags);
+				return glMapNamedBufferRange((GLint) mID, aOffset, aSize, flags);
 			#else
 				mMapBinding = GLBufferImplementation::GetUnusedBuffer();
 				if(mMapBinding == Target::INVALID_TARGET) return nullptr;
@@ -415,7 +419,7 @@ namespace Solaire {
 			#if SOLAIRE_GL_VER_GTE(4,4)
 				mIsMapped = true;
 				const GLbitfield flags = GL_MAP_WRITE_BIT | aInvMode | aSyncMode | (aInvMode == NO_INVALIDATION && READ ? GL_MAP_READ_BIT : 0) | (PERSISTENT ? GL_MAP_PERSISTENT_BIT : 0);
-				return glMapNamedBufferRange(mID, aOffset, aSize, flags);
+				return glMapNamedBufferRange((GLint) mID, aOffset, aSize, flags);
 			#else
 				mMapBinding = GLBufferImplementation::GetUnusedBuffer();
 				if(mMapBinding == Target::INVALID_TARGET) return nullptr;
@@ -428,7 +432,7 @@ namespace Solaire {
 		typename std::enable_if<(R || W) && (! P), bool>::type Unmap() throw() { 
 			if(mIsMapped) return nullptr;
 			#if SOLAIRE_GL_VER_GTE(4,4)
-				glUnmapNamedBuffer(mID);
+				glUnmapNamedBuffer((GLint) mID);
 				mIsMapped = false;
 				return true;
 			#else
@@ -494,5 +498,7 @@ namespace Solaire {
 	typedef WriteBuffer<false, true>	PersisstentWriteOnlyBuffer;
 	typedef ReadBuffer<true, true>		PersisstentReadWriteBuffer;
 }
+
+#include "BufferImplementation.inl"
 
 #endif

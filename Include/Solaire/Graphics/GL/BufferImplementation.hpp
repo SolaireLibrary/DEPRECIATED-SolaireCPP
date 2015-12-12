@@ -46,9 +46,7 @@ Last Modified	: 11th December 2015
 #define SOLAIRE_GL_PIXEL_UNPACK_BUFFER_VER 3,0
 #define SOLAIRE_GL_TRANSFORM_FEEDBACK_BUFFER_VER 3,0
 	
-#include <map>
-#include <vector>
-#include "Object.hpp"
+#include "GLHeader.hpp"
 
 namespace Solaire {
 
@@ -56,34 +54,7 @@ namespace Solaire {
 
 	namespace GLBufferImplementation {
 
-		constexpr GLenum GetBinding(const GLenum aTarget) {
-			return
-				#if SOLAIRE_GL_VER_GTE(4,0)
-					aTarget == GL_UNIFORM_BUFFER ? GL_UNIFORM_BUFFER_BINDING :
-				#endif
-				#if SOLAIRE_GL_VER_GTE(4,1)
-					aTarget == GL_DRAW_INDIRECT_BUFFER ? GL_DRAW_INDIRECT_BUFFER_BINDING :
-				#endif
-				#if SOLAIRE_GL_VER_GTE(4,2)
-					aTarget == GL_COPY_READ_BUFFER ? GL_COPY_READ_BUFFER_BINDING :
-					aTarget == GL_COPY_WRITE_BUFFER ? GL_COPY_WRITE_BUFFER_BINDING :
-					aTarget == GL_ATOMIC_COUNTER_BUFFER ? GL_ATOMIC_COUNTER_BUFFER_BINDING :
-				#endif
-				#if SOLAIRE_GL_VER_GTE(4,3)
-					aTarget == GL_DISPATCH_INDIRECT_BUFFER ? GL_DISPATCH_INDIRECT_BUFFER_BINDING :
-					aTarget == GL_SHADER_STORAGE_BUFFER ? GL_SHADER_STORAGE_BUFFER_BINDING :
-				#endif
-				#if SOLAIRE_GL_VER_GTE(4,4)
-					aTarget == GL_TEXTURE_BUFFER ? GL_TEXTURE_BUFFER_BINDING :
-					aTarget ==  GL_QUERY_BUFFER ? GL_QUERY_BUFFER_BINDING :
-				#endif
-				aTarget == GL_ARRAY_BUFFER,
-				aTarget == GL_ELEMENT_ARRAY_BUFFER,
-				aTarget == GL_PIXEL_PACK_BUFFER,
-				aTarget == GL_PIXEL_UNPACK_BUFFER,
-				aTarget == GL_TRANSFORM_FEEDBACK_BUFFER,
-				GL_INVALID_ENUM;
-		}
+		constexpr GLenum GetBinding(const GLenum aTarget);
 
 		enum class BufferTarget : GLenum {
 			#if SOLAIRE_GL_VER_GTE(3,1)
@@ -145,50 +116,12 @@ namespace Solaire {
 			aFn(BufferTarget::TRANSFORM_FEEDBACK);
 		}
 
-		static std::map<BufferTarget, std::vector<Buffer*>> BUFFER_BIND_MAP;
-
-		void InitialiseBufferData() {
-			static bool ONCE = true;
-			if(ONCE) {
-				ONCE = false;
-				ForEachBufferTarget([](const BufferTarget aTarget) {
-					BUFFER_BIND_MAP.emplace(aTarget, std::vector<const Buffer*>());
-				});
-			}
-		}
-
-		std::vector<Buffer*>* GetBindList(const BufferTarget aTarget) {
-			auto it = BUFFER_BIND_MAP.find(aTarget);
-			return it == BUFFER_BIND_MAP.end() ? nullptr : &it->second;
-		}
-
-		GLuint GetBindCount(const BufferTarget aTarget) {
-			const std::vector<Buffer*>* const list = GetBindList(aTarget);
-			return list ? list->size() : 0;
-		}
-
-		BufferTarget GetUnusedBuffer() {
-			for(const auto& i : BUFFER_BIND_MAP) if(i.second.empty()) return i.first;
-			return BufferTarget::INVALID_TARGET;
-		}
-
-		bool Bind(const BufferTarget aTarget, Buffer& aBuffer) {
-			std::vector<Buffer*>* const list = GetBindList(aTarget);
-			if(list == nullptr) return false;
-			list->push_back(&aBuffer);
-			glBindBuffer(static_cast<GLenum>(aTarget), reinterpret_cast<Object&>(aBuffer).GetID());
-			return true;
-		}
-
-		bool Unbind(const BufferTarget aTarget, Buffer& aBuffer) {
-			std::vector<Buffer*>* const list = GetBindList(aTarget);
-			if(list == nullptr) return false;
-			if(list->empty()) return false;
-			if(list->back() != &aBuffer) return false;
-			list->pop_back();
-			glBindBuffer(static_cast<GLenum>(aTarget), list->empty() ? Object::NULL_ID : reinterpret_cast<Object*>(list->back())->GetID());
-			return true;
-		}
+		void InitialiseBufferData();
+		std::vector<Buffer*>* GetBindList(const BufferTarget aTarget);
+		GLuint GetBindCount(const BufferTarget aTarget);
+		BufferTarget GetUnusedBuffer();
+		bool Bind(const BufferTarget aTarget, Buffer& aBuffer);
+		bool Unbind(const BufferTarget aTarget, Buffer& aBuffer);
 	}
 }
 

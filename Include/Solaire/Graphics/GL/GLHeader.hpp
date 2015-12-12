@@ -88,5 +88,11 @@ Last Modified	: 9th December 2015
 #endif
 #endif
 
+namespace Solaire {
+	enum class GLID : GLint {
+		NULL_ID = 0
+	};
+}
+
 
 #endif
