@@ -20,7 +20,7 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-\file Object.hpp
+\file Buffer.hpp
 \brief
 \author
 Created			: Adam Smith
