@@ -42,6 +42,42 @@ namespace Solaire {
 		Allocator& mAllocator;
 		GLuint mSize;
 	protected:
+		// Inherited from Resource
+
+		virtual SOLAIRE_EXPORT_CALL SharedAllocation<Type> CreateResource() const throw() {
+			if(mSize == 0) return SharedAllocation<Type>();
+
+			SharedAllocation<Type> tmp = mAllocator.SharedAllocate<Type>();
+
+			if( ! tmp->Create()) return SharedAllocation<Type>();
+			if( ! tmp->Allocate(mSize)) return SharedAllocation<Type>();
+
+			return tmp;
+		}
+	public:
+		BufferResource(Allocator& aAllocator, ID_TYPE aID) :
+			Resource(aID),
+			mAllocator(aAllocator),
+			mSize(0)
+		{}
+
+		BufferResource(Allocator& aAllocator, ID_TYPE aID, const GLuint aSize) :
+			Resource(aID),
+			mAllocator(aAllocator),
+			mSize(aSize)
+		{}
+
+		SOLAIRE_EXPORT_CALL ~BufferResource() {
+
+		}
+	};
+
+	template<typename ID_TYPE, const bool READ, const bool PERSISSTENT = false>
+	class BufferResource : public Resource<ID_TYPE, BufferImplementation<READ, true, PERSISSTENT>> {
+	private:
+		Allocator& mAllocator;
+		GLuint mSize;
+	protected:
 		virtual SOLAIRE_EXPORT_CALL bool HasData() const throw() {return false;}
 		virtual SOLAIRE_EXPORT_CALL GLuint GetDataSize() const throw() { return 0; }
 		virtual SOLAIRE_EXPORT_CALL bool CopyData(void* const) const throw() { return false; }
@@ -65,6 +101,8 @@ namespace Solaire {
 					tmp->Unmap();
 					return SharedAllocation<Type>();
 				}
+				//! \todo Persistant buffers cannot be unmapped
+				static_assert(! PERSISSTENT, "SolaireCPP : WRITE / PERSISSTENT BufferResource not implemented")
 				if(! tmp->Unmap()) return SharedAllocation<Type>();
 			}
 
