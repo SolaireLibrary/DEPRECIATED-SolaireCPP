@@ -28,54 +28,146 @@
 	\version 1.0
 	\date
 	Created			: 20th November 2015
-	Last Modified	: 20th November 2015
+	Last Modified	: 13th December 2015
 */
 
 #include <iostream>
-#include "..\Core\Init.hpp"
 #include "..\IO\Stream.hpp"
 
 namespace Solaire {
 
-	class ReadStreamSTL : public ReadStream {
+	template<class T>
+	class IStreamSTL : public IStream {
 	private:
-		std::istream& mStream;
+		enum {
+			BAD_STATE = std::ios::eofbit | std::ios::failbit | std::ios::badbit
+		};
+	private:
+		T mStream;
 	public:
-		ReadStreamSTL(std::istream&);
-		~ReadStreamSTL();
-
-		// Inherited from StreamBase
-		bool SOLAIRE_EXPORT_CALL SetOffset(const uint32_t) const throw() override;
-		uint32_t SOLAIRE_EXPORT_CALL GetOffset() const throw() override;
-		void SOLAIRE_EXPORT_CALL Destructor() throw() override;
-
-		// Inherited from ReadStream
-
-		uint32_t SOLAIRE_EXPORT_CALL Read(void* const, const uint32_t) throw() override;
-		bool SOLAIRE_EXPORT_CALL End() const throw() override;
+		template<typename... PARAMS>
+		IStreamSTL(PARAMS&& ...aParams) :
+			mStream(aParams...)
+		{}
+	
+		SOLAIRE_EXPORT_CALL ~IStreamSTL() throw() {
+	
+		}
+	
+		// Inherited from Stream	
+	
+		bool SOLAIRE_EXPORT_CALL IsTraversable() const throw() override {
+			//! \todo Check if stream is traversable
+			return true;
+		}
+	
+		size_t SOLAIRE_EXPORT_CALL GetOffset() const throw() override {
+			return mStream.tellg();
+		}
+	
+		void SOLAIRE_EXPORT_CALL SetOffset(const size_t aOffset) throw() override {
+			mStream.seekg(aOffset, mStream.beg);
+		}
+	
+		void SOLAIRE_EXPORT_CALL ToBegin() throw() override {
+			mStream.seekg(0, mStream.beg);
+		}
+	
+		void SOLAIRE_EXPORT_CALL ToEnd() throw() override {
+			mStream.seekg(0, mStream.end);
+		}
+	
+		// Inherited from Istream 
+	
+		bool SOLAIRE_EXPORT_CALL AtEnd() const throw() override {
+			return mStream.eof();
+		}
+	
+		bool SOLAIRE_EXPORT_CALL Read8(uint8_t& aValue) const throw() override {
+			mStream >> aValue;
+			return (mStream.rdstate() & BAD_STATE) != 0;
+		}
+	
+		bool SOLAIRE_EXPORT_CALL Read16(uint16_t& aValue) const throw() override{
+			mStream >> aValue;
+			return (mStream.rdstate() & BAD_STATE) != 0;
+		} 
+	
+		bool SOLAIRE_EXPORT_CALL Read32(uint32_t& aValue) const throw() override {
+			mStream >> aValue;
+			return (mStream.rdstate() & BAD_STATE) != 0;
+		}
+	
+		bool SOLAIRE_EXPORT_CALL Read64(uint64_t& aValue) const throw() override {
+			mStream >> aValue;
+			return (mStream.rdstate() & BAD_STATE) != 0;
+		} 
 	};
 
-	class WriteStreamSTL : public WriteStream {
+	template<class T>
+	class OStreamSTL : public OStream {
 	private:
-		std::ostream& mStream;
+		enum {
+			BAD_STATE = std::ios::eofbit | std::ios::failbit | std::ios::badbit
+		};
+	private:
+		T mStream;
 	public:
-		WriteStreamSTL(std::ostream&);
-		~WriteStreamSTL();
-
-		// Inherited from StreamBase
-
-		bool SOLAIRE_EXPORT_CALL SetOffset(const uint32_t) const throw() override;
-		uint32_t SOLAIRE_EXPORT_CALL GetOffset() const throw() override;
-		void SOLAIRE_EXPORT_CALL Destructor() throw() override;
-
-		// Inherited from WriteStream
-
-		uint32_t SOLAIRE_EXPORT_CALL Write(const void* const, const uint32_t) throw() override;
-		bool SOLAIRE_EXPORT_CALL Flush() throw() override;
+		template<typename... PARAMS>
+		OStreamSTL(PARAMS&& ...aParams) :
+			mStream(aParams...)
+		{}
+	
+		SOLAIRE_EXPORT_CALL ~OStreamSTL() throw() {
+	
+		}
+	
+		// Inherited from Stream	
+	
+		bool SOLAIRE_EXPORT_CALL IsTraversable() const throw() override {
+			//! \todo Check if stream is traversable
+			return true;
+		}
+	
+		size_t SOLAIRE_EXPORT_CALL GetOffset() const throw() override {
+			return mStream.tellp();
+		}
+	
+		void SOLAIRE_EXPORT_CALL SetOffset(const size_t aOffset) throw() override {
+			mStream.seekp(aOffset, mStream.beg);
+		}
+	
+		void SOLAIRE_EXPORT_CALL ToBegin() throw() override {
+			mStream.seekp(0, mStream.beg);
+		}
+	
+		void SOLAIRE_EXPORT_CALL ToEnd() throw() override {
+			mStream.seekp(0, mStream.end);
+		}
+	
+		// Inherited from OStream
+	
+		bool SOLAIRE_EXPORT_CALL Write8(const uint8_t aValue) const throw() override {
+			mStream << aValue;
+			return (mStream.rdstate() & BAD_STATE) != 0;
+		}
+	
+		bool SOLAIRE_EXPORT_CALL Write16(const uint16_t aValue) const throw() override{
+			mStream << aValue;
+			return (mStream.rdstate() & BAD_STATE) != 0;
+		} 
+	
+		bool SOLAIRE_EXPORT_CALL Write32(const uint32_t aValue) const throw() override {
+			mStream << aValue;
+			return (mStream.rdstate() & BAD_STATE) != 0;
+		}
+	
+		bool SOLAIRE_EXPORT_CALL Write64(const uint64_t aValue) const throw() override {
+			mStream << aValue;
+			return (mStream.rdstate() & BAD_STATE) != 0;
+		} 
 	};
-
-	//! \todo ReadStream -> std::istream wrapper
-	//! \todo WriteStream -> std::ostream wrapper
+	
 }
 
 

@@ -28,157 +28,202 @@
 	\version 1.0
 	\date
 	Created			: 20th November 2015
-	Last Modified	: 20th November 2015
+	Last Modified	: 13th December 2015
 */
 
 #include <cstdint>
-#include <cstring>
 
 namespace Solaire {
 
-	class StreamBase{
+	class Stream {
 	public:
-		virtual bool SOLAIRE_EXPORT_CALL SetOffset(const uint32_t) const throw() = 0;
-		virtual uint32_t SOLAIRE_EXPORT_CALL GetOffset() const throw() = 0;
-		virtual void SOLAIRE_EXPORT_CALL Destructor() throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL IsTraversable() const throw() = 0;
+		virtual size_t SOLAIRE_EXPORT_CALL GetOffset() const throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL SetOffset(const size_t) throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL ToBegin() throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL ToEnd() throw() = 0;
+		virtual SOLAIRE_EXPORT_CALL ~Stream() throw() {}
 	};
 
-	class ReadStream : public StreamBase {
-	public:
-		virtual uint32_t SOLAIRE_EXPORT_CALL Read(void* const, const uint32_t) throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL End() const throw() = 0;
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(bool& aValue) throw() {
-			Read(&aValue, sizeof(bool));
+	class IStream : public Stream {
+	public:	
+		virtual bool SOLAIRE_EXPORT_CALL AtEnd() const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Read8(uint8_t&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Read16(uint16_t&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Read32(uint32_t&) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Read64(uint64_t&) const throw() = 0;
+		virtual SOLAIRE_EXPORT_CALL ~IStream() throw() {}
+	
+		inline bool Read(void* const aData, const size_t aBytes) throw() {
+			uint8_t* begin = static_cast<uint8_t*>(aData);
+			const uint8_t* const end = begin + aBytes;
+		
+			while(end - begin >= 8) {
+				if(! Read64(*reinterpret_cast<uint64_t*>(begin))) return false;
+				begin += 8;
+			}
+		
+			if(end - begin >= 4) {
+				if(! Read32(*reinterpret_cast<uint32_t*>(begin))) return false;
+				begin += 4;
+			}
+		
+			if(end - begin >= 2) {
+				if(! Read16(*reinterpret_cast<uint16_t*>(begin))) return false;
+				begin += 2;
+			}
+		
+			if(begin != end) {
+				if(! Read8(*begin)) return false;
+			}
+		
+			return true;
+		}
+	
+		inline IStream& operator>>(uint8_t& aValue) throw() {
+			Read8(aValue);
 			return *this;
 		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(char& aValue) throw() {
-			Read(&aValue, sizeof(char));
+	
+		inline IStream& operator>>(uint16_t& aValue) throw() {
+			Read16(aValue);
 			return *this;
 		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(uint8_t& aValue) throw() {
-			Read(&aValue, sizeof(uint8_t));
+	
+		inline IStream& operator>>(uint32_t& aValue) throw() {
+			Read32(aValue);
 			return *this;
 		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(uint16_t& aValue) throw() {
-			Read(&aValue, sizeof(uint16_t));
+	
+		inline IStream& operator>>(uint64_t& aValue) throw() {
+			Read64(aValue);
 			return *this;
 		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(uint32_t& aValue) throw() {
-			Read(&aValue, sizeof(uint32_t));
+		inline IStream& operator>>(int8_t& aValue) throw() {
+			Read8(reinterpret_cast<uint8_t&>(aValue));
 			return *this;
 		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(uint64_t& aValue) throw() {
-			Read(&aValue, sizeof(uint64_t));
+	
+		inline IStream& operator>>(int16_t& aValue) throw() {
+			Read16(reinterpret_cast<uint16_t&>(aValue));
 			return *this;
 		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(int8_t& aValue) throw() {
-			Read(&aValue, sizeof(int8_t));
+	
+		inline IStream& operator>>(int32_t& aValue) throw() {
+			Read32(reinterpret_cast<uint32_t&>(aValue));
 			return *this;
 		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(int16_t& aValue) throw() {
-			Read(&aValue, sizeof(int16_t));
+	
+		inline IStream& operator>>(int64_t& aValue) throw() {
+			Read64(reinterpret_cast<uint64_t&>(aValue));
 			return *this;
 		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(int32_t& aValue) throw() {
-			Read(&aValue, sizeof(int32_t));
+	
+		inline IStream& operator>>(char& aValue) throw() {
+			Read8(reinterpret_cast<uint8_t&>(aValue));
 			return *this;
 		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(int64_t& aValue) throw() {
-			Read(&aValue, sizeof(int64_t));
-			return *this;
-		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(float& aValue) throw() {
+	
+		inline IStream& operator>>(float& aValue) throw() {
 			Read(&aValue, sizeof(float));
 			return *this;
 		}
-
-		inline ReadStream& SOLAIRE_EXPORT_CALL operator>>(double& aValue) throw() {
+	
+		inline IStream& operator>>(double& aValue) throw() {
 			Read(&aValue, sizeof(double));
 			return *this;
 		}
 	};
 
-	class WriteStream : public StreamBase {
+	class OStream : public Stream {
 	public:
-		virtual uint32_t SOLAIRE_EXPORT_CALL Write(const void* const, const uint32_t) throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL Flush() throw() = 0;
-
-		inline bool SOLAIRE_EXPORT_CALL WriteCString(const char* const aString) throw() {
-			const uint32_t length = std::strlen(aString);
-			return Write(aString, length) == length;
+		virtual bool SOLAIRE_EXPORT_CALL Write8(const uint8_t) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Write16(const uint16_t) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Write32(const uint32_t) const throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Write64(const uint64_t) const throw() = 0;
+		virtual SOLAIRE_EXPORT_CALL ~OStream() throw() {}
+	
+		inline bool Write(const void* const aData, const size_t aBytes) throw() {
+			const uint8_t* begin = static_cast<const uint8_t*>(aData);
+			const uint8_t* const end = begin + aBytes;
+		
+			while(end - begin >= 8) {
+				if(! Write64(*reinterpret_cast<const uint64_t*>(begin))) return false;
+				begin += 8;
+			}
+		
+			if(end - begin >= 4) {
+				if(! Write32(*reinterpret_cast<const uint32_t*>(begin))) return false;
+				begin += 4;
+			}
+		
+			if(end - begin >= 2) {
+				if(! Write16(*reinterpret_cast<const uint16_t*>(begin))) return false;
+				begin += 2;
+			}
+		
+			if(begin != end) {
+				if(! Write8(*begin)) return false;
+			}
+		
+			return true;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const bool aValue) throw() {
-			Write(&aValue, sizeof(bool));
+	
+		inline OStream& operator<<(const uint8_t aValue) throw() {
+			Write8(aValue);
 			return *this;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const char aValue) throw() {
-			Write(&aValue, sizeof(char));
+	
+		inline OStream& operator<<(const uint16_t aValue) throw() {
+			Write16(aValue);
 			return *this;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const uint8_t aValue) throw() {
-			Write(&aValue, sizeof(uint8_t));
+	
+		inline OStream& operator<<(const uint32_t aValue) throw() {
+			Write32(aValue);
 			return *this;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const uint16_t aValue) throw() {
-			Write(&aValue, sizeof(uint16_t));
+	
+		inline OStream& operator<<(const uint64_t aValue) throw() {
+			Write64(aValue);
 			return *this;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const uint32_t aValue) throw() {
-			Write(&aValue, sizeof(uint32_t));
+		inline OStream& operator<<(const int8_t aValue) throw() {
+			Write8(*reinterpret_cast<const uint8_t*>(&aValue));
 			return *this;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const uint64_t aValue) throw() {
-			Write(&aValue, sizeof(uint64_t));
+	
+		inline OStream& operator<<(const int16_t aValue) throw() {
+			Write16(*reinterpret_cast<const uint16_t*>(&aValue));
 			return *this;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const int8_t aValue) throw() {
-			Write(&aValue, sizeof(int8_t));
+	
+		inline OStream& operator<<(const int32_t aValue) throw() {
+			Write32(*reinterpret_cast<const uint32_t*>(&aValue));
 			return *this;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const int16_t aValue) throw() {
-			Write(&aValue, sizeof(int16_t));
+	
+		inline OStream& operator<<(const int64_t aValue) throw() {
+			Write64(*reinterpret_cast<const uint64_t*>(&aValue));
 			return *this;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const int32_t aValue) throw() {
-			Write(&aValue, sizeof(int32_t));
+	
+		inline OStream& operator<<(const char aValue) throw() {
+			Write8(*reinterpret_cast<const uint8_t*>(&aValue));
 			return *this;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const int64_t aValue) throw() {
-			Write(&aValue, sizeof(int64_t));
-			return *this;
-		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const float aValue) throw() {
+	
+		inline OStream& operator<<(const float aValue) throw() {
 			Write(&aValue, sizeof(float));
 			return *this;
 		}
-
-		inline WriteStream& SOLAIRE_EXPORT_CALL operator<<(const double aValue) throw() {
+	
+		inline OStream& operator<<(const double aValue) throw() {
 			Write(&aValue, sizeof(double));
 			return *this;
 		}
 	};
+
 }
 
 
