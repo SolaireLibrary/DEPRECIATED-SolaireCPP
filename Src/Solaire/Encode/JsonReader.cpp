@@ -23,12 +23,12 @@
 
 namespace Solaire{
 
-	static bool JsonNullRead(ReadStream&, Json::Reader&);
-	static bool JsonBoolRead(ReadStream&, Json::Reader&);
-	static bool JsonNumberRead(ReadStream&, Json::Reader&);
-	static bool JsonStringRead(ReadStream&, Json::Reader&);
-	static bool JsonArrayRead(ReadStream&, Json::Reader&);
-	static bool JsonObjectRead(ReadStream&, Json::Reader&);
+	static bool JsonNullRead(IStream&, Json::Reader&);
+	static bool JsonBoolRead(IStream&, Json::Reader&);
+	static bool JsonNumberRead(IStream&, Json::Reader&);
+	static bool JsonStringRead(IStream&, Json::Reader&);
+	static bool JsonArrayRead(IStream&, Json::Reader&);
+	static bool JsonObjectRead(IStream&, Json::Reader&);
 
 	class JsonBaseReader {
 	protected :
@@ -41,9 +41,9 @@ namespace Solaire{
 			TYPE_OBJECT
 		};
 
-		static bool StateSkipWhitespace(ReadStream& aStream) {
+		static bool StateSkipWhitespace(IStream& aStream) {
 			char buf;
-			while(! aStream.End()) {
+			while(! aStream.AtEnd()) {
 				aStream >> buf;
 				switch(buf)
 				{
@@ -60,7 +60,7 @@ namespace Solaire{
 			return true;
 		}
 
-		static bool StateValueRead(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateValueRead(IStream& aStream, Json::Reader& aReader) {
 			const uint32_t offset = aStream.GetOffset();
 			StateSkipWhitespace(aStream);
 
@@ -136,10 +136,10 @@ namespace Solaire{
 
 	class JsonStringReader : public JsonBaseReader {
 	private:
-		static bool StateFirstQuote(ReadStream& aStream) {
+		static bool StateFirstQuote(IStream& aStream) {
 			if (!StateSkipWhitespace(aStream)) return false;
 			char buf;
-			while(! aStream.End()) {
+			while(! aStream.AtEnd()) {
 				aStream >> buf;
 				if(buf == '"') {
 					return true;
@@ -150,12 +150,12 @@ namespace Solaire{
 			return false;
 		}
 
-		static bool StateBody(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateBody(IStream& aStream, Json::Reader& aReader) {
 			bool escaped = false;
 			CString buffer(GetDefaultAllocator());
 			char c;
 
-			while(! aStream.End()) {
+			while(! aStream.AtEnd()) {
 				aStream >> c;
 				switch(c) {
 				case '"' :
@@ -185,7 +185,7 @@ namespace Solaire{
 			return false;
 		}
 	public:
-		static bool Read(ReadStream& aStream, Json::Reader& aReader) {
+		static bool Read(IStream& aStream, Json::Reader& aReader) {
 			const uint32_t offset = aStream.GetOffset();
 
 			if(! StateFirstQuote(aStream)) {
@@ -204,12 +204,12 @@ namespace Solaire{
 
 	class JsonNumberReader : public JsonBaseReader {
 	private:
-		static bool StateValue(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateValue(IStream& aStream, Json::Reader& aReader) {
 			CString buf(GetDefaultAllocator());
 			double value;
 
 			while(true) {
-				if(aStream.End()) return false;
+				if(aStream.AtEnd()) return false;
 				char c;
 				aStream >> c;
 				buf += c;
@@ -243,7 +243,7 @@ namespace Solaire{
 			return false;
 		}
 	public:
-		static bool Read(ReadStream& aStream, Json::Reader& aReader) {
+		static bool Read(IStream& aStream, Json::Reader& aReader) {
 			const uint32_t offset = aStream.GetOffset();
 
 			if(! StateSkipWhitespace(aStream)) {
@@ -262,7 +262,7 @@ namespace Solaire{
 
 	class JsonBoolReader : public JsonBaseReader {
 	private:
-		static bool StateValue(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateValue(IStream& aStream, Json::Reader& aReader) {
 			char buf[4];
 			aStream >> buf[0];
 
@@ -279,7 +279,7 @@ namespace Solaire{
 			}
 		}
 	public:
-		static bool Read(ReadStream& aStream, Json::Reader& aReader) {
+		static bool Read(IStream& aStream, Json::Reader& aReader) {
 			const uint32_t offset = aStream.GetOffset();
 
 			if(! StateSkipWhitespace(aStream)) {
@@ -298,7 +298,7 @@ namespace Solaire{
 
 	class JsonNullReader : public JsonBaseReader {
 	private:
-		static bool StateValue(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateValue(IStream& aStream, Json::Reader& aReader) {
 			char buf[4];
 			if(aStream.Read(buf, 4) != 4) return false;
 			if(std::memcmp(buf, "null", 4) != 0) return false;
@@ -306,7 +306,7 @@ namespace Solaire{
 			return true;
 		}
 	public:
-		static bool Read(ReadStream& aStream, Json::Reader& aReader) {
+		static bool Read(IStream& aStream, Json::Reader& aReader) {
 			const uint32_t offset = aStream.GetOffset();
 
 			if(! StateSkipWhitespace(aStream)) {
@@ -325,7 +325,7 @@ namespace Solaire{
 
 	class JsonArrayReader : public JsonBaseReader {
 	private:
-		static bool StateOpenArray(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateOpenArray(IStream& aStream, Json::Reader& aReader) {
 			if(! StateSkipWhitespace(aStream)) return false;
 			char c;
 			aStream >> c;
@@ -334,7 +334,7 @@ namespace Solaire{
 			return StateCloseArray(aStream, aReader);
 		}
 
-		static bool StateCloseArray(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateCloseArray(IStream& aStream, Json::Reader& aReader) {
 			if(! StateSkipWhitespace(aStream)) return false;
 			char c;
 			aStream >> c;
@@ -350,7 +350,7 @@ namespace Solaire{
 			}
 		}
 
-		static bool StateChildSeperator(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateChildSeperator(IStream& aStream, Json::Reader& aReader) {
 			if(! StateSkipWhitespace(aStream)) return false;
 			char c;
 			aStream >> c;
@@ -367,7 +367,7 @@ namespace Solaire{
 			}
 		}
 	public:
-		static bool Read(ReadStream& aStream, Json::Reader& aReader) {
+		static bool Read(IStream& aStream, Json::Reader& aReader) {
 			const uint32_t offset = aStream.GetOffset();
 
 			if(! StateOpenArray(aStream, aReader)) {
@@ -381,7 +381,7 @@ namespace Solaire{
 
 	class JsonObjectReader : public JsonBaseReader {
 	private:
-		static bool StateOpenObject(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateOpenObject(IStream& aStream, Json::Reader& aReader) {
 			if(! StateSkipWhitespace(aStream)) return false;
 			char c;
 			aStream >> c;
@@ -390,7 +390,7 @@ namespace Solaire{
 			return StateCloseObject(aStream, aReader);
 		}
 
-		static bool StateCloseObject(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateCloseObject(IStream& aStream, Json::Reader& aReader) {
 			if(! StateSkipWhitespace(aStream)) return false;
 			char c;
 			aStream >> c;
@@ -406,10 +406,10 @@ namespace Solaire{
 			}
 		}
 
-		static bool StateMemberName(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateMemberName(IStream& aStream, Json::Reader& aReader) {
 			CString name(GetDefaultAllocator());
 			char c;
-			while(! aStream.End()) {
+			while(! aStream.AtEnd()) {
 				aStream >> c;
 				if(c == '"') {
 					if(! aReader.MemberName(name)) return false;
@@ -421,7 +421,7 @@ namespace Solaire{
 			return false;
 		}
 
-		static bool StateNameSeperator(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateNameSeperator(IStream& aStream, Json::Reader& aReader) {
 			if(! StateSkipWhitespace(aStream)) return false;
 			char c;
 			aStream >> c;
@@ -430,7 +430,7 @@ namespace Solaire{
 			return StateChildSeperator(aStream, aReader);
 		}
 
-		static bool StateChildSeperator(ReadStream& aStream, Json::Reader& aReader) {
+		static bool StateChildSeperator(IStream& aStream, Json::Reader& aReader) {
 			if(! StateSkipWhitespace(aStream)) return false;
 			char c;
 			aStream >> c;
@@ -449,7 +449,7 @@ namespace Solaire{
 			}
 		}
 	public:
-		static bool Read(ReadStream& aStream, Json::Reader& aReader) {
+		static bool Read(IStream& aStream, Json::Reader& aReader) {
 			const uint32_t offset = aStream.GetOffset();
 
 			if(! StateOpenObject(aStream, aReader)) {
@@ -461,27 +461,27 @@ namespace Solaire{
 		}
 	};
 
-	bool JsonNullRead(ReadStream& aStream, Json::Reader& aReader) {
+	bool JsonNullRead(IStream& aStream, Json::Reader& aReader) {
 		return JsonNullReader::Read(aStream, aReader);
 	}
 
-	bool JsonBoolRead(ReadStream& aStream, Json::Reader& aReader) {
+	bool JsonBoolRead(IStream& aStream, Json::Reader& aReader) {
 		return JsonBoolReader::Read(aStream, aReader);
 	}
 
-	bool JsonNumberRead(ReadStream& aStream, Json::Reader& aReader) {
+	bool JsonNumberRead(IStream& aStream, Json::Reader& aReader) {
 		return JsonNumberReader::Read(aStream, aReader);
 	}
 
-	bool JsonStringRead(ReadStream& aStream, Json::Reader& aReader){
+	bool JsonStringRead(IStream& aStream, Json::Reader& aReader){
 		return JsonStringReader::Read(aStream, aReader);
 	}
 
-	bool JsonArrayRead(ReadStream& aStream, Json::Reader& aReader) {
+	bool JsonArrayRead(IStream& aStream, Json::Reader& aReader) {
 		return JsonArrayReader::Read(aStream, aReader);
 	}
 
-	bool JsonObjectRead(ReadStream& aStream, Json::Reader& aReader) {
+	bool JsonObjectRead(IStream& aStream, Json::Reader& aReader) {
 		return JsonObjectReader::Read(aStream, aReader);
 	}
 

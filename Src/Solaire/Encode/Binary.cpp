@@ -24,7 +24,7 @@ namespace Solaire{ namespace Encode{
 
 	// Binary
 
-	bool SOLAIRE_EXPORT_CALL Binary::Write(const Value& aValue, WriteStream& aStream) {
+	bool SOLAIRE_EXPORT_CALL Binary::Write(const Value& aValue, OStream& aStream) {
 
 		const Value::Type type = aValue.GetType();
 		aStream.Write(&type, sizeof(Value::Type));
@@ -116,7 +116,7 @@ namespace Solaire{ namespace Encode{
 		return true;
 	}
 
-	Value SOLAIRE_EXPORT_CALL Binary::Read(Allocator& aAllocator, ReadStream& aStream) {
+	Value SOLAIRE_EXPORT_CALL Binary::Read(Allocator& aAllocator, IStream& aStream) {
 		Value value(aAllocator);
 
 		Value::Type type;
@@ -207,7 +207,7 @@ namespace Solaire{ namespace Encode{
 		return value;
 	}
 
-	Value SOLAIRE_EXPORT_CALL Binary::Read(ReadStream& aStream) {
+	Value SOLAIRE_EXPORT_CALL Binary::Read(IStream& aStream) {
 		return Read(GetDefaultAllocator(), aStream);
 	}
 

@@ -33,18 +33,18 @@ namespace Solaire{
 
 	// Writer
 
-	Json::Writer::Writer(WriteStream& aStream) :
+	Json::Writer::Writer(OStream& aStream) :
 		mOutputStream(aStream),
 		mState(GetDefaultAllocator())
 	{}
 
-	Json::Writer::Writer(Allocator& aAllocator, WriteStream& aStream) :
+	Json::Writer::Writer(Allocator& aAllocator, OStream& aStream) :
 		mOutputStream(aStream),
 		mState(aAllocator)
 	{}
 
 	Json::Writer::~Writer() {
-		mOutputStream.Flush();
+		//mOutputStream.Flush();
 	}
 
 	bool Json::Writer::IsArray() const throw() {

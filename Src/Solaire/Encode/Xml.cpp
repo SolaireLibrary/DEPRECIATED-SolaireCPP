@@ -35,7 +35,7 @@ namespace Solaire{ namespace Encode{
 
 	// Writer
 	
-	Xml::Writer::Writer(WriteStream& aStream) :
+	Xml::Writer::Writer(OStream& aStream) :
 		mOutputStream(aStream),
 		mHead(GetDefaultAllocator())
 	{}
@@ -118,7 +118,7 @@ namespace Solaire{ namespace Encode{
 
 		if(mHead.IsEmpty()) {
 			if(! WriteElement(mRoot)) return false;
-			mOutputStream.Flush();
+			//mOutputStream.Flush();
 		}
 
 		return true;

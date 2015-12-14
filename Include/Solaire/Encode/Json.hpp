@@ -69,13 +69,13 @@ namespace Solaire{
 				State(Allocator&);
 			};
 		private:
-			WriteStream& mOutputStream;
+			OStream& mOutputStream;
 			DynamicArray<State> mState;
 		private:
 			bool AddValueInternal(const ConstString<char>&) throw();
 		public:
-			Writer(WriteStream&);
-			Writer(Allocator& aAllocator, WriteStream&);
+			Writer(OStream&);
+			Writer(Allocator& aAllocator, OStream&);
 			~Writer();
 
 			bool IsArray() const throw();
@@ -106,9 +106,9 @@ namespace Solaire{
 			bool AddValue(const ConstString<char>&, const Encode::Value&) throw();
 		};
 
-		static bool SOLAIRE_EXPORT_CALL Read(ReadStream&, Reader&);
-		static Encode::Value SOLAIRE_EXPORT_CALL Read(ReadStream&);
-		static Encode::Value SOLAIRE_EXPORT_CALL Read(Allocator&, ReadStream&);
+		static bool SOLAIRE_EXPORT_CALL Read(IStream&, Reader&);
+		static Encode::Value SOLAIRE_EXPORT_CALL Read(IStream&);
+		static Encode::Value SOLAIRE_EXPORT_CALL Read(Allocator&, IStream&);
 	};
 
 

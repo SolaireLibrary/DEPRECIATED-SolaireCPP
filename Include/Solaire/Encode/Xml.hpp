@@ -64,11 +64,11 @@ namespace Solaire { namespace Encode {
 		private:
 			bool WriteElement(const ElementData&) throw();
 		private:
-			WriteStream& mOutputStream;
+			OStream& mOutputStream;
 			ElementData mRoot;
 			DynamicArray<ElementData*> mHead;
 		public:
-			Writer(WriteStream&);
+			Writer(OStream&);
 			~Writer();
 
 			bool BeginElement(const ConstString<char>&);
@@ -81,9 +81,9 @@ namespace Solaire { namespace Encode {
 
 		};
 
-		static bool SOLAIRE_EXPORT_CALL Read(WriteStream&, Reader&);
-		static Value SOLAIRE_EXPORT_CALL Read(Allocator&, ReadStream&);
-		static Value SOLAIRE_EXPORT_CALL Read(ReadStream&);
+		static bool SOLAIRE_EXPORT_CALL Read(OStream&, Reader&);
+		static Value SOLAIRE_EXPORT_CALL Read(Allocator&, IStream&);
+		static Value SOLAIRE_EXPORT_CALL Read(IStream&);
 	};
 
 }}
