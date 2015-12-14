@@ -76,9 +76,9 @@ namespace Solaire {
 
 		void SOLAIRE_EXPORT_CALL WaitAll() throw() override {
 			bool success = false;
-			while(!success) {
+			do{
 				success = WaitAllFor(UINT32_MAX);
-			}
+			}while(! success);
 		}
 
 		bool SOLAIRE_EXPORT_CALL WaitAllFor(const uint32_t aMilliseconds) throw() override {
