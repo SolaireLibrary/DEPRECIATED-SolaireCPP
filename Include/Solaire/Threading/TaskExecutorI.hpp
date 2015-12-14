@@ -28,8 +28,10 @@ Last modified	: Adam Smith
 \version 1.0
 \date
 Created			: 6th December 2015
-Last Modified	: 8th December 2015
+Last Modified	: 14th December 2015
 */
+
+#include <cstdint>
 
 namespace Solaire {
 
@@ -40,6 +42,10 @@ namespace Solaire {
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Schedule(TaskI&) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Update() throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL WaitAll() throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL WaitAllFor(const uint32_t) throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL GetThreadCount() throw() = 0;
+		virtual uint32_t SOLAIRE_EXPORT_CALL GetTaskCount() throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~TaskExecutorI() throw(){}
 	};
 

@@ -60,9 +60,9 @@ namespace Solaire {
 			mExitFlag = true;
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				for(SharedAllocation<TaskImplementation> i : mPreList) i->Cancel();
-				for(SharedAllocation<TaskImplementation> i : mPostList) i->Cancel();
-				for(SharedAllocation<TaskImplementation> i : mPauseList) i->Cancel();
+				for (SharedAllocation<TaskImplementation> i : mPreList) i->Cancel();
+				for (SharedAllocation<TaskImplementation> i : mPostList) i->Cancel();
+				for (SharedAllocation<TaskImplementation> i : mPauseList) i->Cancel();
 				mInitialiseList.clear();
 				mPreList.clear();
 				mPostList.clear();
@@ -73,6 +73,43 @@ namespace Solaire {
 		}
 
 		// Inherited from TaskExecutorI
+
+		void SOLAIRE_EXPORT_CALL WaitAll() throw() override {
+			bool success = false;
+			while(!success) {
+				success = WaitAllFor(UINT32_MAX);
+			}
+		}
+
+		bool SOLAIRE_EXPORT_CALL WaitAllFor(const uint32_t aMilliseconds) throw() override {
+			enum {
+				WAIT_TIME = 1
+			};
+
+			for(uint32_t i = 0; i < aMilliseconds; i += WAIT_TIME) {
+				Update();
+				if(GetTaskCount() == 0) return true;
+				std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME));
+			}
+
+			return false;
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL GetThreadCount() throw() override {
+			return mWorkers.size();
+		}
+
+		uint32_t SOLAIRE_EXPORT_CALL GetTaskCount() throw() override {
+			uint32_t count = 0;
+			std::lock_guard<std::mutex> lock(mLock);
+			count += mInitialiseList.size();
+			count += mPreList.size();
+			count += mPauseList.size();
+			count += mPostList.size();
+			count += mBufferList.size();
+			for(const auto& i : mExecuteList) if(i.second) ++count;
+			return count;
+		}
 		
 		bool SOLAIRE_EXPORT_CALL Schedule(TaskI& aTask) throw() override {
 			{
