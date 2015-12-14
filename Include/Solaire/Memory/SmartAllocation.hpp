@@ -110,6 +110,9 @@ namespace Solaire {
 	
 	template<class T>
 	class SharedAllocation {
+	public:
+		template<class T2>
+		friend class SharedAllocation;
 	private:
 		uint32_t* mCount;
 		Allocator* mAllocator;
