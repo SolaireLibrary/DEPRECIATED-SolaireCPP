@@ -41,6 +41,14 @@ namespace Solaire {
 			mTask.RemoveCallbacks();
 		}
 
+		inline uint64_t GetPauseTime() const throw() {
+			return mTask.GetPauseTime();
+		}
+
+		inline uint64_t GetPauseDuration() const throw() {
+			return mTask.GetPauseDuration();
+		}
+
 		inline bool Initialise() throw() {
 			return mTask.InitialiseI(*this);
 		}

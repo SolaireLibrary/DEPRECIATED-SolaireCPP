@@ -33,11 +33,14 @@ Last Modified	: 8th December 2015
 
 #include "TaskI.hpp"
 #include "TaskCallbacks.hpp"
+#include "..\Core\System.hpp"
 
 namespace Solaire {
 
 	class Task : public TaskI {
 	private :
+		uint64_t mPauseTime;
+		uint64_t mPauseDuration;
 		TaskCallbacks* mCallbacks;
 		State mState;
 	protected :
@@ -64,6 +67,8 @@ namespace Solaire {
 			case STATE_COMPLETE:
 				mCallbacks = &aCallbacks;
 				mState = STATE_INITIALISED;
+				mPauseTime = 0;
+				mPauseDuration = 0;
 				return Initialise();
 			default:
 				return false;
@@ -91,12 +96,23 @@ namespace Solaire {
 			return result;
 		}
 
-		bool SOLAIRE_EXPORT_CALL Pause() throw() override {
+		bool SOLAIRE_EXPORT_CALL Pause(const uint64_t aMilliseconds) throw() override {
 			if(mState != STATE_EXECUTE) return false;
 			const bool result = OnPause();
 			mState = STATE_PAUSED;
+			mPauseTime = GetTimeMilliseconds();
+			mPauseDuration = aMilliseconds;
 			return result;
 		}
+
+		uint64_t SOLAIRE_EXPORT_CALL GetPauseTime() const throw() override {
+			return mPauseTime;
+		}
+
+		uint64_t SOLAIRE_EXPORT_CALL GetPauseDuration() const throw()  override {
+			return mPauseDuration;
+		}
+
 
 		bool SOLAIRE_EXPORT_CALL OnResumeI() throw() override {
 			if(mState != STATE_PAUSED) return false;
@@ -113,6 +129,8 @@ namespace Solaire {
 
 	public:
 		Task() throw() :
+			mPauseTime(0),
+			mPauseDuration(0),
 			mCallbacks(nullptr),
 			mState(STATE_INITIALISED)
 		{}
