@@ -85,7 +85,7 @@ namespace Solaire {
 			if(mState != STATE_PRE_EXECUTE) return false;
 			mState = STATE_EXECUTE;
 			const bool result = OnExecute();
-			mState = STATE_POST_EXECUTE;
+			if(mState == STATE_EXECUTE) mState = STATE_POST_EXECUTE;
 			return result;
 		}
 
