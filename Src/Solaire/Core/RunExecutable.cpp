@@ -27,7 +27,7 @@ namespace Solaire {
 			Iterator<const char*>& aBegin, 
 			const Iterator<const char*>& aEnd, 
 			int* const aReturnCode
-		) {
+		) throw() {
 		#if SOLAIRE_OS == SOLAIRE_WINDOWS
 			char buf[MAX_PATH * 2];
 			uint32_t offset = 0;

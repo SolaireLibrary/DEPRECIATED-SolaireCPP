@@ -1,6 +1,3 @@
-#ifndef SOLAIRE_SYSTEM_HPP
-#define SOLAIRE_SYSTEM_HPP
-
 //Copyright 2015 Adam Smith
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,29 +16,17 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-/*!
-	\file System.hpp
-	\brief
-	\author
-	Created			: Adam Smith
-	Last modified	: Adam Smith
-	\version 1.0
-	\date
-	Created			: 3rd December 2015
-	Last Modified	: 3rd December 2015
-*/
-
-#include <cstdint>
-#include "Init.hpp"
-#include "Iterator.hpp"
+#include "Solaire\Core\System.hpp"
+#include <chrono>
 
 namespace Solaire {
 
 	extern "C" {
-		bool SOLAIRE_EXPORT_CALL RunExecutable(const char* const, Iterator<const char*>&, const Iterator<const char*>&, int* const) throw();
-		uint64_t SOLAIRE_EXPORT_CALL GetTimeMilliseconds() throw();
+		uint64_t SOLAIRE_EXPORT_CALL GetTimeMilliseconds() throw() {
+			auto time = std::chrono::high_resolution_clock::now();
+			auto duration = time.time_since_epoch();
+			return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+		}
 	}
+
 }
-
-
-#endif
