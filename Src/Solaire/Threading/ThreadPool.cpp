@@ -20,6 +20,7 @@
 #include "Solaire\Threading\TaskExecutorI.hpp"
 #include "Solaire\Memory\Allocator.hpp"
 #include "Solaire\Memory\SmartAllocation.hpp"
+#include "Solaire\Core\System.hpp"
 
 #include <mutex>
 #include <thread>
@@ -43,7 +44,9 @@ namespace Solaire {
 		std::map<std::thread::id, SharedAllocation<TaskImplementation>> mExecuteList;
 		std::deque<SharedAllocation<TaskImplementation>> mPauseList;
 		std::deque<SharedAllocation<TaskImplementation>> mPostList;
-		std::deque<SharedAllocation<TaskImplementation>> mBufferList;
+		std::deque<SharedAllocation<TaskImplementation>> mPrimaryBufferList;
+		std::deque<SharedAllocation<TaskImplementation>> mSecondaryBufferList;
+		std::deque<SharedAllocation<TaskImplementation>> mTertiaryBufferList;
 		bool mExitFlag;
 	public:
 		ThreadPool(Allocator& aAllocator, const uint32_t aThreads) throw() :
@@ -106,7 +109,9 @@ namespace Solaire {
 			count += mPreList.size();
 			count += mPauseList.size();
 			count += mPostList.size();
-			count += mBufferList.size();
+			count += mPrimaryBufferList.size();
+			count += mSecondaryBufferList.size();
+			count += mTertiaryBufferList.size();
 			for(const auto& i : mExecuteList) if(i.second) ++count;
 			return count;
 		}
@@ -125,21 +130,23 @@ namespace Solaire {
 		}
 
 		bool SOLAIRE_EXPORT_CALL Update() throw() override {
+
+			// Pre-execution
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				std::swap(mBufferList, mInitialiseList);
+				std::swap(mPrimaryBufferList, mInitialiseList);
 			}
 
-			for(SharedAllocation<TaskImplementation> i : mBufferList) if(! i->PreExecute()) i->Cancel();
+			for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if(! i->PreExecute()) i->Cancel();
 
 			uint32_t preCount = 0;
 			{
 				std::lock_guard<std::mutex> lock(mLock);
 				preCount = mPreList.size();
-				for(SharedAllocation<TaskImplementation> i : mBufferList) if(i->GetState() == TaskI::STATE_PRE_EXECUTE) mPreList.push_back(i);
+				for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if(i->GetState() == TaskI::STATE_PRE_EXECUTE) mPreList.push_back(i);
 				preCount = mPreList.size() - preCount;
-				mBufferList.clear();
-				mBufferList.swap(mPostList);
+				mPrimaryBufferList.clear();
+				mPrimaryBufferList.swap(mPauseList);
 			}
 
 			if(preCount >= mWorkers.size()) {
@@ -148,8 +155,30 @@ namespace Solaire {
 				for(uint32_t i = 0; i < preCount; ++i) mPreCondition.notify_one();
 			}
 
-			for(SharedAllocation<TaskImplementation> i : mBufferList) if(! i->PostExecute()) i->Cancel();
-			mBufferList.clear();
+			// Resume
+			const uint64_t time = GetTimeMilliseconds();
+			for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if (i->GetPauseDuration() + i->GetPauseTime() <= time) {
+				mSecondaryBufferList.push_back(i);
+			}else {
+				mTertiaryBufferList.push_back(i);
+			}
+
+			mPrimaryBufferList.clear();
+
+			{
+				std::lock_guard<std::mutex> lock(mLock);
+				mPrimaryBufferList.swap(mPostList);
+				for(SharedAllocation<TaskImplementation> i : mSecondaryBufferList) mPreList.push_front(i);
+				mTertiaryBufferList.swap(mPauseList);
+			}
+
+			mSecondaryBufferList.clear();
+			mTertiaryBufferList.clear();
+
+			// Post-execution
+
+			for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if(! i->PostExecute()) i->Cancel();
+			mPrimaryBufferList.clear();
 
 			return true;
 		}
@@ -159,10 +188,7 @@ namespace Solaire {
 				SharedAllocation<TaskImplementation>& task = mExecuteList[std::this_thread::get_id()];
 				{
 					std::lock_guard<std::mutex> lock(mLock);
-					if(! mPauseList.empty()) {
-						task.Swap(mPauseList.front());
-						mPauseList.pop_front();
-					}else if(! mPreList.empty()) {
+					if(! mPreList.empty()) {
 						task.Swap(mPreList.front());
 						mPreList.pop_front();
 					}                
