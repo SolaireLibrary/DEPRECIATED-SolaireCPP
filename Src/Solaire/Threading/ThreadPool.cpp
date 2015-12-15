@@ -48,6 +48,14 @@ namespace Solaire {
 		std::deque<SharedAllocation<TaskImplementation>> mSecondaryBufferList;
 		std::deque<SharedAllocation<TaskImplementation>> mTertiaryBufferList;
 		bool mExitFlag;
+	private:
+		void NotifyWorkers(const uint32_t aCount) {
+			if(aCount >= mWorkers.size()) {
+				mPreCondition.notify_all();
+			}else {
+				for(uint32_t i = 0; i < aCount; ++i) mPreCondition.notify_one();
+			}
+		}
 	public:
 		ThreadPool(Allocator& aAllocator, const uint32_t aThreads) throw() :
 			mAllocator(aAllocator),
@@ -149,11 +157,7 @@ namespace Solaire {
 				mPrimaryBufferList.swap(mPauseList);
 			}
 
-			if(preCount >= mWorkers.size()) {
-				mPreCondition.notify_all();
-			}else {
-				for(uint32_t i = 0; i < preCount; ++i) mPreCondition.notify_one();
-			}
+			NotifyWorkers(preCount);
 
 			// Resume
 			const uint64_t time = GetTimeMilliseconds();
@@ -171,6 +175,8 @@ namespace Solaire {
 				for(SharedAllocation<TaskImplementation> i : mSecondaryBufferList) mPreList.push_front(i);
 				mTertiaryBufferList.swap(mPauseList);
 			}
+
+			NotifyWorkers(mSecondaryBufferList.size());
 
 			mSecondaryBufferList.clear();
 			mTertiaryBufferList.clear();
