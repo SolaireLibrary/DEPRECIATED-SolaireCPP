@@ -61,6 +61,11 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL Pause(const uint64_t) throw() = 0;
 		virtual uint64_t SOLAIRE_EXPORT_CALL GetPauseTime() const throw() = 0;
 		virtual uint64_t SOLAIRE_EXPORT_CALL GetPauseDuration() const throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL SetPauseDuration(const uint64_t) throw() = 0;
+
+		inline void SOLAIRE_EXPORT_CALL Unpause() throw() {
+			SetPauseDuration(0);
+		}
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Cancel() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Wait() const throw() = 0;

@@ -112,6 +112,10 @@ namespace Solaire {
 		uint64_t SOLAIRE_EXPORT_CALL GetPauseDuration() const throw()  override {
 			return mPauseDuration;
 		}
+		
+		void SOLAIRE_EXPORT_CALL SetPauseDuration(const uint64_t aTime) throw() {
+			mPauseDuration = aTime;
+		}
 
 
 		bool SOLAIRE_EXPORT_CALL OnResumeI() throw() override {

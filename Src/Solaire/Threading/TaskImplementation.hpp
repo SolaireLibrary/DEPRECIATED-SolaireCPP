@@ -49,6 +49,14 @@ namespace Solaire {
 			return mTask.GetPauseDuration();
 		}
 
+		inline void SetPauseDuration(const uint64_t aMilliseconds) throw() {
+			return mTask.SetPauseDuration(aMilliseconds);
+		}
+
+		inline void Unpause() throw() {
+			return mTask.Unpause();
+		}
+
 		inline bool Initialise() throw() {
 			return mTask.InitialiseI(*this);
 		}
