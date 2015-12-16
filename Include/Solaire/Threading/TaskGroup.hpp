@@ -56,6 +56,23 @@ namespace Solaire {
 		std::vector<SharedAllocation<TaskI>> mTaskBuffer;
 		State mState;
 	private:
+		void SOLAIRE_EXPORT_CALL CalculatePause() {
+			uint64_t lowPauseTime = UINT64_MAX;
+			uint64_t highResumeTime = 0;
+			for(SharedAllocation<TaskI> i : mLiveTasks) {
+				if (i->GetState() == STATE_PAUSED) {
+					const uint64_t time = i->GetPauseTime();
+					const uint64_t duration = i->GetPauseDuration();
+					const uint64_t resume = time + duration;
+					if(time < lowPauseTime) lowPauseTime = time;
+					if(resume > highResumeTime) highResumeTime = resume;
+				}
+			}
+			if(lowPauseTime != UINT64_MAX) {
+				Pause(highResumeTime - lowPauseTime);
+				mPauseTime = lowPauseTime;
+			}
+		}
 		// GroupInitialise
 
 		template<const int MODE>
@@ -259,6 +276,7 @@ namespace Solaire {
 			const bool result = GroupExecute<EXE_MODE>();
 			mLiveTasks.swap(mTaskBuffer);
 			mTaskBuffer.clear();
+			CalculatePause();
 			if(mState == STATE_EXECUTE) mState = STATE_POST_EXECUTE;
 			return result;
 		}
@@ -301,6 +319,7 @@ namespace Solaire {
 			const bool result = GroupResume<EXE_MODE>();
 			mLiveTasks.swap(mTaskBuffer);
 			mTaskBuffer.clear();
+			CalculatePause();
 			if(mState == STATE_EXECUTE) mState = STATE_POST_EXECUTE;
 			return result;
 		}
