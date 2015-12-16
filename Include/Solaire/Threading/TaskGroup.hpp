@@ -193,6 +193,40 @@ namespace Solaire {
 			}
 			return ! mTaskBuffer.empty();
 		}
+
+		// GroupResume
+
+		template<const int MODE>
+		std::enable_if_t<MODE == TASK_GROUP_ALL, bool > SOLAIRE_EXPORT_CALL GroupResume() throw() {
+			for (SharedAllocation<TaskI> i : mLiveTasks) {
+				if (!i->OnResumeI()) {
+					return false;
+				}
+			}
+			std::swap(mLiveTasks, mTaskBuffer);
+			return true;
+		}
+
+		template<const int MODE>
+		std::enable_if_t<MODE == TASK_GROUP_ONE, bool > SOLAIRE_EXPORT_CALL GroupResume() throw() {
+			for (SharedAllocation<TaskI> i : mLiveTasks) {
+				if (i->OnResumeI()) {
+					mTaskBuffer.push_back(i);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		template<const int MODE>
+		std::enable_if_t<MODE == TASK_GROUP_ANY, bool > SOLAIRE_EXPORT_CALL GroupResume() throw() {
+			for (SharedAllocation<TaskI> i : mLiveTasks) {
+				if (i->OnResumeI()) {
+					mTaskBuffer.push_back(i);
+				}
+			}
+			return !mTaskBuffer.empty();
+		}
 	protected :
 		// Inherited from TaskI
 		
@@ -264,10 +298,11 @@ namespace Solaire {
 		bool SOLAIRE_EXPORT_CALL OnResumeI() throw() override {
 			if(mState != STATE_PAUSED) return false;
 			mState = STATE_EXECUTE;
-			for (SharedAllocation<TaskI> i : mLiveTasks) {
-				if(! i->OnPauseI()) return false;
-			}
-			return true;
+			const bool result = GroupResume<EXE_MODE>();
+			mLiveTasks.swap(mTaskBuffer);
+			mTaskBuffer.clear();
+			if(mState == STATE_EXECUTE) mState = STATE_POST_EXECUTE;
+			return result;
 		}
 
 		bool SOLAIRE_EXPORT_CALL OnCancelI() throw() override {
