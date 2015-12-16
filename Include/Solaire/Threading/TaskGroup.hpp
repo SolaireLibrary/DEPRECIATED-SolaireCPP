@@ -276,7 +276,7 @@ namespace Solaire {
 		bool SOLAIRE_EXPORT_CALL Pause(const uint64_t aMilliseconds) throw() override {
 			if(mState != STATE_EXECUTE) return false;
 			for(SharedAllocation<TaskI> i : mLiveTasks) {
-				if(i->GetState() != STATE_PAUSED) if(! i->OnPauseI()) return false;
+				if(i->GetState() != STATE_PAUSED) if(! i->Pause(aMilliseconds)) return false;
 			}
 			mState = STATE_PAUSED;
 			return true;
