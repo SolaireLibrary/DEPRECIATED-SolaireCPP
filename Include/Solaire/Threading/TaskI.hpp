@@ -38,8 +38,14 @@ namespace Solaire {
 	class TaskImplementation;
 	class TaskCallbacks;
 
+	template<const int INIT_MODE, const int PRE_MODE, const int EXE_MODE, const int POST_MODE>
+	class TaskGroup;
+
 	class TaskI {
 	public :
+		template<const int, const int, const int, const int>
+		friend class TaskGroup;
+
 		friend TaskImplementation;
 		enum State : uint8_t{
 			STATE_INITIALISED,
