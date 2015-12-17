@@ -35,6 +35,6 @@
 #define SOLAIRE_COMPILER_VERSION (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
 
 #define SOLAIRE_WARNINGS 1
-#define SOLAIRE_INLINE __attribute__ ((always_inline))
+#define SOLAIRE_FORCE_INLINE __attribute__ ((always_inline))
 
 #endif

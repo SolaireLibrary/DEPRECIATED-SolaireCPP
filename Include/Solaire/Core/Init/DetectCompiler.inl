@@ -60,5 +60,15 @@
     #error SolaireCPP : DetectCompiler.inl could not detect the current compiler
 #endif
 
+// Default defines
+
+#ifndef SOLAIRE_FORCE_INLINE
+	#define SOLAIRE_FORCE_INLINE inline
+#endif
+
+#ifndef SOLAIRE_EXPORT_INTERFACE
+	#define SOLAIRE_EXPORT_INTERFACE class
+#endif
+
 
 #endif

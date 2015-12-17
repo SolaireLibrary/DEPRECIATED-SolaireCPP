@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_INIT_MSVC_INL
-#define SOLAIRE_INIT_MSVC_INL
+#ifndef SOLAIRE_MODULE_HEADER_GAME_HPP
+#define SOLAIRE_MODULE_HEADER_GAME_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,21 +20,17 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file MSVC.inl
+	\file ModuleHeader.hpp
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 22nd September 2015
-	Last Modified	: 22nd September 2015
+	Created			: 17th December 2015
+	Last Modified	: 17th December 2015
 */
 
-#define SOLAIRE_COMPILER SOLAIRE_MSVC
-#define SOLAIRE_COMPILER_VERSION _MSC_VER
-
-#define SOLAIRE_WARNINGS 0
-#define SOLAIRE_FORCE_INLINE __forceinline
+#define SOLAIRE_MODULE_GAME 1.0
 
 #endif

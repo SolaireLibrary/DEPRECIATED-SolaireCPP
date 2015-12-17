@@ -35,6 +35,6 @@
 #define SOLAIRE_COMPILER_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
 #define SOLAIRE_WARNINGS 1
-#define SOLAIRE_INLINE __attribute__ ((always_inline))
+#define SOLAIRE_FORCE_INLINE __attribute__ ((always_inline))
 
 #endif
