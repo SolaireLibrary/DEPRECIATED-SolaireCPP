@@ -32,10 +32,11 @@
 */
 
 #include <cstdint>
+#include "..\Core\ModuleHeader.hpp"
 
 namespace Solaire {
 
-	class Compiler {
+	SOLAIRE_EXPORT_INTERFACE Compiler {
 	public:
 		virtual void SOLAIRE_EXPORT_CALL SetCompilerPath(const char* const) throw() = 0;
 		virtual void SOLAIRE_EXPORT_CALL SetOutputPath(const char* const) throw() = 0;
@@ -46,14 +47,14 @@ namespace Solaire {
 		virtual ~Compiler(){}
 	};
 
-	class LibCompiler : public Compiler {
+	SOLAIRE_EXPORT_INTERFACE LibCompiler : public Compiler {
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL CompileStaticLib() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL CompileSharedLib() throw() = 0;
 		virtual ~LibCompiler(){}
 	};
 
-	class CppCompiler : public LibCompiler {
+	SOLAIRE_EXPORT_INTERFACE CppCompiler : public LibCompiler {
 	public:
 		virtual void SOLAIRE_EXPORT_CALL AddSourceFile(const char* const) throw() = 0;
 		virtual void SOLAIRE_EXPORT_CALL AddIncludePath(const char* const) throw() = 0;
@@ -61,7 +62,7 @@ namespace Solaire {
 		virtual void SOLAIRE_EXPORT_CALL GenerateImportLibrary(const bool) throw () = 0;
 		virtual ~CppCompiler() {}
 
-		inline void SOLAIRE_EXPORT_CALL AddDefine(const char* const aName) throw() {
+		SOLAIRE_FORCE_INLINE void SOLAIRE_EXPORT_CALL AddDefine(const char* const aName) throw() {
 			AddDefine(aName, nullptr);
 		}
 	};

@@ -183,7 +183,7 @@ namespace Solaire {
 	};
 
 	template<class T>
-	class FixedContainer {
+	SOLAIRE_EXPORT_INTERFACE FixedContainer {
 	public:
 		typedef T Type;
 		typedef ContainerIterator<Type> Iterator;
@@ -199,53 +199,53 @@ namespace Solaire {
 		virtual Solaire::Iterator<T>& SOLAIRE_EXPORT_CALL GetBeginIterator() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~FixedContainer(){}
 
-		inline const Type& operator[](const uint32_t aIndex) const {
+		SOLAIRE_FORCE_INLINE const Type& operator[](const uint32_t aIndex) const {
 			return const_cast<FixedContainer<T>*>(this)->operator[](aIndex);
 		}
 
-		inline T* GetPtr() {
+		SOLAIRE_FORCE_INLINE T* GetPtr() {
 			return IsContiguous() ? &operator[](0) : nullptr;
 		}
 
-		inline const T* GetPtr() const {
+		SOLAIRE_FORCE_INLINE const T* GetPtr() const {
 			return IsContiguous() ? &operator[](0) : nullptr;
 		}
 
-		inline Iterator begin() {
+		SOLAIRE_FORCE_INLINE Iterator begin() {
 			return Iterator(GetBeginIterator(), 0);
 		}
 
-		inline Iterator end() {
+		SOLAIRE_FORCE_INLINE Iterator end() {
 			return Iterator(GetBeginIterator(), Size());
 		}
 
-		inline ConstIterator begin() const {
+		SOLAIRE_FORCE_INLINE ConstIterator begin() const {
 			return ContainerConstIterator<T>(const_cast<FixedContainer<T>*>(this)->GetBeginIterator(), 0);
 		}
 
-		inline ConstIterator end() const {
+		SOLAIRE_FORCE_INLINE ConstIterator end() const {
 			return ContainerConstIterator<T>(const_cast<FixedContainer<T>*>(this)->GetBeginIterator(), Size());
 		}
 
-		inline ReverseIterator rbegin() {
+		SOLAIRE_FORCE_INLINE ReverseIterator rbegin() {
 			return ReverseIterator(GetBeginIterator(), Size() - 1);
 		}
 
-		inline ReverseIterator rend() {
+		SOLAIRE_FORCE_INLINE ReverseIterator rend() {
 			return ReverseIterator(GetBeginIterator(), -1);
 		}
 
-		inline ConstReverseIterator rbegin() const {
+		SOLAIRE_FORCE_INLINE ConstReverseIterator rbegin() const {
 			return ReverseIterator(const_cast<FixedContainer<T>*>(this)->GetBeginIterator(), Size() - 1);
 		}
 
-		inline ConstReverseIterator rend() const {
+		SOLAIRE_FORCE_INLINE ConstReverseIterator rend() const {
 			return ReverseIterator(const_cast<FixedContainer<T>*>(this)->GetBeginIterator(), -1);
 		}
 	};
 
 	template<class T>
-	class Stack : public FixedContainer<T> {
+	SOLAIRE_EXPORT_INTERFACE Stack : public FixedContainer<T> {
 	public:
 		virtual Type& SOLAIRE_EXPORT_CALL PushBack(const Type&) = 0;
 		virtual Type SOLAIRE_EXPORT_CALL PopBack() = 0;
@@ -253,33 +253,33 @@ namespace Solaire {
 		virtual void SOLAIRE_EXPORT_CALL Clear() = 0;
 		virtual  SOLAIRE_EXPORT_CALL ~Stack(){}
 
-		inline T& Back() {
+		SOLAIRE_FORCE_INLINE T& Back() {
 			return operator[](Size() - 1);
 		}
 
-		inline const T& Back() const {
+		SOLAIRE_FORCE_INLINE const T& Back() const {
 			return operator[](Size() - 1);
 		}
 	};
 
 	template<class T>
-	class DoubleEndedStack : public Stack<T> {
+	SOLAIRE_EXPORT_INTERFACE DoubleEndedStack : public Stack<T> {
 	public:
 		virtual Type& SOLAIRE_EXPORT_CALL PushFront(const Type&) = 0;
 		virtual Type SOLAIRE_EXPORT_CALL PopFront() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~DoubleEndedStack(){}
 
-		inline T& Front() {
+		SOLAIRE_FORCE_INLINE T& Front() {
 			return operator[](0);
 		}
 
-		inline const T& Front() const {
+		SOLAIRE_FORCE_INLINE const T& Front() const {
 			return operator[](0);
 		}
 	};
 
 	template<class T>
-	class List : public DoubleEndedStack<T> {
+	SOLAIRE_EXPORT_INTERFACE List : public DoubleEndedStack<T> {
 	public:
 		virtual Type& SOLAIRE_EXPORT_CALL InsertBefore(const ConstIterator, const Type&) = 0;
 		virtual Type& SOLAIRE_EXPORT_CALL InsertAfter(const ConstIterator, const Type&) = 0;

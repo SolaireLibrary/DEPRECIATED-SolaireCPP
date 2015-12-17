@@ -32,6 +32,7 @@ Last Modified	: 8th December 2015
 */
 
 #include <cstdint>
+#include "..\Core\ModuleHeader.hpp"
 
 namespace Solaire {
 
@@ -41,7 +42,7 @@ namespace Solaire {
 	template<const int INIT_MODE, const int PRE_MODE, const int EXE_MODE, const int POST_MODE>
 	class TaskGroup;
 
-	class TaskI {
+	SOLAIRE_EXPORT_INTERFACE TaskI {
 	public :
 		template<const int, const int, const int, const int>
 		friend class TaskGroup;
@@ -69,7 +70,7 @@ namespace Solaire {
 		virtual uint64_t SOLAIRE_EXPORT_CALL GetPauseDuration() const throw() = 0;
 		virtual void SOLAIRE_EXPORT_CALL SetPauseDuration(const uint64_t) throw() = 0;
 
-		inline void SOLAIRE_EXPORT_CALL Unpause() throw() {
+		SOLAIRE_FORCE_INLINE void SOLAIRE_EXPORT_CALL Unpause() throw() {
 			SetPauseDuration(0);
 		}
 	public:

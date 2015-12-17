@@ -35,7 +35,7 @@ Last Modified	: 8th December 2015
 
 namespace Solaire {
 
-	class TaskCallbacks {
+	SOLAIRE_EXPORT_INTERFACE TaskCallbacks {
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Cancel() throw() = 0;;
 		virtual bool SOLAIRE_EXPORT_CALL Wait() throw() = 0;

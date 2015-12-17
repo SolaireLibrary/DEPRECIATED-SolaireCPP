@@ -36,43 +36,43 @@
 
 namespace Solaire {
 
-	class BaseIterator {
+	SOLAIRE_EXPORT_INTERFACE BaseIterator {
 	public:
 		typedef size_t Offset;
 	protected:
 		virtual Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() = 0;
 	public:
-		inline bool operator==(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool operator==(const BaseIterator& aOther) const throw() {
 			return GetOffset() == aOther.GetOffset();
 		}
 
-		inline bool operator!=(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool operator!=(const BaseIterator& aOther) const throw() {
 			return GetOffset() != aOther.GetOffset();
 		}
 
-		inline bool operator<(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool operator<(const BaseIterator& aOther) const throw() {
 			return GetOffset() < aOther.GetOffset();
 		}
 
-		inline bool operator>(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool operator>(const BaseIterator& aOther) const throw() {
 			return GetOffset() > aOther.GetOffset();
 		}
 
-		inline bool operator<=(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool operator<=(const BaseIterator& aOther) const throw() {
 			return GetOffset() <= aOther.GetOffset();
 		}
 
-		inline bool operator>=(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool operator>=(const BaseIterator& aOther) const throw() {
 			return GetOffset() >= aOther.GetOffset();
 		}
 
-		inline Offset operator-(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE Offset operator-(const BaseIterator& aOther) const throw() {
 			return GetOffset() - aOther.GetOffset();
 		}
 	};
 
 	template<class T>
-	class Iterator : public BaseIterator {
+	SOLAIRE_EXPORT_INTERFACE Iterator : public BaseIterator {
 	public:
 		typedef T Type;
 	public:
@@ -83,13 +83,13 @@ namespace Solaire {
 		virtual Iterator<Type>& SOLAIRE_EXPORT_CALL operator-=(const Offset) throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~Iterator(){}
 
-		inline Type& operator*() throw() {
+		SOLAIRE_FORCE_INLINE Type& operator*() throw() {
 			return *operator->();
 		}
 	};
 
 	template<class ITERATOR, class T>
-	class IteratorSTL : public Iterator<T>{
+	SOLAIRE_EXPORT_INTERFACE IteratorSTL : public Iterator<T>{
 	private:
 		const ITERATOR mBegin;
 		ITERATOR mCurrent;

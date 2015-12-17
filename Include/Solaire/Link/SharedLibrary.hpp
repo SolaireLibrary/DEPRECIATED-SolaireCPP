@@ -35,7 +35,7 @@ namespace Solaire {
 
 	class Allocator;
 
-	class SharedLibrary {
+	SOLAIRE_EXPORT_INTERFACE SharedLibrary {
 	public:
 		typedef void(SOLAIRE_EXPORT_CALL *FunctionPtr)();
 	public:

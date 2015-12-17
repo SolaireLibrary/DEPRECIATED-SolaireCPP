@@ -32,10 +32,11 @@
 */
 
 #include <cstdint>
+#include "..\Core\ModuleHeader.hpp"
 
 namespace Solaire {
 
-	class Stream {
+	SOLAIRE_EXPORT_INTERFACE Stream {
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL IsTraversable() const throw() = 0;
 		virtual size_t SOLAIRE_EXPORT_CALL GetOffset() const throw() = 0;
@@ -45,7 +46,7 @@ namespace Solaire {
 		virtual SOLAIRE_EXPORT_CALL ~Stream() throw() {}
 	};
 
-	class IStream : public Stream {
+	SOLAIRE_EXPORT_INTERFACE IStream : public Stream {
 	public:	
 		virtual bool SOLAIRE_EXPORT_CALL AtEnd() const throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Read8(uint8_t&) const throw() = 0;
@@ -54,7 +55,7 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL Read64(uint64_t&) const throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~IStream() throw() {}
 	
-		inline bool Read(void* const aData, const size_t aBytes) throw() {
+		SOLAIRE_FORCE_INLINE bool Read(void* const aData, const size_t aBytes) throw() {
 			uint8_t* begin = static_cast<uint8_t*>(aData);
 			const uint8_t* const end = begin + aBytes;
 		
@@ -80,62 +81,62 @@ namespace Solaire {
 			return true;
 		}
 	
-		inline IStream& operator>>(uint8_t& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(uint8_t& aValue) throw() {
 			Read8(aValue);
 			return *this;
 		}
 	
-		inline IStream& operator>>(uint16_t& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(uint16_t& aValue) throw() {
 			Read16(aValue);
 			return *this;
 		}
 	
-		inline IStream& operator>>(uint32_t& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(uint32_t& aValue) throw() {
 			Read32(aValue);
 			return *this;
 		}
 	
-		inline IStream& operator>>(uint64_t& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(uint64_t& aValue) throw() {
 			Read64(aValue);
 			return *this;
 		}
-		inline IStream& operator>>(int8_t& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(int8_t& aValue) throw() {
 			Read8(reinterpret_cast<uint8_t&>(aValue));
 			return *this;
 		}
 	
-		inline IStream& operator>>(int16_t& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(int16_t& aValue) throw() {
 			Read16(reinterpret_cast<uint16_t&>(aValue));
 			return *this;
 		}
 	
-		inline IStream& operator>>(int32_t& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(int32_t& aValue) throw() {
 			Read32(reinterpret_cast<uint32_t&>(aValue));
 			return *this;
 		}
 	
-		inline IStream& operator>>(int64_t& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(int64_t& aValue) throw() {
 			Read64(reinterpret_cast<uint64_t&>(aValue));
 			return *this;
 		}
 	
-		inline IStream& operator>>(char& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(char& aValue) throw() {
 			Read8(reinterpret_cast<uint8_t&>(aValue));
 			return *this;
 		}
 	
-		inline IStream& operator>>(float& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(float& aValue) throw() {
 			Read(&aValue, sizeof(float));
 			return *this;
 		}
 	
-		inline IStream& operator>>(double& aValue) throw() {
+		SOLAIRE_FORCE_INLINE IStream& operator>>(double& aValue) throw() {
 			Read(&aValue, sizeof(double));
 			return *this;
 		}
 	};
 
-	class OStream : public Stream {
+	SOLAIRE_EXPORT_INTERFACE OStream : public Stream {
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Write8(const uint8_t) const throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Write16(const uint16_t) const throw() = 0;
@@ -143,7 +144,7 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL Write64(const uint64_t) const throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~OStream() throw() {}
 	
-		inline bool Write(const void* const aData, const size_t aBytes) throw() {
+		SOLAIRE_FORCE_INLINE bool Write(const void* const aData, const size_t aBytes) throw() {
 			const uint8_t* begin = static_cast<const uint8_t*>(aData);
 			const uint8_t* const end = begin + aBytes;
 		
@@ -169,56 +170,56 @@ namespace Solaire {
 			return true;
 		}
 	
-		inline OStream& operator<<(const uint8_t aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const uint8_t aValue) throw() {
 			Write8(aValue);
 			return *this;
 		}
 	
-		inline OStream& operator<<(const uint16_t aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const uint16_t aValue) throw() {
 			Write16(aValue);
 			return *this;
 		}
 	
-		inline OStream& operator<<(const uint32_t aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const uint32_t aValue) throw() {
 			Write32(aValue);
 			return *this;
 		}
 	
-		inline OStream& operator<<(const uint64_t aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const uint64_t aValue) throw() {
 			Write64(aValue);
 			return *this;
 		}
-		inline OStream& operator<<(const int8_t aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const int8_t aValue) throw() {
 			Write8(*reinterpret_cast<const uint8_t*>(&aValue));
 			return *this;
 		}
 	
-		inline OStream& operator<<(const int16_t aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const int16_t aValue) throw() {
 			Write16(*reinterpret_cast<const uint16_t*>(&aValue));
 			return *this;
 		}
 	
-		inline OStream& operator<<(const int32_t aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const int32_t aValue) throw() {
 			Write32(*reinterpret_cast<const uint32_t*>(&aValue));
 			return *this;
 		}
 	
-		inline OStream& operator<<(const int64_t aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const int64_t aValue) throw() {
 			Write64(*reinterpret_cast<const uint64_t*>(&aValue));
 			return *this;
 		}
 	
-		inline OStream& operator<<(const char aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const char aValue) throw() {
 			Write8(*reinterpret_cast<const uint8_t*>(&aValue));
 			return *this;
 		}
 	
-		inline OStream& operator<<(const float aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const float aValue) throw() {
 			Write(&aValue, sizeof(float));
 			return *this;
 		}
 	
-		inline OStream& operator<<(const double aValue) throw() {
+		SOLAIRE_FORCE_INLINE OStream& operator<<(const double aValue) throw() {
 			Write(&aValue, sizeof(double));
 			return *this;
 		}

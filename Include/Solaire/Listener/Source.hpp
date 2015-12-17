@@ -37,7 +37,7 @@ namespace Solaire{
 
 	class Listener;
 
-	class SOLAIRE_EXPORT_API Source {
+	SOLAIRE_EXPORT_INTERFACE Source {
 	protected:
 		virtual bool SOLAIRE_EXPORT_CALL CanAcceptListener(const Listener&) throw() = 0;
 		virtual void SOLAIRE_EXPORT_CALL OnListen(Listener&) throw() = 0;

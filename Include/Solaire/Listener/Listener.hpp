@@ -37,17 +37,17 @@ namespace Solaire{
 
 	class Source;
 
-	class SOLAIRE_EXPORT_API Listener {
+	SOLAIRE_EXPORT_INTERFACE Listener {
 	public:
-		inline bool SOLAIRE_EXPORT_CALL Listen(Source& aSource) throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_EXPORT_CALL Listen(Source& aSource) throw() {
 			return aSource.AddListener(*this);
 		}
 
-		inline bool SOLAIRE_EXPORT_CALL Unlisten(Source& aSource) throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_EXPORT_CALL Unlisten(Source& aSource) throw() {
 			return aSource.RemoveListener(*this);
 		}
 
-		inline bool SOLAIRE_EXPORT_CALL IsListening(const Source& aSource) const throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_EXPORT_CALL IsListening(const Source& aSource) const throw() {
 			return aSource.HasListener(*this);
 		}
 

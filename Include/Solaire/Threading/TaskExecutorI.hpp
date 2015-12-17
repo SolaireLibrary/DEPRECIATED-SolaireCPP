@@ -38,7 +38,7 @@ namespace Solaire {
 	class Allocator;
 	class TaskI;
 
-	class TaskExecutorI {
+	SOLAIRE_EXPORT_INTERFACE TaskExecutorI {
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Schedule(TaskI&) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Update() throw() = 0;
