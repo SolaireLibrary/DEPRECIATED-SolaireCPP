@@ -44,14 +44,14 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL CompileExecutable() throw() = 0;
 		virtual void SOLAIRE_EXPORT_CALL AddFlag(const char* const) throw() = 0;
 		virtual const char* SOLAIRE_EXPORT_CALL GetLog() const throw() = 0;
-		virtual ~Compiler(){}
+		virtual SOLAIRE_EXPORT_CALL ~Compiler(){}
 	};
 
 	SOLAIRE_EXPORT_INTERFACE LibCompiler : public Compiler {
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL CompileStaticLib() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL CompileSharedLib() throw() = 0;
-		virtual ~LibCompiler(){}
+		virtual SOLAIRE_EXPORT_CALL ~LibCompiler(){}
 	};
 
 	SOLAIRE_EXPORT_INTERFACE CppCompiler : public LibCompiler {
@@ -60,9 +60,9 @@ namespace Solaire {
 		virtual void SOLAIRE_EXPORT_CALL AddIncludePath(const char* const) throw() = 0;
 		virtual void SOLAIRE_EXPORT_CALL AddDefine(const char*, const char*) throw() = 0;
 		virtual void SOLAIRE_EXPORT_CALL GenerateImportLibrary(const bool) throw () = 0;
-		virtual ~CppCompiler() {}
+		virtual SOLAIRE_EXPORT_CALL ~CppCompiler() {}
 
-		SOLAIRE_FORCE_INLINE void SOLAIRE_EXPORT_CALL AddDefine(const char* const aName) throw() {
+		SOLAIRE_FORCE_INLINE void SOLAIRE_DEFAULT_CALL AddDefine(const char* const aName) throw() {
 			AddDefine(aName, nullptr);
 		}
 	};

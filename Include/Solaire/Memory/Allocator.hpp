@@ -109,7 +109,7 @@ namespace Solaire{
 			\see Allocate
 		*/
 		template<class T, typename ...PARAMS>
-		SOLAIRE_FORCE_INLINE T* RawAllocate(PARAMS&&... aParams) {
+		SOLAIRE_FORCE_INLINE T* SOLAIRE_DEFAULT_CALL RawAllocate(PARAMS&&... aParams) {
 			return new(Allocate(sizeof(T))) T(aParams...);
 		}
 
@@ -123,7 +123,7 @@ namespace Solaire{
 			\see Allocate
 		*/
 		template<class T, typename ...PARAMS>
-		SOLAIRE_FORCE_INLINE UniqueAllocation<T> UniqueAllocate(PARAMS&&... aParams) {
+		SOLAIRE_FORCE_INLINE UniqueAllocation<T> SOLAIRE_DEFAULT_CALL UniqueAllocate(PARAMS&&... aParams) {
 			return UniqueAllocation<T>(
 				*this,
 				new(Allocate(sizeof(T))) T(aParams...)
@@ -140,7 +140,7 @@ namespace Solaire{
 			\see Allocate
 		*/
 		template<class T, typename ...PARAMS>
-		SOLAIRE_FORCE_INLINE SharedAllocation<T> SharedAllocate(PARAMS&&... aParams) {
+		SOLAIRE_FORCE_INLINE SharedAllocation<T> SOLAIRE_DEFAULT_CALL SharedAllocate(PARAMS&&... aParams) {
 			return SharedAllocation<T>(
 				*this,
 				new(Allocate(sizeof(T))) T(aParams...)
@@ -152,8 +152,8 @@ namespace Solaire{
 	extern "C" SOLAIRE_EXPORT_API Allocator& SOLAIRE_EXPORT_CALL _GetDefaultAllocator() throw();
 	extern "C" SOLAIRE_EXPORT_API Allocator* SOLAIRE_EXPORT_CALL _CreateMemoryArena(Allocator&, Allocator&, const uint32_t, const bool) throw();
 
-	SOLAIRE_FORCE_INLINE Allocator& GetDefaultAllocator() { return _GetDefaultAllocator(); }
-	SOLAIRE_FORCE_INLINE Allocator* CreateMemoryArena(Allocator& aAllocator, Allocator& aArenaAllocator, const uint32_t aBytes, const bool aRecycle){ return _CreateMemoryArena(aAllocator, aArenaAllocator, aBytes, aRecycle); }
+	SOLAIRE_FORCE_INLINE Allocator& SOLAIRE_DEFAULT_CALL GetDefaultAllocator() { return _GetDefaultAllocator(); }
+	SOLAIRE_FORCE_INLINE Allocator* SOLAIRE_DEFAULT_CALL CreateMemoryArena(Allocator& aAllocator, Allocator& aArenaAllocator, const uint32_t aBytes, const bool aRecycle){ return _CreateMemoryArena(aAllocator, aArenaAllocator, aBytes, aRecycle); }
 #else 
 	static constexpr const char* const GetDefaultAllocator_FnName = "__GetDefaultAllocator@0";
 	static constexpr const char* const CreateMemoryArena_FnName = "__CreateMemoryArena@16";

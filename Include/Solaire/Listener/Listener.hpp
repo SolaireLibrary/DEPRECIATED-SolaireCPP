@@ -39,15 +39,15 @@ namespace Solaire{
 
 	SOLAIRE_EXPORT_INTERFACE Listener {
 	public:
-		SOLAIRE_FORCE_INLINE bool SOLAIRE_EXPORT_CALL Listen(Source& aSource) throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Listen(Source& aSource) throw() {
 			return aSource.AddListener(*this);
 		}
 
-		SOLAIRE_FORCE_INLINE bool SOLAIRE_EXPORT_CALL Unlisten(Source& aSource) throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Unlisten(Source& aSource) throw() {
 			return aSource.RemoveListener(*this);
 		}
 
-		SOLAIRE_FORCE_INLINE bool SOLAIRE_EXPORT_CALL IsListening(const Source& aSource) const throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL IsListening(const Source& aSource) const throw() {
 			return aSource.HasListener(*this);
 		}
 

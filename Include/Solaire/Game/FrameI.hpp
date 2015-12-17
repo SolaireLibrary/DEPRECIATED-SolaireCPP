@@ -39,6 +39,8 @@ namespace Solaire{
 
 	SOLAIRE_EXPORT_INTERFACE FrameI {
 	public:
+		virtual SOLAIRE_EXPORT_CALL ~FrameI() {}
+
 		// Frame Management
 		virtual uint64_t SOLAIRE_EXPORT_CALL GetFrameNumber() const throw() = 0;
 
@@ -46,11 +48,11 @@ namespace Solaire{
 		virtual uint64_t SOLAIRE_EXPORT_CALL GetStartTime() const throw() = 0;
 		virtual uint64_t SOLAIRE_EXPORT_CALL GetDuration() const throw() = 0;
 
-		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_EXPORT_CALL GetEndTime() const throw() {
+		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetEndTime() const throw() {
 			return GetStartTime() + GetDuration();
 		}
 
-		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_EXPORT_CALL GetRemainingTime() const throw() {
+		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetRemainingTime() const throw() {
 			const uint64_t end = GetEndTime();
 			const uint64_t current = GetTimeMilliseconds();
 			return current < end ? end - current : 0;

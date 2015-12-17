@@ -42,31 +42,31 @@ namespace Solaire {
 	protected:
 		virtual Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() = 0;
 	public:
-		SOLAIRE_FORCE_INLINE bool operator==(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL operator==(const BaseIterator& aOther) const throw() {
 			return GetOffset() == aOther.GetOffset();
 		}
 
-		SOLAIRE_FORCE_INLINE bool operator!=(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL operator!=(const BaseIterator& aOther) const throw() {
 			return GetOffset() != aOther.GetOffset();
 		}
 
-		SOLAIRE_FORCE_INLINE bool operator<(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL operator<(const BaseIterator& aOther) const throw() {
 			return GetOffset() < aOther.GetOffset();
 		}
 
-		SOLAIRE_FORCE_INLINE bool operator>(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL operator>(const BaseIterator& aOther) const throw() {
 			return GetOffset() > aOther.GetOffset();
 		}
 
-		SOLAIRE_FORCE_INLINE bool operator<=(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL operator<=(const BaseIterator& aOther) const throw() {
 			return GetOffset() <= aOther.GetOffset();
 		}
 
-		SOLAIRE_FORCE_INLINE bool operator>=(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL operator>=(const BaseIterator& aOther) const throw() {
 			return GetOffset() >= aOther.GetOffset();
 		}
 
-		SOLAIRE_FORCE_INLINE Offset operator-(const BaseIterator& aOther) const throw() {
+		SOLAIRE_FORCE_INLINE Offset SOLAIRE_DEFAULT_CALL operator-(const BaseIterator& aOther) const throw() {
 			return GetOffset() - aOther.GetOffset();
 		}
 	};
@@ -83,7 +83,7 @@ namespace Solaire {
 		virtual Iterator<Type>& SOLAIRE_EXPORT_CALL operator-=(const Offset) throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~Iterator(){}
 
-		SOLAIRE_FORCE_INLINE Type& operator*() throw() {
+		SOLAIRE_FORCE_INLINE Type& SOLAIRE_DEFAULT_CALL operator*() throw() {
 			return *operator->();
 		}
 	};
@@ -96,7 +96,7 @@ namespace Solaire {
 	protected:
 		//Inherited from Iterator
 
-		Offset SOLAIRE_EXPORT_CALL GetOffset() const throw() override {
+		SOLAIRE_FORCE_INLINE Offset SOLAIRE_DEFAULT_CALL GetOffset() const throw() override {
 			return mCurrent - mBegin;
 		}
 	public:
@@ -116,26 +116,26 @@ namespace Solaire {
 
 		// Inherited from Iterator
 
-		Type* SOLAIRE_EXPORT_CALL operator->() throw() {
+		SOLAIRE_FORCE_INLINE Type* SOLAIRE_DEFAULT_CALL operator->() throw() {
 			return &*mCurrent;
 		}
 
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator++() throw() {
+		SOLAIRE_FORCE_INLINE Iterator<Type>& SOLAIRE_DEFAULT_CALL operator++() throw() {
 			++mCurrent;
 			return *this;
 		}
 
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator--() throw() {
+		SOLAIRE_FORCE_INLINE Iterator<Type>& SOLAIRE_DEFAULT_CALL operator--() throw() {
 			--mCurrent;
 			return *this;
 		}
 
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator+=(const Offset aOffset) throw() {
+		SOLAIRE_FORCE_INLINE Iterator<Type>& SOLAIRE_DEFAULT_CALL operator+=(const Offset aOffset) throw() {
 			mCurrent += aOffset;
 			return *this;
 		}
 
-		Iterator<Type>& SOLAIRE_EXPORT_CALL operator-=(const Offset aOffset) throw() override {
+		SOLAIRE_FORCE_INLINE Iterator<Type>& SOLAIRE_DEFAULT_CALL operator-=(const Offset aOffset) throw() override {
 			mCurrent -= aOffset;
 			return *this;
 		}
