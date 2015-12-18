@@ -61,56 +61,67 @@ namespace Solaire {
 		}
 
 		bool UpdatePreExecute() throw() {
+			// Move the tasks currently in the initialise queue to a thread safe location
 			{
 				std::lock_guard<std::mutex> lock(mLock);
 				std::swap(mPrimaryBuffer, mPreQueue);
 			}
 
+			// Pre-execute the tasks
 			for (SharedAllocation<TaskImplementation> i : mPrimaryBuffer) if (!i->PreExecute()) i->Cancel();
 
-			uint32_t preCount = 0;
+			// Move the tasks to their correct execution queues
+			uint32_t taskAddedForWorkers = 0;
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				preCount = mExeQueue.size();
-				for (SharedAllocation<TaskImplementation> i : mPrimaryBuffer) if (i->GetState() == TaskI::STATE_PRE_EXECUTE) {
-					if (i->ExecuteOnMain()) {
+				for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) if (i->GetState() == TaskI::STATE_PRE_EXECUTE) {
+					if(i->ExecuteOnMain()) {
 						mMainExeQueue.push_back(i);
-					}
-					else {
+					}else {
 						mExeQueue.push_back(i);
+						++taskAddedForWorkers;
 					}
 				}
-				preCount = mExeQueue.size() - preCount;
 				mPrimaryBuffer.clear();
 			}
 
-			NotifyWorkers(preCount);
+			// Notify workers of how many Tasks were added to the execution queue
+			NotifyWorkers(taskAddedForWorkers);
 			return true;
 		}
 
 		bool UpdateResume() throw() {
+			// mPrimaryBuffer		= List of paused tasks
+			// mSecondaryBuffer		= List of tasks with expired pause
+			// mTertiaryBuffer		= List of tasks that are still paused
+
+			// Move the tasks currently in the pause queue to a thread safe location
 			{
 				std::lock_guard<std::mutex> lock(mLock);
 				std::swap(mPauseQueue, mPrimaryBuffer);
 			}
+
+			// Check if the pause timer has expired for each task and place them in the corresponding list
 			const uint64_t time = GetTimeMilliseconds();
 			for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) {
-				if (i->GetPauseDuration() + i->GetPauseTime() <= time) {
+				if(i->GetPauseDuration() + i->GetPauseTime() <= time) {
 					mSecondaryBuffer.push_back(i);
 				}else {
 					mTertiaryBuffer.push_back(i);
 				}
 			}
 
+			// All tasks have been examined, so clear the list
 			mPrimaryBuffer.clear();
 
+			// Protect the main queues from thread access and syncronise the queues
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				mPrimaryBuffer.swap(mPauseQueue);
 				for (SharedAllocation<TaskImplementation> i : mSecondaryBuffer) mExeQueue.push_front(i);
 				mTertiaryBuffer.swap(mPauseQueue);
 			}
 
+			// Notify workers of how many Tasks were added to the execution queue
 			NotifyWorkers(mSecondaryBuffer.size());
 
 			mSecondaryBuffer.clear();
@@ -119,12 +130,23 @@ namespace Solaire {
 		}
 
 		bool UpdatePostExecute() throw() {
-			for(SharedAllocation<TaskImplementation> i : mPostQueue) if (!i->PostExecute()) i->Cancel();
-			mPostQueue.clear();
+			// Move the tasks currently in the post-execution queue to a thread safe location
+			{
+				std::lock_guard<std::mutex> lock(mLock);
+				std::swap(mPostQueue, mPrimaryBuffer);
+			}
+
+			// Post-execute the tasks
+			for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) if (!i->PostExecute()) i->Cancel();
+			mPrimaryBuffer.clear();
 			return true;
 		}
 
 		bool UpdateExecute() throw() {
+			// mPrimaryBuffer		= List of tasks that were paused during execution
+			// mSecondaryBuffer		= List of tasks that executed sucessfully
+
+			// Attempt to execute each task in the main thread execution queue and place them into the corresponding list
 			for(SharedAllocation<TaskImplementation> i : mMainExeQueue) {
 				bool result = true;
 				switch (i->GetState()) {
@@ -158,9 +180,12 @@ namespace Solaire {
 					continue;
 				}
 			}
+
+			// Return the paused tasks to the main thread execution queue
 			mMainExeQueue.clear();
 			std::swap(mMainExeQueue, mPrimaryBuffer);
 
+			// Add the executed tasks to the post-execute queue
 			{
 				std::lock_guard<std::mutex> lock(mLock);
 				for(SharedAllocation<TaskImplementation> i : mSecondaryBuffer) mPostQueue.push_back(i);
