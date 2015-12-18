@@ -67,7 +67,7 @@ namespace Solaire {
 				mConfig.PauseTime = 0;
 				mConfig.PauseDuration = 0;
 				mConfig.State = STATE_INITIALISED;
-				mConfig.Execution = EXECUTE_ON_WORKER;
+				mConfig.ExecutionMode = EXECUTE_ON_WORKER;
 				return Initialise();
 			default:
 				return false;
@@ -134,7 +134,7 @@ namespace Solaire {
 			mConfig.PauseTime = 0;
 			mConfig.PauseDuration = 0;
 			mConfig.State = STATE_INITIALISED;
-			mConfig.Execution = EXECUTE_ON_WORKER;
+			mConfig.ExecutionMode = EXECUTE_ON_WORKER;
 		}
 
 		virtual SOLAIRE_EXPORT_CALL ~Task() throw() {

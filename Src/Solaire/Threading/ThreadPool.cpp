@@ -77,7 +77,7 @@ namespace Solaire {
 				for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) {
 					const TaskI::Configuration config = i->GetConfiguration();
 					if(config.State == TaskI::STATE_PRE_EXECUTE) {
-						if(config.Execution == TaskI::EXECUTE_ON_MAIN) {
+						if(config.ExecutionMode == TaskI::EXECUTE_ON_MAIN) {
 							mMainExeQueue.push_back(i);
 						}else {
 							mExeQueue.push_back(i);

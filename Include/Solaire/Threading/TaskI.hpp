@@ -65,10 +65,10 @@ namespace Solaire {
 
 		struct Configuration {
 			uint64_t PauseTime;
-			uint64_t PauseDuration;
+			uint16_t PauseDuration;
 			struct {
 				uint16_t State : 3;
-				uint16_t Execution : 1;
+				uint16_t ExecutionMode : 1;
 			};
 		};
 	protected :
@@ -91,6 +91,27 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL WaitFor(const uint32_t) const throw() = 0;
 		virtual Configuration SOLAIRE_EXPORT_CALL GetConfiguration() const throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~TaskI() throw(){}
+
+		SOLAIRE_FORCE_INLINE State SOLAIRE_DEFAULT_CALL GetState() const throw() {
+			return static_cast<State>(GetConfiguration().State);
+		}
+
+		SOLAIRE_FORCE_INLINE ExecutionMode SOLAIRE_DEFAULT_CALL GetExecutionMode() const throw() {
+			return static_cast<ExecutionMode>(GetConfiguration().ExecutionMode);
+		}
+
+		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetPauseTime() const throw() {
+			return GetConfiguration().PauseTime;
+		}
+
+		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetPauseDuration() const throw() {
+			return GetConfiguration().PauseDuration;
+		}
+
+		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetResumeTime() const throw() {
+			const Configuration tmp = GetConfiguration();
+			return tmp.PauseTime + tmp.PauseDuration;
+		}
 	};
 }
 

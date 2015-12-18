@@ -75,6 +75,26 @@ namespace Solaire {
 			return result;
 		}
 
+		SOLAIRE_FORCE_INLINE TaskI::State SOLAIRE_DEFAULT_CALL GetState() const throw() {
+			return mTask.GetState();
+		}
+
+		SOLAIRE_FORCE_INLINE  TaskI::ExecutionMode SOLAIRE_DEFAULT_CALL GetExecutionMode() const throw() {
+			return mTask.GetExecutionMode();
+		}
+
+		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetPauseTime() const throw() {
+			return mTask.GetPauseTime();
+		}
+
+		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetPauseDuration() const throw() {
+			return mTask.GetPauseDuration();
+		}
+
+		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetResumeTime() const throw() {
+			return mTask.GetResumeTime();
+		}
+
 		// Inherited from TaskCallbacks
 		
 		bool SOLAIRE_EXPORT_CALL Cancel() throw() override {
