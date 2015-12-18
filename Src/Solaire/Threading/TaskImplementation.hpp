@@ -52,23 +52,23 @@ namespace Solaire {
 		}
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Initialise() throw() {
-			return mTask.InitialiseI();
+			return mTask.Initialise();
 		}
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL PreExecute() throw() {
-			return mTask.OnPreExecuteI();
+			return mTask.PreExecute();
 		}
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Execute() throw() {
-			return mTask.OnExecuteI();
+			return mTask.Execute();
 		}
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Resume() throw() {
-			return mTask.OnResumeI();
+			return mTask.Resume();
 		}
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL PostExecute() throw() {
-			const bool result = mTask.OnPostExecuteI();
+			const bool result = mTask.PostExecute();
 			mWaitCondition.notify_all();
 			return result;
 		}
@@ -96,7 +96,7 @@ namespace Solaire {
 		// Inherited from TaskCallbacks
 		
 		bool SOLAIRE_EXPORT_CALL Cancel() throw() override {
-			const bool result = mTask.OnCancelI();
+			const bool result = mTask.Cancel();
 			mWaitCondition.notify_all();
 			return result;
 		}

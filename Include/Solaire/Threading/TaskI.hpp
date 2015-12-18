@@ -33,6 +33,7 @@ Last Modified	: 8th December 2015
 
 #include <cstdint>
 #include "..\Core\ModuleHeader.hpp"
+#include "..\Core\System.hpp"
 #include "TaskCallbacks.hpp"
 
 namespace Solaire {
@@ -74,20 +75,78 @@ namespace Solaire {
 			};
 		};
 	protected :
-		virtual bool SOLAIRE_EXPORT_CALL InitialiseI() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnPreExecuteI() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnExecuteI() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnPostExecuteI() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnResumeI() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnCancelI() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL Pause(const uint64_t) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL OnInitialise() throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL OnPreExecute() throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL OnExecute() throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL OnPostExecute() throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL OnPause() throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL OnResume() throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL OnCancel() throw() = 0;
+
 		virtual Configuration& SOLAIRE_EXPORT_CALL GetConfigurationRef() throw() = 0;
 
 		SOLAIRE_FORCE_INLINE void SOLAIRE_DEFAULT_CALL Unpause() throw() {
 			GetConfigurationRef().PauseDuration = 0;
 		}
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Initialise() throw() {
+			Configuration& config = GetConfigurationRef();
+			switch(config.State) {
+			case STATE_INITIALISED:
+				return true;
+			case STATE_CANCELED:
+			case STATE_COMPLETE:
+				config.PauseTime = 0;
+				config.PauseDuration = 0;
+				config.State = STATE_INITIALISED;
+				config.ExecutionMode = EXECUTE_ON_WORKER;
+				return OnInitialise();
+			default:
+				return false;
+			}
+		}
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL PreExecute() throw() {
+			Configuration& config = GetConfigurationRef();
+			if(config.State != STATE_INITIALISED) return false;
+			config.State = STATE_PRE_EXECUTE;
+			return OnPreExecute();
+		}
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Execute() throw() {
+			Configuration& config = GetConfigurationRef();
+			if(config.State != STATE_PRE_EXECUTE) return false;
+			config.State = STATE_EXECUTE;
+			const bool result = OnExecute();
+			if(config.State == STATE_EXECUTE) config.State = STATE_POST_EXECUTE;
+			return result;
+		}
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL PostExecute() throw() {
+			Configuration& config = GetConfigurationRef();
+			if(config.State != STATE_POST_EXECUTE) return false;
+			const bool result = OnPostExecute();
+			config.State = STATE_COMPLETE;
+			return result;
+		}
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Pause(const uint16_t aMilliseconds) throw() {
+			Configuration& config = GetConfigurationRef(); 
+			if(config.State != STATE_EXECUTE) return false;
+			const bool result = OnPause();
+			config.State = STATE_PAUSED;
+			config.PauseTime = GetTimeMilliseconds();
+			config.PauseDuration = aMilliseconds;
+			return result;
+		}
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Resume() throw() {
+			Configuration& config = GetConfigurationRef();
+			if(config.State != STATE_PAUSED) return false;
+			config.State = STATE_EXECUTE;
+			return OnResume();
+		}
 	public:
-		virtual bool SOLAIRE_EXPORT_CALL Cancel() throw() = 0;
 		virtual Configuration SOLAIRE_EXPORT_CALL GetConfiguration() const throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~TaskI() throw(){}
 
@@ -124,6 +183,14 @@ namespace Solaire {
 		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetResumeTime() const throw() {
 			const Configuration tmp = GetConfiguration();
 			return tmp.PauseTime + tmp.PauseDuration;
+		}
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Cancel() throw() {
+			Configuration& config = GetConfigurationRef();
+			if(config.State != STATE_CANCELED || config.State != STATE_COMPLETE || config.State == STATE_INITIALISED) return false;
+			const bool result = OnCancel();
+			config.State = STATE_CANCELED;
+			return result;
 		}
 	};
 }

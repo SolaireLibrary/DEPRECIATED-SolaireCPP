@@ -33,93 +33,17 @@ Last Modified	: 8th December 2015
 
 #include "TaskI.hpp"
 #include "TaskCallbacks.hpp"
-#include "..\Core\System.hpp"
 
 namespace Solaire {
 
 	class Task : public TaskI {
-	private :
+	protected:
 		Configuration mConfig;
 	protected :
-		virtual bool SOLAIRE_EXPORT_CALL Initialise() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnPreExecute() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnExecute() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnPostExecute() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnPause() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnResume() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL OnCancel() throw() = 0;
-
 		// Inherited from TaskI
-		bool SOLAIRE_EXPORT_CALL InitialiseI() throw() override {
-			switch(mConfig.State) {
-			case STATE_INITIALISED:
-				return true;
-			case STATE_CANCELED:
-			case STATE_COMPLETE:
-				mConfig.PauseTime = 0;
-				mConfig.PauseDuration = 0;
-				mConfig.State = STATE_INITIALISED;
-				mConfig.ExecutionMode = EXECUTE_ON_WORKER;
-				return Initialise();
-			default:
-				return false;
-			}
-		}
-		
-		bool SOLAIRE_EXPORT_CALL OnPreExecuteI() throw() override {
-			if(mConfig.State != STATE_INITIALISED) return false;
-			mConfig.State = STATE_PRE_EXECUTE;
-			return OnPreExecute();
-		}
 
-		bool SOLAIRE_EXPORT_CALL OnExecuteI() throw() override {
-			if(mConfig.State != STATE_PRE_EXECUTE) return false;
-			mConfig.State = STATE_EXECUTE;
-			const bool result = OnExecute();
-			if(mConfig.State == STATE_EXECUTE) mConfig.State = STATE_POST_EXECUTE;
-			return result;
-		}
-
-		bool SOLAIRE_EXPORT_CALL OnPostExecuteI() throw() override {
-			if(mConfig.State != STATE_POST_EXECUTE) return false;
-			const bool result = OnPostExecute();
-			mConfig.State = STATE_COMPLETE;
-			return result;
-		}
-
-		bool SOLAIRE_EXPORT_CALL Pause(const uint64_t aMilliseconds) throw() override {
-			if(mConfig.State != STATE_EXECUTE) return false;
-			const bool result = OnPause();
-			mConfig.State = STATE_PAUSED;
-			mConfig.PauseTime = GetTimeMilliseconds();
-			mConfig.PauseDuration = aMilliseconds;
-			return result;
-		}
-
-		Configuration SOLAIRE_EXPORT_CALL GetConfiguration() const throw() override {
-			return mConfig;
-		}
-		
 		Configuration& SOLAIRE_EXPORT_CALL GetConfigurationRef() throw() override {
 			return mConfig;
-		}
-		
-		void SOLAIRE_EXPORT_CALL SetPauseDuration(const uint64_t aTime) throw() {
-			mConfig.PauseDuration = aTime;
-		}
-
-
-		bool SOLAIRE_EXPORT_CALL OnResumeI() throw() override {
-			if(mConfig.State != STATE_PAUSED) return false;
-			mConfig.State = STATE_EXECUTE;
-			return OnResume();
-		}
-
-		bool SOLAIRE_EXPORT_CALL OnCancelI() throw() override {
-			if(mConfig.State != STATE_CANCELED || mConfig.State != STATE_COMPLETE || mConfig.State == STATE_INITIALISED) return false;
-			const bool result = OnCancel();
-			mConfig.State = STATE_CANCELED;
-			return result;
 		}
 
 	public:
@@ -137,8 +61,8 @@ namespace Solaire {
 
 		// Inherited from TaskI
 
-		bool SOLAIRE_EXPORT_CALL Cancel() throw() override {
-			return mConfig.Callbacks == nullptr ? false : mConfig.Callbacks->Cancel();
+		Configuration SOLAIRE_EXPORT_CALL GetConfiguration() const throw() override {
+			return mConfig;
 		}
 	};
 
