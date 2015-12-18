@@ -42,6 +42,7 @@ namespace Solaire {
 		std::deque<SharedAllocation<TaskImplementation>> mInitialiseList;
 		std::deque<SharedAllocation<TaskImplementation>> mPreList;
 		std::map<std::thread::id, SharedAllocation<TaskImplementation>> mExecuteList;
+		std::deque<SharedAllocation<TaskImplementation>> mMainExecuteList;
 		std::deque<SharedAllocation<TaskImplementation>> mPauseList;
 		std::deque<SharedAllocation<TaskImplementation>> mPostList;
 		std::deque<SharedAllocation<TaskImplementation>> mPrimaryBufferList;
@@ -120,6 +121,7 @@ namespace Solaire {
 			count += mPrimaryBufferList.size();
 			count += mSecondaryBufferList.size();
 			count += mTertiaryBufferList.size();
+			count += mMainExecuteList.size();
 			for(const auto& i : mExecuteList) if(i.second) ++count;
 			return count;
 		}
@@ -151,7 +153,13 @@ namespace Solaire {
 			{
 				std::lock_guard<std::mutex> lock(mLock);
 				preCount = mPreList.size();
-				for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if(i->GetState() == TaskI::STATE_PRE_EXECUTE) mPreList.push_back(i);
+				for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if(i->GetState() == TaskI::STATE_PRE_EXECUTE) {
+					if(i->ExecuteOnMain()) {
+						mMainExecuteList.push_back(i);
+					}else {
+						mPreList.push_back(i);
+					}
+				}
 				preCount = mPreList.size() - preCount;
 				mPrimaryBufferList.clear();
 				mPrimaryBufferList.swap(mPauseList);
@@ -185,6 +193,50 @@ namespace Solaire {
 
 			for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if(! i->PostExecute()) i->Cancel();
 			mPrimaryBufferList.clear();
+
+			// Execution
+
+			for(SharedAllocation<TaskImplementation> i : mMainExecuteList) {
+				bool result = true;
+				switch (i->GetState()) {
+				case TaskI::STATE_PAUSED:
+					result = i->Resume();
+					break;
+				case TaskI::STATE_PRE_EXECUTE:
+					result = i->Execute();
+					break;
+				default:
+					i.Swap(SharedAllocation<TaskImplementation>());
+					continue;
+				}
+
+				if(! result) {
+					i->Cancel();
+					i.Swap(SharedAllocation<TaskImplementation>());
+					continue;
+				}
+
+				if(i) {
+					switch (i->GetState()) {
+					case TaskI::STATE_POST_EXECUTE :
+						mSecondaryBufferList.push_back(i);
+						break;
+					case TaskI::STATE_PAUSED :
+						mPrimaryBufferList.push_back(i);
+						break;
+					}
+				
+					continue;
+				}
+			}
+			mMainExecuteList.clear();
+			std::swap(mMainExecuteList, mPrimaryBufferList);
+
+			{
+				std::lock_guard<std::mutex> lock(mLock);
+				for(SharedAllocation<TaskImplementation> i : mSecondaryBufferList) mPostList.push_back(i);
+			}
+			mSecondaryBufferList.clear();
 
 			return true;
 		}

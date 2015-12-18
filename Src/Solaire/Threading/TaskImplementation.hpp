@@ -41,46 +41,50 @@ namespace Solaire {
 			mTask.RemoveCallbacks();
 		}
 
-		inline uint64_t GetPauseTime() const throw() {
+		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetPauseTime() const throw() {
 			return mTask.GetPauseTime();
 		}
 
-		inline uint64_t GetPauseDuration() const throw() {
+		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetPauseDuration() const throw() {
 			return mTask.GetPauseDuration();
 		}
 
-		inline void SetPauseDuration(const uint64_t aMilliseconds) throw() {
+		SOLAIRE_FORCE_INLINE void SOLAIRE_DEFAULT_CALL SetPauseDuration(const uint64_t aMilliseconds) throw() {
 			return mTask.SetPauseDuration(aMilliseconds);
 		}
 
-		inline void Unpause() throw() {
+		SOLAIRE_FORCE_INLINE void SOLAIRE_DEFAULT_CALL Unpause() throw() {
 			return mTask.Unpause();
 		}
 
-		inline bool Initialise() throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Initialise() throw() {
 			return mTask.InitialiseI(*this);
 		}
 
-		inline bool PreExecute() throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL PreExecute() throw() {
 			return mTask.OnPreExecuteI();
 		}
 
-		inline bool Execute() throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Execute() throw() {
 			return mTask.OnExecuteI();
 		}
 
-		inline bool Resume() throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Resume() throw() {
 			return mTask.OnResumeI();
 		}
 
-		inline bool PostExecute() throw() {
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL PostExecute() throw() {
 			const bool result = mTask.OnPostExecuteI();
 			mWaitCondition.notify_all();
 			return result;
 		}
 
-		inline TaskI::State GetState() const throw() {
+		SOLAIRE_FORCE_INLINE TaskI::State SOLAIRE_DEFAULT_CALL GetState() const throw() {
 			return mTask.GetState();
+		}
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL ExecuteOnMain() const throw() {
+			return mTask.ExecuteOnMain();
 		}
 
 		// Inherited from TaskCallbacks
