@@ -67,6 +67,8 @@ namespace Solaire {
 				uint8_t ExecutesOnWorker : 1;
 				uint8_t IsPausable : 1;
 				uint8_t IsReinitialisable : 1;
+				uint8_t SkipPreExecute : 1;
+				uint8_t SkipPostExecute : 1;
 			};
 
 			Configuration() :
@@ -75,7 +77,9 @@ namespace Solaire {
 				State(STATE_INITIALISED),
 				ExecutesOnWorker(1),
 				IsPausable(1),
-				IsReinitialisable(1)
+				IsReinitialisable(1),
+				SkipPreExecute(0),
+				SkipPostExecute(0)
 			{}
 		};
 	protected :
@@ -112,7 +116,7 @@ namespace Solaire {
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL PreExecute() throw() {
 			Configuration& config = GetConfigurationRef();
-			if(config.State != STATE_INITIALISED) return false;
+			if(config.State != STATE_INITIALISED || config.SkipPreExecute) return false;
 			config.State = STATE_PRE_EXECUTE;
 			return OnPreExecute();
 		}
@@ -128,7 +132,7 @@ namespace Solaire {
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL PostExecute() throw() {
 			Configuration& config = GetConfigurationRef();
-			if(config.State != STATE_POST_EXECUTE) return false;
+			if(config.State != STATE_POST_EXECUTE || config.SkipPostExecute) return false;
 			const bool result = OnPostExecute();
 			config.State = STATE_COMPLETE;
 			return result;

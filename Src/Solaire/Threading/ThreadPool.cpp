@@ -66,7 +66,16 @@ namespace Solaire {
 			}
 
 			// Pre-execute the tasks
-			for (SharedAllocation<TaskI> i : mPrimaryBuffer) if (!i->PreExecute()) i->Cancel();
+			for(SharedAllocation<TaskI> i : mPrimaryBuffer) {
+				TaskI::Configuration& config = i->GetConfigurationRef();
+				if(config.SkipPreExecute) {
+					if(config.State == TaskI::STATE_INITIALISED) config.State = TaskI::STATE_PRE_EXECUTE;
+				}else {
+					i->PreExecute();
+				}
+
+				if(config.State != TaskI::STATE_PRE_EXECUTE) i->Cancel();
+			}
 
 			// Move the tasks to their correct execution queues
 			uint32_t taskAddedForWorkers = 0;
@@ -139,7 +148,17 @@ namespace Solaire {
 			}
 
 			// Post-execute the tasks
-			for(SharedAllocation<TaskI> i : mPrimaryBuffer) if (!i->PostExecute()) i->Cancel();
+			for(SharedAllocation<TaskI> i : mPrimaryBuffer) {
+				TaskI::Configuration& config = i->GetConfigurationRef();
+				if(config.SkipPreExecute) {
+					if(config.State == TaskI::STATE_POST_EXECUTE) config.State = TaskI::STATE_COMPLETE;
+				}else {
+					i->PostExecute();
+				}
+
+				if(config.State != TaskI::STATE_COMPLETE) i->Cancel();
+			}
+
 			mPrimaryBuffer.clear();
 			return true;
 		}
