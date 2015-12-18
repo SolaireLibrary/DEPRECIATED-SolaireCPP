@@ -49,6 +49,10 @@ namespace Solaire {
 			return mConfig;
 		}
 
+		void SOLAIRE_EXPORT_CALL NotifyWait() throw() override {
+			mWaitCondition.notify_all();
+		}
+
 	public:
 		Task() throw() {
 
@@ -62,13 +66,6 @@ namespace Solaire {
 
 		Configuration SOLAIRE_EXPORT_CALL GetConfiguration() const throw() override {
 			return mConfig;
-		}
-
-		bool SOLAIRE_EXPORT_CALL Cancel() throw() override {
-			if (mConfig.State == STATE_CANCELED || mConfig.State == STATE_COMPLETE) return false;
-			const bool result = OnCancel();
-			mWaitCondition.notify_all();
-			return result;
 		}
 
 		bool SOLAIRE_EXPORT_CALL Wait() const throw() override {

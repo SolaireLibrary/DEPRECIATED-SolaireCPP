@@ -152,6 +152,7 @@ namespace Solaire {
 				TaskI::Configuration& config = i->GetConfigurationRef();
 				if(config.SkipPreExecute) {
 					if(config.State == TaskI::STATE_POST_EXECUTE) config.State = TaskI::STATE_COMPLETE;
+					i->NotifyWait();
 				}else {
 					i->PostExecute();
 				}

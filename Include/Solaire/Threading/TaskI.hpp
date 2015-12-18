@@ -83,6 +83,7 @@ namespace Solaire {
 			{}
 		};
 	protected :
+		virtual void SOLAIRE_EXPORT_CALL NotifyWait() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnInitialise() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnPreExecute() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnExecute() throw() = 0;
@@ -135,6 +136,7 @@ namespace Solaire {
 			if(config.State != STATE_POST_EXECUTE || config.SkipPostExecute) return false;
 			const bool result = OnPostExecute();
 			config.State = STATE_COMPLETE;
+			NotifyWait();
 			return result;
 		}
 
@@ -159,7 +161,14 @@ namespace Solaire {
 		virtual SOLAIRE_EXPORT_CALL ~TaskI() throw(){}
 		virtual bool SOLAIRE_EXPORT_CALL Wait() const throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL WaitFor(const uint32_t aMilliseconds) const throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL Cancel() throw() = 0;
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Cancel() throw() {
+			Configuration& config = GetConfigurationRef();
+			if (config.State == STATE_CANCELED || config.State == STATE_COMPLETE) return false;
+			const bool result = OnCancel();
+			NotifyWait();
+			return result;
+		}
 
 		SOLAIRE_FORCE_INLINE State SOLAIRE_DEFAULT_CALL GetState() const throw() {
 			return static_cast<State>(GetConfiguration().State);
