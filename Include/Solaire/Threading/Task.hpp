@@ -39,7 +39,6 @@ namespace Solaire {
 
 	class Task : public TaskI {
 	private :
-		TaskCallbacks* mCallbacks;
 		Configuration mConfig;
 	protected :
 		virtual bool SOLAIRE_EXPORT_CALL Initialise() throw() = 0;
@@ -51,19 +50,12 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL OnCancel() throw() = 0;
 
 		// Inherited from TaskI
-		
-		void SOLAIRE_EXPORT_CALL RemoveCallbacks() throw() override{
-			mCallbacks = nullptr;
-		}
-		
-		bool SOLAIRE_EXPORT_CALL InitialiseI(TaskCallbacks& aCallbacks) throw() override {
+		bool SOLAIRE_EXPORT_CALL InitialiseI() throw() override {
 			switch(mConfig.State) {
 			case STATE_INITIALISED:
-				mCallbacks = &aCallbacks;
 				return true;
 			case STATE_CANCELED:
 			case STATE_COMPLETE:
-				mCallbacks = &aCallbacks;
 				mConfig.PauseTime = 0;
 				mConfig.PauseDuration = 0;
 				mConfig.State = STATE_INITIALISED;
@@ -108,6 +100,10 @@ namespace Solaire {
 			return mConfig;
 		}
 		
+		Configuration& SOLAIRE_EXPORT_CALL GetConfigurationRef() throw() override {
+			return mConfig;
+		}
+		
 		void SOLAIRE_EXPORT_CALL SetPauseDuration(const uint64_t aTime) throw() {
 			mConfig.PauseDuration = aTime;
 		}
@@ -127,10 +123,8 @@ namespace Solaire {
 		}
 
 	public:
-		Task() throw() :
-			mCallbacks(nullptr)
-		{
-
+		Task() throw() {
+			mConfig.Callbacks = nullptr;
 			mConfig.PauseTime = 0;
 			mConfig.PauseDuration = 0;
 			mConfig.State = STATE_INITIALISED;
@@ -144,19 +138,7 @@ namespace Solaire {
 		// Inherited from TaskI
 
 		bool SOLAIRE_EXPORT_CALL Cancel() throw() override {
-			return mCallbacks == nullptr ? false : mCallbacks->Cancel();
-		}
-
-		bool SOLAIRE_EXPORT_CALL Wait() const throw() override {
-			return mCallbacks == nullptr ? 
-				mConfig.State == STATE_COMPLETE || mConfig.State == STATE_CANCELED :
-				mCallbacks->Wait();
-		}
-
-		bool SOLAIRE_EXPORT_CALL WaitFor(const uint32_t aMilliseconds) const throw() override {
-			return mCallbacks == nullptr ? 
-				mConfig.State == STATE_COMPLETE || mConfig.State == STATE_CANCELED :
-				mCallbacks->WaitFor(aMilliseconds);
+			return mConfig.Callbacks == nullptr ? false : mConfig.Callbacks->Cancel();
 		}
 	};
 

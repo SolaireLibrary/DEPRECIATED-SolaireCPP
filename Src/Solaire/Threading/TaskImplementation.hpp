@@ -35,18 +35,16 @@ namespace Solaire {
 	public:
 		TaskImplementation(TaskI& aTask) throw() :
 			mTask(aTask)
-		{}
+		{
+			mTask.GetConfigurationRef().Callbacks = this;
+		}
 
 		SOLAIRE_EXPORT_CALL ~TaskImplementation() throw() {
-			mTask.RemoveCallbacks();
+			mTask.GetConfigurationRef().Callbacks = nullptr;
 		}
 
 		SOLAIRE_FORCE_INLINE TaskI::Configuration SOLAIRE_DEFAULT_CALL GetConfiguration() const throw() {
 			return mTask.GetConfiguration();
-		}
-
-		SOLAIRE_FORCE_INLINE void SOLAIRE_DEFAULT_CALL SetPauseDuration(const uint64_t aMilliseconds) throw() {
-			return mTask.SetPauseDuration(aMilliseconds);
 		}
 
 		SOLAIRE_FORCE_INLINE void SOLAIRE_DEFAULT_CALL Unpause() throw() {
@@ -54,7 +52,7 @@ namespace Solaire {
 		}
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Initialise() throw() {
-			return mTask.InitialiseI(*this);
+			return mTask.InitialiseI();
 		}
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL PreExecute() throw() {

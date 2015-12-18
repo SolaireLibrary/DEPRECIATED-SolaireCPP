@@ -33,6 +33,7 @@ Last Modified	: 8th December 2015
 
 #include <cstdint>
 #include "..\Core\ModuleHeader.hpp"
+#include "TaskCallbacks.hpp"
 
 namespace Solaire {
 
@@ -64,6 +65,7 @@ namespace Solaire {
 		};
 
 		struct Configuration {
+			TaskCallbacks* Callbacks;
 			uint64_t PauseTime;
 			uint16_t PauseDuration;
 			struct {
@@ -72,25 +74,36 @@ namespace Solaire {
 			};
 		};
 	protected :
-		virtual bool SOLAIRE_EXPORT_CALL InitialiseI(TaskCallbacks&) throw() = 0;
-		virtual void SOLAIRE_EXPORT_CALL RemoveCallbacks() throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL InitialiseI() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnPreExecuteI() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnExecuteI() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnPostExecuteI() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnResumeI() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnCancelI() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Pause(const uint64_t) throw() = 0;
-		virtual void SOLAIRE_EXPORT_CALL SetPauseDuration(const uint64_t) throw() = 0;
+		virtual Configuration& SOLAIRE_EXPORT_CALL GetConfigurationRef() throw() = 0;
 
 		SOLAIRE_FORCE_INLINE void SOLAIRE_DEFAULT_CALL Unpause() throw() {
-			SetPauseDuration(0);
+			GetConfigurationRef().PauseDuration = 0;
 		}
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Cancel() throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL Wait() const throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL WaitFor(const uint32_t) const throw() = 0;
 		virtual Configuration SOLAIRE_EXPORT_CALL GetConfiguration() const throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~TaskI() throw(){}
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Wait() const throw() {
+			const Configuration config = GetConfiguration();
+			return config.Callbacks == nullptr ?
+				config.State == STATE_COMPLETE || config.State == STATE_CANCELED :
+				config.Callbacks->Wait();
+		}
+
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL WaitFor(const uint32_t aMilliseconds) const throw() {
+			const Configuration config = GetConfiguration();
+			return config.Callbacks == nullptr ?
+				config.State == STATE_COMPLETE || config.State == STATE_CANCELED :
+				config.Callbacks->WaitFor(aMilliseconds);
+		}
 
 		SOLAIRE_FORCE_INLINE State SOLAIRE_DEFAULT_CALL GetState() const throw() {
 			return static_cast<State>(GetConfiguration().State);
