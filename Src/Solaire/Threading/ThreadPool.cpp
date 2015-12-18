@@ -75,11 +75,11 @@ namespace Solaire {
 				for(SharedAllocation<TaskI> i : mPrimaryBuffer) {
 					const TaskI::Configuration config = i->GetConfiguration();
 					if(config.State == TaskI::STATE_PRE_EXECUTE) {
-						if(config.ExecutionMode == TaskI::EXECUTE_ON_MAIN) {
-							mMainExeQueue.push_back(i);
-						}else {
+						if(config.ExecutesOnWorker) {
 							mExeQueue.push_back(i);
 							++taskAddedForWorkers;
+						}else {
+							mMainExeQueue.push_back(i);
 						}
 					}
 				}

@@ -51,10 +51,7 @@ namespace Solaire {
 
 	public:
 		Task() throw() {
-			mConfig.PauseTime = 0;
-			mConfig.PauseDuration = 0;
-			mConfig.State = STATE_INITIALISED;
-			mConfig.ExecutionMode = EXECUTE_ON_WORKER;
+
 		}
 
 		virtual SOLAIRE_EXPORT_CALL ~Task() throw() {
@@ -68,6 +65,7 @@ namespace Solaire {
 		}
 
 		bool SOLAIRE_EXPORT_CALL Cancel() throw() override {
+			if (mConfig.State == STATE_CANCELED || mConfig.State == STATE_COMPLETE) return false;
 			const bool result = OnCancel();
 			mWaitCondition.notify_all();
 			return result;

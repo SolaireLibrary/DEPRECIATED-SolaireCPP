@@ -48,11 +48,6 @@ namespace Solaire {
 		template<const int, const int, const int, const int>
 		friend class TaskGroup;
 
-		enum ExecutionMode : uint8_t {
-			EXECUTE_ON_WORKER,
-			EXECUTE_ON_MAIN
-		};
-
 		friend ThreadPool;
 		enum State : uint8_t{
 			STATE_INITIALISED,
@@ -68,9 +63,20 @@ namespace Solaire {
 			uint64_t PauseTime;
 			uint16_t PauseDuration;
 			struct {
-				uint16_t State : 3;
-				uint16_t ExecutionMode : 1;
+				uint8_t State : 3;
+				uint8_t ExecutesOnWorker : 1;
+				uint8_t IsPausable : 1;
+				uint8_t IsReinitialisable : 1;
 			};
+
+			Configuration() :
+				PauseTime(0),
+				PauseDuration(0),
+				State(STATE_INITIALISED),
+				ExecutesOnWorker(1),
+				IsPausable(1),
+				IsReinitialisable(1)
+			{}
 		};
 	protected :
 		virtual bool SOLAIRE_EXPORT_CALL OnInitialise() throw() = 0;
@@ -94,10 +100,10 @@ namespace Solaire {
 				return true;
 			case STATE_CANCELED:
 			case STATE_COMPLETE:
+				if(! config.IsReinitialisable) return false;
 				config.PauseTime = 0;
 				config.PauseDuration = 0;
 				config.State = STATE_INITIALISED;
-				config.ExecutionMode = EXECUTE_ON_WORKER;
 				return OnInitialise();
 			default:
 				return false;
@@ -130,7 +136,7 @@ namespace Solaire {
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Pause(const uint16_t aMilliseconds) throw() {
 			Configuration& config = GetConfigurationRef(); 
-			if(config.State != STATE_EXECUTE) return false;
+			if(config.State != STATE_EXECUTE || ! config.IsPausable) return false;
 			const bool result = OnPause();
 			config.State = STATE_PAUSED;
 			config.PauseTime = GetTimeMilliseconds();
@@ -140,7 +146,7 @@ namespace Solaire {
 
 		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL Resume() throw() {
 			Configuration& config = GetConfigurationRef();
-			if(config.State != STATE_PAUSED) return false;
+			if(config.State != STATE_PAUSED || ! config.IsPausable) return false;
 			config.State = STATE_EXECUTE;
 			return OnResume();
 		}
@@ -155,8 +161,8 @@ namespace Solaire {
 			return static_cast<State>(GetConfiguration().State);
 		}
 
-		SOLAIRE_FORCE_INLINE ExecutionMode SOLAIRE_DEFAULT_CALL GetExecutionMode() const throw() {
-			return static_cast<ExecutionMode>(GetConfiguration().ExecutionMode);
+		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL ExecutesOnWorker() const throw() {
+			return GetConfiguration().ExecutesOnWorker;
 		}
 
 		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetPauseTime() const throw() {
