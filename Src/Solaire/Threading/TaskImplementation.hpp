@@ -41,12 +41,8 @@ namespace Solaire {
 			mTask.RemoveCallbacks();
 		}
 
-		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetPauseTime() const throw() {
-			return mTask.GetPauseTime();
-		}
-
-		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetPauseDuration() const throw() {
-			return mTask.GetPauseDuration();
+		SOLAIRE_FORCE_INLINE TaskI::Configuration SOLAIRE_DEFAULT_CALL GetConfiguration() const throw() {
+			return mTask.GetConfiguration();
 		}
 
 		SOLAIRE_FORCE_INLINE void SOLAIRE_DEFAULT_CALL SetPauseDuration(const uint64_t aMilliseconds) throw() {
@@ -77,14 +73,6 @@ namespace Solaire {
 			const bool result = mTask.OnPostExecuteI();
 			mWaitCondition.notify_all();
 			return result;
-		}
-
-		SOLAIRE_FORCE_INLINE TaskI::State SOLAIRE_DEFAULT_CALL GetState() const throw() {
-			return mTask.GetState();
-		}
-
-		SOLAIRE_FORCE_INLINE bool SOLAIRE_DEFAULT_CALL ExecuteOnMain() const throw() {
-			return mTask.ExecuteOnMain();
 		}
 
 		// Inherited from TaskCallbacks

@@ -47,6 +47,11 @@ namespace Solaire {
 		template<const int, const int, const int, const int>
 		friend class TaskGroup;
 
+		enum ExecutionMode : uint8_t {
+			EXECUTE_ON_WORKER,
+			EXECUTE_ON_MAIN
+		};
+
 		friend TaskImplementation;
 		enum State : uint8_t{
 			STATE_INITIALISED,
@@ -57,6 +62,15 @@ namespace Solaire {
 			STATE_CANCELED,
 			STATE_COMPLETE
 		};
+
+		struct Configuration {
+			uint64_t PauseTime;
+			uint64_t PauseDuration;
+			struct {
+				uint16_t State : 3;
+				uint16_t Execution : 1;
+			};
+		};
 	protected :
 		virtual bool SOLAIRE_EXPORT_CALL InitialiseI(TaskCallbacks&) throw() = 0;
 		virtual void SOLAIRE_EXPORT_CALL RemoveCallbacks() throw() = 0;
@@ -66,10 +80,7 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL OnResumeI() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL OnCancelI() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Pause(const uint64_t) throw() = 0;
-		virtual uint64_t SOLAIRE_EXPORT_CALL GetPauseTime() const throw() = 0;
-		virtual uint64_t SOLAIRE_EXPORT_CALL GetPauseDuration() const throw() = 0;
 		virtual void SOLAIRE_EXPORT_CALL SetPauseDuration(const uint64_t) throw() = 0;
-		virtual bool SOLAIRE_EXPORT_CALL ExecuteOnMain() const throw() = 0;
 
 		SOLAIRE_FORCE_INLINE void SOLAIRE_DEFAULT_CALL Unpause() throw() {
 			SetPauseDuration(0);
@@ -78,7 +89,7 @@ namespace Solaire {
 		virtual bool SOLAIRE_EXPORT_CALL Cancel() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Wait() const throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL WaitFor(const uint32_t) const throw() = 0;
-		virtual State SOLAIRE_EXPORT_CALL GetState() const throw() = 0;
+		virtual Configuration SOLAIRE_EXPORT_CALL GetConfiguration() const throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~TaskI() throw(){}
 	};
 }

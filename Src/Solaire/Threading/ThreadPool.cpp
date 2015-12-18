@@ -74,12 +74,15 @@ namespace Solaire {
 			uint32_t taskAddedForWorkers = 0;
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) if (i->GetState() == TaskI::STATE_PRE_EXECUTE) {
-					if(i->ExecuteOnMain()) {
-						mMainExeQueue.push_back(i);
-					}else {
-						mExeQueue.push_back(i);
-						++taskAddedForWorkers;
+				for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) {
+					const TaskI::Configuration config = i->GetConfiguration();
+					if(config.State == TaskI::STATE_PRE_EXECUTE) {
+						if(config.Execution == TaskI::EXECUTE_ON_MAIN) {
+							mMainExeQueue.push_back(i);
+						}else {
+							mExeQueue.push_back(i);
+							++taskAddedForWorkers;
+						}
 					}
 				}
 				mPrimaryBuffer.clear();
@@ -104,7 +107,8 @@ namespace Solaire {
 			// Check if the pause timer has expired for each task and place them in the corresponding list
 			const uint64_t time = GetTimeMilliseconds();
 			for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) {
-				if(i->GetPauseDuration() + i->GetPauseTime() <= time) {
+				const TaskI::Configuration config = i->GetConfiguration();
+				if(config.PauseTime + config.PauseDuration <= time) {
 					mSecondaryBuffer.push_back(i);
 				}else {
 					mTertiaryBuffer.push_back(i);
@@ -149,7 +153,7 @@ namespace Solaire {
 			// Attempt to execute each task in the main thread execution queue and place them into the corresponding list
 			for(SharedAllocation<TaskImplementation> i : mMainExeQueue) {
 				bool result = true;
-				switch (i->GetState()) {
+				switch (i->GetConfiguration().State) {
 				case TaskI::STATE_PAUSED:
 					result = i->Resume();
 					break;
@@ -168,7 +172,7 @@ namespace Solaire {
 				}
 
 				if(i) {
-					switch (i->GetState()) {
+					switch (i->GetConfiguration().State) {
 					case TaskI::STATE_POST_EXECUTE :
 						mSecondaryBuffer.push_back(i);
 						break;
@@ -268,7 +272,7 @@ namespace Solaire {
 				const SharedAllocation<TaskImplementation> task = mAllocator.SharedAllocate<TaskImplementation>(aTask);
 				if (!task->Initialise()) return false;
 
-				if (task->GetState() != TaskI::STATE_INITIALISED) return false;
+				if (task->GetConfiguration().State != TaskI::STATE_INITIALISED) return false;
 
 				std::lock_guard<std::mutex> lock(mLock);
 				mPreQueue.push_back(task);
@@ -297,7 +301,7 @@ namespace Solaire {
 
 				if(task) {
 					bool result = false;
-					switch (task->GetState()) {
+					switch (task->GetConfiguration().State) {
 					case TaskI::STATE_PAUSED:
 						result = task->Resume();
 						break;
@@ -316,7 +320,7 @@ namespace Solaire {
 					}
 
 					if(task) {
-						switch (task->GetState()) {
+						switch (task->GetConfiguration().State) {
 						case TaskI::STATE_POST_EXECUTE :
 							{
 								std::lock_guard<std::mutex> lock(mLock);
