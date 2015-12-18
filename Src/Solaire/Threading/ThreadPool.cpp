@@ -67,14 +67,7 @@ namespace Solaire {
 
 			// Pre-execute the tasks
 			for(SharedAllocation<TaskI> i : mPrimaryBuffer) {
-				TaskI::Configuration& config = i->GetConfigurationRef();
-				if(config.SkipPreExecute) {
-					if(config.State == TaskI::STATE_INITIALISED) config.State = TaskI::STATE_PRE_EXECUTE;
-				}else {
-					i->PreExecute();
-				}
-
-				if(config.State != TaskI::STATE_PRE_EXECUTE) i->Cancel();
+				if(! i->PreExecute()) i->Cancel();
 			}
 
 			// Move the tasks to their correct execution queues
@@ -149,15 +142,7 @@ namespace Solaire {
 
 			// Post-execute the tasks
 			for(SharedAllocation<TaskI> i : mPrimaryBuffer) {
-				TaskI::Configuration& config = i->GetConfigurationRef();
-				if(config.SkipPreExecute) {
-					if(config.State == TaskI::STATE_POST_EXECUTE) config.State = TaskI::STATE_COMPLETE;
-					i->NotifyWait();
-				}else {
-					i->PostExecute();
-				}
-
-				if(config.State != TaskI::STATE_COMPLETE) i->Cancel();
+				if(i->PostExecute()) i->Cancel();
 			}
 
 			mPrimaryBuffer.clear();
@@ -170,8 +155,9 @@ namespace Solaire {
 
 			// Attempt to execute each task in the main thread execution queue and place them into the corresponding list
 			for(SharedAllocation<TaskI> i : mMainExeQueue) {
+				TaskI::Configuration& config = i->GetConfiguration();
 				bool result = true;
-				switch (i->GetConfiguration().State) {
+				switch (config.State) {
 				case TaskI::STATE_PAUSED:
 					result = i->Resume();
 					break;
@@ -190,9 +176,14 @@ namespace Solaire {
 				}
 
 				if(i) {
-					switch (i->GetConfiguration().State) {
+					switch (config.State) {
 					case TaskI::STATE_POST_EXECUTE :
-						mSecondaryBuffer.push_back(i);
+						if(config.SkipPostExecute) {
+							config.State = TaskI::STATE_COMPLETE;
+							i->NotifyWait();
+						}else {
+							mSecondaryBuffer.push_back(i);
+						}
 						break;
 					case TaskI::STATE_PAUSED :
 						mPrimaryBuffer.push_back(i);
@@ -289,10 +280,20 @@ namespace Solaire {
 			{
 				if (!aTask->Initialise()) return false;
 
-				if (aTask->GetConfiguration().State != TaskI::STATE_INITIALISED) return false;
+				TaskI::Configuration& config = aTask->GetConfiguration();
+				if(config.State != TaskI::STATE_INITIALISED) return false;
+
+				TaskQueue* queue = nullptr;
+
+				if (config.SkipPreExecute) {
+					config.State = TaskI::STATE_PRE_EXECUTE;
+					queue = config.ExecutesOnWorker ? &mExeQueue : &mMainExeQueue;
+				}else {
+					queue = &mPreQueue;
+				}
 
 				std::lock_guard<std::mutex> lock(mLock);
-				mPreQueue.push_back(aTask);
+				queue->push_back(aTask);
 			}
 			return true;
 		}
@@ -317,8 +318,9 @@ namespace Solaire {
 				}  
 
 				if(task) {
+					TaskI::Configuration& config = task->GetConfigurationRef();
 					bool result = false;
-					switch (task->GetConfiguration().State) {
+					switch (config.State) {
 					case TaskI::STATE_PAUSED:
 						result = task->Resume();
 						break;
@@ -337,9 +339,12 @@ namespace Solaire {
 					}
 
 					if(task) {
-						switch (task->GetConfiguration().State) {
+						switch (config.State) {
 						case TaskI::STATE_POST_EXECUTE :
-							{
+							if(config.SkipPostExecute) {
+								config.State = TaskI::STATE_COMPLETE;
+								task->NotifyWait();
+							}else {
 								std::lock_guard<std::mutex> lock(mLock);
 								mPostQueue.push_back(task);
 							}
