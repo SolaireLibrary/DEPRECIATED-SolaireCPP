@@ -31,14 +31,17 @@ Created			: 6th December 2015
 Last Modified	: 8th December 2015
 */
 
+#include <mutex>
+#include <memory>
 #include "TaskI.hpp"
-#include "TaskCallbacks.hpp"
 
 namespace Solaire {
 
 	class Task : public TaskI {
 	protected:
 		Configuration mConfig;
+		mutable std::mutex mLock;
+		mutable std::condition_variable mWaitCondition;
 	protected :
 		// Inherited from TaskI
 
@@ -48,7 +51,6 @@ namespace Solaire {
 
 	public:
 		Task() throw() {
-			mConfig.Callbacks = nullptr;
 			mConfig.PauseTime = 0;
 			mConfig.PauseDuration = 0;
 			mConfig.State = STATE_INITIALISED;
@@ -63,6 +65,23 @@ namespace Solaire {
 
 		Configuration SOLAIRE_EXPORT_CALL GetConfiguration() const throw() override {
 			return mConfig;
+		}
+
+		bool SOLAIRE_EXPORT_CALL Cancel() throw() override {
+			const bool result = OnCancel();
+			mWaitCondition.notify_all();
+			return result;
+		}
+
+		bool SOLAIRE_EXPORT_CALL Wait() const throw() override {
+			std::unique_lock<std::mutex> lock(mLock);
+			mWaitCondition.wait(lock);
+			return true;
+		}
+
+		bool SOLAIRE_EXPORT_CALL WaitFor(const uint32_t aMilliseconds) const throw() override {
+			std::unique_lock<std::mutex> lock(mLock);
+			return mWaitCondition.wait_for(lock, std::chrono::milliseconds(aMilliseconds)) == std::cv_status::no_timeout;
 		}
 	};
 

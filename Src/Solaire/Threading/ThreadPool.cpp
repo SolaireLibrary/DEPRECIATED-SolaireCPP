@@ -16,7 +16,7 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
-#include "TaskImplementation.hpp"
+#include "Solaire\Threading\TaskI.hpp"
 #include "Solaire\Threading\TaskExecutorI.hpp"
 #include "Solaire\Memory\Allocator.hpp"
 #include "Solaire\Memory\SmartAllocation.hpp"
@@ -32,10 +32,8 @@
 namespace Solaire {
 
 	class ThreadPool : public TaskExecutorI {
-	public:
-		friend TaskImplementation;
 	private:
-		typedef std::deque<SharedAllocation<TaskImplementation>> TaskQueue;
+		typedef std::deque<SharedAllocation<TaskI>> TaskQueue;
 	private:
 		Allocator& mAllocator;
 		std::mutex mLock;
@@ -43,7 +41,7 @@ namespace Solaire {
 		std::deque<std::thread> mWorkers;
 		TaskQueue mPreQueue;
 		TaskQueue mExeQueue;
-		std::map<std::thread::id, SharedAllocation<TaskImplementation>> mWorkerMap;
+		std::map<std::thread::id, SharedAllocation<TaskI>> mWorkerMap;
 		TaskQueue mMainExeQueue;
 		TaskQueue mPauseQueue;
 		TaskQueue mPostQueue;
@@ -68,13 +66,13 @@ namespace Solaire {
 			}
 
 			// Pre-execute the tasks
-			for (SharedAllocation<TaskImplementation> i : mPrimaryBuffer) if (!i->PreExecute()) i->Cancel();
+			for (SharedAllocation<TaskI> i : mPrimaryBuffer) if (!i->PreExecute()) i->Cancel();
 
 			// Move the tasks to their correct execution queues
 			uint32_t taskAddedForWorkers = 0;
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) {
+				for(SharedAllocation<TaskI> i : mPrimaryBuffer) {
 					const TaskI::Configuration config = i->GetConfiguration();
 					if(config.State == TaskI::STATE_PRE_EXECUTE) {
 						if(config.ExecutionMode == TaskI::EXECUTE_ON_MAIN) {
@@ -106,7 +104,7 @@ namespace Solaire {
 
 			// Check if the pause timer has expired for each task and place them in the corresponding list
 			const uint64_t time = GetTimeMilliseconds();
-			for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) {
+			for(SharedAllocation<TaskI> i : mPrimaryBuffer) {
 				const TaskI::Configuration config = i->GetConfiguration();
 				if(config.PauseTime + config.PauseDuration <= time) {
 					mSecondaryBuffer.push_back(i);
@@ -121,7 +119,7 @@ namespace Solaire {
 			// Protect the main queues from thread access and syncronise the queues
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				for (SharedAllocation<TaskImplementation> i : mSecondaryBuffer) mExeQueue.push_front(i);
+				for (SharedAllocation<TaskI> i : mSecondaryBuffer) mExeQueue.push_front(i);
 				mTertiaryBuffer.swap(mPauseQueue);
 			}
 
@@ -141,7 +139,7 @@ namespace Solaire {
 			}
 
 			// Post-execute the tasks
-			for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) if (!i->PostExecute()) i->Cancel();
+			for(SharedAllocation<TaskI> i : mPrimaryBuffer) if (!i->PostExecute()) i->Cancel();
 			mPrimaryBuffer.clear();
 			return true;
 		}
@@ -151,7 +149,7 @@ namespace Solaire {
 			// mSecondaryBuffer		= List of tasks that executed sucessfully
 
 			// Attempt to execute each task in the main thread execution queue and place them into the corresponding list
-			for(SharedAllocation<TaskImplementation> i : mMainExeQueue) {
+			for(SharedAllocation<TaskI> i : mMainExeQueue) {
 				bool result = true;
 				switch (i->GetConfiguration().State) {
 				case TaskI::STATE_PAUSED:
@@ -161,13 +159,13 @@ namespace Solaire {
 					result = i->Execute();
 					break;
 				default:
-					i.Swap(SharedAllocation<TaskImplementation>());
+					i.Swap(SharedAllocation<TaskI>());
 					continue;
 				}
 
 				if(! result) {
 					i->Cancel();
-					i.Swap(SharedAllocation<TaskImplementation>());
+					i.Swap(SharedAllocation<TaskI>());
 					continue;
 				}
 
@@ -192,7 +190,7 @@ namespace Solaire {
 			// Add the executed tasks to the post-execute queue
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				for(SharedAllocation<TaskImplementation> i : mSecondaryBuffer) mPostQueue.push_back(i);
+				for(SharedAllocation<TaskI> i : mSecondaryBuffer) mPostQueue.push_back(i);
 			}
 			mSecondaryBuffer.clear();
 
@@ -205,7 +203,7 @@ namespace Solaire {
 		{
 			for (uint32_t i = 0; i < aThreads; ++i) {
 				mWorkers.push_back(std::thread(&ThreadPool::WorkerFunction, this));
-				mWorkerMap.emplace(mWorkers.back().get_id(), SharedAllocation<TaskImplementation>());
+				mWorkerMap.emplace(mWorkers.back().get_id(), SharedAllocation<TaskI>());
 			}
 		}
 
@@ -213,9 +211,9 @@ namespace Solaire {
 			mExitFlag = true;
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				for (SharedAllocation<TaskImplementation> i : mExeQueue) i->Cancel();
-				for (SharedAllocation<TaskImplementation> i : mPauseQueue) i->Cancel();
-				for (SharedAllocation<TaskImplementation> i : mPostQueue) i->Cancel();
+				for (SharedAllocation<TaskI> i : mExeQueue) i->Cancel();
+				for (SharedAllocation<TaskI> i : mPauseQueue) i->Cancel();
+				for (SharedAllocation<TaskI> i : mPostQueue) i->Cancel();
 				mPreQueue.clear();
 				mExeQueue.clear();
 				mPauseQueue.clear();
@@ -267,15 +265,14 @@ namespace Solaire {
 			return count;
 		}
 		
-		bool SOLAIRE_EXPORT_CALL Schedule(TaskI& aTask) throw() override {
+		bool SOLAIRE_EXPORT_CALL Schedule(SharedAllocation<TaskI> aTask) throw() override {
 			{
-				const SharedAllocation<TaskImplementation> task = mAllocator.SharedAllocate<TaskImplementation>(aTask);
-				if (!task->Initialise()) return false;
+				if (!aTask->Initialise()) return false;
 
-				if (task->GetConfiguration().State != TaskI::STATE_INITIALISED) return false;
+				if (aTask->GetConfiguration().State != TaskI::STATE_INITIALISED) return false;
 
 				std::lock_guard<std::mutex> lock(mLock);
-				mPreQueue.push_back(task);
+				mPreQueue.push_back(aTask);
 			}
 			return true;
 		}
@@ -290,7 +287,7 @@ namespace Solaire {
 	private:
 		void WorkerFunction() throw() {
 			while(! mExitFlag) {
-				SharedAllocation<TaskImplementation>& task = mWorkerMap[std::this_thread::get_id()];
+				SharedAllocation<TaskI>& task = mWorkerMap[std::this_thread::get_id()];
 				{
 					std::lock_guard<std::mutex> lock(mLock);
 					if(! mExeQueue.empty()) {
@@ -309,13 +306,13 @@ namespace Solaire {
 						result = task->Execute();
 						break;
 					default:
-						task.Swap(SharedAllocation<TaskImplementation>());
+						task.Swap(SharedAllocation<TaskI>());
 						continue;
 					}
 
 					if(! result) {
 						task->Cancel();
-						task.Swap(SharedAllocation<TaskImplementation>());
+						task.Swap(SharedAllocation<TaskI>());
 						continue;
 					}
 

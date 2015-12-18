@@ -32,6 +32,8 @@ Last Modified	: 14th December 2015
 */
 
 #include <cstdint>
+#include "..\Core\ModuleHeader.hpp"
+#include "..\Memory\Allocator.hpp"
 
 namespace Solaire {
 
@@ -40,7 +42,7 @@ namespace Solaire {
 
 	SOLAIRE_EXPORT_INTERFACE TaskExecutorI {
 	public:
-		virtual bool SOLAIRE_EXPORT_CALL Schedule(TaskI&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL Schedule(SharedAllocation<TaskI>) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Update() throw() = 0;
 		virtual void SOLAIRE_EXPORT_CALL WaitAll() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL WaitAllFor(const uint32_t) throw() = 0;
