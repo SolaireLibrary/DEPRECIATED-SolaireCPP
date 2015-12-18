@@ -35,27 +35,139 @@ namespace Solaire {
 	public:
 		friend TaskImplementation;
 	private:
+		typedef std::deque<SharedAllocation<TaskImplementation>> TaskQueue;
+	private:
 		Allocator& mAllocator;
 		std::mutex mLock;
 		std::condition_variable mPreCondition;
 		std::deque<std::thread> mWorkers;
-		std::deque<SharedAllocation<TaskImplementation>> mInitialiseList;
-		std::deque<SharedAllocation<TaskImplementation>> mPreList;
-		std::map<std::thread::id, SharedAllocation<TaskImplementation>> mExecuteList;
-		std::deque<SharedAllocation<TaskImplementation>> mMainExecuteList;
-		std::deque<SharedAllocation<TaskImplementation>> mPauseList;
-		std::deque<SharedAllocation<TaskImplementation>> mPostList;
-		std::deque<SharedAllocation<TaskImplementation>> mPrimaryBufferList;
-		std::deque<SharedAllocation<TaskImplementation>> mSecondaryBufferList;
-		std::deque<SharedAllocation<TaskImplementation>> mTertiaryBufferList;
+		TaskQueue mPreQueue;
+		TaskQueue mExeQueue;
+		std::map<std::thread::id, SharedAllocation<TaskImplementation>> mWorkerMap;
+		TaskQueue mMainExeQueue;
+		TaskQueue mPauseQueue;
+		TaskQueue mPostQueue;
+		TaskQueue mPrimaryBuffer;
+		TaskQueue mSecondaryBuffer;
+		TaskQueue mTertiaryBuffer;
 		bool mExitFlag;
 	private:
-		void NotifyWorkers(const uint32_t aCount) {
+		void NotifyWorkers(const uint32_t aCount) throw() {
 			if(aCount >= mWorkers.size()) {
 				mPreCondition.notify_all();
 			}else {
 				for(uint32_t i = 0; i < aCount; ++i) mPreCondition.notify_one();
 			}
+		}
+
+		bool UpdatePreExecute() throw() {
+			{
+				std::lock_guard<std::mutex> lock(mLock);
+				std::swap(mPrimaryBuffer, mPreQueue);
+			}
+
+			for (SharedAllocation<TaskImplementation> i : mPrimaryBuffer) if (!i->PreExecute()) i->Cancel();
+
+			uint32_t preCount = 0;
+			{
+				std::lock_guard<std::mutex> lock(mLock);
+				preCount = mExeQueue.size();
+				for (SharedAllocation<TaskImplementation> i : mPrimaryBuffer) if (i->GetState() == TaskI::STATE_PRE_EXECUTE) {
+					if (i->ExecuteOnMain()) {
+						mMainExeQueue.push_back(i);
+					}
+					else {
+						mExeQueue.push_back(i);
+					}
+				}
+				preCount = mExeQueue.size() - preCount;
+				mPrimaryBuffer.clear();
+			}
+
+			NotifyWorkers(preCount);
+			return true;
+		}
+
+		bool UpdateResume() throw() {
+			{
+				std::lock_guard<std::mutex> lock(mLock);
+				std::swap(mPauseQueue, mPrimaryBuffer);
+			}
+			const uint64_t time = GetTimeMilliseconds();
+			for(SharedAllocation<TaskImplementation> i : mPrimaryBuffer) {
+				if (i->GetPauseDuration() + i->GetPauseTime() <= time) {
+					mSecondaryBuffer.push_back(i);
+				}else {
+					mTertiaryBuffer.push_back(i);
+				}
+			}
+
+			mPrimaryBuffer.clear();
+
+			{
+				std::lock_guard<std::mutex> lock(mLock);
+				mPrimaryBuffer.swap(mPauseQueue);
+				for (SharedAllocation<TaskImplementation> i : mSecondaryBuffer) mExeQueue.push_front(i);
+				mTertiaryBuffer.swap(mPauseQueue);
+			}
+
+			NotifyWorkers(mSecondaryBuffer.size());
+
+			mSecondaryBuffer.clear();
+			mTertiaryBuffer.clear();
+			return true;
+		}
+
+		bool UpdatePostExecute() throw() {
+			for(SharedAllocation<TaskImplementation> i : mPostQueue) if (!i->PostExecute()) i->Cancel();
+			mPostQueue.clear();
+			return true;
+		}
+
+		bool UpdateExecute() throw() {
+			for(SharedAllocation<TaskImplementation> i : mMainExeQueue) {
+				bool result = true;
+				switch (i->GetState()) {
+				case TaskI::STATE_PAUSED:
+					result = i->Resume();
+					break;
+				case TaskI::STATE_PRE_EXECUTE:
+					result = i->Execute();
+					break;
+				default:
+					i.Swap(SharedAllocation<TaskImplementation>());
+					continue;
+				}
+
+				if(! result) {
+					i->Cancel();
+					i.Swap(SharedAllocation<TaskImplementation>());
+					continue;
+				}
+
+				if(i) {
+					switch (i->GetState()) {
+					case TaskI::STATE_POST_EXECUTE :
+						mSecondaryBuffer.push_back(i);
+						break;
+					case TaskI::STATE_PAUSED :
+						mPrimaryBuffer.push_back(i);
+						break;
+					}
+				
+					continue;
+				}
+			}
+			mMainExeQueue.clear();
+			std::swap(mMainExeQueue, mPrimaryBuffer);
+
+			{
+				std::lock_guard<std::mutex> lock(mLock);
+				for(SharedAllocation<TaskImplementation> i : mSecondaryBuffer) mPostQueue.push_back(i);
+			}
+			mSecondaryBuffer.clear();
+
+			return true;
 		}
 	public:
 		ThreadPool(Allocator& aAllocator, const uint32_t aThreads) throw() :
@@ -64,7 +176,7 @@ namespace Solaire {
 		{
 			for (uint32_t i = 0; i < aThreads; ++i) {
 				mWorkers.push_back(std::thread(&ThreadPool::WorkerFunction, this));
-				mExecuteList.emplace(mWorkers.back().get_id(), SharedAllocation<TaskImplementation>());
+				mWorkerMap.emplace(mWorkers.back().get_id(), SharedAllocation<TaskImplementation>());
 			}
 		}
 
@@ -72,13 +184,13 @@ namespace Solaire {
 			mExitFlag = true;
 			{
 				std::lock_guard<std::mutex> lock(mLock);
-				for (SharedAllocation<TaskImplementation> i : mPreList) i->Cancel();
-				for (SharedAllocation<TaskImplementation> i : mPostList) i->Cancel();
-				for (SharedAllocation<TaskImplementation> i : mPauseList) i->Cancel();
-				mInitialiseList.clear();
-				mPreList.clear();
-				mPostList.clear();
-				mPauseList.clear();
+				for (SharedAllocation<TaskImplementation> i : mExeQueue) i->Cancel();
+				for (SharedAllocation<TaskImplementation> i : mPauseQueue) i->Cancel();
+				for (SharedAllocation<TaskImplementation> i : mPostQueue) i->Cancel();
+				mPreQueue.clear();
+				mExeQueue.clear();
+				mPauseQueue.clear();
+				mPauseQueue.clear();
 			}
 			mPreCondition.notify_all();
 			for (std::thread& i : mWorkers) i.join();
@@ -114,15 +226,15 @@ namespace Solaire {
 		uint32_t SOLAIRE_EXPORT_CALL GetTaskCount() throw() override {
 			uint32_t count = 0;
 			std::lock_guard<std::mutex> lock(mLock);
-			count += mInitialiseList.size();
-			count += mPreList.size();
-			count += mPauseList.size();
-			count += mPostList.size();
-			count += mPrimaryBufferList.size();
-			count += mSecondaryBufferList.size();
-			count += mTertiaryBufferList.size();
-			count += mMainExecuteList.size();
-			for(const auto& i : mExecuteList) if(i.second) ++count;
+			count += mPreQueue.size();
+			count += mExeQueue.size();
+			count += mPostQueue.size();
+			count += mPauseQueue.size();
+			count += mPrimaryBuffer.size();
+			count += mSecondaryBuffer.size();
+			count += mTertiaryBuffer.size();
+			count += mMainExeQueue.size();
+			for(const auto& i : mWorkerMap) if(i.second) ++count;
 			return count;
 		}
 		
@@ -134,121 +246,27 @@ namespace Solaire {
 				if (task->GetState() != TaskI::STATE_INITIALISED) return false;
 
 				std::lock_guard<std::mutex> lock(mLock);
-				mInitialiseList.push_back(task);
+				mPreQueue.push_back(task);
 			}
 			return true;
 		}
 
 		bool SOLAIRE_EXPORT_CALL Update() throw() override {
-
-			// Pre-execution
-			{
-				std::lock_guard<std::mutex> lock(mLock);
-				std::swap(mPrimaryBufferList, mInitialiseList);
-			}
-
-			for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if(! i->PreExecute()) i->Cancel();
-
-			uint32_t preCount = 0;
-			{
-				std::lock_guard<std::mutex> lock(mLock);
-				preCount = mPreList.size();
-				for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if(i->GetState() == TaskI::STATE_PRE_EXECUTE) {
-					if(i->ExecuteOnMain()) {
-						mMainExecuteList.push_back(i);
-					}else {
-						mPreList.push_back(i);
-					}
-				}
-				preCount = mPreList.size() - preCount;
-				mPrimaryBufferList.clear();
-				mPrimaryBufferList.swap(mPauseList);
-			}
-
-			NotifyWorkers(preCount);
-
-			// Resume
-			const uint64_t time = GetTimeMilliseconds();
-			for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if (i->GetPauseDuration() + i->GetPauseTime() <= time) {
-				mSecondaryBufferList.push_back(i);
-			}else {
-				mTertiaryBufferList.push_back(i);
-			}
-
-			mPrimaryBufferList.clear();
-
-			{
-				std::lock_guard<std::mutex> lock(mLock);
-				mPrimaryBufferList.swap(mPostList);
-				for(SharedAllocation<TaskImplementation> i : mSecondaryBufferList) mPreList.push_front(i);
-				mTertiaryBufferList.swap(mPauseList);
-			}
-
-			NotifyWorkers(mSecondaryBufferList.size());
-
-			mSecondaryBufferList.clear();
-			mTertiaryBufferList.clear();
-
-			// Post-execution
-
-			for(SharedAllocation<TaskImplementation> i : mPrimaryBufferList) if(! i->PostExecute()) i->Cancel();
-			mPrimaryBufferList.clear();
-
-			// Execution
-
-			for(SharedAllocation<TaskImplementation> i : mMainExecuteList) {
-				bool result = true;
-				switch (i->GetState()) {
-				case TaskI::STATE_PAUSED:
-					result = i->Resume();
-					break;
-				case TaskI::STATE_PRE_EXECUTE:
-					result = i->Execute();
-					break;
-				default:
-					i.Swap(SharedAllocation<TaskImplementation>());
-					continue;
-				}
-
-				if(! result) {
-					i->Cancel();
-					i.Swap(SharedAllocation<TaskImplementation>());
-					continue;
-				}
-
-				if(i) {
-					switch (i->GetState()) {
-					case TaskI::STATE_POST_EXECUTE :
-						mSecondaryBufferList.push_back(i);
-						break;
-					case TaskI::STATE_PAUSED :
-						mPrimaryBufferList.push_back(i);
-						break;
-					}
-				
-					continue;
-				}
-			}
-			mMainExecuteList.clear();
-			std::swap(mMainExecuteList, mPrimaryBufferList);
-
-			{
-				std::lock_guard<std::mutex> lock(mLock);
-				for(SharedAllocation<TaskImplementation> i : mSecondaryBufferList) mPostList.push_back(i);
-			}
-			mSecondaryBufferList.clear();
-
-			return true;
+			return
+				UpdatePreExecute() &&
+				UpdateResume() &&
+				UpdateExecute() &&
+				UpdatePostExecute();
 		}
 	private:
 		void WorkerFunction() throw() {
 			while(! mExitFlag) {
-				SharedAllocation<TaskImplementation>& task = mExecuteList[std::this_thread::get_id()];
+				SharedAllocation<TaskImplementation>& task = mWorkerMap[std::this_thread::get_id()];
 				{
 					std::lock_guard<std::mutex> lock(mLock);
-					if(! mPreList.empty()) {
-						task.Swap(mPreList.front());
-						mPreList.pop_front();
+					if(! mExeQueue.empty()) {
+						task.Swap(mExeQueue.front());
+						mExeQueue.pop_front();
 					}                
 				}  
 
@@ -277,13 +295,13 @@ namespace Solaire {
 						case TaskI::STATE_POST_EXECUTE :
 							{
 								std::lock_guard<std::mutex> lock(mLock);
-								mPostList.push_back(task);
+								mPostQueue.push_back(task);
 							}
 							break;
 						case TaskI::STATE_PAUSED :
 							{
 								std::lock_guard<std::mutex> lock(mLock);
-								mPauseList.push_back(task);
+								mPauseQueue.push_back(task);
 							}
 							break;
 						}
