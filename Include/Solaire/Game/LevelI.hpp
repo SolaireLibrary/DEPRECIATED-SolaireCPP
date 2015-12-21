@@ -1,5 +1,5 @@
-#ifndef SOLAIRE_FRAMEI_HPP
-#define SOLAIRE_FRAMEI_HPP
+#ifndef SOLAIRE_LEVELI_HPP
+#define SOLAIRE_LEVELI_HPP
 
 //Copyright 2015 Adam Smith
 //
@@ -20,14 +20,14 @@
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
 /*!
-	\file FrameI.hpp
+	\file LevelI.hpp
 	\brief
 	\author
 	Created			: Adam Smith
 	Last modified	: Adam Smith
 	\version 1.0
 	\date
-	Created			: 17th December 2015
+	Created			: 21st December 2015
 	Last Modified	: 21st December 2015
 */
 
@@ -38,30 +38,33 @@
 namespace Solaire{
 
 	class GameI;
+	class LevelListenerI;
 
-	SOLAIRE_EXPORT_INTERFACE FrameI {
+	SOLAIRE_EXPORT_INTERFACE LevelI {
 	public:
-		virtual SOLAIRE_EXPORT_CALL ~FrameI() {}
+		friend GameI;
+	protected:
+		virtual bool SOLAIRE_EXPORT_CALL OnLoad(GameI&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL OnUnload() throw() = 0;
+	public:
+		virtual SOLAIRE_EXPORT_CALL ~LevelI() {}
 
 		// Helpers
 		virtual GameI& SOLAIRE_EXPORT_CALL GetGame() const throw() = 0;
 
-		// Frame Management
-		virtual uint64_t SOLAIRE_EXPORT_CALL GetFrameNumber() const throw() = 0;
+		// Listeners
+		virtual bool SOLAIRE_EXPORT_CALL AddListener(LevelListenerI&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL RemoveListener(LevelListenerI&) throw() = 0;
+	};
 
-		// Frame Timing
-		virtual uint64_t SOLAIRE_EXPORT_CALL GetStartTime() const throw() = 0;
-		virtual uint64_t SOLAIRE_EXPORT_CALL GetDuration() const throw() = 0;
-
-		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetEndTime() const throw() {
-			return GetStartTime() + GetDuration();
-		}
-
-		SOLAIRE_FORCE_INLINE uint64_t SOLAIRE_DEFAULT_CALL GetRemainingTime() const throw() {
-			const uint64_t end = GetEndTime();
-			const uint64_t current = GetTimeMilliseconds();
-			return current < end ? end - current : 0;
-		}
+	SOLAIRE_EXPORT_INTERFACE LevelListenerI{
+	public:
+		friend LevelI;
+	protected:
+		virtual bool SOLAIRE_EXPORT_CALL OnLoad(GameI&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL OnUnload(GameI&) throw() = 0;
+	public:
+		virtual SOLAIRE_EXPORT_CALL ~LevelListenerI() {}
 	};
 }
 
