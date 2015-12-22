@@ -38,9 +38,12 @@ namespace Solaire {
 	class Allocator;
 
 	template<class RETURN, class... PARAMS>
-	struct SharedLibraryFunction {
+	struct _SharedLibraryFunction {
 		typedef RETURN(SOLAIRE_EXPORT_CALL *Type)(PARAMS...);
 	};
+
+	template<class RETURN, class... PARAMS>
+	using SharedLibraryFunction = typename _SharedLibraryFunction<RETURN, PARAMS...>::type;
 
 	SOLAIRE_EXPORT_INTERFACE SharedLibrary {
 	protected:
@@ -55,8 +58,8 @@ namespace Solaire {
 		virtual SOLAIRE_EXPORT_CALL ~SharedLibrary(){}
 
 		template<class RETURN, class... PARAMS>
-		SOLAIRE_FORCE_INLINE typename SharedLibraryFunction<RETURN, PARAMS...>::Type SOLAIRE_DEFAULT_CALL LoadFunction(const char* const aName) {
-			return reinterpret_cast<typename SharedLibraryFunction<RETURN, PARAMS...>::Type>(_LoadFunction(aName));
+		SOLAIRE_FORCE_INLINE SharedLibraryFunction<RETURN, PARAMS...> SOLAIRE_DEFAULT_CALL LoadFunction(const char* const aName) {
+			return reinterpret_cast<SharedLibraryFunction<RETURN, PARAMS...>>(_LoadFunction(aName));
 		}
 	};
 
