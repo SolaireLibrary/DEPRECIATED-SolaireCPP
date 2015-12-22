@@ -36,7 +36,7 @@ namespace Solaire {
 			mModule(nullptr)
 		{}
 
-		~SharedLibraryDll() {
+		SOLAIRE_EXPORT_CALL ~SharedLibraryDll() {
 			if(IsOpen()) {
 				Close();
 			}
@@ -59,11 +59,11 @@ namespace Solaire {
 			return mModule != nullptr;
 		}
 
-		FunctionPtr SOLAIRE_EXPORT_CALL LoadFunction(const char* const aName) const throw() override {
+		FunctionPtr SOLAIRE_EXPORT_CALL _LoadFunction(const char* const aName) const throw() override {
 			return reinterpret_cast<FunctionPtr>(GetProcAddress(mModule, aName));
 		}
 
-		Allocator& GetAllocator() const throw() override {
+		Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() override {
 			return mAllocator;
 		}
 

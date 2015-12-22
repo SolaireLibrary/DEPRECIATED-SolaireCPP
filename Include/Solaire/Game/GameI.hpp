@@ -40,6 +40,7 @@ namespace Solaire{
 
 	class GameListenerI;
 	class FrameI;
+	class Allocator;
 
 	//! \todo Frame management
 
@@ -53,6 +54,9 @@ namespace Solaire{
 			return aLevel.OnUnload();
 		}
 	protected:
+		virtual bool SOLAIRE_EXPORT_CALL OnLoadLevel(LevelI&) throw() = 0;
+		virtual bool SOLAIRE_EXPORT_CALL OnUnloadLevel() throw() = 0;
+
 		virtual bool SOLAIRE_EXPORT_CALL LoadLevel(LevelI&) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL UnloadLevel() throw() = 0;
 	public:
@@ -60,6 +64,7 @@ namespace Solaire{
 
 		// Helpers
 		virtual FrameI& SOLAIRE_EXPORT_CALL GetFrame() const throw() = 0;
+		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
 
 		// Level Management
 		virtual LevelI& SOLAIRE_EXPORT_CALL GetLevel() const throw() = 0;

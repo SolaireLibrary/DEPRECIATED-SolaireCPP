@@ -31,20 +31,33 @@
 	Last Modified	: 3rd December 2015
 */
 
+#include "..\Core\ModuleHeader.hpp"
+
 namespace Solaire {
 
 	class Allocator;
 
+	template<class RETURN, class... PARAMS>
+	struct SharedLibraryFunction {
+		typedef RETURN(SOLAIRE_EXPORT_CALL *Type)(PARAMS...);
+	};
+
 	SOLAIRE_EXPORT_INTERFACE SharedLibrary {
-	public:
+	protected:
 		typedef void(SOLAIRE_EXPORT_CALL *FunctionPtr)();
+	protected:
+		virtual FunctionPtr SOLAIRE_EXPORT_CALL _LoadFunction(const char* const) const throw() = 0;
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Open(const char* const) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Close() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL IsOpen() const throw() = 0;
-		virtual FunctionPtr SOLAIRE_EXPORT_CALL LoadFunction(const char* const) const throw() = 0;
-		virtual Allocator& GetAllocator() const throw() = 0;
-		virtual ~SharedLibrary(){}
+		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
+		virtual SOLAIRE_EXPORT_CALL ~SharedLibrary(){}
+
+		template<class RETURN, class... PARAMS>
+		SOLAIRE_FORCE_INLINE typename SharedLibraryFunction<RETURN, PARAMS...>::Type SOLAIRE_DEFAULT_CALL LoadFunction(const char* const aName) {
+			return reinterpret_cast<typename SharedLibraryFunction<RETURN, PARAMS...>::Type>(_LoadFunction(aName));
+		}
 	};
 
 	extern "C" {
