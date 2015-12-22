@@ -154,7 +154,7 @@ namespace Solaire {
 			mAllocator(aOther.mAllocator),
 			mObject(aOther.mObject)
 		{
-			++ *mCount;
+			if(mCount)++ *mCount;
 		}
 
 		SharedAllocation(SharedAllocation<T>&& aOther) throw() :

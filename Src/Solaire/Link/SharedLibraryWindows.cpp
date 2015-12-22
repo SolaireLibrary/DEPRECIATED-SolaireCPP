@@ -59,7 +59,7 @@ namespace Solaire {
 			return mModule != nullptr;
 		}
 
-		FunctionPtr SOLAIRE_EXPORT_CALL _LoadFunction(const char* const aName) const throw() override {
+		FunctionPtr SOLAIRE_EXPORT_CALL LoadUntypedFunction(const char* const aName) const throw() override {
 			return reinterpret_cast<FunctionPtr>(GetProcAddress(mModule, aName));
 		}
 

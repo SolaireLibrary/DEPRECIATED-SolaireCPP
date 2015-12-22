@@ -35,19 +35,24 @@
 
 namespace Solaire {
 
-	SOLAIRE_EXPORT_INTERFACE ScriptI : public SharedLibrary {
-	public:
-		enum : int {
-			SCRIPT_NOT_COMPILED = 12345
-		};
-	public:
-		virtual SOLAIRE_EXPORT_CALL ~ScriptI(){}
+	typedef SharedAllocation<SharedLibrary> ScriptLib;
+	typedef int(SOLAIRE_EXPORT_CALL *ScriptFunction)();
 
-		virtual int SOLAIRE_EXPORT_CALL operator()() = 0;
+	SOLAIRE_EXPORT_INTERFACE ScriptLoaderCallback{
+		virtual void SOLAIRE_EXPORT_CALL operator()(ScriptLib, ScriptFunction) throw() = 0;
+	};
+
+	SOLAIRE_EXPORT_INTERFACE ScriptLoaderI {
+	public:
+		virtual void SOLAIRE_EXPORT_CALL AddScript(const char* const, const char* const, ScriptLoaderCallback&) throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL AddIncludeFile(const char* const) throw() = 0;
+		virtual void SOLAIRE_EXPORT_CALL AddSourceFile(const char* const) throw() = 0;
+		virtual ScriptLib SOLAIRE_EXPORT_CALL CompileScripts() throw() = 0;
+		virtual SOLAIRE_EXPORT_CALL ~ScriptLoaderI() {}
 	};
 
 	extern "C" {
-		SOLAIRE_EXPORT_API ScriptI* SOLAIRE_EXPORT_CALL CompileScript(Allocator&);
+		SOLAIRE_EXPORT_API ScriptLoaderI* SOLAIRE_EXPORT_CALL CreateScriptLoader(Allocator&);
 	}
 }
 

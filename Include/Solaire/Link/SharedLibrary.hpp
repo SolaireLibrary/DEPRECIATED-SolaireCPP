@@ -46,20 +46,19 @@ namespace Solaire {
 	using SharedLibraryFunction = typename _SharedLibraryFunction<RETURN, PARAMS...>::type;
 
 	SOLAIRE_EXPORT_INTERFACE SharedLibrary {
-	protected:
+	public:
 		typedef void(SOLAIRE_EXPORT_CALL *FunctionPtr)();
-	protected:
-		virtual FunctionPtr SOLAIRE_EXPORT_CALL _LoadFunction(const char* const) const throw() = 0;
 	public:
 		virtual bool SOLAIRE_EXPORT_CALL Open(const char* const) throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL Close() throw() = 0;
 		virtual bool SOLAIRE_EXPORT_CALL IsOpen() const throw() = 0;
 		virtual Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() = 0;
+		virtual FunctionPtr SOLAIRE_EXPORT_CALL LoadUntypedFunction(const char* const) const throw() = 0;
 		virtual SOLAIRE_EXPORT_CALL ~SharedLibrary(){}
 
 		template<class RETURN, class... PARAMS>
 		SOLAIRE_FORCE_INLINE SharedLibraryFunction<RETURN, PARAMS...> SOLAIRE_DEFAULT_CALL LoadFunction(const char* const aName) {
-			return reinterpret_cast<SharedLibraryFunction<RETURN, PARAMS...>>(_LoadFunction(aName));
+			return reinterpret_cast<SharedLibraryFunction<RETURN, PARAMS...>>(LoadUntypedFunction(aName));
 		}
 	};
 

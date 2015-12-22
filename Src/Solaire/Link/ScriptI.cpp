@@ -16,92 +16,162 @@
 // Email             : solairelibrary@mail.com
 // GitHub repository : https://github.com/SolaireLibrary/SolaireCPP
 
+#include <vector>
+#include <string>
+#include <functional>
+#include <mutex>
+#include <fstream>
+
 #include "Solaire\Memory\Allocator.hpp"
 #include "Solaire\Link\ScriptI.hpp"
 #include "Solaire\Link\CompilerMinGW.hpp"
-#include <string>
 
 namespace Solaire {
 
-	class ScriptImplementation : public ScriptI{
+	class ScriptLoaderImplementation : public ScriptLoaderI {
+	private:
+		struct ScriptData {
+			std::string ScriptName;
+			std::string ScriptSource;
+			ScriptLoaderCallback* Callback;
+		};
 	private:
 		Allocator& mAllocator;
-		SharedLibrary* mSharedLibrary;
-		CppCompiler* mCompiler;
-		int (SOLAIRE_EXPORT_CALL *mMainFunction)();
+		std::vector<ScriptData> mScripts;
+		std::vector<std::string> mIncludeFiles;
+		std::vector<std::string> mSourceFiles;
 	private:
-		bool CompileScript() {
-			mCompiler->SetCompilerPath("MinGW\\bin\\mingw32-g++.exe");
-			mCompiler->SetOutputPath("" /*! \todo tmp directory*/);
-			mCompiler->SetOutputName("" /*! \todo random name*/);
-			//! \todo Set flags
-			return mCompiler->CompileSharedLib();
+		static void _WriteFuntion(std::ostream& aStream, const ScriptData& aData) {
+			aStream << "	static int SOLAIRE_EXPORT_CALL " << aData.ScriptName << "() throw() {" << std::endl;
+			aStream << "		#include \"" << aData.ScriptSource << "\"" << std::endl;
+			aStream << "	}" << std::endl << std::endl;
 		}
 
-		bool LoadScript() {
-			mSharedLibrary = CreateSharedLibrary(mAllocator);
-			if(mSharedLibrary == nullptr) return false;
-			//if (!mSharedLibrary->Open(/*dll*/)) return false;
-			//mMainFunction = mSharedLibrary->LoadFunction<int>("SolaireMain");
-			return mSharedLibrary != nullptr;
+		static void _WriteSelector(std::ostream& aStream, const std::vector<ScriptData>& aScripts) {
+			aStream << "	typedef int(SOLAIRE_EXPORT_CALL *ScriptPtr)();" << std::endl;
+			aStream << "	extern \"C\" SOLAIRE_EXPORT_API ScriptPtr SOLAIRE_EXPORT_CALL GetScript(const int aIndex) throw() {" << std::endl;
+			aStream << "		switch(aIndex){" << std::endl;
+			const int size = aScripts.size();
+			for(int i = 0; i < size; ++i) {
+				aStream << "			case " << i << " : " << std::endl;
+				aStream << "				return &" << aScripts[i].ScriptName << ";" << std::endl;
+			}
+			aStream << "			default  : " << std::endl;
+			aStream << "				return (ScriptPtr) nullptr;" << std::endl;
+			aStream << "		}" << std::endl;
+			aStream << "	}" << std::endl << std::endl;
 		}
-	protected:
-
-		// Inherited from SharedLibrary
-		FunctionPtr SOLAIRE_EXPORT_CALL _LoadFunction(const char* const aName) const throw() override {
-			//return mSharedLibrary ? reinterpret_cast<FunctionPtr>(mSharedLibrary->LoadFunction<void>(aName)) : nullptr;
-			return nullptr;
-		}
-
 	public:
-		ScriptImplementation(Allocator& aAllocator) :
+		ScriptLoaderImplementation(Allocator& aAllocator) :
 			mAllocator(aAllocator)
 		{}
 
-		SOLAIRE_EXPORT_CALL ~ScriptImplementation() {
-			if(mSharedLibrary) {
-				mSharedLibrary->~SharedLibrary();
-				mAllocator.Deallocate(mSharedLibrary);
+		SOLAIRE_EXPORT_CALL ~ScriptLoaderImplementation() {
+
+		}
+
+		// Inherited from ScriptLoaderI
+
+		void SOLAIRE_EXPORT_CALL AddScript(const char* const aScriptName, const char* const aScriptSource, ScriptLoaderCallback& aCallback) throw() override {
+			ScriptData data;
+			data.ScriptName = aScriptName;
+			data.ScriptSource = aScriptSource;
+			data.Callback = &aCallback;
+			mScripts.push_back(data);
+		}
+
+		void SOLAIRE_EXPORT_CALL AddIncludeFile(const char* const aFile) throw() override {
+			mIncludeFiles.push_back(aFile);
+		}
+
+		void SOLAIRE_EXPORT_CALL AddSourceFile(const char* const aFile) throw() override {
+			mSourceFiles.push_back(aFile);
+		}
+
+		ScriptLib SOLAIRE_EXPORT_CALL CompileScripts() throw() override {
+			char pathBuf[MAX_PATH];
+			//GetTemporaryDirectory(pathBuf);
+			std::strcpy(pathBuf, "tmp\\");
+			const std::string tmpDirectory = pathBuf;
+			const std::string outputName = "SOLAIRE_SCRIPT"; //! \todo create a random dll name
+			const std::string source = tmpDirectory + outputName + ".cpp";
+			const std::string outputFile = tmpDirectory + outputName + ".dll";
+			
+			// Get Scripts
+			std::vector<ScriptData> scripts;
+			std::vector<std::string> includeFiles;
+			std::vector<std::string> sourceFiles;
+			//SCRIPT_LOCK.lock();
+			std::swap(mScripts, scripts);
+			std::swap(mIncludeFiles, includeFiles);
+			std::swap(mSourceFiles, sourceFiles);
+			//SCRIPT_LOCK.unlock();
+
+			if(scripts.empty()) return ScriptLib();
+
+			//includeFiles.push_back("Solaire\\Memory\\Allocator.hpp");
+			sourceFiles.push_back(source);
+			
+			// Generate source
+			{
+				std::ofstream sourceFile(source);
+				if(! sourceFile.is_open()) return ScriptLib();
+
+				for(const std::string& i : includeFiles) {
+					sourceFile << "#include \"" << i << "\"" << std::endl;
+				}
+				sourceFile << "#undef SOLAIRE_EXPORT_API" << std::endl;
+				sourceFile << "#define SOLAIRE_EXPORT_API __declspec(dllexport)" << std::endl;
+				sourceFile << std::endl;
+				sourceFile << "namespace Solaire {" << std::endl;
+				for(const ScriptData& i : scripts) _WriteFuntion(sourceFile, i);
+				_WriteSelector(sourceFile, scripts);
+				sourceFile << "}" << std::endl;
 			}
-			if(mCompiler) {
-				mCompiler->~CppCompiler();
-				mAllocator.Deallocate(mCompiler);
+			
+			// Initialise compiler
+			SharedAllocation<CppCompiler> compiler(mAllocator, CreateCompilerMinGW(mAllocator));
+			//compiler->SetCompilerPath("MinGW\\bin\\mingw32-g++.exe");
+			compiler->SetCompilerPath("C:\\Program Files\\CodeBlocks\\MinGW\\bin\\mingw32-g++.exe");
+			compiler->SetOutputPath(tmpDirectory.c_str());
+			compiler->SetOutputName(outputName.c_str());
+			for(const std::string& i : sourceFiles) {
+				compiler->AddSourceFile(i.c_str());
 			}
-		}
+			compiler->AddFlag("-std=c++11");
+			compiler->AddDefine("var", "auto");
+			compiler->AddDefine("SOLAIRE_EXPORT_CALL", "__stdcall");
+			compiler->AddDefine("SOLAIRE_EXPORT_API", "__declspec(dllimport)");
+			
+			// Compile
+			compiler->CompileSharedLib();
+			
+			// Load
 
-		// Inherited from ScriptI
-		int SOLAIRE_EXPORT_CALL operator()() override {
-			return mMainFunction ? mMainFunction() : SCRIPT_NOT_COMPILED;
-		}
+			ScriptLib lib(mAllocator, CreateSharedLibrary(mAllocator));
+			if(! lib) return ScriptLib();
+			//if(! lib->Open(outputFile.c_str())) return ScriptLib();
+			{
+				typedef ScriptFunction(SOLAIRE_EXPORT_CALL *GetScriptType)(const int);
+				//GetScriptType GetScript = lib->LoadFunction<int, const int>("GetScript"); //! \todo Check correct export name
+				GetScriptType GetScript = (GetScriptType) lib->LoadUntypedFunction("GetScript"); //! \todo Check correct export name
 
-
-		// Inherited from SharedLibrary
-		bool SOLAIRE_EXPORT_CALL Open(const char* const aFilename) throw() override {
-			if(mSharedLibrary) {
-				return false;
-			}else {
-				if(! CompileScript()) return false;
-				return LoadScript();
+				const int size = scripts.size();
+				for(int i = 0; i < size; ++i) {
+					const ScriptData& data = scripts[i];
+					//data.Callback(lib, GetFunction(i));
+					//data.Callback(lib, (ScriptFunction) nullptr);
+				}
 			}
-		}
-
-		bool SOLAIRE_EXPORT_CALL Close() throw() override {
-			return mSharedLibrary ? mSharedLibrary->Close() : false;
-		}
-
-		bool SOLAIRE_EXPORT_CALL IsOpen() const throw() override {
-			return mSharedLibrary ? mSharedLibrary->IsOpen() : false;
-		}
-
-		Allocator& SOLAIRE_EXPORT_CALL GetAllocator() const throw() override {
-			return mAllocator;
+			
+			return lib;
 		}
 
 	};
 
 	extern "C" {
-		SOLAIRE_EXPORT_API ScriptI* SOLAIRE_EXPORT_CALL CompileScript(Allocator& aAllocator) {
-			return new(aAllocator.Allocate(sizeof(ScriptImplementation))) ScriptImplementation(aAllocator);
+		SOLAIRE_EXPORT_API ScriptLoaderI* SOLAIRE_EXPORT_CALL CreateScriptLoader(Allocator& aAllocator) {
+			return new(aAllocator.Allocate(sizeof(ScriptLoaderImplementation))) ScriptLoaderImplementation(aAllocator);
 		}
 	}
 }
